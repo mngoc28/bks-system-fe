@@ -1,0 +1,2 @@
+export { RoomDetailView } from "./RoomDetailView";
+

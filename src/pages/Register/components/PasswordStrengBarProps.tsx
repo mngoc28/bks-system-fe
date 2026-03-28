@@ -1,0 +1,43 @@
+import {PasswordStrength } from "@/dataHelper/auth.dataHelper";
+import { useTranslation } from "react-i18next";
+
+function getPasswordStrength(password: string){
+  const { t } = useTranslation();
+  let score = 0;
+
+  if(password.length >= 8) score++;
+  if(/[A-Z]/.test(password)) score++;
+  if(/[0-9]/.test(password)) score++;
+  if(/[^A-Za-z0-9]/.test(password)) score++;
+  if (/[!@#$%^&*()_+\-=[\]{}|;:',.<>?/]/.test(password)) score++;
+
+  switch(score){
+    case 0:
+    case 1: return {label: t('validation.password.weak'), color: "bg-red-500", width: "20%"}
+    case 2: return {label: t('validation.password.medium'), color: "bg-yellow-400", width: "40%"}
+    case 3: return {label: t('validation.password.medium'), color: "bg-yellow-400", width: "60%"}
+    case 4: return {label: t('validation.password.strong'), color: "bg-green-400", width:"80%"}
+    case 5: return {label: t('validation.password.veryStrong'), color: "bg-green-600",width:"100%"}
+    default: return {label: t('validation.password.weak'), color: "bg-red-500", width: "20%"}
+  }
+
+}
+
+const PasswordStrengthBarProps: React.FC<PasswordStrength> = ({ password }) => {
+  if(password.length < 8) return null;
+  const { label, color, width } = getPasswordStrength(password);
+
+  return (
+    <div className="mt-2">
+      <div className="w-full h-2 bg-gray-200 rounded">
+        <div
+          className={`${color} h-2 rounded transition-all duration-300`}
+          style={{ width }}
+        ></div>
+      </div>
+      <p className="mt-1 text-sm font-semibold text-gray-700">{label}</p>
+    </div>
+  );
+};
+
+export default PasswordStrengthBarProps;

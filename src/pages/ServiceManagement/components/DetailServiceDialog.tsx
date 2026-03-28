@@ -1,0 +1,99 @@
+import React from "react";
+import { DetailServiceDialogProps } from "@/dataHelper/service.dataHelper";
+import { t } from "i18next";
+import { safeFormatDateTime } from "@/utils/dateUtils";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+
+const DetailServiceDialog: React.FC<DetailServiceDialogProps> = ({
+    service,
+    isOpen,
+    isLoading = false,
+    onClose,
+}) => {
+    const data = service ?? null;
+    if (!isOpen) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-[720px]">
+        <DialogHeader>
+          <DialogTitle>{t("serviceManagement.title_detail")}</DialogTitle>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            {t("serviceManagement.is_Loading")}
+          </div>
+        ) : !data ? (
+          <div className="rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            {t("serviceManagement.no_data")}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <div className="rounded-lg border border-slate-200 overflow-hidden">
+              <div className="grid grid-cols-10">
+                <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                  {t("serviceManagement.id")}
+                </div>
+                <div className="col-span-8 p-3 border-b border-slate-200">
+                  {data.id}
+                </div>
+
+                <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                  {t("serviceManagement.name")}
+                </div>
+                <div className="col-span-8 p-3 border-b border-slate-200">
+                  {data.name}
+                </div>
+
+                <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                  {t("serviceManagement.price")}
+                </div>
+                <div className="col-span-8 p-3 border-b border-slate-200">
+                  {(data.price)}
+                </div>
+
+                <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                  {t("serviceManagement.update_at")}
+                </div>
+                <div className="col-span-8 p-3 border-b border-slate-200">
+                  {safeFormatDateTime(data.updated_at)}
+                </div>
+
+                <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                  {t("serviceManagement.create_at")}
+                </div>
+                <div className="col-span-8 p-3 border-b border-slate-200">
+                  {safeFormatDateTime(data.created_at)}
+                </div>
+
+                <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                  {t("serviceManagement.description")}
+                </div>
+                <div className="col-span-8 p-3 border-b border-slate-200">
+                  {data.description || "-"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-3 py-1 h-[40px] rounded-md bg-gray-600 text-white hover:bg-gray-500 text-[15px]"
+          >
+            {t("common.cancel")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    );
+};
+
+export default DetailServiceDialog;

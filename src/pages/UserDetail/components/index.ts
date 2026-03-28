@@ -1,0 +1,2 @@
+export { UserDetailView } from "./UserDetailView";
+
