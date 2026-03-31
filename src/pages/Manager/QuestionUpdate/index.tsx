@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { ROUTERS } from "@/constant";
 import { useChatbotDetailQuery, useUpdateChatbotMutation } from "@/hooks/useChatbotQuery";
 import type { CreateQuestionFormValues } from "@/dataHelper/chatbot.dataHelper";
-import { CreateQuestionForm } from "@/pages/QuestionCreate/components";
+import { CreateQuestionForm } from "@/pages/Manager/QuestionCreate/components";
 
 const QuestionUpdatePage = () => {
   const { t } = useTranslation();

@@ -1,6 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ROUTERS } from "@/constant";
-import ProfileDialog from "@/pages/Profile";
+import ProfileDialog from "@/pages/Manager/Profile";
 import useLanguage from "@/store/useLanguage";
 import { useUserStore } from "@/store/useUserStore";
 import { LogOut, User } from "lucide-react";
