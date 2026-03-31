@@ -77,11 +77,11 @@ const RoomSearch = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <p className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
-            Ket qua tim kiem
+            Kết quả tìm kiếm
           </p>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Tim phong luu tru phu hop</h1>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Tìm phòng lưu trú phù hợp</h1>
           <p className="mt-3 text-slate-200">
-            {selectedProvince?.name ? `Khu vuc: ${selectedProvince.name}` : "Tat ca tinh/thanh"}
+            {selectedProvince?.name ? `Khu vực: ${selectedProvince.name}` : "Tất cả tỉnh/thành"}
             {selectedDistrict?.name ? ` - ${selectedDistrict.name}` : ""}
           </p>
         </div>
@@ -92,7 +92,7 @@ const RoomSearch = () => {
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
-              { label: "Tim phong" },
+              { label: "Tìm phòng" },
             ]}
             className="text-sm"
           />
@@ -105,7 +105,7 @@ const RoomSearch = () => {
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Tim theo ten phong, dia chi..."
+              placeholder="Tìm theo tên phòng, địa chỉ..."
               className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-4 pr-4 text-sm outline-none transition focus:border-sky-400"
             />
           </div>
@@ -115,9 +115,9 @@ const RoomSearch = () => {
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
             >
-              <option value="price_asc">Gia thap den cao</option>
-              <option value="price_desc">Gia cao den thap</option>
-              <option value="capacity_desc">Suc chua cao nhat</option>
+              <option value="price_asc">Giá thấp đến cao</option>
+              <option value="price_desc">Giá cao đến thấp</option>
+              <option value="capacity_desc">Sức chứa cao nhất</option>
             </select>
           </div>
         </section>
@@ -133,18 +133,18 @@ const RoomSearch = () => {
         ) : filteredRooms.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
             <SearchX className="mx-auto mb-3 h-8 w-8 text-slate-400" />
-            <p className="text-base font-semibold text-slate-700">Khong tim thay phong phu hop</p>
-            <p className="mt-2 text-sm text-slate-500">Thu doi bo loc hoac tim o khu vuc khac.</p>
+            <p className="text-base font-semibold text-slate-700">Không tìm thấy phòng phù hợp</p>
+            <p className="mt-2 text-sm text-slate-500">Thử đổi bộ lọc hoặc tìm ở khu vực khác.</p>
           </div>
         ) : (
           <>
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-slate-600">
-                Tim thay <span className="font-semibold text-slate-900">{filteredRooms.length}</span> phong phu hop
+                Tìm thấy <span className="font-semibold text-slate-900">{filteredRooms.length}</span> phòng phù hợp
               </p>
               <Badge variant="secondary" className="rounded-full bg-sky-50 px-3 py-1 text-sky-700">
                 <Filter className="mr-1 h-3.5 w-3.5" />
-                Da ap dung bo loc
+                Đã áp dụng bộ lọc
               </Badge>
             </div>
 
@@ -175,9 +175,9 @@ const RoomSearch = () => {
                       <div className="flex items-center justify-between text-sm">
                         <span className="inline-flex items-center gap-1.5 text-slate-600">
                           <Users className="h-4 w-4 text-sky-500" />
-                          {room.people} khach
+                          {room.people} khách
                         </span>
-                        <span className="font-semibold text-sky-600">{formatPrice(room.cheapest_daily_price)}/dem</span>
+                        <span className="font-semibold text-sky-600">{formatPrice(room.cheapest_daily_price)}/đêm</span>
                       </div>
 
                       {room.amenities && (
@@ -195,7 +195,7 @@ const RoomSearch = () => {
 
                       <div className="pt-1">
                         <Button asChild className="w-full rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-                          <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>Xem chi tiet</Link>
+                          <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>Xem chi tiết</Link>
                         </Button>
                       </div>
                     </CardContent>

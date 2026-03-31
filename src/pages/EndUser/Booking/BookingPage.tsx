@@ -147,6 +147,26 @@ const BookingPage = () => {
         }
     };
 
+    const services: ServiceItem[] = useMemo(() => {
+        if (!room?.services) return [];
+
+        try {
+            const parsedServices = JSON.parse(room.services);
+            return parsedServices.map((service: any) => ({
+                id: service.id,
+                name: service.name,
+                price: service.price?.toString() || "0",
+            }));
+        } catch (error) {
+            console.error("Error parsing services:", error);
+            return [];
+        }
+    }, [room?.services]);
+
+    const selectedServices = useMemo(() => {
+        return services.filter((service) => serviceIds.includes(service.id));
+    }, [services, serviceIds]);
+
     if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
@@ -157,35 +177,11 @@ const BookingPage = () => {
 
     if (!room) return <div className="p-8 text-center text-slate-600">{t("booking.room_not_found")}</div>;
 
-    // Parse services from comma-separated strings
-    const services: ServiceItem[] = (() => {
-    if (!room.services) return [];
-    
-    try {
-        // Parse JSON string to array
-        const parsedServices = JSON.parse(room.services);
-        
-        // Map to ServiceItem format
-        return parsedServices.map((service: any) => ({
-            id: service.id,
-            name: service.name,
-            price: service.price?.toString() || '0'
-        }));
-    } catch (error) {
-        console.error('Error parsing services:', error);
-        return [];
-    }
-})();
-
     const roomImage = room.room_image
         ? `${CLOUDINARY_HEADER_IMAGE_URL}/${room.room_image}`
         : (room.images && room.images.length > 0
             ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.images[0].image_url}`
             : "");
-
-    const selectedServices = useMemo(() => {
-        return services.filter((service) => serviceIds.includes(service.id));
-    }, [services, serviceIds]);
 
     const numberOfNights = startDate && endDate ? getNumberOfNights(startDate, endDate) : 1;
     const roomTotal = Number(room.cheapest_daily_price || 0) * numberOfNights;
@@ -247,12 +243,12 @@ const BookingPage = () => {
                 <div className="mx-auto mb-6 flex w-full max-w-7xl items-center gap-3">
                     <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${currentStep === 1 ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>
                         <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
-                        Thong tin
+                        Thông tin
                     </div>
                     <div className="h-px flex-1 bg-slate-200" />
                     <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${currentStep === 2 ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>
                         <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">2</span>
-                        Xac nhan
+                        Xác nhận
                     </div>
                 </div>
 
@@ -381,10 +377,10 @@ const BookingPage = () => {
                         <Card className="border-slate-200/80 shadow-sm flex-1">
                             <CardHeader className="pb-4">
                                 <CardTitle className="text-xl mb-2">
-                                    {currentStep === 1 ? t("booking.customerInfo") : "Xac nhan dat phong"}
+                                    {currentStep === 1 ? t("booking.customerInfo") : "Xác nhận đặt phòng"}
                                 </CardTitle>
                                 <p className="text-sm text-slate-500 italic font-normal">
-                                    {currentStep === 1 ? t("booking.helperText") : "Kiem tra lai thong tin truoc khi gui yeu cau dat phong."}
+                                    {currentStep === 1 ? t("booking.helperText") : "Kiểm tra lại thông tin trước khi gửi yêu cầu đặt phòng."}
                                 </p>
                             </CardHeader>
                             <CardContent className="flex-1 flex flex-col p-6">
@@ -396,7 +392,7 @@ const BookingPage = () => {
                                                 <Label htmlFor="name" className="text-sm font-semibold">{t("booking.fields.name")} <span className="text-red-500">*</span></Label>
                                                 <Input
                                                     id="name"
-                                                    placeholder="Nguyen Van A"
+                                                    placeholder="Nguyễn Văn A"
                                                     required
                                                     {...register("name")}
                                                     className={`h-11 text-sm ${errors.name ? "border-red-500" : ""}`}
@@ -498,37 +494,37 @@ const BookingPage = () => {
                                                 className="w-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90 text-base py-6"
                                                 onClick={handleContinueToConfirm}
                                             >
-                                                Tiep tuc xac nhan
+                                                Tiếp tục xác nhận
                                             </Button>
                                         </div>
                                     </form>
                                 ) : (
                                     <div className="space-y-5">
                                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Thong tin khach hang</h3>
+                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Thông tin khách hàng</h3>
                                             <div className="mt-3 space-y-2 text-sm text-slate-700">
-                                                <p><span className="font-semibold">Ho ten:</span> {previewData?.name}</p>
+                                                <p><span className="font-semibold">Họ tên:</span> {previewData?.name}</p>
                                                 <p><span className="font-semibold">Email:</span> {previewData?.email}</p>
-                                                <p><span className="font-semibold">So dien thoai:</span> {previewData?.phone}</p>
-                                                <p><span className="font-semibold">Nhan phong:</span> {previewData?.start_date}</p>
-                                                <p><span className="font-semibold">Tra phong:</span> {previewData?.end_date}</p>
-                                                {previewData?.note ? <p><span className="font-semibold">Yeu cau:</span> {previewData.note}</p> : null}
+                                                <p><span className="font-semibold">Số điện thoại:</span> {previewData?.phone}</p>
+                                                <p><span className="font-semibold">Nhận phòng:</span> {previewData?.start_date}</p>
+                                                <p><span className="font-semibold">Trả phòng:</span> {previewData?.end_date}</p>
+                                                {previewData?.note ? <p><span className="font-semibold">Yêu cầu:</span> {previewData.note}</p> : null}
                                             </div>
                                         </div>
 
                                         <div className="rounded-xl border border-slate-200 bg-white p-4">
-                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Tam tinh</h3>
+                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Tạm tính</h3>
                                             <div className="mt-3 space-y-2 text-sm text-slate-700">
                                                 <div className="flex items-center justify-between">
-                                                    <span>Tien phong ({numberOfNights} dem)</span>
+                                                    <span>Tiền phòng ({numberOfNights} đêm)</span>
                                                     <span className="font-semibold">{formatCurrencyInput(roomTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <span>Dich vu bo sung</span>
+                                                    <span>Dịch vụ bổ sung</span>
                                                     <span className="font-semibold">{formatCurrencyInput(serviceTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                                 <div className="border-t border-slate-200 pt-2 mt-2 flex items-center justify-between text-base">
-                                                    <span className="font-semibold">Tong cong</span>
+                                                    <span className="font-semibold">Tổng cộng</span>
                                                     <span className="font-bold text-sky-600">{formatCurrencyInput(estimatedTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                             </div>
@@ -536,7 +532,7 @@ const BookingPage = () => {
 
                                         {selectedServices.length > 0 ? (
                                             <div className="rounded-xl border border-slate-200 bg-white p-4">
-                                                <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Dich vu da chon</h3>
+                                                <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Dịch vụ đã chọn</h3>
                                                 <ul className="mt-3 space-y-2 text-sm text-slate-700">
                                                     {selectedServices.map((service) => (
                                                         <li key={service.id} className="flex items-center justify-between">
@@ -559,7 +555,7 @@ const BookingPage = () => {
                                                     setCurrentStep(1);
                                                 }}
                                             >
-                                                Quay lai chinh sua
+                                                Quay lại chỉnh sửa
                                             </Button>
                                             <Button
                                                 type="button"

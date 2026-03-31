@@ -46,9 +46,9 @@ const safeParseBookings = (): UserBooking[] => {
 };
 
 const bookingStatusLabel: Record<BookingStatus, string> = {
-  upcoming: "Sap toi",
-  completed: "Hoan thanh",
-  cancelled: "Da huy",
+  upcoming: "Sắp tới",
+  completed: "Hoàn thành",
+  cancelled: "Đã hủy",
 };
 
 const bookingStatusBadgeClass: Record<BookingStatus, string> = {
@@ -85,10 +85,10 @@ const MyBookings = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <p className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
-            Quan ly dat phong
+            Quản lý đặt phòng
           </p>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Dat phong cua toi</h1>
-          <p className="mt-3 text-slate-200">Theo doi trang thai don va quan ly lich luu tru ngay tren BKS Stay.</p>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng của tôi</h1>
+          <p className="mt-3 text-slate-200">Theo dõi trạng thái đơn và quản lý lịch lưu trú ngay trên BKS Stay.</p>
         </div>
       </section>
 
@@ -96,8 +96,8 @@ const MyBookings = () => {
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
-              { label: "Trang chu", href: ROUTERS.HOME },
-              { label: "Dat phong cua toi" },
+              { label: "Trang chủ", href: ROUTERS.HOME },
+              { label: "Đặt phòng của tôi" },
             ]}
             className="text-sm"
           />
@@ -123,10 +123,10 @@ const MyBookings = () => {
         {filteredBookings.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-14 text-center">
             <SearchX className="mx-auto mb-3 h-8 w-8 text-slate-400" />
-            <p className="text-base font-semibold text-slate-700">Chua co don dat phong nao o muc nay</p>
-            <p className="mt-2 text-sm text-slate-500">Hay tim phong phu hop va tao don dat dau tien cua ban.</p>
+            <p className="text-base font-semibold text-slate-700">Chưa có đơn đặt phòng nào ở mục này</p>
+            <p className="mt-2 text-sm text-slate-500">Hãy tìm phòng phù hợp và tạo đơn đặt đầu tiên của bạn.</p>
             <Button asChild className="mt-5 rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-              <Link to={ROUTERS.SEARCH_ROOMS}>Tim phong ngay</Link>
+              <Link to={ROUTERS.SEARCH_ROOMS}>Tìm phòng ngay</Link>
             </Button>
           </div>
         ) : (
@@ -144,7 +144,7 @@ const MyBookings = () => {
                         </div>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                           <MapPin className="h-4 w-4 text-sky-500" />
-                          {booking.address || "Dang cap nhat dia chi"}
+                          {booking.address || "Đang cập nhật địa chỉ"}
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                           <CalendarDays className="h-4 w-4 text-sky-500" />
@@ -152,16 +152,16 @@ const MyBookings = () => {
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
                           <Clock3 className="h-4 w-4" />
-                          Tao luc: {new Date(booking.createdAt).toLocaleString("vi-VN")}
+                          Tạo lúc: {new Date(booking.createdAt).toLocaleString("vi-VN")}
                         </p>
                       </div>
 
                       <div className="space-y-3 md:text-right">
-                        <p className="text-sm text-slate-500">Tong tam tinh</p>
+                        <p className="text-sm text-slate-500">Tổng tạm tính</p>
                         <p className="text-2xl font-bold text-sky-600">{formatPrice(booking.totalPrice)}</p>
                         <div className="flex flex-wrap gap-2 md:justify-end">
                           <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-                            <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>Xem phong</Link>
+                            <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>Xem phòng</Link>
                           </Button>
 
                           {booking.status === "upcoming" && (
@@ -171,7 +171,7 @@ const MyBookings = () => {
                               onClick={() => handleCancelBooking(booking.id)}
                             >
                               <XCircle className="mr-1 h-4 w-4" />
-                              Huy don
+                              Hủy đơn
                             </Button>
                           )}
 
@@ -179,7 +179,7 @@ const MyBookings = () => {
                             <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
                               <Link to={`${ROUTERS.BOOKING}/${booking.roomId}`}>
                                 <CheckCircle2 className="mr-1 h-4 w-4" />
-                                Dat lai
+                                Đặt lại
                               </Link>
                             </Button>
                           )}

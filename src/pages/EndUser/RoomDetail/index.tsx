@@ -87,9 +87,9 @@ const PublicRoomDetail = () => {
       <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
         <PublicHeader />
         <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
-          <p className="text-slate-600">Khong tim thay phong hop le.</p>
+          <p className="text-slate-600">Không tìm thấy phòng hợp lệ.</p>
           <Button className="mt-5" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
-            Quay lai tim phong
+            Quay lại tìm phòng
           </Button>
         </main>
         <PublicFooter />
@@ -110,12 +110,12 @@ const PublicRoomDetail = () => {
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Quay lai
+            Quay lại
           </button>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{room?.title || "Chi tiet phong"}</h1>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{room?.title || "Chi tiết phòng"}</h1>
           <p className="mt-3 inline-flex items-center gap-2 text-slate-200">
             <MapPin className="h-4 w-4 text-sky-300" />
-            {room?.building_address || "Dang cap nhat dia chi"}
+            {room?.building_address || "Đang cập nhật địa chỉ"}
           </p>
         </div>
       </section>
@@ -124,9 +124,9 @@ const PublicRoomDetail = () => {
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
-              { label: "Trang chu", href: ROUTERS.HOME },
-              { label: "Tim phong", href: ROUTERS.SEARCH_ROOMS },
-              { label: room?.title || "Chi tiet phong" },
+              { label: "Trang chủ", href: ROUTERS.HOME },
+              { label: "Tìm phòng", href: ROUTERS.SEARCH_ROOMS },
+              { label: room?.title || "Chi tiết phòng" },
             ]}
             className="text-sm"
           />
@@ -137,11 +137,11 @@ const PublicRoomDetail = () => {
         <section className="space-y-6">
           {isLoading ? (
             <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white px-6 py-12 text-center text-slate-500">
-              Dang tai chi tiet phong...
+              Đang tải chi tiết phòng...
             </div>
           ) : isError || !room ? (
             <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-12 text-center text-rose-600">
-              Khong the tai thong tin phong. Vui long thu lai.
+              Không thể tải thông tin phòng. Vui lòng thử lại.
             </div>
           ) : (
             <>
@@ -163,44 +163,44 @@ const PublicRoomDetail = () => {
               <Card className="rounded-3xl border-slate-200 shadow-sm">
                 <CardContent className="space-y-5 p-6">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="rounded-full bg-sky-100 text-sky-700">Phong san sang</Badge>
-                    <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700">{room.province_name || "Viet Nam"}</Badge>
+                    <Badge variant="secondary" className="rounded-full bg-sky-100 text-sky-700">Phòng sẵn sàng</Badge>
+                    <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700">{room.province_name || "Việt Nam"}</Badge>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Suc chua</p>
+                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Sức chứa</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <Users className="h-4 w-4 text-sky-500" />
-                        {room.people || 0} khach
+                        {room.people || 0} khách
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Dien tich</p>
+                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Diện tích</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <Ruler className="h-4 w-4 text-sky-500" />
                         {room.area || "--"} m2
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Linh hoat</p>
+                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Linh hoạt</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <CalendarDays className="h-4 w-4 text-sky-500" />
-                        Dat theo ngay
+                        Đặt theo ngày
                       </p>
                     </div>
                   </div>
 
                   {room.description && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Mo ta phong</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">Mô tả phòng</h2>
                       <p className="mt-2 whitespace-pre-line text-sm leading-7 text-slate-600">{room.description}</p>
                     </div>
                   )}
 
                   {amenities.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Tien nghi noi bat</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">Tiện nghi nổi bật</h2>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {amenities.map((amenity: string) => (
                           <Badge key={amenity} variant="secondary" className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
@@ -213,7 +213,7 @@ const PublicRoomDetail = () => {
 
                   {services.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Dich vu bo sung</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">Dịch vụ bổ sung</h2>
                       <div className="mt-3 grid gap-2">
                         {services.map((service) => (
                           <div key={service.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
@@ -237,18 +237,18 @@ const PublicRoomDetail = () => {
           <Card className="rounded-3xl border-slate-200 shadow-sm">
             <CardContent className="space-y-5 p-6">
               <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Gia tu</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
                 <p className="mt-2 text-3xl font-bold text-sky-600">{formatPrice(room?.cheapest_daily_price || 0)}</p>
-                <p className="text-sm text-slate-500">/ dem, chua bao gom dich vu bo sung</p>
+                <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
               </div>
 
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                <p>Co the huy linh hoat theo chinh sach cua doi tac.</p>
-                <p>Ho tro xac nhan nhanh qua email va so dien thoai.</p>
+                <p>Có thể hủy linh hoạt theo chính sách của đối tác.</p>
+                <p>Hỗ trợ xác nhận nhanh qua email và số điện thoại.</p>
               </div>
 
               <Button asChild className="w-full rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-                <Link to={`${ROUTERS.BOOKING}/${id}`}>Dat phong ngay</Link>
+                <Link to={`${ROUTERS.BOOKING}/${id}`}>Đặt phòng ngay</Link>
               </Button>
             </CardContent>
           </Card>
