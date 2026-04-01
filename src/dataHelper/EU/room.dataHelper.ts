@@ -1,5 +1,6 @@
 export interface Room {
     id: number;
+    province_id?: number;
     title: string;
     room_type: string;
     people: number;

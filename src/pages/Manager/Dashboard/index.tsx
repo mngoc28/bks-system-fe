@@ -25,8 +25,10 @@ const Dashboard: React.FC = () => {
   }, [selectedChart]);
 
   return (
-    <div className="flex min-w-0 flex-col gap-6 p-3 sm:p-6">
-      <h2 className="text-lg font-bold">{t("dashboard.overview")}</h2>
+    <div className="flex min-w-0 flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{t("dashboard.overview")}</p>
+      </div>
       {permission === PERMISSIONS.ADMIN && <UserViewCards />}
 
       {permission === PERMISSIONS.ADMIN && <PartnerViewCards />}
@@ -36,26 +38,28 @@ const Dashboard: React.FC = () => {
       {/* Charts Section with Tabs */}
       {permission === PERMISSIONS.ADMIN && (
         <section className="space-y-6">
-          <h2 className="text-xl font-bold">{t("dashboard.charts")}</h2>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{t("dashboard.charts")}</p>
+          </div>
 
           {/* Chart Tabs */}
           <div className="flex flex-wrap gap-2 border-b border-slate-200">
             <button
               onClick={() => setSelectedChart("bookingsPerMonth")}
-              className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${selectedChart === "bookingsPerMonth" ? "border-b-2 border-blue-500 text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
+              className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${selectedChart === "bookingsPerMonth" ? "border-b-2 border-primary text-primary" : "text-slate-600 hover:text-slate-900"}`}
             >
               {t("dashboard.bookings_per_month")}
             </button>
             <button
               onClick={() => setSelectedChart("revenueByMonth")}
-              className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${selectedChart === "revenueByMonth" ? "border-b-2 border-blue-500 text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
+              className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${selectedChart === "revenueByMonth" ? "border-b-2 border-primary text-primary" : "text-slate-600 hover:text-slate-900"}`}
             >
               {t("dashboard.revenue_by_month")}
             </button>
             {bookingsByBuildingData?.data && bookingsByBuildingData.data.length > 0 && (
               <button
                 onClick={() => setSelectedChart("bookingsByBuilding")}
-                className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${selectedChart === "bookingsByBuilding" ? "border-b-2 border-blue-500 text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
+                className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${selectedChart === "bookingsByBuilding" ? "border-b-2 border-primary text-primary" : "text-slate-600 hover:text-slate-900"}`}
               >
                 {t("dashboard.bookings_by_building")}
               </button>

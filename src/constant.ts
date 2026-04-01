@@ -52,10 +52,13 @@ export const enum ROUTERS {
   CONTACT = "/contact",
   COMPANY_HUB = "/company",
   SEARCH_ROOMS = "/search/rooms",
+  SEARCH_ROOMS_BY_PROVINCE = "/search/rooms/province/:provinceId",
   BOOKING = "/booking",
   SET_PASSWORD = "/set-password",
   VERIFY_EMAIL = "/verify-email",
   RESET_TOKEN_SUCCESS = "/reset-token-success",
+  PUBLIC_NEWS_DETAIL = "/news/:newsId",
+  PUBLIC_NEWS_LIST = "/news-list",
 }
 
 export const STORAGE_VAR = {
@@ -265,5 +268,4 @@ export const PROVINCES = [
 export const LANGUAGE_OPTIONS: Array<{ value: string; flag: string; label: string }> = [
   { value: "vi", flag: "vi", label: "Việt Nam" },
   { value: "en", flag: "en", label: "English" },
-  { value: "ja", flag: "jp", label: "日本語" },
 ];

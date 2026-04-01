@@ -21,7 +21,7 @@ const NewsTableHeader: React.FC<NewsTableHeaderProps> = ({ onSort, sortField, so
     const renderSortableHeader = (field: string, label: string) => {
        return (
         <TableHead
-            className="cursor-pointer whitespace-nowrap border-r border-gray-300 px-4 py-3 text-center text-slate-700"
+            className="cursor-pointer whitespace-nowrap border-r border-slate-200 px-4 py-3 text-center text-slate-700 font-semibold"
             onClick={() => onSort(field)}
             aria-sort={sortField === field ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
         >
@@ -34,15 +34,17 @@ const NewsTableHeader: React.FC<NewsTableHeaderProps> = ({ onSort, sortField, so
     }
     return (
       <TableHeader>
-        <tr className="border-b border-gray-300 bg-slate-100">
+        <tr className="border-b border-slate-200 bg-slate-50/80">
             {renderSortableHeader("id", t("news.table_id"))}
-            {(t("news.table_image"))}
+            <TableHead className="whitespace-nowrap border-r border-slate-200 px-4 py-3 text-slate-700 font-semibold">
+                {t("news.table_image")}
+            </TableHead>
             {renderSortableHeader("user_name", t("news.table_user"))}
             {renderSortableHeader("title", t("news.table_title"))}
             {/* {renderSortableHeader("summary", t("news.table_summary"))} */}
             {renderSortableHeader("published_at", t("news.table_published_at"))}           
             {renderSortableHeader("status", t("news.table_status"))}
-            <TableHead className="cursor-pointer whitespace-nowrap border-r border-gray-300 px-4 py-3 text-center text-slate-700">
+            <TableHead className="cursor-pointer whitespace-nowrap border-r border-slate-200 px-4 py-3 text-center text-slate-700 font-semibold">
                 {t("common.actions")}
             </TableHead>
         </tr>

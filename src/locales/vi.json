@@ -3,15 +3,14 @@
     "label": "Ngôn ngữ",
     "options": {
       "vi": "Tiếng Việt",
-      "en": "Tiếng Anh",
-      "ja": "Tiếng Nhật"
+      "en": "Tiếng Anh"
     }
   },
   "public": {
     "header": {
       "brand": {
         "eyebrow": "BKS",
-        "title": "BKS Stay"
+        "title": "BKS System"
       },
       "nav": {
         "contact": "Liên hệ",
@@ -22,8 +21,8 @@
     "footer": {
       "brand": {
         "eyebrow": "BKS",
-        "title": "BKS Stay",
-        "description": "BKS Stay tuyển chọn chỗ ở chất lượng với thông tin minh bạch, giúp bạn tìm và đặt phòng nhanh chóng cho mọi chuyến đi."
+        "title": "BKS System",
+        "description": "BKS System tuyển chọn chỗ ở chất lượng với thông tin minh bạch, giúp bạn tìm và đặt phòng nhanh chóng cho mọi chuyến đi."
       },
       "contact": {
         "hotlineLabel": "Hotline",
@@ -55,7 +54,7 @@
         "disclaimer": "Bằng việc đăng ký, bạn đồng ý với chính sách bảo mật của chúng tôi."
       },
       "bottom": {
-        "note": "© {{year}} BKS Stay. Trải nghiệm đặt phòng lưu trú đáng tin cậy.",
+        "note": "© {{year}} BKS System. Trải nghiệm đặt phòng lưu trú đáng tin cậy.",
         "sitemap": "Sơ đồ trang",
         "cookies": "Cookie",
         "investor": "Quan hệ nhà đầu tư"
@@ -64,7 +63,7 @@
     "contactCard": {
       "eyebrow": "Cần hỗ trợ?",
       "title": "Trao đổi với chuyên gia BKS",
-      "description": "Đội ngũ BKS Stay sẵn sàng hỗ trợ bạn chọn chỗ ở phù hợp. Liên hệ ngay, chúng tôi sẽ phản hồi trong vòng một giờ.",
+      "description": "Đội ngũ BKS System sẵn sàng hỗ trợ bạn chọn chỗ ở phù hợp. Liên hệ ngay, chúng tôi sẽ phản hồi trong vòng một giờ.",
       "hotlineLabel": "Hotline",
       "hotlineValue": "+84 28 1234 5678",
       "emailLabel": "Email",
@@ -114,7 +113,7 @@
       },
       "partners": {
         "heading": "Đối tác đáng tin cậy",
-        "description": "Gặp gỡ các khách sạn, homestay và đơn vị vận hành lưu trú uy tín trong hệ thống BKS Stay.",
+        "description": "Gặp gỡ các khách sạn, homestay và đơn vị vận hành lưu trú uy tín trong hệ thống BKS System.",
         "badge": "Lưu trú",
         "cardLabel": "Xem chi tiết {{name}}",
         "trust": "Đối tác xác minh",
@@ -145,6 +144,35 @@
           "home": "Trang chủ",
           "current": "Đối tác lưu trú theo tỉnh/thành"
         }
+      }
+    },
+    "roomByProvince": {
+      "badge": "Phòng theo tỉnh/thành",
+      "title": "Phòng tại {{province}}",
+      "titleFallback": "Danh sách phòng theo tỉnh/thành",
+      "subtitle": "Khám phá các phòng đang mở cho thuê trong khu vực bạn đã chọn.",
+      "breadcrumb": {
+        "search": "Tìm phòng",
+        "current": "Tỉnh/thành"
+      },
+      "summary": "Tìm thấy {{count}} phòng tại {{province}}",
+      "appliedFilter": "Đã áp dụng bộ lọc tỉnh",
+      "invalidTitle": "Tỉnh/thành không hợp lệ",
+      "invalidDescription": "Không tìm thấy tỉnh/thành bạn đang truy cập. Vui lòng quay lại để chọn khu vực khác.",
+      "emptyTitle": "Chưa có phòng tại khu vực này",
+      "emptyDescription": "Hãy thử chọn tỉnh/thành khác để xem thêm lựa chọn phù hợp.",
+      "loading": "Đang tải danh sách phòng...",
+      "loadError": "Không thể tải danh sách phòng. Vui lòng thử lại.",
+      "retry": "Thử lại",
+      "backHome": "Quay lại trang chủ",
+      "viewDetails": "Xem chi tiết",
+      "perNight": "/đêm",
+      "guests": "{{count}} khách",
+      "results": "phòng",
+      "fallbackAddress": "Đang cập nhật địa chỉ",
+      "roomStatus": {
+        "available": "Sẵn sàng",
+        "private": "Tạm ẩn"
       }
     },
     "scrollToTop": "Lên đầu trang"
@@ -187,7 +215,7 @@
     "close": "Đóng",
     "back": "Quay lại",
     "search": "Tìm kiếm",
-    "filter": "Lọc tìm kiếm",
+    "filter": "Lọc/Tìm kiếm",
     "reset": "Đặt lại",
     "submit": "Gửi",
     "view": "Xem",
@@ -362,8 +390,8 @@
     "add_new_user": "Thêm người dùng mới",
     "create_user_form_title": "Tạo người dùng mới",
     "create_user_form_description": "Điền thông tin bên dưới để tạo tài khoản người dùng mới.",
-    "filter_search": "Lọc tìm kiếm",
-    "filter_title": "Lọc tìm kiếm",
+    "filter_search": "Lọc/Tìm kiếm",
+    "filter_title": "Lọc/Tìm kiếm",
     "filter_description": "Thiết lập bộ lọc để thu hẹp kết quả.",
     "filter_name": "Tên người dùng",
     "filter_name_placeholder": "Tên người dùng...",
@@ -723,7 +751,7 @@
     "no_admins": "Không tìm thấy quản trị viên nào",
     "error_loading": "Lỗi khi tải danh sách quản trị viên",
     "detail": "Chi tiết",
-    "filter_search": "Lọc tìm kiếm",
+    "filter_search": "Lọc/Tìm kiếm",
     "search": "Tìm kiếm",
     "clear_filter": "Xóa bộ lọc",
     "super_admin": "Quản trị viên",
@@ -847,7 +875,7 @@
     "service": "Quản lý dịch vụ",
     "news": "Quản lý tin tức",
     "users": "Quản lý người dùng",
-    "partner": "Đối tác"
+    "partner": "Quản lý đối tác"
   },
   "endUserPartners": {
     "title": "Công ty quản lý phòng/căn hộ hàng tháng tại",
@@ -1233,7 +1261,7 @@
     "update_amenity_failed": "Cập nhật tiện ích thất bại",
     "delete_amenity_success": "Xóa tiện ích thành công",
     "delete_amenity_failed": "Xóa tiện ích thất bại",
-    "filter_search": "Lọc tìm kiếm",
+    "filter_search": "Lọc/Tìm kiếm",
     "search_name": "Tên tiện ích",
     "search_name_placeholder": "Nhập tên tiện ích để tìm kiếm..."
   },
@@ -1245,7 +1273,7 @@
   },
   "bookings": {
     "title": "Danh sách đặt phòng",
-    "filter": "Lọc tìm kiếm",
+    "filter": "Lọc/Tìm kiếm",
     "create": "Đặt phòng",
     "loading": "Đang tải dữ liệu đặt phòng...",
     "booking_list": "Danh sách đặt phòng",

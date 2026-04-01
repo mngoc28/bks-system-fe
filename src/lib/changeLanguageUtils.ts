@@ -3,7 +3,6 @@ import { initReactI18next } from "react-i18next";
 
 import { getLanguageStorage } from "@/store/useLanguage";
 import enTranslation from "../locales/en.json";
-import jaTranslation from "../locales/ja.json";
 import viTranslation from "../locales/vi.json";
 
 i18n
@@ -15,9 +14,6 @@ i18n
       },
       vi: {
         translation: viTranslation,
-      },
-      ja: {
-        translation: jaTranslation,
       },
     },
     lng: getLanguageStorage(),

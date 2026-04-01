@@ -15,17 +15,11 @@ const CompanyHub = () => {
 
   const provinces = useMemo(() => (provincesResponse?.data ?? []) as ProvinceTypes[], [provincesResponse]);
 
-  // Handle province selection and navigate to partner management with query params
-  const handleProvinceSelect = (provinceId: number, provinceSlug?: string) => {
-    const params = new URLSearchParams({
-      province: String(provinceId),
-    });
-
+  // Handle province selection and navigate to public partner list
+  const handleProvinceSelect = (provinceSlug?: string) => {
     if (provinceSlug) {
-      params.set("provinceName", provinceSlug);
+      navigate(ROUTERS.PARTNERS.replace(":provinceNameEn", provinceSlug));
     }
-
-    navigate(`${ROUTERS.PARTNER_MANAGEMENT}?${params.toString()}`);
   };
 
   return (
@@ -69,7 +63,7 @@ const CompanyHub = () => {
                   <button
                     key={province.id}
                     type="button"
-                    onClick={() => handleProvinceSelect(Number(province.id), province.name_en)}
+                    onClick={() => handleProvinceSelect(province.name_en)}
                     className="inline-flex min-w-[140px] flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 sm:flex-none sm:text-base"
                   >
                     {province.name}

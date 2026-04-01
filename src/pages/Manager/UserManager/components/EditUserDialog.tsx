@@ -64,8 +64,8 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-blue-100 p-2">
-              <Edit className="size-5 text-blue-600" />
+            <div className="rounded-full bg-primary/10 p-2">
+              <Edit className="size-5 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">{t("user.edit_user")}</DialogTitle>
@@ -89,7 +89,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
                       {t("common.name")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder={t("user.filter_name_placeholder")} {...field} disabled={isLoading} className="border-gray-300 focus:border-blue-500" />
+                      <Input placeholder={t("user.filter_name_placeholder")} {...field} disabled={isLoading} className="border-gray-300 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,7 +106,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
                       {t("common.email")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder={t("user.filter_email_placeholder")} {...field} disabled className="border-gray-300 focus:border-blue-500 bg-gray-50" />
+                      <Input type="email" placeholder={t("user.filter_email_placeholder")} {...field} disabled className="border-gray-300 focus:border-primary bg-gray-50" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,7 +123,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
                       {t("common.phone")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder={t("user.filter_phone_placeholder")} {...field} disabled={isLoading} className="border-gray-300 focus:border-blue-500" />
+                      <Input placeholder={t("user.filter_phone_placeholder")} {...field} disabled={isLoading} className="border-gray-300 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +141,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                       <FormControl>
-                        <SelectTrigger className="border-gray-300 focus:border-blue-500">
+                        <SelectTrigger className="border-gray-300 focus:border-primary">
                           <SelectValue placeholder={t("user.filter_role")} />
                         </SelectTrigger>
                       </FormControl>
@@ -160,7 +160,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading} className="flex-1">
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 size-4 animate-spin" />

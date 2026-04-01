@@ -114,7 +114,7 @@ const Partners: React.FC = () => {
             <div className="flex items-center justify-between">
                 <h1 className="flex-1 text-xl font-bold text-slate-800">{t("partner.partner_list")}</h1>
                 <div className="flex flex-wrap items-center justify-end gap-2 px-4 p-4">
-                    <Button variant="default" size="sm" className="flex items_center gap-2 bg-blue-600 px-4 py-2 hover:bg-bluer-700" onClick={() => setOpen(true)}>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen(true)}>
                         <Filter className="size-4" />
                         {t("common.filter")}
                     </Button>
@@ -139,7 +139,7 @@ const Partners: React.FC = () => {
             {isLoading ? (
                 <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
             ) : (
-                <div className="w-full rounded-lg border border-blue-100 bg-white">
+                <div className="w-full rounded-lg border border-slate-200 bg-white">
                     <PartnerTable
                         filtered={filtered}
                         onSort={toggleSort}

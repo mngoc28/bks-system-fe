@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
+import ScrollToTop from "./components/common/ScrollToTop";
 import Router from "./Router";
 import "./assets/fonts.css";
 import "./index.css";
@@ -15,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <Router />
       </BrowserRouter>
       <Toaster />

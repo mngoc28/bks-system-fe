@@ -16,7 +16,7 @@ const ServiceSearchSection: React.FC<ServiceSearchSectionProps> = ({
     if (!open) return null;
 
     return (
-        <div className="mt-4 w-full rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
+        <div className="mt-4 w-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
             <div className="space-y-3">
                 <div className="flex flex-col items-end gap-3">
                     <div className="flex w-full items-end gap-3">

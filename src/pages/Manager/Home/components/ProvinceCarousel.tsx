@@ -41,9 +41,9 @@ const ProvinceCarousel = ({ provinces, className, heading, description }: Provin
         {provinces.map((province) => (
           <SplideSlide key={province.id}>
             <Link
-              to={`${ROUTERS.PROVINCE_DETAIL}/${province.id}`}
+              to={ROUTERS.SEARCH_ROOMS_BY_PROVINCE.replace(":provinceId", province.id.toString())}
               aria-label={t("public.home.provinceCarousel.cardLabel", { name: province.name })}
-              className="group relative flex h-44 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 transition hover:-translate-y-1 hover:border-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+              className="group relative flex h-44 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <div className="relative h-32 w-full overflow-hidden">
                 <img
@@ -58,7 +58,7 @@ const ProvinceCarousel = ({ provinces, className, heading, description }: Provin
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/20 to-transparent" />
               </div>
               <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
-                <h3 className="text-base font-semibold text-slate-900 transition group-hover:text-sky-600">{province.name}</h3>
+                <h3 className="text-base font-semibold text-slate-900 transition group-hover:text-primary">{province.name}</h3>
               </div>
             </Link>
           </SplideSlide>

@@ -1,0 +1,324 @@
+import { useEffect, useMemo } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Filter, MapPin, SearchX, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+import Breadcrumb from "@/components/common/Breadcrumb";
+import Pagination from "@/components/Pagination";
+import { PublicFooter, PublicHeader } from "@/components/layout/Public";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import type { Room } from "@/dataHelper/EU/room.dataHelper";
+import { useRoomsQuery } from "@/hooks/EU/useRoomQuery";
+import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
+import { formatPrice } from "@/utils/utils";
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 9;
+const LIMIT_OPTIONS = [6, 9, 12, 18];
+
+const normalize = (text: string) => text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+const parsePositiveInt = (value: string | null, fallback: number) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+};
+
+type RoomWithOptionalStatus = Room & {
+  status?: number | string | null;
+};
+
+const RoomByProvince = () => {
+  const { t } = useTranslation();
+  const { provinceId: provinceIdParam } = useParams<{ provinceId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const provinceId = parsePositiveInt(provinceIdParam ?? null, 0);
+  const rawPage = parsePositiveInt(searchParams.get("page"), DEFAULT_PAGE);
+  const requestedLimit = parsePositiveInt(searchParams.get("limit"), DEFAULT_LIMIT);
+  const limit = LIMIT_OPTIONS.includes(requestedLimit) ? requestedLimit : DEFAULT_LIMIT;
+
+  const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
+  const selectedProvince = useMemo(
+    () => provincesData?.data?.find((province) => province.id === provinceId),
+    [provinceId, provincesData],
+  );
+
+  const {
+    data: roomsFromApi = [],
+    isLoading: isLoadingRooms,
+    isError,
+    refetch,
+  } = useRoomsQuery(
+    {
+      province_id: provinceId,
+      page: rawPage,
+      per_page: limit,
+    },
+    { enabled: provinceId > 0 },
+  );
+
+  const normalizedProvinceName = useMemo(() => {
+    if (!selectedProvince?.name) {
+      return "";
+    }
+
+    return normalize(selectedProvince.name);
+  }, [selectedProvince]);
+
+  const filteredRooms = useMemo(() => {
+    if (!provinceId || !roomsFromApi.length) {
+      return [] as Room[];
+    }
+
+    return roomsFromApi.filter((room) => {
+      if (room.province_id) {
+        return room.province_id === provinceId;
+      }
+
+      if (!normalizedProvinceName) {
+        return true;
+      }
+
+      return normalize(room.province_name || "").includes(normalizedProvinceName);
+    });
+  }, [provinceId, roomsFromApi, normalizedProvinceName]);
+
+  const totalRooms = filteredRooms.length;
+  const totalPages = Math.max(DEFAULT_PAGE, Math.ceil(totalRooms / limit));
+  const page = Math.min(rawPage, totalPages);
+
+  const pagedRooms = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredRooms.slice(start, start + limit);
+  }, [filteredRooms, page, limit]);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    let changed = false;
+
+    if (next.get("page") !== String(rawPage)) {
+      next.set("page", String(rawPage));
+      changed = true;
+    }
+
+    if (next.get("limit") !== String(limit)) {
+      next.set("limit", String(limit));
+      changed = true;
+    }
+
+    if (changed) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, rawPage, limit, setSearchParams]);
+
+  useEffect(() => {
+    if (rawPage <= totalPages) {
+      return;
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.set("page", String(totalPages));
+    setSearchParams(next, { replace: true });
+  }, [rawPage, totalPages, searchParams, setSearchParams]);
+
+  const updateSearchParams = (nextPage: number, nextLimit: number) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("page", String(nextPage));
+    next.set("limit", String(nextLimit));
+    setSearchParams(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) {
+      return;
+    }
+
+    updateSearchParams(nextPage, limit);
+  };
+
+  const handlePerPageChange = (nextLimit: number) => {
+    if (!LIMIT_OPTIONS.includes(nextLimit) || nextLimit === limit) {
+      return;
+    }
+
+    updateSearchParams(DEFAULT_PAGE, nextLimit);
+  };
+
+  const isInvalidProvince = !isLoadingProvinces && (!provinceId || !selectedProvince);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
+      <PublicHeader />
+
+      <div className="relative overflow-hidden bg-slate-950 text-white">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <p className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
+            {t("public.roomByProvince.badge")}
+          </p>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+            {selectedProvince?.name
+              ? t("public.roomByProvince.title", { province: selectedProvince.name })
+              : t("public.roomByProvince.titleFallback")}
+          </h1>
+          <p className="mt-3 text-slate-200">{t("public.roomByProvince.subtitle")}</p>
+        </div>
+      </div>
+
+      <div className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: t("breadcrumb.home"), href: ROUTERS.HOME },
+              { label: t("public.roomByProvince.breadcrumb.search"), href: ROUTERS.SEARCH_ROOMS },
+              { label: selectedProvince?.name || t("public.roomByProvince.breadcrumb.current") },
+            ]}
+            className="text-sm"
+          />
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {isInvalidProvince ? (
+          <section className="rounded-3xl border border-dashed border-amber-300 bg-amber-50/80 px-6 py-16 text-center">
+            <p className="text-lg font-semibold text-amber-800">{t("public.roomByProvince.invalidTitle")}</p>
+            <p className="mt-2 text-sm text-amber-700">{t("public.roomByProvince.invalidDescription")}</p>
+            <div className="mt-6">
+              <Button asChild className="rounded-xl">
+                <Link to={ROUTERS.HOME}>{t("public.roomByProvince.backHome")}</Link>
+              </Button>
+            </div>
+          </section>
+        ) : isLoadingProvinces || isLoadingRooms ? (
+          <section className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center text-slate-500">
+            {t("public.roomByProvince.loading")}
+          </section>
+        ) : isError ? (
+          <section className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-16 text-center">
+            <p className="text-base font-semibold text-rose-600">{t("public.roomByProvince.loadError")}</p>
+            <div className="mt-6">
+              <Button className="rounded-xl" variant="outline" onClick={() => void refetch()}>
+                {t("public.roomByProvince.retry")}
+              </Button>
+            </div>
+          </section>
+        ) : totalRooms === 0 ? (
+          <section className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
+            <SearchX className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+            <p className="text-base font-semibold text-slate-700">{t("public.roomByProvince.emptyTitle")}</p>
+            <p className="mt-2 text-sm text-slate-500">{t("public.roomByProvince.emptyDescription")}</p>
+            <div className="mt-6">
+              <Button asChild className="rounded-xl" variant="outline">
+                <Link to={ROUTERS.HOME}>{t("public.roomByProvince.backHome")}</Link>
+              </Button>
+            </div>
+          </section>
+        ) : (
+          <>
+            <div className="mb-6 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600">
+                {t("public.roomByProvince.summary", {
+                  count: totalRooms,
+                  province: selectedProvince?.name || t("public.roomByProvince.breadcrumb.current"),
+                })}
+              </p>
+              <Badge variant="secondary" className="w-fit rounded-full bg-sky-50 px-3 py-1 text-sky-700">
+                <Filter className="mr-1 h-3.5 w-3.5" />
+                {t("public.roomByProvince.appliedFilter")}
+              </Badge>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              {pagedRooms.map((room) => {
+                const roomImage = room.room_image
+                  ? `${CLOUDINARY_HEADER_IMAGE_URL}/${room.room_image}`
+                  : "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80";
+
+                const statusValue = (room as RoomWithOptionalStatus).status;
+                const isAvailable = statusValue === undefined || statusValue === null || statusValue === 1 || statusValue === "1";
+
+                return (
+                  <Card
+                    key={room.id}
+                    className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:border-sky-300 hover:shadow-md flex flex-col md:flex-row"
+                  >
+                    <div className="relative h-64 md:h-auto md:w-72 lg:w-96 shrink-0 overflow-hidden">
+                      <img src={roomImage} alt={room.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-900/10 to-transparent md:hidden" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/20 via-transparent to-transparent hidden md:block" />
+                    </div>
+                    <CardContent className="flex-1 flex flex-col p-6">
+                      <div className="flex flex-col h-full gap-4">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-start justify-between">
+                            <h3 className="line-clamp-2 text-xl font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{room.title}</h3>
+                            <Badge variant="secondary" className={`rounded-full px-3 py-1 shrink-0 ${isAvailable ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-700'}`}>
+                              {isAvailable ? t("public.roomByProvince.roomStatus.available") : t("public.roomByProvince.roomStatus.private")}
+                            </Badge>
+                          </div>
+                          
+                          <p className="inline-flex items-start gap-2 text-sm text-slate-600">
+                            <MapPin className="mt-0.5 h-4 w-4 text-sky-500 shrink-0" />
+                            <span className="line-clamp-2">{room.building_address || t("public.roomByProvince.fallbackAddress")}</span>
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+                          <span className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                            <Users className="h-4 w-4 text-sky-500" />
+                            {t("public.roomByProvince.guests", { count: room.people })}
+                          </span>
+                        </div>
+
+                        <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{t("public.roomByProvince.priceLabel", "Từ")}</span>
+                            <span className="text-2xl font-bold text-sky-600">
+                              {formatPrice(room.cheapest_daily_price)}
+                              <span className="text-sm font-normal text-slate-500 ml-1">{t("public.roomByProvince.perNight")}</span>
+                            </span>
+                          </div>
+                          <div className="flex gap-3 shrink-0">
+                            <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-md shadow-sky-100 px-8">
+                              <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>
+                                {t("public.roomByProvince.viewDetails")}
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                perPage={limit}
+                onPerPageChange={handlePerPageChange}
+                totalItems={totalRooms}
+                perPageOptions={LIMIT_OPTIONS}
+                resultsText={t("public.roomByProvince.results")}
+              />
+            </div>
+          </>
+        )}
+      </main>
+
+      <PublicFooter />
+    </div>
+  );
+};
+
+export default RoomByProvince;

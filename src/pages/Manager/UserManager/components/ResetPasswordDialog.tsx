@@ -53,8 +53,8 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-blue-100 p-2">
-              <KeyRound className="size-5 text-blue-600" />
+            <div className="rounded-full bg-primary/10 p-2">
+              <KeyRound className="size-5 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">{t("user.reset_password")}</DialogTitle>
@@ -83,7 +83,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
                         placeholder={t("user.new_password_placeholder")}
                         {...field}
                         disabled={isLoading}
-                        className="border-gray-300 focus:border-blue-500 pr-10"
+                        className="border-gray-300 focus:border-primary pr-10"
                       />
                       <button
                         type="button"
@@ -116,7 +116,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
                         placeholder={t("user.new_password_confirmation_placeholder")}
                         {...field}
                         disabled={isLoading}
-                        className="border-gray-300 focus:border-blue-500 pr-10"
+                        className="border-gray-300 focus:border-primary pr-10"
                       />
                       <button
                         type="button"
@@ -137,7 +137,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading} className="flex-1">
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 size-4 animate-spin" />

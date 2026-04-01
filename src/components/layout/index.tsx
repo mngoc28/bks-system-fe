@@ -13,7 +13,7 @@ import ClassSidebar from "../ClassSidebar";
 
 // Mock class info
 const classInfo = {
-  name: " BKS Project",
+  name: " BKS Dashboard",
   acronym: "BKS",
 };
 
@@ -70,11 +70,11 @@ const Layout = () => {
       icon: <House />,
     },
     {
-      id: "bookings",
-      permissionKey: "booking:view",
-      label: t("menu.bookings"),
-      path: ROUTERS.BOOKING_MANAGE,
-      icon: <Calendar />,
+      id: "partner-information",
+      permissionKey: "partner-management:view",
+      label: t("menu.partner"),
+      path: ROUTERS.PARTNER_MANAGEMENT,
+      icon: <Handshake />
     },
     {
       id: "buildings",
@@ -91,6 +91,13 @@ const Layout = () => {
       icon: <DoorOpen />,
     },
     {
+      id: "bookings",
+      permissionKey: "booking:view",
+      label: t("menu.bookings"),
+      path: ROUTERS.BOOKING_MANAGE,
+      icon: <Calendar />,
+    },
+    {
       id: "amenities",
       permissionKey: "amenities:view",
       label: t("menu.amenities"),
@@ -98,18 +105,11 @@ const Layout = () => {
       icon: <Wrench />,
     },
     {
-      id: "question-management",
-      permissionKey: "question-management:view",
-      label: t("menu.chatbot", { defaultValue: "Chatbot" }),
-      path: ROUTERS.QUESTION_MANAGEMENT,
-      icon: <BotIcon className="w-5 h-5" />,
-    },
-    {
-      id: "user-management",
-      permissionKey: "user-management:view",
-      label: t("menu.user-management"),
-      path: ROUTERS.USER_MANAGEMENT,
-      icon: <Users2 />,
+      id: "service-management",
+      permissionKey: "service-management:view",
+      label: t("menu.service"),
+      path: ROUTERS.SERVICE_MANAGEMENT,
+      icon: <Cog />,
     },
     {
       id: "news-management",
@@ -126,19 +126,19 @@ const Layout = () => {
       icon: <MapPinned className="w-5 h-5" />,
     },
     {
-      id: "service-management",
-      permissionKey: "service-management:view",
-      label: t("menu.service"),
-      path: ROUTERS.SERVICE_MANAGEMENT,
-      icon: <Cog />,
+      id: "question-management",
+      permissionKey: "question-management:view",
+      label: t("menu.chatbot", { defaultValue: "Chatbot" }),
+      path: ROUTERS.QUESTION_MANAGEMENT,
+      icon: <BotIcon className="w-5 h-5" />,
     },
     {
-      id: "partner-information",
-      permissionKey: "partner-management:view",
-      label: t("menu.partner"),
-      path: ROUTERS.PARTNER_MANAGEMENT,
-      icon: <Handshake />
-    }
+      id: "user-management",
+      permissionKey: "user-management:view",
+      label: t("menu.user-management"),
+      path: ROUTERS.USER_MANAGEMENT,
+      icon: <Users2 />,
+    },
   ];
 
   // get page title from path name
@@ -217,8 +217,10 @@ const Layout = () => {
         />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header pageTitle={getpageTitle(location.pathname)} />
-          <div className="flex-1 overflow-y-auto">
-            <Outlet />
+          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto max-w-7xl space-y-6">
+              <Outlet />
+            </div>
           </div>
         </div>
       </main>

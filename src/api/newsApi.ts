@@ -28,4 +28,12 @@ export const newsApi = {
     // delete news
   deleteNews: async (id: number): Promise<ApiResponse<string>> =>
     axiosClient.delete(`admin/news/${id}`),
+
+  // Public news detail
+  getNewsDetailPublic: async (id: number): Promise<ApiResponse<News>> =>
+    axiosClient.get(`news/detail-news/${id}`),
+
+  // Public news list
+  getListNewsPublic: async (data: NewsFilters): Promise<ApiResponse<NewsListDataResponse>> =>
+    axiosClient.get("news/list-news", { params: data }),
 }

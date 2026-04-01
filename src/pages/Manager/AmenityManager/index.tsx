@@ -7,6 +7,7 @@ import { Filter, Plus } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAmenityDialog, AmenitySearchSection, AmenityTable, DeleteConfirmDialog, EditAmenityDialog } from "./components";
+import PageBar from "@/components/PageBar";
 
 // Main Amenity Management Component
 const AmenityManagement: React.FC = () => {
@@ -175,20 +176,22 @@ const AmenityManagement: React.FC = () => {
   };
 
   return (
-    <div className="flex w-full flex-col gap-6 p-[12px_24px]">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t("amenities.amenity_list")}</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700" onClick={() => setAddAmenityOpen(true)}>
-            <Plus className="size-4" />
-            {t("amenities.add_amenity")}
-          </Button>
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setOpen((v) => !v)}>
-            <Filter className="size-4" />
-            {t("amenities.filter_search")}
-          </Button>
-        </div>
-      </div>
+    <div className="flex w-full flex-col gap-6">
+      <PageBar
+        subtitle={t("amenities.amenity_list")}
+        actions={
+          <>
+            <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen((v) => !v)}>
+              <Filter className="size-4" />
+              {t("amenities.filter_search")}
+            </Button>
+            <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setAddAmenityOpen(true)}>
+              <Plus className="size-4" />
+              {t("amenities.add_amenity")}
+            </Button>
+          </>
+        }
+      />
 
       {open && (
         <AmenitySearchSection
@@ -200,29 +203,33 @@ const AmenityManagement: React.FC = () => {
         />
       )}
 
-      {isLoading ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
-      ) : totalItems === 0 ? (
-        <EmptyPage/>
-      ) : (
-        <AmenityTable
-          filtered={filtered}
-          page={page}
-          perPage={perPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          onPageChange={(p) => setPage(p)}
-          onPerPageChange={(pp) => {
-            setPerPage(pp);
-            setPage(DEFAULT_PAGE);
-          }}
-          onEdit={askEdit}
-          onDelete={askDelete}
-          highlightedId={highlightedId}
-          toggleSort={toggleSort}
-          filters={filters}
-        />
-      )}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="p-12 text-center text-sm text-slate-500">{t("common.loading")}</div>
+        ) : totalItems === 0 ? (
+          <div className="p-12">
+            <EmptyPage/>
+          </div>
+        ) : (
+          <AmenityTable
+            filtered={filtered}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={(p) => setPage(p)}
+            onPerPageChange={(pp) => {
+              setPerPage(pp);
+              setPage(DEFAULT_PAGE);
+            }}
+            onEdit={askEdit}
+            onDelete={askDelete}
+            highlightedId={highlightedId}
+            toggleSort={toggleSort}
+            filters={filters}
+          />
+        )}
+      </div>
 
       <DeleteConfirmDialog amenity={deleteTarget} isOpen={deleteOpen} isLoading={deleteLoading} onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} />
       <AddAmenityDialog isOpen={addAmenityOpen} isLoading={createAmenityLoading} serverError={serverError} existingAmenities={serverRows.map(item => item.name)} onClose={() => setAddAmenityOpen(false)} onSubmit={handleAddAmenity} />

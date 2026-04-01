@@ -35,7 +35,7 @@ const NewsGrid = ({
       {(headingText || descriptionText) && (
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-sky-700">
+            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary">
               {badgeIcon}
               {badgeText}
             </span>
@@ -45,7 +45,7 @@ const NewsGrid = ({
           {ctaText && (
             <Link
               to={primaryCta}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/60 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-200/60 transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               {ctaText}
             </Link>
@@ -70,9 +70,9 @@ const NewsGrid = ({
           {articles.map((article) => (
             <Link
               key={article.id}
-              to={`${ROUTERS.NEWS_DETAIL}/${article.slug}`}
+              to={ROUTERS.PUBLIC_NEWS_DETAIL.replace(":newsId", article.id.toString())}
               aria-label={t("public.home.news.cardLabel", { title: article.title })}
-              className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-sm transition hover:-translate-y-1 hover:border-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+              className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-sm transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
             <div className="relative h-44 w-full overflow-hidden">
               <img
@@ -84,7 +84,7 @@ const NewsGrid = ({
             </div>
             <div className="flex flex-1 flex-col gap-3 px-4 py-4">
               <div className="space-y-2">
-                <h3 className="text-[0.95rem] font-semibold text-slate-900 transition group-hover:text-sky-600">{article.title}</h3>
+                <h3 className="text-[0.95rem] font-semibold text-slate-900 transition group-hover:text-primary">{article.title}</h3>
                 {article.excerpt && (
                   <p className="text-[0.875rem] leading-relaxed text-slate-600 line-clamp-3">{article.excerpt}</p>
                 )}
@@ -92,7 +92,7 @@ const NewsGrid = ({
               {article.publishedAt && (
                 <div className="mt-auto flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
                   <span className="inline-flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-sky-500" />
+                    <Clock3 className="h-4 w-4 text-primary" />
                     {article.publishedAt}
                   </span>
                 </div>
@@ -107,7 +107,7 @@ const NewsGrid = ({
         <div className="mt-8 flex justify-center">
           <Link
             to={footerCta}
-            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/60 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-200/60 transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {footerText}
           </Link>

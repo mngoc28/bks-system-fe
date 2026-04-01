@@ -274,13 +274,13 @@ const UserManagement: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">{t("user.user_list")}</h1>
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700" onClick={() => setAddUserOpen(true)}>
-            <UserPlus className="size-4" />
-            {t("user.add_user")}
-          </Button>
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setOpen((v) => !v)}>
+          <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen((v) => !v)}>
             <Filter className="size-4" />
             {t("user.filter_search")}
+          </Button>
+          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setAddUserOpen(true)}>
+            <UserPlus className="size-4" />
+            {t("user.add_user")}
           </Button>
         </div>
       </div>
@@ -305,7 +305,7 @@ const UserManagement: React.FC = () => {
         <UsersEmptyState onOpenFilter={() => setOpen(true)} />
       ) : (
         <div className="flex flex-1 flex-col px-4">
-          <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white">
+          <div className="w-full overflow-auto rounded-xl border border-slate-200 bg-white">
             <UserTable
               users={filtered}
               currentUserEmail={currentUserEmail}

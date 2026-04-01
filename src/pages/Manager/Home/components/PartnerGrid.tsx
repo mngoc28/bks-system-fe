@@ -31,7 +31,7 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
             key={company.id}
             to={`${ROUTERS.PARTNER_DETAIL}/${company.id}`}
             aria-label={t("public.home.partners.cardLabel", { name: company.name })}
-            className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow transition hover:-translate-y-1 hover:border-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+            className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <div className="relative h-40 w-full overflow-hidden">
               <img
@@ -46,14 +46,14 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
             </div>
             <div className="flex flex-1 flex-col gap-2.5 px-5 py-4">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-[1rem] font-semibold text-slate-900 transition group-hover:text-sky-600">{company.name}</h3>
+                <h3 className="text-[1rem] font-semibold text-slate-900 transition group-hover:text-primary">{company.name}</h3>
               </div>
               <p className="inline-flex items-start gap-2 text-[0.875rem] leading-6 text-slate-600">
-                <MapPin className="mt-0.5 h-4 w-4 text-sky-500" />
+                <MapPin className="mt-0.5 h-4 w-4 text-primary" />
                 <span>{company.address}</span>
               </p>
-              <div className="mt-auto inline-flex items-center gap-2 text-[0.875rem] font-semibold text-sky-600">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-500" aria-hidden />
+              <div className="mt-auto inline-flex items-center gap-2 text-[0.875rem] font-semibold text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
                 <span className="tracking-wide">{trustText}</span>
               </div>
             </div>
@@ -65,7 +65,7 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
         <div className="mt-8 flex justify-center">
           <Link
             to={ctaHref}
-            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/60 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-200/60 transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {ctaText}
           </Link>
