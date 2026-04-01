@@ -102,23 +102,10 @@ const QuestionManagerPage = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-slate-800">{t("questions.title")}</h1>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
-          <Button variant="default" size="sm" className="flex w-full items-center gap-2 px-4 py-2 sm:w-auto" onClick={() => navigate(ROUTERS.QUESTION_CREATE, getNavigationState())}>
-            <Plus className="size-4" />
-            {t("questions.add")}
-          </Button>
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
-            className="flex w-full items-center justify-between gap-2 px-4 py-2 sm:w-auto"
-            onClick={() => navigate(ROUTERS.QUESTION_FLOW, getNavigationState())}
-          >
-            <span>{t("questions.flow.open_button")}</span>
-            <GitBranch className="size-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            className="flex w-full items-center gap-2 px-4 py-2 sm:w-auto"
+            className="flex w-full items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5 sm:w-auto"
             onClick={() => {
               setAutoOpenByParams(false);
               setOpenFilters((prev) => !prev);
@@ -126,6 +113,19 @@ const QuestionManagerPage = () => {
           >
             <Filter className="size-4" />
             {t("common.filter")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex w-full items-center justify-between gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5 sm:w-auto"
+            onClick={() => navigate(ROUTERS.QUESTION_FLOW, getNavigationState())}
+          >
+            <span>{t("questions.flow.open_button")}</span>
+            <GitBranch className="size-4" />
+          </Button>
+          <Button variant="default" size="sm" className="flex w-full items-center gap-2 px-4 py-2 sm:w-auto" onClick={() => navigate(ROUTERS.QUESTION_CREATE, getNavigationState())}>
+            <Plus className="size-4" />
+            {t("questions.add")}
           </Button>
         </div>
       </div>

@@ -34,7 +34,7 @@ src/
 │   ├── layout/         # Layout components
 │   └── ...
 ├── hooks/              # Custom React hooks
-├── locales/            # Đa ngôn ngữ (vi, en, ja)
+├── locales/            # Đa ngôn ngữ (vi, en)
 ├── pages/              # Page components
 ├── store/              # Zustand stores
 ├── utils/              # Utility functions
@@ -42,10 +42,9 @@ src/
 ```
 ## 🌐 Đa ngôn ngữ
 
-Hỗ trợ 3 ngôn ngữ:
+Hỗ trợ 2 ngôn ngữ:
 - 🇻🇳 Tiếng Việt (mặc định)
 - 🇺🇸 English
-- 🇯🇵 日本語
 
 ## 🎨 UI Components
 

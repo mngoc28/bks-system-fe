@@ -11,7 +11,7 @@ import {
 } from "@radix-ui/react-select";
 import { SelectValue } from "../ui/select";
 
-const LanguageOptions: string[] = ["en", "jp", "vi"];
+const LanguageOptions: string[] = ["vi", "en"];
 
 const Language = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
   ({ className, ...props }, ref) => {

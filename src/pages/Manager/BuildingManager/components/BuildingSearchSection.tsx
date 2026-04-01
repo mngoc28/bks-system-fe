@@ -21,7 +21,7 @@ const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = fa
   });
   if (!open) return null;
   return (
-    <div className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="space-y-3">
         <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-3">
           <div>
@@ -78,7 +78,7 @@ const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = fa
                   type="button"
                   onClick={() => setAreaMode("max")}
                   className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
-                    areaMode === "max" ? "border-blue-500 bg-blue-50 text-blue-600" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400 hover:text-gray-600"
+                    areaMode === "max" ? "border-primary bg-primary/10 text-primary" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400 hover:text-gray-600"
                   }`}
                   aria-label=""
                   tabIndex={0}
@@ -95,7 +95,7 @@ const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = fa
                   type="button"
                   onClick={() => setAreaMode("min")}
                   className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
-                    areaMode === "min" ? "border-blue-500 bg-blue-50 text-blue-600" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400 hover:text-gray-600"
+                    areaMode === "min" ? "border-primary bg-primary/10 text-primary" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400 hover:text-gray-600"
                   }`}
                   aria-label=""
                   tabIndex={0}

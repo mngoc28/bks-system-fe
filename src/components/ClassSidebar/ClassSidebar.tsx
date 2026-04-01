@@ -72,14 +72,14 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
             className={cn(
               "flex w-full items-center rounded-md transition-colors",
               compact ? "justify-center px-3 py-3" : "gap-2 px-4 py-3 text-lg",
-              isOpen ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-gray-50",
+              isOpen ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5",
             )}
             onClick={() => (compact ? handleMobileMenuIconClick(item) : handleToggleMenu(item.id))}
             aria-expanded={isOpen}
             aria-controls={`submenu-${item.id}`}
             title={item.label}
           >
-            <span className={cn("transition-colors", isOpen ? "text-blue-600" : "text-slate-500")}>{item.icon}</span>
+            <span className={cn("transition-colors", isOpen ? "text-white" : "text-slate-300")}>{item.icon}</span>
             {!compact && (
               <>
                 <span
@@ -109,12 +109,12 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
                   <li key={child.id}>
                     <Link
                       to={child.path!}
-                      className={cn("flex items-center gap-2 rounded-md px-4 py-2 text-base transition-colors", isChildActive ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-gray-50")}
+                      className={cn("flex items-center gap-2 rounded-md px-4 py-2 text-base transition-colors", isChildActive ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5")}
                       onClick={() => {
                         if (isMobile) setIsSheetOpen(false);
                       }}
                     >
-                      <span className={isChildActive ? "text-blue-600" : "text-slate-500"}>{child.icon}</span>
+                      <span className={isChildActive ? "text-white" : "text-slate-300"}>{child.icon}</span>
                       {child.label}
                     </Link>
                   </li>
@@ -133,9 +133,9 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
           <Link
             to={item.path!}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-md transition-colors",
+              "relative flex items-center justify-center gap-2 rounded-md transition-all duration-200",
               compact ? "px-3 py-3" : "px-4 py-3 text-lg",
-              isActive ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-gray-50",
+              isActive ? "bg-white/10 text-white shadow-inner" : "text-slate-300 hover:bg-white/5",
             )}
             onClick={() => {
               setOpenMenus({});
@@ -145,7 +145,10 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
             }}
             title={item.label}
           >
-            <span className={isActive ? "text-blue-600" : "text-slate-500"}>{item.icon}</span>
+            {isActive && (
+              <span className="absolute left-0 top-1/4 h-1/2 w-1 rounded-r-full bg-white transition-all duration-300" />
+            )}
+            <span className={cn("transition-all duration-200", isActive ? "scale-110 text-white" : "text-slate-300")}>{item.icon}</span>
           </Link>
         </li>
       );
@@ -156,15 +159,18 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
         <Link
           to={item.path!}
           className={cn(
-            "flex items-center gap-2 rounded-md px-4 py-3 text-lg transition-colors",
-            isActive ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-gray-50",
+            "relative flex items-center gap-2 rounded-md px-4 py-3 text-lg transition-all duration-200",
+            isActive ? "bg-white/10 text-white shadow-inner" : "text-slate-300 hover:bg-white/5",
           )}
           onClick={() => {
             setOpenMenus({});
             if (isMobile) setIsSheetOpen(false);
           }}
         >
-          <span className={cn("transition-colors", isActive ? "text-blue-600" : "text-slate-500")}>{item.icon}</span>
+          {isActive && (
+            <span className="absolute left-0 top-1/4 h-1/2 w-1 rounded-r-full bg-white transition-all duration-300" />
+          )}
+          <span className={cn("transition-all duration-200", isActive ? "scale-110 text-white" : "text-slate-300")}>{item.icon}</span>
           <span
             className={cn(
               "flex-1 whitespace-nowrap transition-all duration-200 ease-out",
@@ -181,7 +187,7 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
   const renderFullSidebar = () => (
     <div
       className={cn(
-        "flex h-full flex-col border-r border-slate-300 bg-white transition-[width] duration-200 ease-in-out",
+        "flex h-full flex-col border-r border-white/10 bg-gradient-to-b from-primary via-[#1e3a8a] to-[#1e40af] transition-[width] duration-200 ease-in-out",
         isCollapsed ? "w-[88px] px-3 py-6" : "w-[300px] p-6",
         className,
       )}
@@ -189,19 +195,19 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
       <div className={cn("flex items-center", isCollapsed ? "justify-center gap-3" : "justify-between")}>
         <span
           className={cn(
-            "font-bold text-slate-700 transition-all duration-200",
+            "font-extrabold tracking-tight text-white transition-all duration-200",
             isCollapsed ? "text-xl" : "text-2xl",
             !isCollapsed && !showLabels ? "opacity-0 translate-x-2" : "opacity-100 translate-x-0",
           )}
         >
-          {isCollapsed ? classInfo.acronym : classInfo.name}
+          {isCollapsed ? classInfo.acronym : classInfo.name.toUpperCase()}
         </span>
         <button
           type="button"
           onClick={onToggleCollapse}
           className={cn(
-            "rounded-full bg-slate-100 p-1.5 text-slate-600 shadow-sm transition hover:bg-slate-200 hover:text-slate-800",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400"
+            "rounded-full bg-white/10 p-1.5 text-white/80 shadow-sm transition hover:bg-white/20 hover:text-white",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/20"
           )}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -217,9 +223,9 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
   );
 
   const renderMobileSidebar = () => (
-    <div className="flex h-full w-[80px] flex-col border-r border-slate-300 bg-white p-4">
+    <div className="flex h-full w-[80px] flex-col border-r border-white/10 bg-gradient-to-b from-primary via-[#1e3a8a] to-[#1e40af] p-4">
       <div className="flex items-center justify-center">
-        <span className="text-xl font-bold text-slate-700">{classInfo.acronym}</span>
+        <span className="text-xl font-bold text-white">{classInfo.acronym}</span>
       </div>
       <nav className="mt-4 flex-1 overflow-y-auto">
         <ul className="space-y-3">{menuItems.map((item) => renderMenuItem(item, { isMobileView: true }))}</ul>

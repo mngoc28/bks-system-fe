@@ -65,3 +65,20 @@ export const useLatestNewsQuery = (limit = 6) => {
         queryFn: async () => newsApi.getLatestNews({ limit }),
     });
 }
+
+// news detail public
+export const useNewsDetailPublicQuery = (id: number) => {
+    return useQuery<ApiResponse<News>, Error>({
+        queryKey: ['news-detail-public', id],
+        queryFn: async () => newsApi.getNewsDetailPublic(id),
+        enabled: id > 0,
+    });
+}
+
+// news list public
+export const useListNewsPublicQuery = (data: NewsFilters) => {
+    return useQuery<ApiResponse<NewsListDataResponse>, Error>({
+        queryKey: ['news-list-public', data],
+        queryFn: async () => newsApi.getListNewsPublic(data),
+    });
+}

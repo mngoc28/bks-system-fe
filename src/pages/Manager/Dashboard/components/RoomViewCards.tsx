@@ -14,7 +14,7 @@ const PartnerViewCards: React.FC = () => {
       label: t("dashboard.total_rooms"),
       value: partner?.totalRooms ?? 0,
       icon: Building,
-      color: "text-blue-700",
+      color: "text-primary",
     },
     {
       label: t("dashboard.total_private_rooms"),

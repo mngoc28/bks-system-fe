@@ -21,7 +21,7 @@ const UserSearchSection: React.FC<UserSearchSectionProps> = ({
   if (!open) return null;
 
   return (
-    <div className="mt-4 w-full rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
+    <div className="mt-4 w-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="space-y-3">
         <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-4">
           <div>

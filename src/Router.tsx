@@ -14,9 +14,12 @@ const PublicLayout = React.lazy(() => import("./components/layout/PublicLayout/P
 const PartnerList = React.lazy(() => import("./pages/EndUser/PartnerList"));
 const PartnerDetail = React.lazy(() => import("./pages/EndUser/PartnerDetail"));
 const RoomSearch = React.lazy(() => import("./pages/EndUser/RoomSearch"));
+const RoomByProvince = React.lazy(() => import("./pages/EndUser/RoomByProvince"));
 const PublicRoomDetail = React.lazy(() => import("./pages/EndUser/RoomDetail"));
 const MyBookings = React.lazy(() => import("./pages/EndUser/MyBookings"));
 const BookingSuccess = React.lazy(() => import("./pages/EndUser/BookingSuccess"));
+const PublicNewsDetail = React.lazy(() => import("./pages/EndUser/NewsDetail"));
+const PublicNewsList = React.lazy(() => import("./pages/EndUser/NewsList"));
 const Login = React.lazy(() => import("./pages/Manager/Login"));
 const Register = React.lazy(() => import("./pages/Manager/Register"));
 const CompanyHub = React.lazy(() => import("./pages/Manager/CompanyHub"));
@@ -54,6 +57,15 @@ const NewsDetail = React.lazy(() => import("./pages/Manager/NewsDetail"));
 const NewsEdit = React.lazy(() => import("./pages/Manager/NewsEdit"));
 const NewsAdd = React.lazy(() => import("./pages/Manager/NewsAdd"));
 const Booking = React.lazy(() => import("./pages/EndUser/Booking/BookingPage"));
+
+// Partner Routes
+const PartnerLayout = React.lazy(() => import("./pages/Partner/PartnerLayout"));
+const PartnerDashboard = React.lazy(() => import("./pages/Partner/Dashboard"));
+const PartnerProperties = React.lazy(() => import("./pages/Partner/Properties"));
+const PartnerBookings = React.lazy(() => import("./pages/Partner/Bookings"));
+const PartnerMaintenances = React.lazy(() => import("./pages/Partner/Maintenances"));
+const PartnerFinance = React.lazy(() => import("./pages/Partner/Finance"));
+
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center">
     <div className="size-12 animate-spin rounded-full border-y-2 border-blue-500"></div>
@@ -104,11 +116,14 @@ export default function Router() {
           <Route path={ROUTERS.PARTNERS} element={<PartnerList />} />
           <Route path={ROUTERS.PARTNER_DETAIL} element={<PartnerDetail />} />
           <Route path={ROUTERS.SEARCH_ROOMS} element={<RoomSearch />} />
+          <Route path={ROUTERS.SEARCH_ROOMS_BY_PROVINCE} element={<RoomByProvince />} />
           <Route path={ROUTERS.PUBLIC_ROOM_DETAIL} element={<PublicRoomDetail />} />
           <Route path={ROUTERS.MY_BOOKINGS} element={<MyBookings />} />
           <Route path={ROUTERS.BOOKING_SUCCESS} element={<BookingSuccess />} />
           <Route path={`${ROUTERS.BOOKING}/:roomId`} element={<Booking />} />
           <Route path={ROUTERS.COMPANY_HUB} element={<CompanyHub />} />
+          <Route path={ROUTERS.PUBLIC_NEWS_DETAIL} element={<PublicNewsDetail />} />
+          <Route path={ROUTERS.PUBLIC_NEWS_LIST} element={<PublicNewsList />} />
         </Route>
 
         {/* Public Routes */}
@@ -216,6 +231,24 @@ export default function Router() {
           <Route path={ROUTERS.NEWS_EDIT + "/:id"} element={<NewsEdit />} />
           <Route path={ROUTERS.NEWS_ADD} element={<NewsAdd />} />
         </Route>
+
+        {/* Partner Routes */}
+        <Route
+          path="/partner"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <PartnerLayout />
+            </Suspense>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<PartnerDashboard />} />
+          <Route path="properties" element={<PartnerProperties />} />
+          <Route path="bookings" element={<PartnerBookings />} />
+          <Route path="maintenances" element={<PartnerMaintenances />} />
+          <Route path="finance" element={<PartnerFinance />} />
+        </Route>
+
         {/* 404 - Redirect to Login */}
         <Route path={ROUTERS.NOT_FOUND} element={<Navigate to={ROUTERS.LOGIN} replace />} />
         <Route path="*" element={<Navigate to={ROUTERS.LOGIN} replace />} />

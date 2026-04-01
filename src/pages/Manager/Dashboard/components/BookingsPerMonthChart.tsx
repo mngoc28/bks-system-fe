@@ -60,11 +60,11 @@ const BookingsPerMonthChart: React.FC = () => {
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-30 sm:w-45 h-8 text-[13px] sm:h-10 sm:text-[15px]" placeholder={t("dashboard.end_date")} />
             </div>
           </div>
-          <Button onClick={handleApplyDateRange} size="sm" variant="outline" className="h-8 bg-blue-500 text-slate-100 hover:bg-blue-600 hover:text-zinc-100 sm:h-10">
+          <Button onClick={handleApplyDateRange} size="sm" variant="outline" className="h-8 bg-primary text-slate-100 hover:bg-primary-hover hover:text-zinc-100 sm:h-10">
             {t("common.apply")}
           </Button>
           {(appliedStartDate || appliedEndDate) && (
-            <Button onClick={handleResetDateRange} size="sm" variant="ghost" className="h-8 bg-blue-500 text-slate-100 hover:bg-blue-600 hover:text-zinc-100 sm:h-10">
+            <Button onClick={handleResetDateRange} size="sm" variant="ghost" className="h-8 bg-primary text-slate-100 hover:bg-primary-hover hover:text-zinc-100 sm:h-10">
               {t("common.reset")}
             </Button>
           )}
@@ -82,7 +82,7 @@ const BookingsPerMonthChart: React.FC = () => {
                 <YAxis tick={{ fontSize: 12 }} width={60} />
                 <Tooltip formatter={(value: any) => value.toLocaleString()} />
                 <Legend />
-                <Line type="monotone" dataKey="total" stroke="#3B82F6" strokeWidth={2} name={t("dashboard.bookings")} />
+                <Line type="monotone" dataKey="total" stroke="#1e40af" strokeWidth={2} name={t("dashboard.bookings")} />
               </LineChart>
             </ResponsiveContainer>
           </div>

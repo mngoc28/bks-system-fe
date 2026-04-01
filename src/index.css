@@ -13,8 +13,10 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --primary: 225 73% 25%; /* Navy Blue #1e40af */
     --primary-foreground: 0 0% 98%;
+    --primary-hover: 225 73% 20%;
+    --primary-light: 225 73% 90%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
@@ -164,7 +166,7 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth; */
   }
 
   body[data-radix-select-open] {
@@ -314,4 +316,22 @@
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ========================================
+   Global Admin Table Row Hover Effect
+   ======================================== */
+.admin-table tbody tr {
+  position: relative;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-table tbody tr:hover {
+  background-color: hsl(225 73% 25% / 0.03);
+  box-shadow: inset 3px 0 0 hsl(225 73% 25%);
+}
+
+/* Smooth subtle row separator */
+.admin-table tbody tr + tr {
+  border-top: 1px solid hsl(var(--border));
 }

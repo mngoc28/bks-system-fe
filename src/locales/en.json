@@ -3,8 +3,7 @@
     "label": "Language",
     "options": {
       "vi": "Vietnamese",
-      "en": "English",
-      "ja": "Japanese"
+      "en": "English"
     }
   },
   "public": {
@@ -145,6 +144,35 @@
           "home": "Home",
           "current": "Companies by province"
         }
+      }
+    },
+    "roomByProvince": {
+      "badge": "Rooms by Province",
+      "title": "Rooms in {{province}}",
+      "titleFallback": "Rooms by Province",
+      "subtitle": "Browse available rooms in your selected destination.",
+      "breadcrumb": {
+        "search": "Room search",
+        "current": "Province"
+      },
+      "summary": "Found {{count}} rooms in {{province}}",
+      "appliedFilter": "Province filter applied",
+      "invalidTitle": "Invalid province",
+      "invalidDescription": "The province in this URL was not found. Please go back and choose another area.",
+      "emptyTitle": "No rooms in this area yet",
+      "emptyDescription": "Try another province to discover more options.",
+      "loading": "Loading room listings...",
+      "loadError": "Unable to load rooms. Please try again.",
+      "retry": "Retry",
+      "backHome": "Back to home",
+      "viewDetails": "View details",
+      "perNight": "/night",
+      "guests": "{{count}} guests",
+      "results": "rooms",
+      "fallbackAddress": "Address updating",
+      "roomStatus": {
+        "available": "Available",
+        "private": "Private"
       }
     },
     "scrollToTop": "Scroll to top"

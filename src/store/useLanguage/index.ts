@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 const COOKIE_KEY = "horizon-study-lang";
 const FALLBACK_LANGUAGE = "vi";
-const SUPPORTED_LANGUAGES = ["vi", "en", "ja"] as const;
+const SUPPORTED_LANGUAGES = ["vi", "en"] as const;
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const normalizeLanguage = (rawLanguage?: string | null): SupportedLanguage => {
@@ -11,7 +11,7 @@ const normalizeLanguage = (rawLanguage?: string | null): SupportedLanguage => {
     return FALLBACK_LANGUAGE;
   }
 
-  const mapped = rawLanguage === "jp" ? "ja" : rawLanguage;
+  const mapped = rawLanguage.toLowerCase();
   return (SUPPORTED_LANGUAGES as ReadonlyArray<string>).includes(mapped) ? (mapped as SupportedLanguage) : FALLBACK_LANGUAGE;
 };
 

@@ -280,13 +280,13 @@ const PublicHome = () => {
 
           <div className="relative z-20 mx-auto flex h-full w-full max-w-6xl flex-col justify-center gap-10 px-6 py-16">
             <div className="max-w-2xl space-y-4">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-sky-200">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-primary-10">
                 {t("public.home.hero.badge")}
               </span>
               <h1 className="text-[2.5rem] font-bold leading-tight sm:text-[3rem]">
                 {t("public.home.hero.title")}
               </h1>
-              <p className="text-base text-sky-100/90">
+              <p className="text-base text-slate-200">
                 {t("public.home.hero.description")}
               </p>
             </div>
@@ -306,7 +306,7 @@ const PublicHome = () => {
                 loading={isLoadingProvinces}
                 icon={<MapPin className="h-5 w-5" />}
                 showSearch
-                triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-sky-300"
+                triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50"
                 contentClassName="bg-white text-slate-900"
               />
 
@@ -321,13 +321,13 @@ const PublicHome = () => {
                 loading={isLoadingDistricts}
                 icon={<MapPin className="h-5 w-5" />}
                 showSearch
-                triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-sky-300 disabled:opacity-60"
+                triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60"
                 contentClassName="bg-white text-slate-900"
               />
 
               <button
                 type="submit"
-                className="flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-8 text-base font-semibold text-white shadow-xl transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-14 items-center justify-center rounded-2xl bg-primary px-8 text-base font-semibold text-white shadow-xl transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={!provinceId}
               >
               <Search className="mr-2 h-5 w-5" />
@@ -365,7 +365,8 @@ const PublicHome = () => {
           heading={t("public.home.news.heading")}
           description={t("public.home.news.description")}
           articles={latestNews}
-          ctaHref={ROUTERS.NEWS}
+          ctaHref={ROUTERS.PUBLIC_NEWS_LIST}
+          ctaLabel={t("public.home.news.ctaLabel", "Xem thêm")}
           footerLabel={t("public.home.news.footerCta")}
           loading={isLoadingNews}
           error={isErrorNews}

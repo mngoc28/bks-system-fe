@@ -1,5 +1,6 @@
 import EmptyPage from "@/components/EmptyPage";
 import Pagination from "@/components/Pagination";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from "@/constant";
 import { CreateServiceRequest, Service, ServiceFilters } from "@/dataHelper/service.dataHelper";
 import { useAllServicesQuery, useCreateServiceMutation, useDeleteServicesMutation, useGetServicesMutation, useUpdateServiceMutation } from "@/hooks/useServiceQuery";
@@ -198,18 +199,20 @@ const ServiceManagement: React.FC = () => {
     };
 
     return (
-        <div className="flex w-full flex-col gap-6 p-[12px_24px]">
+        <div className="flex w-full flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h1 className="text-xl font-bold text-slate-800">{t('serviceManagement.title')}</h1>
-                <div className="flex item-center gap-2">
-                    <button onClick={() => setAddServiceOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-                        <Plus className="size-4" />
-                        {t('serviceManagement.addService')}
-                    </button>
-                    <button onClick={() => setOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{t('serviceManagement.title')}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen(true)}>
                         <Filter className="size-4" />
                         {t('serviceManagement.filter_search')}
-                    </button>
+                    </Button>
+                    <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setAddServiceOpen(true)}>
+                        <Plus className="size-4" />
+                        {t('serviceManagement.addService')}
+                    </Button>
                 </div>
             </div>
             {open && (
@@ -226,40 +229,44 @@ const ServiceManagement: React.FC = () => {
                     onClose={() => setOpen(false)}
                 />
             )}
-            {isLoading ? (
-                <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
-            ) : totalItems === 0 ? (
-                <EmptyPage />
-            ) : (
-                <div className="w-full  rounded-lg border border-blue-100 bg-white">
-                    <ServiceTable
-                        filtered={filtered}
-                        onSort={toggleSort}
-                        onEdit={askEditService}
-                        onView={askViewService}
-                        onDelete={askDeleteService}
-                        filters={filters}
-                    />
-                    {totalItems > 0 && (
-                        <div className="p-4">
-                            <Pagination
-                                currentPage={page}
-                                totalPages={totalPages}
-                                onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-                                perPage={perPage}
-                                onPerPageChange={(pp) =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        per_page: pp,
-                                        page: DEFAULT_PAGE,
-                                    }))
-                                }
-                                totalItems={totalItems}
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                {isLoading ? (
+                    <div className="p-12 text-center text-sm text-slate-500">{t("common.loading")}</div>
+                ) : totalItems === 0 ? (
+                    <div className="p-12">
+                        <EmptyPage />
+                    </div>
+                ) : (
+                    <>
+                        <ServiceTable
+                            filtered={filtered}
+                            onSort={toggleSort}
+                            onEdit={askEditService}
+                            onView={askViewService}
+                            onDelete={askDeleteService}
+                            filters={filters}
+                        />
+                        {totalItems > 0 && (
+                            <div className="p-4 border-t border-slate-100">
+                                <Pagination
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+                                    perPage={perPage}
+                                    onPerPageChange={(pp) =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            per_page: pp,
+                                            page: DEFAULT_PAGE,
+                                        }))
+                                    }
+                                    totalItems={totalItems}
+                                />
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
 
             <DeleteConfirmDialog service={deleteTarget} isOpen={deleteOpen} isLoading={deleteLoading} onClose={() => setDeleteOpen(false)} onConfirm={handleDeleteService} />
             <AddServiceDialog isOpen={addServiceOpen} isLoading={createServiceLoading} serverError={serverError} existingServices={names} onClose={() => setAddServiceOpen(false)} onSubmit={handleAddService} />

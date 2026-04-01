@@ -11,22 +11,22 @@ const BuildingHeader: React.FC<BuildingHeaderProps> = ({ onCreateBuilding, onOpe
       <h1 className="flex-1 text-xl font-bold text-slate-800">{t("buildings.building_list")}</h1>
       <div className="flex flex-wrap items-center justify-end gap-2">
         <Button
-          variant="default"
+          variant="outline"
           size="sm"
-          className="flex items-center gap-2 bg-blue-600 px-4 py-2 hover:bg-blue-700"
-          onClick={onCreateBuilding}
-        >
-          <Plus className="size-4" />
-          {t("buildings.create_building")}
-        </Button>
-        <Button
-          variant="default"
-          size="sm"
-          className="flex items-center gap-2 bg-blue-600 px-4 py-2 hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5"
           onClick={onOpenFilter}
         >
           <Filter className="size-4" />
           {t("common.filter")}
+        </Button>
+        <Button
+          variant="default"
+          size="sm"
+          className="flex items-center gap-2 px-4 py-2"
+          onClick={onCreateBuilding}
+        >
+          <Plus className="size-4" />
+          {t("buildings.create_building")}
         </Button>
       </div>
     </div>

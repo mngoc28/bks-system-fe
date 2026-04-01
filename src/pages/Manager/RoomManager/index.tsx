@@ -208,13 +208,13 @@ const RoomManager: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">{t("rooms.room_list")}</h1>
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm" className="flex items-center gap-2 bg-blue-600 px-4 py-2 hover:bg-blue-700" onClick={handleCreateRoom}>
-            <Plus className="size-4" />
-            {t("rooms.create_room")}
-          </Button>
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setOpen((v) => !v)}>
+          <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen((v) => !v)}>
             <Filter className="size-4" />
             {t("common.filter")}
+          </Button>
+          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={handleCreateRoom}>
+            <Plus className="size-4" />
+            {t("rooms.create_room")}
           </Button>
         </div>
       </div>

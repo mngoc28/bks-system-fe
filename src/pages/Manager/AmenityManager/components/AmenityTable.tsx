@@ -24,10 +24,10 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
   const { t } = useTranslation();
   return (
     <div className="flex flex-1 flex-col px-4">
-      <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white">
-        <Table className="min-w-max bg-white text-sm text-slate-700">
+      <div className="w-full overflow-auto">
+        <Table className="admin-table min-w-max bg-white text-sm text-slate-700">
           <TableHeader>
-            <tr className="bg-slate-100">
+            <tr className="bg-slate-50/80 border-b border-slate-200">
               <TableHead
                 className="cursor-pointer select-none whitespace-nowrap px-4 py-3 text-center text-slate-700"
                 onClick={() => toggleSort("id")}

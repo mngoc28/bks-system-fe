@@ -210,6 +210,15 @@ export default function BookingManagePage() {
         <h1 className="text-xl font-bold text-slate-800">{t("bookings.title")}</h1>
         <div className="flex flex-row items-end gap-2">
           <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <Filter className="size-4" />
+            {t("bookings.filter")}
+          </Button>
+          <Button
             variant="default"
             size="sm"
             className="flex items-center gap-2 px-4 py-2"
@@ -217,15 +226,6 @@ export default function BookingManagePage() {
           >
             <Plus className="size-4" />
             {t("bookings.create")}
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            className="flex items-center gap-2 px-4 py-2"
-            onClick={() => setOpen((v) => !v)}
-          >
-            <Filter className="size-4" />
-            {t("bookings.filter")}
           </Button>
         </div>
       </div>
@@ -252,11 +252,11 @@ export default function BookingManagePage() {
       ) : totalItems === 0 ? (
         <BookingsEmptyState onOpenFilter={() => setOpen(true)} />
       ) : (
-        <div className="w-full bg-white rounded-lg border border-blue-100">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="w-full overflow-x-auto">
           <Table className="w-full min-w-[1280px] text-sm text-slate-700">
           <TableHeader>
-            <tr className="bg-slate-100">
+            <tr className="bg-slate-50/80 border-b border-slate-200">
               <TableHead
                 className="px-4 py-3 text-slate-700 whitespace-nowrap cursor-pointer select-none text-center"
                 onClick={() => toggleSort("id")}

@@ -53,7 +53,7 @@ const FloatingChatbot = () => {
   return (
     <div ref={containerRef} className="pointer-events-auto relative">
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-3 w-[360px] overflow-hidden rounded-[32px] border border-sky-200/80 bg-white/95 shadow-2xl shadow-sky-200/70 backdrop-blur">
+        <div className="absolute bottom-full right-0 mb-3 w-[360px] overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/95 shadow-2xl shadow-slate-200/70 backdrop-blur">
           <PublicChatbot onClose={() => setIsOpen(false)} />
         </div>
       )}
@@ -61,7 +61,7 @@ const FloatingChatbot = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="group inline-flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-500 text-white shadow-lg shadow-sky-200/70 transition hover:scale-105 hover:shadow-xl hover:shadow-sky-300/70"
+        className="group inline-flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-slate-200/70 transition hover:scale-105 hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-300/70"
         aria-expanded={isOpen}
         aria-label={isOpen ? "Đóng chatbot" : "Mở chatbot"}
       >

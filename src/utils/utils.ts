@@ -3,7 +3,7 @@ import React from "react";
 // Status color mapping for booking status
 export const statusColor: Record<string, string> = {
   pending: "bg-yellow-50 text-yellow-700",
-  confirmed: "bg-blue-50 text-blue-700",
+  confirmed: "bg-primary/10 text-primary",
   cancelled: "bg-red-50 text-red-700",
   completed: "bg-green-50 text-green-700",
 };
@@ -16,7 +16,7 @@ export const statusColor: Record<string, string> = {
 export function statusNews(status: number): {status: string, color: string} {
   switch (status) {
     case 0: return {status: "news.status_draft", color: "bg-yellow-50 text-yellow-700"};
-    case 1: return {status: "news.status_published", color: "bg-blue-50 text-blue-700"};
+    case 1: return {status: "news.status_published", color: "bg-primary/10 text-primary"};
     case 2: return {status: "news.status_archived", color: "bg-red-50 text-red-700"};
     default: return {status: "news.status_draft", color: "bg-yellow-50 text-yellow-700"};
   }
