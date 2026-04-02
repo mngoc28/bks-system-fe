@@ -5,6 +5,7 @@ import { useBookingsPerMonthQuery } from "@/hooks/useDashboardQuery";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getDashboardDateRange, setDashboardDateRange } from "@/utils/storage";
+import { Spinner } from "@/components/ui/spinner";
 
 const BookingsPerMonthChart: React.FC = () => {
   const { t } = useTranslation();
@@ -72,7 +73,9 @@ const BookingsPerMonthChart: React.FC = () => {
       </div>
       <div className="min-w-0 rounded border border-slate-200 bg-white p-4">
         {isLoading ? (
-          <div className="flex h-80 items-center justify-center">{t("common.loading")}</div>
+          <div className="flex h-80 items-center justify-center">
+            <Spinner size="md" showText text={t("common.loading_data")} />
+          </div>
         ) : chartData.length > 0 ? (
           <div className="h-80 min-h-0 w-full">
             <ResponsiveContainer width="100%" height="100%">

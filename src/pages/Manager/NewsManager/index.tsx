@@ -1,25 +1,22 @@
 import { useDeleteNewsMutation, useNewsQuery } from "@/hooks/useNewsQuery";
-import { DeleteNewsDialog, NewsHeader, NewsSearchSection } from "./components";
-import { DEFAULT_PAGE, DEFAULT_PAGINATION, DEFAULT_TOTAL, ROUTERS } from "@/constant";
-import NewsTable from "./components/NewsTable";
+import { DeleteNewsDialog, NewsHeader, NewsSearchSection, NewsCard } from "./components";
+import { DEFAULT_PAGE, DEFAULT_CARD_LIMIT, DEFAULT_TOTAL, ROUTERS } from "@/constant";
 import { useTranslation } from "react-i18next";
 import EmptyPage from "@/components/EmptyPage";
-// import { useNavigate } from "react-router";
 import { useState } from "react";
 import { News, NewsFilters } from "@/dataHelper/news.dataHelper";
 import Pagination from "@/components/Pagination";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { useNavigate } from "react-router";
+import { Spinner } from "@/components/ui/spinner";
 
 const NewsManager: React.FC = () => {
   const { t } = useTranslation();
-  // navigate 
   const navigate = useNavigate();
 
-  //search params
   const [searchParams, setSearchParams] = useState<NewsFilters>({
     page: DEFAULT_PAGE,
-    per_page: DEFAULT_PAGINATION,
+    per_page: DEFAULT_CARD_LIMIT,
     sort_field: "",
     sort_direction: undefined,
     title: "",
@@ -27,21 +24,17 @@ const NewsManager: React.FC = () => {
   });
 
   const { data: news, isLoading: isLoadingNews, isError: errorNews } = useNewsQuery(searchParams);
-  // delete news
   const deleteNewsMutation = useDeleteNewsMutation();
 
-  // delete news dialog
   const [deleteTarget, setDeleteTarget] = useState<News | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  // ask delete news
   const askDeleteNews = (id: number) => {
     const target = news?.data?.data?.find((x: News) => x.id === id) || null;
     setDeleteTarget(target);
     setDeleteOpen(true);
   };
 
-  // confirm delete news
   const confirmDeleteNews = async () => {
     if (!deleteTarget) return;
     try {
@@ -54,46 +47,31 @@ const NewsManager: React.FC = () => {
     }
   };
 
-  // toggle sort
-  const toggleSort = (key: string) => {
-    setSearchParams((prev) => {
-      if (prev.sort_field === key) {
-        return { ...prev, sort_direction: prev.sort_direction === "asc" ? "desc" : "asc" };
-      }
-      return { ...prev, sort_field: key, sort_direction: "asc" };
-    });
-  };
-
-  // search open
   const [searchOpen, setSearchOpen] = useState(false);
   const handleOpenSearch = () => {
-    setSearchParams((prev) => ({ ...prev, page: DEFAULT_PAGE, per_page: DEFAULT_PAGINATION, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "" }));
+    setSearchParams((prev) => ({ ...prev, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "" }));
     setSearchOpen(true);
   };
   const handleCloseSearch = () => {
     setSearchOpen(false);
   };
 
-  // show detail news
   const showDetailNews = (id: number) => {
     navigate(`${ROUTERS.NEWS_DETAIL}/${id}`)
   }
 
-  // show edit news
   const showEditNews = (id: number) => {
     navigate(`${ROUTERS.NEWS_EDIT}/${id}`)
   }
 
-  // show create news
   const showCreateNews = () => {
     navigate(ROUTERS.NEWS_ADD)
   }
 
-  // pagination
   const totalItems = news?.data?.total ?? DEFAULT_TOTAL;
   const totalPages = news?.data?.last_page ?? DEFAULT_PAGE;
   const page = news?.data?.current_page ?? DEFAULT_PAGE;
-  const perPage = news?.data?.per_page ?? DEFAULT_PAGINATION;
+  const perPage = news?.data?.per_page ?? DEFAULT_CARD_LIMIT;
 
   return (
     <div className="flex w-full flex-col gap-6 p-[12px_24px]">
@@ -109,28 +87,32 @@ const NewsManager: React.FC = () => {
         open={searchOpen}
         filters={searchParams}
         setFilters={setSearchParams}
-        onReset={() => setSearchParams({ ...searchParams, page: DEFAULT_PAGE, per_page: DEFAULT_PAGINATION, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "" })}
+        onReset={() => setSearchParams({ ...searchParams, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "" })}
         onClose={handleCloseSearch}
       />
       {
         isLoadingNews ? (
-          <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
+          <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+            <Spinner size="lg" showText text={t("common.loading_data")} />
+          </div>
         ) : errorNews ? (
           <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.error")}</div>
         ) :
           totalItems === 0 ? (
             <EmptyPage />
           ) : (
-            <>
-              <NewsTable
-                news={news?.data}
-                onDelete={askDeleteNews}
-                onEdit={(id: number) => showEditNews(id)}
-                onView={(id: number) => showDetailNews(id)}
-                onSort={toggleSort}
-                sortField={searchParams.sort_field}
-                sortDirection={searchParams.sort_direction}
-              />
+            <div className="flex flex-col gap-8">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+                {news?.data?.data?.map((item: News) => (
+                  <NewsCard
+                    key={item.id}
+                    news={item}
+                    onView={showDetailNews}
+                    onEdit={showEditNews}
+                    onDelete={askDeleteNews}
+                  />
+                ))}
+              </div>
               {totalItems > 0 && (
                 <div className="p-4">
                   <Pagination
@@ -140,10 +122,11 @@ const NewsManager: React.FC = () => {
                     perPage={perPage}
                     onPerPageChange={(perPage) => setSearchParams((prev) => ({ ...prev, per_page: perPage }))}
                     totalItems={totalItems}
+                    perPageOptions={[12, 24, 48]}
                   />
                 </div>
               )}
-            </>
+            </div>
           )
       }
     </div>

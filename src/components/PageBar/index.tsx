@@ -23,7 +23,7 @@ const PageBar: React.FC<PageBarProps> = ({ subtitle, actions, className }) => {
     >
       <div className="flex flex-col gap-0.5">
         {subtitle && (
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-sm font-medium text-slate-500">
             {subtitle}
           </p>
         )}

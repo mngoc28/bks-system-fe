@@ -6,6 +6,7 @@ import { useChatbotDetailQuery } from "@/hooks/useChatbotQuery";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTERS } from "@/constant";
+import { Spinner } from "@/components/ui/spinner";
 
 const QuestionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,8 @@ const QuestionDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <span className="text-sm text-slate-500">{t("common.loading")}</span>
+      <div className="flex min-h-[400px] items-center justify-center p-3 sm:p-6">
+        <Spinner size="lg" showText text={t("common.loading_data")} />
       </div>
     );
   }

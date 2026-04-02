@@ -3,64 +3,104 @@ import { Input } from "@/components/ui/input";
 import { ServiceSearchSectionProps } from "@/dataHelper/service.dataHelper";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Search, X, RotateCcw } from "lucide-react";
 
 const ServiceSearchSection: React.FC<ServiceSearchSectionProps> = ({
-    open,
-    value,
-    onChange,
-    onReset,
-    onClose,
+  open,
+  value,
+  onChange,
+  onReset,
+  onClose,
 }) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
+  if (!open) return null;
 
-    if (!open) return null;
-
-    return (
-        <div className="mt-4 w-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="space-y-3">
-                <div className="flex flex-col items-end gap-3">
-                    <div className="flex w-full items-end gap-3">
-                        <div className="flex basis-1/3 flex-col">
-                            <label className="mb-1 block text-sm text-slate-700">{t('serviceManagement.search_name')}</label>
-                            <Input
-                                value={value.name || ''}
-                                onChange={(e) => onChange({ ...value, name: e.target.value })}
-                                placeholder={t('serviceManagement.search_name_placeholder')}
-                                className="h-9"
-                            />
-                        </div>
-                        <div className="flex flex-col basis-2/3">
-                            <label className="mb-1 block text-sm text-slate-700">{t('serviceManagement.price_range')}</label>
-                            <div className="flex gap-2">
-                                <Input
-                                    type="text"
-                                    value={value.priceMin || ''}
-                                    onChange={(e) => onChange({ ...value, priceMin: e.target.value ? e.target.value : "" })}
-                                    placeholder={t('serviceManagement.min_price_placeholder')}
-                                    className="h-9"
-                                />
-                                <Input
-                                    type="text"
-                                    value={value.priceMax || ''}
-                                    onChange={(e) => onChange({ ...value, priceMax: e.target.value ? e.target.value : "" })}
-                                    placeholder={t('serviceManagement.price_max_placeholder')}
-                                    className="h-9"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="secondary" size="sm" onClick={onReset} type="button" className="h-9">
-                            {t('common.reset')}
-                        </Button>
-                        <Button variant="secondary" size="sm" onClick={onClose} className="h-9">
-                            {t('common.close')}
-                        </Button>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+            <Search className="size-4" />
+          </div>
+          <h3 className="text-sm font-bold tracking-tight text-slate-800">
+            {t("common.advanced_filter", { defaultValue: "Bộ lọc nâng cao" })}
+          </h3>
         </div>
-    );
+        <button
+          onClick={onClose}
+          className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="p-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
+          {/* Name */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("serviceManagement.search_name")}
+            </label>
+            <Input
+              value={value.name || ""}
+              onChange={(e) => onChange({ ...value, name: e.target.value })}
+              placeholder={t("serviceManagement.search_name_placeholder")}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* Min Price */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("serviceManagement.min_price_placeholder")}
+            </label>
+            <Input
+              type="text"
+              value={value.priceMin || ""}
+              onChange={(e) => onChange({ ...value, priceMin: e.target.value || "" })}
+              placeholder={t("serviceManagement.min_price_placeholder")}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* Max Price */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("serviceManagement.price_max_placeholder")}
+            </label>
+            <Input
+              type="text"
+              value={value.priceMax || ""}
+              onChange={(e) => onChange({ ...value, priceMax: e.target.value || "" })}
+              placeholder={t("serviceManagement.price_max_placeholder")}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-50 pt-6">
+          <Button
+            variant="ghost"
+            onClick={onReset}
+            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+          >
+            <RotateCcw className="size-4" />
+            {t("common.reset")}
+          </Button>
+          <Button
+            onClick={onClose}
+            className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
+          >
+            {t("common.apply_filter", { defaultValue: "Áp dụng bộ lọc" })}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ServiceSearchSection;

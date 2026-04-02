@@ -1,12 +1,13 @@
 import { ROUTERS } from "@/constant";
 import { useProvinceQuery } from "@/hooks/useProvinceQuery";
-import { t } from "i18next";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
 import { ProvinceDetailForm } from "./components";
 
 const ProvinceDetail: React.FC = () => {
+    const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const provinceId = id ? parseInt(id, 10) : 0;
@@ -23,8 +24,8 @@ const ProvinceDetail: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center p-3 sm:p-6">
-                <Loader2 className="animate-spin size-6" />
+            <div className="flex min-h-[400px] items-center justify-center p-3 sm:p-6">
+                <Spinner size="lg" showText text={t("common.loading_data")} />
             </div>
         );
     }

@@ -1,4 +1,4 @@
-import { LoadingAtom } from "@/components/ui/loading";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { useResetTokenVerifyEmailQuery, useVerifyEmailTokenQuery } from "@/hooks/useAuthQuery";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
@@ -38,7 +38,7 @@ const VerifyEmailToken: React.FC = () => {
     const urlImage = resultResetTokenVerifyEmail?.checkSuccess ? "/assets/images/success.png" : "/assets/images/fail.png";
     return (
         <>
-            {isLoading && <LoadingAtom />}
+            {isLoading && <LoadingScreen text={t("common.loading")} />}
             {!isLoading && (
                 <div className="bg-slate-200 flex items-center justify-center w-screen min-h-screen p-4">
                     <div className="w-full max-w-lg md:w-3/5 h-auto md:h-3/5">

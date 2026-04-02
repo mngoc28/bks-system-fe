@@ -5,6 +5,7 @@ import type { QuestionSortKey, QuestionsProps } from "@/dataHelper/chatbot.dataH
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems, isLoading, onPageChange, onPerPageChange, onView, onEdit, onDelete }: QuestionsProps) => {
   const { t } = useTranslation();
@@ -94,8 +95,8 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
               )}
               {showInitialLoading && (
                 <TableRow>
-                  <TableCell colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
-                    {t("common.loading")}
+                  <TableCell colSpan={5} className="px-4 py-12 text-center">
+                    <Spinner size="lg" showText text={t("common.loading_data")} />
                   </TableCell>
                 </TableRow>
               )}

@@ -25,9 +25,11 @@ export interface PartnerInfor {
 
 export interface PartnerFilter {
     user_name?: string;
+    company_name?: string;
     province_name?: string;
     ward_name?: string;
     phone?: string;
+    website?: string;
     address?: string;
     page?: number | typeof DEFAULT_PAGE;
     per_page?: number | typeof DEFAULT_LIMIT;
@@ -104,16 +106,20 @@ export interface PartnerSearchSectionProps {
     open: boolean;
     value:{
         user_name?: string;
+        company_name?: string;
         province_name?: string;
         ward_name?: string;
         phone?: string;
+        website?: string;
         address?: string;
     };
     onChange: (newValue: {
         user_name?: string;
+        company_name?: string;
         province_name?: string;
         ward_name?: string;
         phone?: string;
+        website?: string;
         address?: string;
     }) => void;
     onReset: () => void;

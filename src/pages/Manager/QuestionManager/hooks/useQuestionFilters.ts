@@ -4,7 +4,7 @@ import type { QuestionFilters, QuestionSortKey, UseQuestionFiltersResult } from 
 import {
   DEFAULT_SORT_KEY,
   DEFAULT_SORT_DIRECTION,
-  DEFAULT_PAGINATION,
+  DEFAULT_CARD_LIMIT,
   DEFAULT_PAGE,
   SEARCH_DEBOUNCE_DELAY_MS,
 } from "@/constant";
@@ -28,7 +28,7 @@ export const useQuestionFilters = (): UseQuestionFiltersResult => {
     return {
       content: searchParams.get("content") ?? "",
       page: parseNumber(searchParams.get("page"), DEFAULT_PAGE),
-      per_page: parseNumber(searchParams.get("per_page"), DEFAULT_PAGINATION),
+      per_page: parseNumber(searchParams.get("per_page"), DEFAULT_CARD_LIMIT),
       sort_by: sortKey,
       direction: sortKey ? parseDirection(searchParams.get("direction")) : DEFAULT_SORT_DIRECTION,
     } satisfies QuestionFilters;
@@ -80,7 +80,7 @@ export const useQuestionFilters = (): UseQuestionFiltersResult => {
     setSearchValue("");
     setContent("");
     setPage(DEFAULT_PAGE);
-    setPerPageState(DEFAULT_PAGINATION);
+    setPerPageState(DEFAULT_CARD_LIMIT);
     setSortBy(DEFAULT_SORT_KEY);
     setDirection(DEFAULT_SORT_DIRECTION);
     setSearchParams({});
@@ -111,7 +111,7 @@ export const useQuestionFilters = (): UseQuestionFiltersResult => {
     const params = new URLSearchParams();
     if (filters.content) params.set("content", filters.content);
     if (filters.page !== DEFAULT_PAGE) params.set("page", String(filters.page));
-    if (filters.per_page !== DEFAULT_PAGINATION) params.set("per_page", String(filters.per_page));
+    if (filters.per_page !== DEFAULT_CARD_LIMIT) params.set("per_page", String(filters.per_page));
     if (filters.sort_by) {
       params.set("sort_by", filters.sort_by);
       params.set("direction", filters.direction);

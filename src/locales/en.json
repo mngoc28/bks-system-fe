@@ -204,6 +204,7 @@
     "empty_description": "Please adjust the filters to find suitable results.",
     "is_required": "is required",
     "loading": "Loading...",
+    "loading_data": "Loading data...",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -256,6 +257,8 @@
     "refresh": "Refresh",
     "clear": "Clear",
     "apply": "Apply",
+    "apply_filter": "Apply Filters",
+    "advanced_filter": "Advanced Filters",
     "remove": "Remove",
     "copy": "Copy",
     "paste": "Paste",
@@ -577,7 +580,13 @@
     "success": "Login successful!",
     "failed": "Login failed!",
     "invalid_credentials": "Login failed! Please check your email and password.",
-    "invalid_response": "Login failed - Invalid response format!"
+    "invalid_response": "Login failed - Invalid response format!",
+    "welcome_back": "Welcome back",
+    "subtitle": "Please enter your credentials below",
+    "login_as_manager": "Sign in as Manager",
+    "login_as_partner": "Switch to Partner Portal",
+    "register_here": "Register Now",
+    "or_continue_with": "Or switch user"
   },
   "forgotPassword": {
     "title": "Forgot Password",
@@ -1841,8 +1850,11 @@
     "error": "An error occurred. Please try again."
   },
   "partner": {
+    "partner_management": "Partner Management",
     "partner_list": "Partner List",
-    "search_user_name": "Search Name",
+    "partner_list_subtitle": "Manage professional relationships and details of your partners.",
+    "representative": "Representative",
+    "search_user_name": "Search by representative",
     "search_user_name_placeholder": "Enter name...",
     "search_province_name": "Search Province/City",
     "search_province_placeholder": "Enter province/city name...",

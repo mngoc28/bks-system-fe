@@ -1,0 +1,80 @@
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Service } from "@/dataHelper/service.dataHelper";
+import { Edit, Trash2, LayoutGrid, CreditCard, Clock } from "lucide-react";
+import { formatPrice } from "@/utils/utils";
+import { safeFormatDateTime } from "@/utils/dateUtils";
+
+interface ServiceCardProps {
+  service: Service;
+  onView: (id: number) => void;
+  onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
+}
+
+const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDelete }) => {
+  const { t } = useTranslation();
+
+  return (
+    <Card
+      className="glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 h-full flex flex-col cursor-pointer"
+      onClick={() => onView(service.id)}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+          <LayoutGrid className="size-5" />
+        </div>
+        <Badge className="bg-emerald-50 text-emerald-600 border-none px-2 py-0.5 text-[10px] font-bold">ACTIVE</Badge>
+      </div>
+
+      <h3
+        className="mb-2 line-clamp-1 text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
+        title={service.name}
+      >
+        {service.name}
+      </h3>
+
+      <div className="mb-4 flex items-center gap-2 text-xs text-slate-400">
+        <Clock className="size-3" />
+        <span>{t("common.updated")}: {safeFormatDateTime(service.updated_at)}</span>
+      </div>
+
+      <p className="mb-6 line-clamp-3 text-sm leading-relaxed text-slate-400 flex-1">
+        {service.description || t("serviceManagement.no_description")}
+      </p>
+
+      <div className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+        <div className="flex items-center gap-2">
+          <CreditCard className="size-4 text-emerald-500" />
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("serviceManagement.price")}</span>
+        </div>
+        <span className="text-lg font-black text-emerald-600">{formatPrice(service.price)}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 rounded-lg border-slate-100 hover:bg-slate-50 hover:text-indigo-600 text-slate-500 dark:border-slate-800"
+          onClick={(e) => { e.stopPropagation(); onEdit(service.id); }}
+        >
+          <Edit className="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 rounded-lg border-slate-100 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 dark:border-slate-800"
+          onClick={(e) => { e.stopPropagation(); onDelete(service.id); }}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+export default ServiceCard;

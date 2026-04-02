@@ -7,6 +7,7 @@ import BookingsByBuildingChart from "./components/BookingsByBuildingChart";
 import { PartnerViewCards, RoomViewCards, UserViewCards } from "./components";
 import { useCheckPermissionQuery } from "@/hooks/useAuthQuery";
 import { PERMISSIONS } from "@/constant";
+import { Spinner } from "@/components/ui/spinner";
 
 type ChartType = "bookingsPerMonth" | "revenueByMonth" | "bookingsByBuilding";
 
@@ -75,7 +76,9 @@ const Dashboard: React.FC = () => {
                 {selectedChart === "bookingsByBuilding" && (
                   <>
                     {isBookingsByBuildingLoading ? (
-                      <div className="flex items-center justify-center p-8">{t("common.loading")}</div>
+                      <div className="flex min-h-[150px] items-center justify-center p-8">
+                        <Spinner size="md" showText text={t("common.loading_data")} />
+                      </div>
                     ) : bookingsByBuildingData?.data && bookingsByBuildingData.data.length > 0 ? (
                       <BookingsByBuildingChart bookingsByBuilding={bookingsByBuildingData.data} />
                     ) : null}

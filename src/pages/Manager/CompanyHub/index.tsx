@@ -7,6 +7,7 @@ import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ContactCard from "@/components/common/ContactCard";
+import { Spinner } from "@/components/ui/spinner";
 
 const CompanyHub = () => {
   const { t } = useTranslation();
@@ -56,7 +57,9 @@ const CompanyHub = () => {
 
           <div className="rounded-3xl bg-white/90 p-6 shadow-sm">
             {isLoading ? (
-              <div className="flex items-center justify-center py-16 text-sm text-slate-500">{t("common.loading")}</div>
+              <div className="flex min-h-[200px] items-center justify-center">
+                <Spinner size="lg" showText text={t("common.loading_data")} />
+              </div>
             ) : (
               <div className="flex flex-wrap gap-3">
                 {provinces.map((province) => (

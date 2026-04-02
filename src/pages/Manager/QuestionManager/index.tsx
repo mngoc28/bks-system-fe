@@ -2,46 +2,44 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Filter, GitBranch, Plus } from "lucide-react";
-import { QuestionDeleteDialog, QuestionSearchSection, QuestionTable } from "./components";
+import { QuestionDeleteDialog, QuestionSearchSection, QuestionCard } from "./components";
 import { useQuestionFilters } from "./hooks/useQuestionFilters";
 import { useChatbotsQuery, useDeleteChatbotMutation } from "@/hooks/useChatbotQuery";
 import { ChatbotRecord, toChatbotListPayload } from "@/dataHelper/chatbot.dataHelper";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTERS } from "@/constant";
+import Pagination from "@/components/Pagination";
+import EmptyPage from "@/components/EmptyPage";
+import { Spinner } from "@/components/ui/spinner";
+import PageBar from "@/components/PageBar";
 
 const QuestionManagerPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine if there are active filter parameters in the URL
   const hasActiveFilterParams = useMemo(() => {
     if (!location.search) return false;
     const params = new URLSearchParams(location.search);
     const ignoredKeys = new Set(["page", "per_page", "sort_by", "direction"]);
     for (const [key, value] of params.entries()) {
       if (ignoredKeys.has(key)) continue;
-      if (typeof value === "string" && value.trim().length > 0) {
-        return true;
-      }
+      if (typeof value === "string" && value.trim().length > 0) return true;
     }
     return false;
   }, [location.search]);
 
   const [openFilters, setOpenFilters] = useState(hasActiveFilterParams);
   const [autoOpenByParams, setAutoOpenByParams] = useState(true);
-  const { filters, searchValue, setTitle, toggleSort, setPage, setPerPage, reset } = useQuestionFilters();
+  const { filters, searchValue, setTitle, setPage, setPerPage, reset } = useQuestionFilters();
 
   const currentQueryString = useMemo(() => location.search, [location.search]);
 
   useEffect(() => {
-    if (autoOpenByParams && hasActiveFilterParams) {
-      setOpenFilters(true);
-    }
+    if (autoOpenByParams && hasActiveFilterParams) setOpenFilters(true);
   }, [autoOpenByParams, hasActiveFilterParams]);
 
   const previousPathRef = useRef(location.pathname);
-
   useEffect(() => {
     if (previousPathRef.current !== location.pathname) {
       previousPathRef.current = location.pathname;
@@ -49,7 +47,6 @@ const QuestionManagerPage = () => {
     }
   }, [location.pathname]);
 
-  // Function to get navigation state with current query string
   const getNavigationState = useCallback(() => {
     if (!currentQueryString) return undefined;
     return { state: { fromSearch: currentQueryString } } as const;
@@ -68,27 +65,20 @@ const QuestionManagerPage = () => {
 
   useEffect(() => {
     if (isLoading || isFetching) return;
-    if (filters.page > 1 && rows.length === 0) {
-      setPage(filters.page - 1);
-    }
+    if (filters.page > 1 && rows.length === 0) setPage(filters.page - 1);
   }, [filters.page, isFetching, isLoading, rows.length, setPage]);
 
-  // Handler to view question detail
   const handleViewDetail = (id: number) => {
     navigate(ROUTERS.QUESTION_DETAIL.replace(":id", String(id)), getNavigationState());
   };
 
-  // Handler to open delete confirmation dialog
   const handleAskDelete = (id: number) => {
-    const target = rows.find((item) => item.id === id) ?? null;
-    setDeleteTarget(target);
+    setDeleteTarget(rows.find((item) => item.id === id) ?? null);
     setDeleteOpen(true);
   };
 
-  // Confirm deletion handler
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
     } finally {
@@ -98,37 +88,44 @@ const QuestionManagerPage = () => {
   };
 
   return (
-    <div className="flex w-full flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t("questions.title")}</h1>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex w-full items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5 sm:w-auto"
-            onClick={() => {
-              setAutoOpenByParams(false);
-              setOpenFilters((prev) => !prev);
-            }}
-          >
-            <Filter className="size-4" />
-            {t("common.filter")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex w-full items-center justify-between gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5 sm:w-auto"
-            onClick={() => navigate(ROUTERS.QUESTION_FLOW, getNavigationState())}
-          >
-            <span>{t("questions.flow.open_button")}</span>
-            <GitBranch className="size-4" />
-          </Button>
-          <Button variant="default" size="sm" className="flex w-full items-center gap-2 px-4 py-2 sm:w-auto" onClick={() => navigate(ROUTERS.QUESTION_CREATE, getNavigationState())}>
-            <Plus className="size-4" />
-            {t("questions.add")}
-          </Button>
-        </div>
-      </div>
+    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+      <PageBar
+        subtitle={t("questions.subtitle") || "Quản lý luồng câu hỏi và kịch bản chatbot tự động."}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              onClick={() => {
+                setAutoOpenByParams(false);
+                setOpenFilters((prev) => !prev);
+              }}
+            >
+              <Filter className="size-4" />
+              {t("common.filter")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              onClick={() => navigate(ROUTERS.QUESTION_FLOW, getNavigationState())}
+            >
+              <GitBranch className="size-4" />
+              {t("questions.flow.open_button")}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              onClick={() => navigate(ROUTERS.QUESTION_CREATE, getNavigationState())}
+            >
+              <Plus className="size-4" />
+              {t("questions.add")}
+            </Button>
+          </div>
+        }
+      />
 
       <QuestionSearchSection
         open={openFilters}
@@ -143,22 +140,40 @@ const QuestionManagerPage = () => {
         isLoading={isFetching}
       />
 
-      <QuestionTable
-        rows={rows}
-        filters={filters}
-        onToggleSort={toggleSort}
-        page={filters.page}
-        perPage={perPage}
-        totalItems={totalItems}
-        isLoading={isLoading}
-        onPageChange={setPage}
-        onPerPageChange={setPerPage}
-        onView={handleViewDetail}
-        onEdit={(id) => {
-          navigate(ROUTERS.QUESTION_UPDATE.replace(":id", String(id)), getNavigationState());
-        }}
-        onDelete={handleAskDelete}
-      />
+      {isLoading ? (
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+          <Spinner size="lg" showText text={t("common.loading_data")} />
+        </div>
+      ) : totalItems === 0 ? (
+        <EmptyPage />
+      ) : (
+        <div className="flex flex-col gap-8">
+           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+              {rows.map((row) => (
+                <QuestionCard
+                  key={row.id}
+                  question={row}
+                  onView={handleViewDetail}
+                  onEdit={(id) => navigate(ROUTERS.QUESTION_UPDATE.replace(":id", String(id)), getNavigationState())}
+                  onDelete={handleAskDelete}
+                />
+              ))}
+           </div>
+           {totalItems > 0 && (
+             <div className="p-4">
+               <Pagination
+                 currentPage={filters.page}
+                 totalPages={Math.max(1, Math.ceil(totalItems / perPage))}
+                 onPageChange={setPage}
+                 perPage={perPage}
+                 onPerPageChange={setPerPage}
+                 totalItems={totalItems}
+                 perPageOptions={[12, 24, 48]}
+               />
+             </div>
+           )}
+        </div>
+      )}
 
       <QuestionDeleteDialog
         isOpen={deleteOpen}

@@ -1,6 +1,5 @@
- import Header from "@/components/Header";
-import { PERMISSIONS, ROUTERS } from "@/constant";
-import { useCheckPermissionQuery } from "@/hooks/useAuthQuery";
+import Header from "@/components/Header";
+import { ROUTERS } from "@/constant";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 import { MenuItem } from "@/shared/types";
 import { BotIcon, Building, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench } from "lucide-react";
@@ -24,38 +23,24 @@ const Layout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
-  const { data: checkPermission } = useCheckPermissionQuery();
 
   useEffect(() => {
-    // Bypass permission check - set all permissions for demo
-    if (checkPermission?.data?.role == PERMISSIONS.PARTNER) {
-      setPermissions(new Set([
-        "dashboard:view",
-        "buildings:view",
-        "rooms:view",
-        "booking:view",
-        "question-management:view",
-        "service-management:view",
-        "news:view",
-        "partner-management:view",
-      ]));
-    } else {
-      setPermissions(new Set([
-        "dashboard:view",
-        "buildings:view",
-        "rooms:view",
-        "user-management:view",
-        "booking:view",
-        "amenities:view",
-        "province-manage:view",
-        "question-management:view",
-        "service-management:view",
-        "news:view",
-        "partner-management:view",
-      ]));
-    }
+    // Current layout is only for Admin/Manager, so we set all permissions
+    setPermissions(new Set([
+      "dashboard:view",
+      "buildings:view",
+      "rooms:view",
+      "user-management:view",
+      "booking:view",
+      "amenities:view",
+      "province-manage:view",
+      "question-management:view",
+      "service-management:view",
+      "news:view",
+      "partner-management:view",
+    ]));
     setIsLoading(false);
-  }, [checkPermission]);
+  }, []);
 
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
@@ -195,18 +180,6 @@ const Layout = () => {
   const filteredMenuItems = filterMenuItemsByPermissions(menuItems, permissions);
 
   return (
-    // <div className="flex flex-col overflow-hidden px-2">
-    //   <main className="flex flex-1 overflow-hidden">
-    //     <ClassSidebar classInfo={classInfo} menuItems={filteredMenuItems} />
-    //     <div className="flex flex-1 flex-col overflow-hidden">
-    //       <Header pageTitle={getpageTitle(location.pathname)} />
-    //       <div className="flex flex-1 ">
-    //         <Outlet />
-    //       </div>
-    //     </div>
-    //   </main>
-    //   <Toaster richColors position="bottom-right" />
-    // </div>
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
       <main className="flex flex-1 overflow-hidden">
         <ClassSidebar

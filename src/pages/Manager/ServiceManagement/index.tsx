@@ -1,13 +1,15 @@
 import EmptyPage from "@/components/EmptyPage";
 import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_LIMIT, DEFAULT_PAGE } from "@/constant";
+import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE } from "@/constant";
 import { CreateServiceRequest, Service, ServiceFilters } from "@/dataHelper/service.dataHelper";
 import { useAllServicesQuery, useCreateServiceMutation, useDeleteServicesMutation, useGetServicesMutation, useUpdateServiceMutation } from "@/hooks/useServiceQuery";
 import { Filter, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AddServiceDialog, DeleteConfirmDialog, DetailServiceDialog, EditServiceDialog, ServiceSearchSection, ServiceTable } from "./components";
+import { AddServiceDialog, DeleteConfirmDialog, DetailServiceDialog, EditServiceDialog, ServiceSearchSection, ServiceCard } from "./components";
+import { Spinner } from "@/components/ui/spinner";
+import PageBar from "@/components/PageBar";
 
 const ServiceManagement: React.FC = () => {
     const { t } = useTranslation();
@@ -24,22 +26,6 @@ const ServiceManagement: React.FC = () => {
     const [deleteTarget, setDeleteTarget] = useState<Service | null>(null);
     const [editTarget, setEditTarget] = useState<Service | null>(null);
     const [viewTarget, setViewTarget] = useState<Service | null>(null);
-
-    type SortKey = "id" | "name" | "created_at" | "updated_at";
-
-    const toggleSort = (key: SortKey) => {
-        setFilters(prev => {
-            let newDirection: "asc" | "desc" = "asc";
-            if (prev.sort_field === key && prev.sort_direction === "asc") {
-                newDirection = "desc";
-            }
-            return {
-                ...prev,
-                sort_field: key,
-                sort_direction: newDirection,
-            };
-        });
-    }
 
     const useDebouncedFilter = (initialFilter: ServiceFilters, delay = 500) => {
         const [filter, setFilter] = useState<ServiceFilters>(initialFilter);
@@ -61,7 +47,7 @@ const ServiceManagement: React.FC = () => {
         min_price: priceMin,
         max_price: priceMax,
         page: DEFAULT_PAGE,
-        per_page: DEFAULT_LIMIT,
+        per_page: DEFAULT_CARD_LIMIT,
     });
 
     const { data: apiData, isLoading } = useGetServicesMutation(debouncedFilters);
@@ -69,33 +55,22 @@ const ServiceManagement: React.FC = () => {
     const names = allData?.map(item => item.name) || [];
 
     const page = filters.page ?? DEFAULT_PAGE;
-    const perPage = filters.per_page ?? DEFAULT_LIMIT;
+    const perPage = filters.per_page ?? DEFAULT_CARD_LIMIT;
 
-
-
-    // hook to clear edit server error when edit dialog is closed
     useEffect(() => {
-        if (!editServiceOpen) {
-            setEditServerError(null);
-        }
+        if (!editServiceOpen) setEditServerError(null);
     }, [editServiceOpen]);
-    // hook to clear delete server error when delete dialog is closed
+    
     useEffect(() => {
-        if (!addServiceOpen) {
-            setServerError(null);
-        }
+        if (!addServiceOpen) setServerError(null);
     }, [addServiceOpen]);
-    //hook to clear delete server error when delete dialog is closed
+    
     useEffect(() => {
-        if (!deleteOpen) {
-            setServerError(null);
-        }
+        if (!deleteOpen) setServerError(null);
     }, [deleteOpen]);
 
-    // map API data to list data
     const serverRows: Service[] = useMemo(() => {
         const list: any[] = (apiData as any)?.data?.data || [];
-
         return list.map((item: any) => ({
             id: item.id ?? 0,
             name: item.name ?? "",
@@ -108,9 +83,7 @@ const ServiceManagement: React.FC = () => {
         }))
     }, [apiData]);
 
-    const filtered = useMemo(() => {
-        return serverRows;
-    }, [serverRows]);
+    const filtered = useMemo(() => serverRows, [serverRows]);
 
     useEffect(() => {
         setFilters((prev) => {
@@ -123,25 +96,15 @@ const ServiceManagement: React.FC = () => {
     const totalItems = paginationData?.total ?? 0;
     const totalPages = paginationData?.last_page ?? Math.max(1, Math.ceil(totalItems / perPage));
 
-
     const deleteMutation = useDeleteServicesMutation();
-    const deleteLoading = deleteMutation.isPending;
-
     const createServiceMutation = useCreateServiceMutation();
-    const createServiceLoading = createServiceMutation.isPending;
-
     const updateServiceMutation = useUpdateServiceMutation();
-    const updateServiceLoading = updateServiceMutation.isPending;
-
 
     const handleReset = () => {
         setName("");
         setPriceMin("");
         setPriceMax("");
-        setFilters((prev) => ({
-            ...prev,
-            page: DEFAULT_PAGE,
-        }));
+        setFilters((prev) => ({ ...prev, page: DEFAULT_PAGE }));
     };
 
     const handleAddService = async (data: CreateServiceRequest) => {
@@ -150,21 +113,17 @@ const ServiceManagement: React.FC = () => {
             await createServiceMutation.mutateAsync(data);
             setAddServiceOpen(false);
         } catch (error: any) {
-            if (error?.response?.data?.message) {
-                setServerError(error.response.data.message);
-            }
+            if (error?.response?.data?.message) setServerError(error.response.data.message);
         }
     };
 
     const askViewService = (id: number) => {
-        const target = serverRows.find(item => item.id === id) || null;
-        setViewTarget(target);
+        setViewTarget(serverRows.find(item => item.id === id) || null);
         setViewServiceOpen(true);
     };
 
     const askEditService = (id: number) => {
-        const target = serverRows.find(item => item.id === id) || null;
-        setEditTarget(target);
+        setEditTarget(serverRows.find(item => item.id === id) || null);
         setEditServiceOpen(true);
     };
 
@@ -172,22 +131,16 @@ const ServiceManagement: React.FC = () => {
         if (!editTarget) return;
         setEditServerError(null);
         try {
-            await updateServiceMutation.mutateAsync({
-                id: editTarget.id,
-                data: data,
-            })
+            await updateServiceMutation.mutateAsync({ id: editTarget.id, data });
             setEditServiceOpen(false);
             setEditTarget(null);
         } catch (error: any) {
-            if (error?.response?.data?.message) {
-                setEditServerError(error.response.data.message);
-            }
+            if (error?.response?.data?.message) setEditServerError(error.response.data.message);
         }
     };
 
     const askDeleteService = (id: number) => {
-        const target = filtered.find(item => item.id === id) || null;
-        setDeleteTarget(target);
+        setDeleteTarget(filtered.find(item => item.id === id) || null);
         setDeleteOpen(true);
     };
 
@@ -199,22 +152,32 @@ const ServiceManagement: React.FC = () => {
     };
 
     return (
-        <div className="flex w-full flex-col gap-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{t('serviceManagement.title')}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen(true)}>
-                        <Filter className="size-4" />
-                        {t('serviceManagement.filter_search')}
-                    </Button>
-                    <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setAddServiceOpen(true)}>
-                        <Plus className="size-4" />
-                        {t('serviceManagement.addService')}
-                    </Button>
-                </div>
-            </div>
+        <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+            <PageBar
+                subtitle={t("serviceManagement.subtitle") || "Quản lý danh sách dịch vụ và tiện ích đi kèm."}
+                actions={
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+                            onClick={() => setOpen(true)}
+                        >
+                            <Filter className="size-4" />
+                            {t("common.filter")}
+                        </Button>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+                            onClick={() => setAddServiceOpen(true)}
+                        >
+                            <Plus className="size-4" />
+                            {t("serviceManagement.addService")}
+                        </Button>
+                    </div>
+                }
+            />
             {open && (
                 <ServiceSearchSection
                     open={open}
@@ -229,48 +192,51 @@ const ServiceManagement: React.FC = () => {
                     onClose={() => setOpen(false)}
                 />
             )}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                {isLoading ? (
-                    <div className="p-12 text-center text-sm text-slate-500">{t("common.loading")}</div>
-                ) : totalItems === 0 ? (
-                    <div className="p-12">
-                        <EmptyPage />
+            
+            {isLoading ? (
+                <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+                    <Spinner size="lg" showText text={t("common.loading_data")} />
+                </div>
+            ) : totalItems === 0 ? (
+                <EmptyPage />
+            ) : (
+                <div className="flex flex-col gap-8">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+                        {filtered.map((service: Service) => (
+                            <ServiceCard
+                                key={service.id}
+                                service={service}
+                                onView={askViewService}
+                                onEdit={askEditService}
+                                onDelete={askDeleteService}
+                            />
+                        ))}
                     </div>
-                ) : (
-                    <>
-                        <ServiceTable
-                            filtered={filtered}
-                            onSort={toggleSort}
-                            onEdit={askEditService}
-                            onView={askViewService}
-                            onDelete={askDeleteService}
-                            filters={filters}
-                        />
-                        {totalItems > 0 && (
-                            <div className="p-4 border-t border-slate-100">
-                                <Pagination
-                                    currentPage={page}
-                                    totalPages={totalPages}
-                                    onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-                                    perPage={perPage}
-                                    onPerPageChange={(pp) =>
-                                        setFilters((prev) => ({
-                                            ...prev,
-                                            per_page: pp,
-                                            page: DEFAULT_PAGE,
-                                        }))
-                                    }
-                                    totalItems={totalItems}
-                                />
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+                    {totalItems > 0 && (
+                        <div className="p-4">
+                            <Pagination
+                                currentPage={page}
+                                totalPages={totalPages}
+                                onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+                                perPage={perPage}
+                                onPerPageChange={(pp) =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        per_page: pp,
+                                        page: DEFAULT_PAGE,
+                                    }))
+                                }
+                                totalItems={totalItems}
+                                perPageOptions={[12, 24, 48]}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
 
-            <DeleteConfirmDialog service={deleteTarget} isOpen={deleteOpen} isLoading={deleteLoading} onClose={() => setDeleteOpen(false)} onConfirm={handleDeleteService} />
-            <AddServiceDialog isOpen={addServiceOpen} isLoading={createServiceLoading} serverError={serverError} existingServices={names} onClose={() => setAddServiceOpen(false)} onSubmit={handleAddService} />
-            <EditServiceDialog service={editTarget} isOpen={editServiceOpen} isLoading={updateServiceLoading} editServerError={editServerError} onClose={() => setEditServiceOpen(false)} onSubmit={handleEditService} />
+            <DeleteConfirmDialog service={deleteTarget} isOpen={deleteOpen} isLoading={deleteMutation.isPending} onClose={() => setDeleteOpen(false)} onConfirm={handleDeleteService} />
+            <AddServiceDialog isOpen={addServiceOpen} isLoading={createServiceMutation.isPending} serverError={serverError} existingServices={names} onClose={() => setAddServiceOpen(false)} onSubmit={handleAddService} />
+            <EditServiceDialog service={editTarget} isOpen={editServiceOpen} isLoading={updateServiceMutation.isPending} editServerError={editServerError} onClose={() => setEditServiceOpen(false)} onSubmit={handleEditService} />
             <DetailServiceDialog
                 service={viewTarget}
                 isOpen={viewServiceOpen}

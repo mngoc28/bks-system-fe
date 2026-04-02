@@ -114,6 +114,7 @@ export interface DeleteConfirmDialogProps {
 
 export interface BuildingCardProps {
   building: Building;
+  onView?: (building: Building) => void;
   onEdit: (building: Building) => void;
   onDelete: (building: Building) => void;
   isDeleting?: boolean;

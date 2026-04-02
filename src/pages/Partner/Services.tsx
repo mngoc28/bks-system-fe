@@ -1,75 +1,162 @@
-import React from 'react';
-import { Settings, Zap, Shield, CreditCard } from 'lucide-react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { Plus, Edit, Trash2, Zap, Droplets, CircleDollarSign, Settings, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { partnerService } from '@/services/partnerService';
+import { Service } from './types';
 
 const Services: React.FC = () => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [form, setForm] = useState<Partial<Service>>({
+    name: '',
+    price: 0,
+    unit: '',
+    category: 'Dịch vụ thêm',
+    status: 'Hoạt động'
+  });
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const res: any = await partnerService.getAllServices();
+      setServices(res.data.data.data || res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenModal = (service?: Service) => {
+    if (service) {
+      setEditingService(service);
+      setForm(service);
+    } else {
+      setEditingService(null);
+      setForm({ name: '', price: 0, unit: '', category: 'Dịch vụ thêm', status: 'Hoạt động' });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editingService) {
+        await partnerService.updateService(String(editingService.id), form);
+      } else {
+        await partnerService.createService(form);
+      }
+      fetchServices();
+      setIsModalOpen(false);
+    } catch (error) {
+      alert('Lỗi khi lưu dịch vụ.');
+    }
+  };
+
+  const handleDelete = async (id: string | number) => {
+    if (window.confirm('Bạn có muốn xóa dịch vụ này?')) {
+      try {
+        await partnerService.deleteService(id);
+        fetchServices();
+      } catch (error) {
+        alert('Lỗi khi xóa dịch vụ.');
+      }
+    }
+  };
+
+  if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dịch vụ & Cài đặt</h1>
-        <p className="text-gray-500 mt-1">Quản lý các dịch vụ đi kèm và cấu hình tài khoản chủ nhà.</p>
+      <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dịch vụ & Lắp đặt</h1>
+          <p className="text-gray-500 mt-1">Quản lý các dịch vụ có phí cho tòa nhà.</p>
+        </div>
+        <Button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 h-10 px-4 text-white">
+          <Plus size={18} className="mr-2" /> Thêm dịch vụ
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Services Configuration */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-              <Zap size={20} />
-            </div>
-            <h2 className="text-lg font-bold text-gray-800">Bảng giá dịch vụ</h2>
-          </div>
-          <p className="text-sm text-gray-500 mb-4">Các dịch vụ này sẽ được hiển thị cho khách hàng chọn khi thuê phòng của bạn.</p>
-          
-          <div className="space-y-3">
-            {[
-              { name: 'Điện', unit: 'kWh', price: '3,500 ₫' },
-              { name: 'Nước', unit: 'Người/Tháng', price: '100,000 ₫' },
-              { name: 'Gửi xe máy', unit: 'Chiếc/Tháng', price: '150,000 ₫' },
-              { name: 'Dọn phòng', unit: 'Lần', price: '50,000 ₫' }
-            ].map((svc, i) => (
-              <div key={i} className="flex justify-between items-center p-3 border border-gray-100 rounded-lg bg-gray-50">
-                <span className="font-medium text-gray-700">{svc.name}</span>
-                <span className="text-blue-600 font-semibold">{svc.price} <span className="text-xs text-gray-500 font-normal">/{svc.unit}</span></span>
-              </div>
-            ))}
-          </div>
-          <button className="mt-4 w-full py-2 border-2 border-dashed border-gray-300 text-gray-600 rounded-lg hover:border-blue-500 hover:text-blue-600 transition-colors font-medium">
-            + Thêm dịch vụ mới
-          </button>
-        </div>
-
-        {/* Payment & Security Settings */}
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                <CreditCard size={20} />
-              </div>
-              <h2 className="text-lg font-bold text-gray-800">Tài khoản nhận tiền</h2>
-            </div>
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
-              <p className="text-sm text-gray-500">Ngân hàng MB Bank</p>
-              <p className="font-mono font-bold text-gray-800 text-lg mt-1">9999 8888 1234</p>
-              <p className="text-sm font-medium text-gray-700 mt-1">NGUYEN TRAN HOST</p>
-            </div>
-            <button className="mt-3 text-sm text-blue-600 font-medium hover:underline">Sửa thông tin thanh toán</button>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                <Shield size={20} />
-              </div>
-              <h2 className="text-lg font-bold text-gray-800">Quy tắc đặt cọc</h2>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">Thông số này dùng để tính tiền cọc tự động khi khách chuyển vào.</p>
-            <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-              <span className="text-gray-700">Mức cọc chuẩn</span>
-              <span className="font-semibold px-3 py-1 bg-gray-100 rounded-md">1 Tháng tiền phòng</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {services.map((service) => (
+                <div key={service.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                      {service.unit === 'kWh' ? <Zap size={20} /> : service.unit === 'khối' ? <Droplets size={20} /> : <CircleDollarSign size={20} />}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800">{service.name}</h3>
+                      <p className="text-xs text-gray-500">{service.category} • {service.status}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <p className="font-bold text-blue-600">{Number(service.price).toLocaleString('vi-VN')} ₫</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">mỗi {service.unit}</p>
+                    </div>
+                    <div className="flex gap-2">
+                       <Button onClick={() => handleOpenModal(service)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Edit size={16}/></Button>
+                       <Button onClick={() => handleDelete(service.id)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Trash2 size={16}/></Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <h2 className="flex items-center gap-2 font-bold mb-4 text-gray-800">
+              <Settings size={18} className="text-blue-500" /> Cài đặt chung
+            </h2>
+            <p className="text-sm text-gray-500 italic">Các cài đặt thông báo hóa đơn sẽ được áp dụng cho tất cả khách thuê.</p>
+        </div>
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingService ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Tên dịch vụ</Label>
+              <Input value={form.name} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({...form, name: e.target.value})} placeholder="VD: Tiền điện..." />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Đơn giá (₫)</Label>
+                <Input type="number" value={form.price} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({...form, price: Number(e.target.value)})} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Đơn vị tính</Label>
+                <Input value={form.unit} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({...form, unit: e.target.value})} placeholder="VD: kWh, khối..." />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Lưu thay đổi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

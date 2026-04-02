@@ -1,20 +1,21 @@
 import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_LIMIT, DEFAULT_PAGE } from "@/constant";
+import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE } from "@/constant";
 import type { Amenity, AmenityFilters } from "@/dataHelper/amenity.dataHelper";
 import { useAmenitiesQuery, useCreateAmenityMutation, useDeleteAmenityMutation, useUpdateAmenityMutation } from "@/hooks/useAmenityQuery";
 import { Filter, Plus } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AddAmenityDialog, AmenitySearchSection, AmenityTable, DeleteConfirmDialog, EditAmenityDialog } from "./components";
+import { AddAmenityDialog, AmenitySearchSection, DeleteConfirmDialog, EditAmenityDialog, AmenityCard } from "./components";
 import PageBar from "@/components/PageBar";
+import Pagination from "@/components/Pagination";
+import { Spinner } from "@/components/ui/spinner";
 
-// Main Amenity Management Component
 const AmenityManagement: React.FC = () => {
   const { t } = useTranslation();
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
   const [page, setPage] = useState(DEFAULT_PAGE);
-  const [perPage, setPerPage] = useState(DEFAULT_LIMIT);
+  const [perPage, setPerPage] = useState(DEFAULT_CARD_LIMIT);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | undefined>(undefined);
   const [searchValue, setSearchValue] = useState("");
@@ -28,7 +29,6 @@ const AmenityManagement: React.FC = () => {
   const [editTarget, setEditTarget] = useState<Amenity | null>(null);
   const [editServerError, setEditServerError] = useState<string | null>(null);
 
-  // hook to clear highlighted ID after 5 seconds
   useEffect(() => {
     if (highlightedId) {
       const timer = setTimeout(() => setHighlightedId(null), 5000);
@@ -36,7 +36,6 @@ const AmenityManagement: React.FC = () => {
     }
   }, [highlightedId]);
 
-  // hook to debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setSearchName(searchValue);
@@ -45,23 +44,14 @@ const AmenityManagement: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchValue]);
 
-  // hook to clear edit server error when edit dialog is closed
   useEffect(() => {
-    if (!editAmenityOpen) {
-      setEditServerError(null);
-    }
+    if (!editAmenityOpen) setEditServerError(null);
   }, [editAmenityOpen]);
 
-  // hook to clear add server error when add dialog is closed
   useEffect(() => {
-    if (!addAmenityOpen) {
-      setServerError(null);
-    }
+    if (!addAmenityOpen) setServerError(null);
   }, [addAmenityOpen]);
 
-  type SortKey = "id" | "name" | "created_at" | "updated_at";
-
-  // Prepare filters for API query
   const filters: AmenityFilters = {
     name: searchName,
     page,
@@ -72,7 +62,6 @@ const AmenityManagement: React.FC = () => {
 
   const { data: apiData, isLoading } = useAmenitiesQuery(filters);
 
-  // Map API data to Amenity type
   const serverRows: Amenity[] = useMemo(() => {
     const list: any[] = apiData?.data ?? [];
     return list.map((item: any) => ({
@@ -85,49 +74,26 @@ const AmenityManagement: React.FC = () => {
     }));
   }, [apiData]);
 
-  const filtered = useMemo(() => {
-    return serverRows;
-  }, [serverRows]);
+  const filtered = useMemo(() => serverRows, [serverRows]);
 
   const totalItems = apiData?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
   const deleteMutation = useDeleteAmenityMutation();
-  const deleteLoading = deleteMutation.isPending;
-
   const createAmenityMutation = useCreateAmenityMutation();
-  const createAmenityLoading = createAmenityMutation.isPending;
-
   const updateAmenityMutation = useUpdateAmenityMutation();
-  const updateAmenityLoading = updateAmenityMutation.isPending;
-
-  // Toggle sorting logic
-  const toggleSort = (key: SortKey) => {
-    if (sortField === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc");
-      } else {
-        setSortField(undefined);
-        setSortDirection(undefined);
-      }
-    } else {
-      setSortField(key);
-      setSortDirection("asc");
-    }
-  };
 
   const handleReset = () => {
     setSearchValue("");
     setSearchName("");
     setPage(DEFAULT_PAGE);
-    setPerPage(DEFAULT_LIMIT);
+    setPerPage(DEFAULT_CARD_LIMIT);
     setSortField(undefined);
     setSortDirection(undefined);
   };
 
   const askDelete = (id: number) => {
-    const target = filtered.find((x) => x.id === id) || null;
-    setDeleteTarget(target);
+    setDeleteTarget(filtered.find((x) => x.id === id) || null);
     setDeleteOpen(true);
   };
 
@@ -145,15 +111,12 @@ const AmenityManagement: React.FC = () => {
       setHighlightedId(result.data.id);
       setAddAmenityOpen(false);
     } catch (error: any) {
-      if (error?.response?.data?.message) {
-        setServerError(error.response.data.message);
-      }
+      if (error?.response?.data?.message) setServerError(error.response.data.message);
     }
   };
 
   const askEdit = (id: number) => {
-    const target = filtered.find((x) => x.id === id) || null;
-    setEditTarget(target);
+    setEditTarget(filtered.find((x) => x.id === id) || null);
     setEditAmenityOpen(true);
   };
 
@@ -161,35 +124,40 @@ const AmenityManagement: React.FC = () => {
     if (!editTarget) return;
     setEditServerError(null);
     try {
-      await updateAmenityMutation.mutateAsync({
-        id: editTarget.id,
-        data: data,
-      });
+      await updateAmenityMutation.mutateAsync({ id: editTarget.id, data });
       setHighlightedId(editTarget.id);
       setEditAmenityOpen(false);
       setEditTarget(null);
     } catch (error: any) {
-      if (error?.response?.data?.message) {
-        setEditServerError(error.response.data.message);
-      }
+      if (error?.response?.data?.message) setEditServerError(error.response.data.message);
     }
   };
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-6 p-[0_24px_24px]">
       <PageBar
         subtitle={t("amenities.amenity_list")}
         actions={
-          <>
-            <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen((v) => !v)}>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              onClick={() => setOpen((v) => !v)}
+            >
               <Filter className="size-4" />
-              {t("amenities.filter_search")}
+              {t("common.filter")}
             </Button>
-            <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setAddAmenityOpen(true)}>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              onClick={() => setAddAmenityOpen(true)}
+            >
               <Plus className="size-4" />
               {t("amenities.add_amenity")}
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -203,37 +171,47 @@ const AmenityManagement: React.FC = () => {
         />
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center text-sm text-slate-500">{t("common.loading")}</div>
-        ) : totalItems === 0 ? (
-          <div className="p-12">
-            <EmptyPage/>
-          </div>
-        ) : (
-          <AmenityTable
-            filtered={filtered}
-            page={page}
-            perPage={perPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            onPageChange={(p) => setPage(p)}
-            onPerPageChange={(pp) => {
-              setPerPage(pp);
-              setPage(DEFAULT_PAGE);
-            }}
-            onEdit={askEdit}
-            onDelete={askDelete}
-            highlightedId={highlightedId}
-            toggleSort={toggleSort}
-            filters={filters}
-          />
-        )}
-      </div>
+      {isLoading ? (
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+          <Spinner size="lg" showText text={t("common.loading_data")} />
+        </div>
+      ) : totalItems === 0 ? (
+        <EmptyPage />
+      ) : (
+        <div className="flex flex-col gap-8">
+           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+              {filtered.map((m) => (
+                <AmenityCard
+                  key={m.id}
+                  amenity={m}
+                  onEdit={askEdit}
+                  onDelete={askDelete}
+                  isHighlighted={highlightedId === m.id}
+                />
+              ))}
+           </div>
+           {totalItems > 0 && (
+             <div className="p-4">
+               <Pagination
+                 currentPage={page}
+                 totalPages={totalPages}
+                 onPageChange={(p) => setPage(p)}
+                 perPage={perPage}
+                 onPerPageChange={(pp) => {
+                   setPerPage(pp);
+                   setPage(DEFAULT_PAGE);
+                 }}
+                 totalItems={totalItems}
+                 perPageOptions={[12, 24, 48]}
+               />
+             </div>
+           )}
+        </div>
+      )}
 
-      <DeleteConfirmDialog amenity={deleteTarget} isOpen={deleteOpen} isLoading={deleteLoading} onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} />
-      <AddAmenityDialog isOpen={addAmenityOpen} isLoading={createAmenityLoading} serverError={serverError} existingAmenities={serverRows.map(item => item.name)} onClose={() => setAddAmenityOpen(false)} onSubmit={handleAddAmenity} />
-      <EditAmenityDialog amenity={editTarget} isOpen={editAmenityOpen} isLoading={updateAmenityLoading} serverError={editServerError} onClose={() => setEditAmenityOpen(false)} onSubmit={handleEditAmenity} />
+      <DeleteConfirmDialog amenity={deleteTarget} isOpen={deleteOpen} isLoading={deleteMutation.isPending} onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} />
+      <AddAmenityDialog isOpen={addAmenityOpen} isLoading={createAmenityMutation.isPending} serverError={serverError} existingAmenities={serverRows.map(item => item.name)} onClose={() => setAddAmenityOpen(false)} onSubmit={handleAddAmenity} />
+      <EditAmenityDialog amenity={editTarget} isOpen={editAmenityOpen} isLoading={updateAmenityMutation.isPending} serverError={editServerError} onClose={() => setEditAmenityOpen(false)} onSubmit={handleEditAmenity} />
     </div>
   );
 };

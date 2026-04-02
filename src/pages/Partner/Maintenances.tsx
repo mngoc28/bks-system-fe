@@ -1,91 +1,118 @@
-import React from 'react';
-import { Search, Filter, Wrench, CalendarClock, CheckSquare } from 'lucide-react';
-import { mockMaintenances } from './mockData';
+import React, { useState, useEffect } from 'react';
+import { Wrench, MapPin, CheckCircle, AlertTriangle, Play, Check, Filter, Loader2 } from 'lucide-react';
+import { MaintenanceRequest } from './types';
+import { Button } from "@/components/ui/button";
+import { partnerService } from '@/services/partnerService';
 
 const Maintenances: React.FC = () => {
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'Chờ xử lý': return 'bg-red-100 text-red-700 border-red-200';
-      case 'Đang sửa': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Đã hoàn thành': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+  const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMaintenances();
+  }, []);
+
+  const fetchMaintenances = async () => {
+    try {
+      setLoading(true);
+      const res: any = await partnerService.getMaintenances();
+      setRequests(res.data.data.data || res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching maintenance requests:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const getStatusStyle = (status: string) => {
+    switch(status) {
+      case 'Đang chờ': case 'Chờ xử lý': return 'bg-red-50 text-red-700 border-red-100';
+      case 'Đang xử lý': case 'Đang sửa': return 'bg-amber-50 text-amber-700 border-amber-100';
+      case 'Đã hoàn thành': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+      default: return 'bg-gray-50 text-gray-700 border-gray-100';
+    }
+  };
+
+  const safeHandleUpdate = (id: string | number, newStatus: string) => {
+    if (window.confirm(`Xác nhận cập nhật trạng thái bảo trì?`)) {
+      // Backend action needed, for now state update or implement a PUT if available
+      setRequests(requests.map(r => String(r.id) === String(id) ? { ...r, status: newStatus as any } : r));
+    }
+  };
+
+  if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Yêu cầu bảo trì, CSKH</h1>
-          <p className="text-gray-500 mt-1">Tiếp nhận và xử lý các vấn đề hỏng hóc từ người thuê.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Quản lý Bảo trì & Sự cố</h1>
+          <p className="text-gray-500 mt-1">Xử lý các yêu cầu sửa chữa và bảo trì từ cư dân.</p>
+        </div>
+        <div className="flex gap-2">
+           <Button variant="outline" className="flex items-center gap-2 h-10 px-4">
+             <Filter size={16} /> Lọc
+           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        {/* Toolbar */}
-        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-4 bg-slate-50/50">
-          <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 w-full sm:w-80">
-            <Search size={18} className="text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Tìm theo phòng, mô tả lỗi..." 
-              className="bg-transparent border-none outline-none text-sm w-full"
-            />
-          </div>
-          <button className="flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
-            <Filter size={18} />
-            Lọc trạng thái
-          </button>
-        </div>
-
-        {/* List layout instead of table for better mobile UX */}
-        <div className="divide-y divide-gray-100">
-          {mockMaintenances.map((mt) => (
-            <div key={mt.id} className="p-6 hover:bg-slate-50 transition-colors flex flex-col md:flex-row justify-between gap-6">
-              <div className="flex-1 space-y-3">
-                <div className="flex items-start justify-between md:justify-start gap-4">
-                  <h3 className="text-lg font-bold text-gray-800">{mt.roomName}</h3>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(mt.status)}`}>
-                    {mt.status}
-                  </span>
-                </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-gray-700 text-sm">
-                  <span className="font-semibold">Mô tả sự cố:</span> {mt.issueDescription}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <CalendarClock size={14} />
-                    <span>Tạo lúc: {new Date(mt.createdAt).toLocaleString('vi-VN')}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-                    <span>Người gửi báo cáo: <strong className="text-gray-700">{mt.customerName}</strong></span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="w-full md:w-48 flex flex-row md:flex-col gap-2 shrink-0">
-                {mt.status === 'Chờ xử lý' && (
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                    <Wrench size={16} />
-                    Bắt đầu sửa chửa
-                  </button>
-                )}
-                {mt.status === 'Đang sửa' && (
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
-                    <CheckSquare size={16} />
-                    Đánh dấu hoàn thành
-                  </button>
-                )}
-                <button className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
-                  Xem chi tiết
-                </button>
-              </div>
-            </div>
-          ))}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50 border-b border-gray-100 uppercase text-[10px] font-bold text-gray-500 tracking-wider">
+                <th className="px-6 py-4">Sự cố / Phòng</th>
+                <th className="px-6 py-4">Mô tả chi tiết</th>
+                <th className="px-6 py-4 text-center">Trạng thái</th>
+                <th className="px-6 py-4 text-right">Trình tự xử lý</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {requests.length > 0 ? requests.map((request) => (
+                <tr key={request.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-gray-100 text-gray-500 rounded-lg">
+                        <Wrench size={18} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-800 text-sm whitespace-nowrap">{request.type || 'Sửa chữa'}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 whitespace-nowrap">
+                          <MapPin size={12} /> {request.roomName || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-xs text-gray-600 line-clamp-2 max-w-xs">{request.description}</p>
+                    <span className="text-[10px] text-gray-400 mt-1 block">Yêu cầu: {new Date(request.createdAt).toLocaleDateString('vi-VN')}</span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusStyle(request.status)}`}>
+                      {request.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                       { (request.status === 'Đang chờ' || request.status === 'Chờ xử lý') && (
+                         <Button onClick={() => safeHandleUpdate(request.id, 'Đang xử lý')} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-8">Tiếp nhận</Button>
+                       )}
+                       { (request.status === 'Đan xử lý' || request.status === 'Đang sửa' ) && (
+                         <Button onClick={() => safeHandleUpdate(request.id, 'Đã hoàn thành')} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8">Xong</Button>
+                       )}
+                       { request.status === 'Đã hoàn thành' && (
+                          <div className="text-emerald-500 flex items-center justify-center p-2"><CheckCircle size={20} /></div>
+                       )}
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                   <td colSpan={4} className="px-6 py-20 text-center text-gray-400 italic">Chưa có yêu cầu bảo trì nào.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

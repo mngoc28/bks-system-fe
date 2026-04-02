@@ -7,6 +7,7 @@ import { useImagesByBuildingIdQuery } from "@/hooks/useBuildingImageQuery";
 import { ImageIcon } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 
 const BuildingImagesCell = React.memo(({ buildingId }: { buildingId: number }) => {
   const { t } = useTranslation();
@@ -22,9 +23,8 @@ const BuildingImagesCell = React.memo(({ buildingId }: { buildingId: number }) =
   return (
     <>
       {isLoadingImages && (
-        <div className="text-center flex flex-col items-center justify-center bg-gray-200  border rounded-sm p-4 w-[150px] h-[150px]">
-          <ImageIcon className="size-10 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-500">{t("common.loading")}</p>
+        <div className="flex w-[150px] h-[150px] items-center justify-center rounded-sm border bg-gray-50/50 p-4 font-medium text-slate-500">
+          <Spinner size="sm" showText text={t("common.loading_data")} />
         </div>
       )}
       {errorImages && (

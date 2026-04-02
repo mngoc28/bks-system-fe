@@ -56,6 +56,9 @@ const News = React.lazy(() => import("./pages/Manager/NewsManager"));
 const NewsDetail = React.lazy(() => import("./pages/Manager/NewsDetail"));
 const NewsEdit = React.lazy(() => import("./pages/Manager/NewsEdit"));
 const NewsAdd = React.lazy(() => import("./pages/Manager/NewsAdd"));
+const PartnerManagement = React.lazy(() => import("./pages/Manager/PartnerManagement"));
+const PartnerDetailManager = React.lazy(() => import("./pages/Manager/PartnerDetail"));
+const PartnerEditManager = React.lazy(() => import("./pages/Manager/PartnerEdit"));
 const Booking = React.lazy(() => import("./pages/EndUser/Booking/BookingPage"));
 
 // Partner Routes
@@ -63,8 +66,11 @@ const PartnerLayout = React.lazy(() => import("./pages/Partner/PartnerLayout"));
 const PartnerDashboard = React.lazy(() => import("./pages/Partner/Dashboard"));
 const PartnerProperties = React.lazy(() => import("./pages/Partner/Properties"));
 const PartnerBookings = React.lazy(() => import("./pages/Partner/Bookings"));
+const PartnerServices = React.lazy(() => import("./pages/Partner/Services.tsx"));
+const PartnerAmenities = React.lazy(() => import("./pages/Partner/Amenities.tsx"));
+const PartnerNews = React.lazy(() => import("./pages/Partner/News.tsx"));
 const PartnerMaintenances = React.lazy(() => import("./pages/Partner/Maintenances"));
-const PartnerFinance = React.lazy(() => import("./pages/Partner/Finance"));
+const PartnerLogin = React.lazy(() => import("./pages/Partner/Login/index"));
 
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center">
@@ -79,8 +85,29 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to={ROUTERS.LOGIN} replace />;
 };
 
+const PartnerPrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const userRole = useUserStore((state) => state.userRole);
+  const token = getAccessToken();
+  
+  let role = (userRole || '').toLowerCase();
+  if (!role) {
+    const persistedData = localStorage.getItem('user');
+    if (persistedData) {
+      try {
+        const parsed = JSON.parse(persistedData);
+        role = (parsed?.state?.userRole || '').toLowerCase();
+      } catch (e) {}
+    }
+  }
+
+  const isAuthenticated = !!token && !isTokenExpired(token) && role === 'partner';
+
+  return isAuthenticated ? <>{children}</> : <Navigate to={ROUTERS.PARTNER_LOGIN} replace />;
+};
+
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const userEmail = useUserStore((state) => state.userEmail);
+  const userRole = useUserStore((state) => state.userRole);
   const logout = useUserStore((state) => state.logout);
   const [token, setToken] = useState<string | null>(getAccessToken());
 
@@ -97,7 +124,29 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
   const isAuthenticated = !!token && !isTokenExpired(token);
 
-  return isAuthenticated ? <Navigate to={ROUTERS.CONTROL} replace /> : <>{children}</>;
+  if (isAuthenticated) {
+    // Get role from store or fallback to localStorage to prevent hydration race condition
+    let role = (userRole || '').toLowerCase();
+    
+    if (!role) {
+      const persistedData = localStorage.getItem('user');
+      if (persistedData) {
+        try {
+          const parsed = JSON.parse(persistedData);
+          role = (parsed?.state?.userRole || '').toLowerCase();
+        } catch (e) {
+          console.error("Error parsing user state", e);
+        }
+      }
+    }
+
+    if (role === 'partner') {
+      return <Navigate to="/partner/dashboard" replace />;
+    }
+    return <Navigate to={ROUTERS.CONTROL} replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export default function Router() {
@@ -192,7 +241,7 @@ export default function Router() {
           </Route>
         </Route>
 
-        {/* Protected Routes */}
+        {/* Admin Protected Routes */}
         <Route
           element={
             <PrivateRoute>
@@ -230,23 +279,40 @@ export default function Router() {
           <Route path={`${ROUTERS.NEWS_DETAIL}/:id`} element={<NewsDetail />} />
           <Route path={ROUTERS.NEWS_EDIT + "/:id"} element={<NewsEdit />} />
           <Route path={ROUTERS.NEWS_ADD} element={<NewsAdd />} />
+          <Route path={ROUTERS.PARTNER_MANAGEMENT} element={<PartnerManagement />} />
+          <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/detail/:id`} element={<PartnerDetailManager />} />
+          <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/edit/:id`} element={<PartnerEditManager />} />
         </Route>
 
-        {/* Partner Routes */}
+        {/* Partner Login */}
+        <Route
+          path={ROUTERS.PARTNER_LOGIN}
+          element={
+            <PublicRoute>
+              <PartnerLogin />
+            </PublicRoute>
+          }
+        />
+
+        {/* Partner Protected Routes */}
         <Route
           path="/partner"
           element={
-            <Suspense fallback={<LoadingFallback />}>
-              <PartnerLayout />
-            </Suspense>
+            <PartnerPrivateRoute>
+              <Suspense fallback={<LoadingFallback />}>
+                <PartnerLayout />
+              </Suspense>
+            </PartnerPrivateRoute>
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<PartnerDashboard />} />
           <Route path="properties" element={<PartnerProperties />} />
           <Route path="bookings" element={<PartnerBookings />} />
+          <Route path="services" element={<PartnerServices />} />
+          <Route path="amenities" element={<PartnerAmenities />} />
+          <Route path="news" element={<PartnerNews />} />
           <Route path="maintenances" element={<PartnerMaintenances />} />
-          <Route path="finance" element={<PartnerFinance />} />
         </Route>
 
         {/* 404 - Redirect to Login */}

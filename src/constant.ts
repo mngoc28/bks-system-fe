@@ -1,6 +1,8 @@
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGINATION = 10;
 export const DEFAULT_LIMIT = 10;
+export const DEFAULT_CARD_LIMIT = 12;
+export const CARD_PER_PAGE_OPTIONS = [12, 24, 48] as const;
 export const DEFAULT_TOTAL = 0;
 export const enum ROUTERS {
   HOME = "/",
@@ -59,6 +61,14 @@ export const enum ROUTERS {
   RESET_TOKEN_SUCCESS = "/reset-token-success",
   PUBLIC_NEWS_DETAIL = "/news/:newsId",
   PUBLIC_NEWS_LIST = "/news-list",
+  PARTNER_LOGIN = "/partner/login",
+  PARTNER_DASHBOARD = "/partner/dashboard",
+  PARTNER_PROPERTIES = "/partner/properties",
+  PARTNER_BOOKINGS = "/partner/bookings",
+  PARTNER_SERVICES = "/partner/services",
+  PARTNER_AMENITIES = "/partner/amenities",
+  PARTNER_NEWS = "/partner/news",
+  PARTNER_MAINTENANCE = "/partner/maintenances",
 }
 
 export const STORAGE_VAR = {
