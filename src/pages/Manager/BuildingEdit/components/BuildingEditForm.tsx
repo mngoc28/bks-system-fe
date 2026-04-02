@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input, ReactQuillEditor } from "@/components/ui/input";
-import { LoadingCommet } from "@/components/ui/loading";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BUILDING_TYPE } from "@/constant";
 import { BuildingEditFormProps, BuildingEditFormRef, CreateBuildingRequest, UpdateBuildingRequest } from "@/dataHelper/building.dataHelper";
@@ -99,7 +99,7 @@ const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormP
     return (
       <>
         {isError && <></>}
-        {isLoading && <LoadingCommet />}
+        {isLoading && <LoadingScreen text={t("common.loading")} />}
         {building && !isError && <Card className="w-full overflow-y-auto p-6 flex flex-col gap-6">
           <div className="">
             {/* Form */}

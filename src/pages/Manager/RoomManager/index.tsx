@@ -1,7 +1,7 @@
 import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
 import { toastError } from "@/components/ui/toast";
-import { DEFAULT_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
+import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import { Room, type RoomFilters, type RoomListData } from "@/dataHelper/room.dataHelper";
 import { useDeleteRoomMutation, useRoomsQuery } from "@/hooks/useRoomQuery";
 // import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
@@ -9,7 +9,10 @@ import { Filter, Plus } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router";
-import { DeleteRoomDialog, RoomSearchSection, RoomTable } from "./components";
+import { DeleteRoomDialog, RoomSearchSection, RoomCard } from "./components";
+import Pagination from "@/components/Pagination";
+import { Spinner } from "@/components/ui/spinner";
+import PageBar from "@/components/PageBar";
 
 // Main Room Manager Component
 const RoomManager: React.FC = () => {
@@ -47,21 +50,20 @@ const RoomManager: React.FC = () => {
 
 
   const [page, setPage] = useState(DEFAULT_PAGE);
-  const [perPage, setPerPage] = useState(DEFAULT_LIMIT);
+  const [perPage, setPerPage] = useState(DEFAULT_CARD_LIMIT);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState<{ id: number; room_number: string; building_name: string; } | null>(null);
   const [filter, setFilters] = useState<RoomFilters>({
     page: DEFAULT_PAGE,
-    per_page: DEFAULT_LIMIT,
+    per_page: DEFAULT_CARD_LIMIT,
   });
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleResetFilters = () => {
     setFilters({
       page: DEFAULT_PAGE,
-      per_page: DEFAULT_LIMIT,
+      per_page: DEFAULT_CARD_LIMIT,
     });
     setSortField(undefined);
     setSortDirection(undefined);
@@ -98,20 +100,7 @@ const RoomManager: React.FC = () => {
   const totalPages = data?.last_page ?? 1;
   const totalItems = data?.total ?? rooms.length;
 
-  type SortKey = "id" | "title" | "room_number" | "building" | "area" | "people" | "status" | "created_at";
-  const toggleSort = (key: SortKey) => {
-    if (sortField === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc");
-      } else {
-        setSortField(undefined);
-        setSortDirection(undefined);
-      }
-    } else {
-      setSortField(key);
-      setSortDirection("asc");
-    }
-  }
+
 
   const handleCreateRoom = () => {
     navigate(ROUTERS.ROOMS_ADD, { state: { page, perPage, sortField, sortDirection, filter } });
@@ -194,30 +183,35 @@ const RoomManager: React.FC = () => {
     }
   }
 
-  const getRoomTypeName = (type: number) => {
-    switch (type) {
-      case 1: return t("rooms.room_type_single");
-      case 2: return t("rooms.room_type_double");
-      case 3: return t("rooms.room_type_mini_apartment");
-      default: return "-";
-    }
-  }
+
 
   return (
-    <div className="flex w-full flex-col gap-6 p-[12px_24px]">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t("rooms.room_list")}</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen((v) => !v)}>
-            <Filter className="size-4" />
-            {t("common.filter")}
-          </Button>
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={handleCreateRoom}>
-            <Plus className="size-4" />
-            {t("rooms.create_room")}
-          </Button>
-        </div>
-      </div>
+    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+      <PageBar
+        subtitle={t("rooms.room_list_subtitle") || "Quản lý danh sách phòng và trạng thái lưu trú."}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              onClick={() => setOpen((v) => !v)}
+            >
+              <Filter className="size-4" />
+              {t("common.filter")}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              onClick={handleCreateRoom}
+            >
+              <Plus className="size-4" />
+              {t("rooms.create_room")}
+            </Button>
+          </div>
+        }
+      />
 
       {open && <RoomSearchSection
         open={open}
@@ -228,33 +222,43 @@ const RoomManager: React.FC = () => {
       />}
 
       {isLoading ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+          <Spinner size="lg" showText text={t("common.loading_data")} />
+        </div>
       ) : totalItems === 0 ? (
         <EmptyPage />
       ) : (
-        <RoomTable
-          sorted={rooms}
-          page={page}
-          totalPages={totalPages}
-          perPage={perPage}
-          totalItems={totalItems}
-          onPageChange={(p) => setPage(p)}
-          onPerPageChange={(pp) => {
-            setPerPage(pp);
-            setPage(DEFAULT_PAGE);
-          }}
-          onViewModal={setSelectedImage}
-          selectedImage={selectedImage}
-          onView={handleViewRoom}
-          onEdit={handleEditRoom}
-          onDelete={handleDeleteRoom}
-          getBuildingName={(room) => room.building_name || "-"}
-          getRoomTypeName={getRoomTypeName}
-          sort={{ key: sortField as SortKey, direction: sortDirection || null}}
-          toggleSort={toggleSort}
-          highlightedId={highlightedId}
-          filters={filter}
-        />
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {rooms.map((room: Room) => (
+              <RoomCard
+                key={room.id}
+                room={room}
+                onView={handleViewRoom}
+                onEdit={handleEditRoom}
+                onDelete={handleDeleteRoom}
+                isDeleting={deleteRoomMutation.isPending && roomToDelete?.id === room.id}
+                highlighted={highlightedId === room.id}
+              />
+            ))}
+          </div>
+          {totalItems > 0 && (
+            <div className="p-4">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={(p) => setPage(p)}
+                perPage={perPage}
+                onPerPageChange={(pp) => {
+                  setPerPage(pp);
+                  setPage(DEFAULT_PAGE);
+                }}
+                totalItems={totalItems}
+                perPageOptions={[12, 24, 48]}
+              />
+            </div>
+          )}
+        </div>
       )}
       <DeleteRoomDialog
         isOpen={deleteDialogOpen}

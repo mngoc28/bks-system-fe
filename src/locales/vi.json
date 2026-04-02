@@ -204,6 +204,7 @@
     "empty_description": "Hãy điều chỉnh lại bộ lọc để tìm kết quả phù hợp.",
     "is_required": "là bắt buộc",
     "loading": "Đang tải...",
+    "loading_data": "Đang tải dữ liệu...",
     "save": "Lưu",
     "cancel": "Hủy",
     "delete": "Xóa",
@@ -256,6 +257,8 @@
     "refresh": "Làm mới",
     "clear": "Xóa",
     "apply": "Áp dụng",
+    "apply_filter": "Áp dụng bộ lọc",
+    "advanced_filter": "Bộ lọc nâng cao",
     "remove": "Gỡ bỏ",
     "copy": "Sao chép",
     "paste": "Dán",
@@ -367,7 +370,8 @@
   "user": {
     "no_images_yet": "Chưa có ảnh",
     "loading": "Đang tải thông tin người dùng...",
-    "user_list": "Danh sách người dùng",
+    "user_list": "Người dùng",
+    "user_list_subtitle": "Quản lý danh sách thành viên và quyền hạn truy cập của họ.",
     "error_fetching_profile": "Lấy thông tin người dùng thất bại!",
     "update_profile_success": "Cập nhật thông tin thành công!",
     "profile_failed": "Cập nhật thông tin thất bại!",
@@ -578,7 +582,26 @@
     "success": "Đăng nhập thành công!",
     "failed": "Đăng nhập thất bại!",
     "invalid_credentials": "Đăng nhập thất bại! Vui lòng kiểm tra lại email và mật khẩu.",
-    "invalid_response": "Đăng nhập thất bại - Response không đúng format!"
+    "invalid_response": "Đăng nhập thất bại - Response không đúng format!",
+    "welcome_back": "Chào mừng bạn trở lại",
+    "subtitle": "Vui lòng nhập thông tin đăng nhập bên dưới",
+    "login_as_manager": "Đăng nhập với tư cách Quản trị viên",
+    "login_as_partner": "Chuyển sang Cổng thông tin Đối tác",
+    "register_here": "Đăng ký ngay",
+    "or_continue_with": "Hoặc chuyển đổi người dùng",
+    "portal_manager": "Cổng Quản Trị",
+    "portal_partner": "Cổng Đối Tác",
+    "portal_admin": "Cổng Quản Trị Viên",
+    "hero_title_manager": "Quản trị hệ thống",
+    "hero_desc_manager": "Hệ thống quản lý vận hành BKS dành cho quản trị viên",
+    "hero_title_partner": "Cổng Quản Trị Đối Tác BKS",
+    "hero_desc_partner": "Mở khóa tiềm năng kinh doanh với bảng điều khiển đối tác cao cấp. Theo dõi hiệu quả và phát triển bền vững",
+    "secure_access": "Truy cập Bảo mật",
+    "cloud_uptime": "Hoạt động 24/7",
+    "joined_partners": "Hơn 1000+ đối tác tham gia",
+    "remember_me": "Ghi nhớ đăng nhập",
+    "contact_admin": "Liên hệ Quản trị viên",
+    "all_rights_reserved": "Bảo lưu mọi quyền"
   },
   "forgotPassword": {
     "title": "Quên mật khẩu",
@@ -985,6 +1008,7 @@
   },
   "buildings": {
     "title": "Quản lý tòa nhà",
+    "building_list_subtitle": "Quản lý thông tin và trạng thái các tòa nhà, chung cư trong hệ thống.",
     "table_id": "ID",
     "table_name": "Tên",
     "table_images": "Hình ảnh",
@@ -1132,6 +1156,7 @@
     "room_details": "Chi tết phòng",
     "basic_information": "Thông tin cơ bản",
     "room_list": "Danh sách phòng",
+    "room_list_subtitle": "Theo dõi và quản lý trạng thái, thông tin các loại phòng lưu trú.",
     "create_room": "Thêm phòng",
     "search_placeholder": "Tìm kiếm phòng...",
     "no_rooms_found": "Không tìm thấy phòng nào",
@@ -1231,7 +1256,7 @@
   },
   "amenities": {
     "error_getting_amenities": "Lỗi khi tải danh sách tiện ích",
-    "amenity_list": "Danh sách tiện ích",
+    "amenity_list": "Quản lý những tiện ích có sẵn trong căn hộ/phòng",
     "add_amenity": "Thêm tiện ích",
     "edit_amenity": "Sửa tiện ích",
     "delete_amenity": "Xóa tiện ích",
@@ -1273,6 +1298,7 @@
   },
   "bookings": {
     "title": "Danh sách đặt phòng",
+    "subtitle": "Quản lý và kiểm soát trạng thái các yêu cầu đặt phòng từ khách hàng.",
     "filter": "Lọc/Tìm kiếm",
     "create": "Đặt phòng",
     "loading": "Đang tải dữ liệu đặt phòng...",
@@ -1470,6 +1496,7 @@
   "province": {
     "error_getting_province": "Lấy thông tin tỉnh/thành phố thất bại",
     "title_manage": "Quản lý tỉnh/thành phố",
+    "subtitle": "Danh sách khu vực hoạt động và thông tin địa bàn kinh doanh.",
     "search_placeholder": "Tìm kiếm tỉnh/thành phố...",
     "id": "ID",
     "name": "Tên tỉnh/thành phố",
@@ -1486,8 +1513,8 @@
     "province_not_found": "Tỉnh/thành phố không tồn tại"
   },
   "questions": {
-    "title": "Quản lý câu hỏi",
-    "subtitle": "Theo dõi câu hỏi và hỗ trợ cư dân kịp thời.",
+    "title": "Quản lý Chatbot",
+    "subtitle": "Thiết lập kịch bản trả lời tự động cho hệ thống trợ lý ảo.",
     "add": "Thêm câu hỏi",
     "view_all": "Xem tất cả",
     "filter_title": "Lọc theo tiêu đề",
@@ -1615,6 +1642,7 @@
   },
   "serviceManagement": {
     "title": "Quản lý dịch vụ",
+    "subtitle": "Cấu hình danh mục dịch vụ và tiện ích đi kèm khi khách thuê phòng.",
     "addService": "Thêm dịch vụ",
     "filter_search": "Lọc & Tìm kiếm",
     "id": "ID",
@@ -1743,6 +1771,7 @@
   },
   "news": {
     "title": "Quản lý tin tức",
+    "news_list_subtitle": "Đăng tải và cập nhật các bảng tin, khuyến mãi và hướng dẫn lưu trú.",
     "create_news": "Thêm tin tức",
     "create_success": "Tạo tin tức thành công",
     "create_failed": "Tạo tin tức thất bại",
@@ -1839,8 +1868,11 @@
     "error": "Có lỗi xảy ra. Vui lòng thử lại."
   },
   "partner": {
+    "partner_management": "Quản lý đối tác",
     "partner_list": "Danh sách đối tác",
-    "search_user_name": "Tìm kiếm theo tên",
+    "partner_list_subtitle": "Quản lý mối quan hệ và thông tin chi tiết của các đối tác.",
+    "representative": "Người đại diện",
+    "search_user_name": "Tìm kiếm theo người đại diện",
     "search_user_name_placeholder": "Nhập tên...",
     "search_province_name": "Tìm kiếm theo tỉnh/thành phố",
     "search_province_placeholder": "Nhập tên tỉnh/thành phố...",
@@ -1879,7 +1911,9 @@
     "update_service_success": "Cập nhật dịch vụ thành công!",
     "max_length_255": "Độ dài tối đa là 255 ký tự",
     "accepted_file_types": "Chỉ chấp nhận tệp hình ảnh",
-    "file_size_limit": "Dung lượng tệp không được vượt quá 5MB"
+    "file_size_limit": "Dung lượng tệp không được vượt quá 5MB",
+    "view_details": "Xem chi tiết",
+    "no_address_provided": "Chưa có địa chỉ"
   },
   "partnerDetail": {
     "loading": "Đang tải...",

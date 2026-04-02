@@ -28,14 +28,17 @@ const PasswordStrengthBarProps: React.FC<PasswordStrength> = ({ password }) => {
   const { label, color, width } = getPasswordStrength(password);
 
   return (
-    <div className="mt-2">
-      <div className="w-full h-2 bg-gray-200 rounded">
+    <div className="mt-3 space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Độ mạnh mật khẩu</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${color.replace('bg-', 'text-')}`}>{label}</span>
+      </div>
+      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
         <div
-          className={`${color} h-2 rounded transition-all duration-300`}
+          className={`${color} h-full rounded-full transition-all duration-500 ease-out`}
           style={{ width }}
         ></div>
       </div>
-      <p className="mt-1 text-sm font-semibold text-gray-700">{label}</p>
     </div>
   );
 };

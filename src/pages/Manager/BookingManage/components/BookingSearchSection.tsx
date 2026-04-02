@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-
+import { Search, X, RotateCcw } from "lucide-react";
 import type { BookingSearchSectionProps } from "@/dataHelper/booking.dataHelper";
 
 const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filters, setFilters, onReset, onClose }) => {
@@ -14,31 +14,21 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
   const [localAssignee, setLocalAssignee] = useState(filters.assignee);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // handle debounced name filter
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setFilters((s) => ({ ...s, q: localQ }));
-    }, 500);
+    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, q: localQ })), 500);
   }, [localQ]);
 
-  // handle debounced room filter
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setFilters((s) => ({ ...s, room: localRoom }));
-    }, 500);
+    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, room: localRoom })), 500);
   }, [localRoom]);
 
-  // handle debounced assignee filter
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setFilters((s) => ({ ...s, assignee: localAssignee }));
-    }, 500);
+    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, assignee: localAssignee })), 500);
   }, [localAssignee]);
 
-  // sync local state when filters change from outside
   useEffect(() => {
     setLocalQ(filters.q);
     setLocalRoom(filters.room);
@@ -47,69 +37,161 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
 
   if (!open) return null;
 
+  const isPartner = userProfile?.data?.role === "partner";
+
   return (
-    <div className="mt-4 w-full rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-      <div className="mb-3">
-        <h3 className="text-base font-semibold text-slate-800">{t("bookings.search.title")}</h3>
-        <p className="text-sm text-slate-500">{t("bookings.search.subtitle")}</p>
+    <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+            <Search className="size-4" />
+          </div>
+          <h3 className="text-sm font-bold tracking-tight text-slate-800">
+            {t("common.advanced_filter", { defaultValue: "Bộ lọc nâng cao" })}
+          </h3>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+        >
+          <X className="size-4" />
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-12">
-        <div className="md:col-span-3">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.table.user")}</label>
-          <Input value={localQ} onChange={(e) => setLocalQ(e.target.value)} placeholder={t("bookings.search.user_placeholder")} />
+      {/* Body */}
+      <div className="p-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
+          {/* User (q) */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.table.user")}
+            </label>
+            <Input
+              value={localQ}
+              onChange={(e) => setLocalQ(e.target.value)}
+              placeholder={t("bookings.search.user_placeholder")}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* Room */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.search.room_label")}
+            </label>
+            <Input
+              value={localRoom}
+              onChange={(e) => setLocalRoom(e.target.value)}
+              placeholder={t("bookings.search.room_placeholder")}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* Status */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.search.status_label")}
+            </label>
+            <select
+              className="flex h-10 w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 text-sm text-slate-600 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              value={filters.status}
+              onChange={(e) => setFilters((s) => ({ ...s, status: e.target.value }))}
+            >
+              <option value="">{t("bookings.search.status_all")}</option>
+              <option value="0">{t("bookings.search.status_pending")}</option>
+              <option value="1">{t("bookings.search.status_confirmed")}</option>
+              <option value="2">{t("bookings.search.status_cancelled")}</option>
+              <option value="3">{t("bookings.search.status_completed")}</option>
+            </select>
+          </div>
+
+          {/* Assignee (only for non-partner) */}
+          {!isPartner && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                {t("bookings.table.assignee")}
+              </label>
+              <Input
+                value={localAssignee}
+                onChange={(e) => setLocalAssignee(e.target.value)}
+                placeholder={t("bookings.search.assignee_placeholder", { defaultValue: "Tên người phụ trách" }) as string}
+                className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          )}
+
+          {/* Start Date */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.search.start_date_label")}
+            </label>
+            <Input
+              type="date"
+              value={filters.start_date}
+              onChange={(e) => setFilters((s) => ({ ...s, start_date: e.target.value }))}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* End Date */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.search.end_date_label")}
+            </label>
+            <Input
+              type="date"
+              value={filters.end_date}
+              onChange={(e) => setFilters((s) => ({ ...s, end_date: e.target.value }))}
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* Price Min */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.search.price_min")}
+            </label>
+            <Input
+              type="number"
+              value={filters.price_min}
+              onChange={(e) => setFilters((s) => ({ ...s, price_min: e.target.value }))}
+              placeholder="0"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          {/* Price Max */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("bookings.search.price_max")}
+            </label>
+            <Input
+              type="number"
+              value={filters.price_max}
+              onChange={(e) => setFilters((s) => ({ ...s, price_max: e.target.value }))}
+              placeholder="0"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
         </div>
 
-        <div className="md:col-span-4">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.search.room_label")}</label>
-          <Input value={localRoom} onChange={(e) => setLocalRoom(e.target.value)} placeholder={t("bookings.search.room_placeholder")} />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.search.status_label")}</label>
-          <select
-            className="w-full rounded border border-slate-300 px-3 py-3 text-sm text-slate-700 h-12"
-            value={filters.status}
-            onChange={(e) => setFilters((s) => ({ ...s, status: e.target.value }))}
+        {/* Footer Actions */}
+        <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-50 pt-6">
+          <Button
+            variant="ghost"
+            onClick={onReset}
+            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
           >
-            <option value="">{t("bookings.search.status_all")}</option>
-            <option value="0">{t("bookings.search.status_pending")}</option>
-            <option value="1">{t("bookings.search.status_confirmed")}</option>
-            <option value="2">{t("bookings.search.status_cancelled")}</option>
-            <option value="3">{t("bookings.search.status_completed")}</option>
-          </select>
-        </div>
-
-        {userProfile?.data?.role !== "partner" && (
-        <div className="md:col-span-3">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.table.assignee")}</label>
-          <Input value={localAssignee} onChange={(e) => setLocalAssignee(e.target.value)} placeholder={t("bookings.search.assignee_placeholder", { defaultValue: "Tên người phụ trách" }) as string} />
-        </div>
-        )}
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.search.start_date_label")}</label>
-          <Input type="date" value={filters.start_date} onChange={(e) => setFilters((s) => ({ ...s, start_date: e.target.value }))} />
-        </div>
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.search.end_date_label")}</label>
-          <Input type="date" value={filters.end_date} onChange={(e) => setFilters((s) => ({ ...s, end_date: e.target.value }))} />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.search.price_min")}</label>
-          <Input type="number" value={filters.price_min} onChange={(e) => setFilters((s) => ({ ...s, price_min: e.target.value }))} placeholder="0" />
-        </div>
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm text-slate-700">{t("bookings.search.price_max")}</label>
-          <Input type="number" value={filters.price_max} onChange={(e) => setFilters((s) => ({ ...s, price_max: e.target.value }))} placeholder="0" />
-        </div>
-
-        <div className="md:col-span-4 flex justify-end gap-2">
-          <Button variant="secondary" size="sm" onClick={onReset} type="button">
-            {t("bookings.search.reset")}
+            <RotateCcw className="size-4" />
+            {t("common.reset")}
           </Button>
-          <Button variant="secondary" size="sm" onClick={onClose}>
-            {t("bookings.search.close")}
+          <Button
+            onClick={onClose}
+            className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
+          >
+            {t("common.apply_filter", { defaultValue: "Áp dụng bộ lọc" })}
           </Button>
         </div>
       </div>

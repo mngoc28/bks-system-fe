@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PartnerSearchSectionProps } from "@/dataHelper/partner.dataHelper";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
 import React from "react";
+import { X, Search, RotateCcw } from "lucide-react";
 
+/**
+ * Enhanced PartnerSearchSection Component
+ * Modern, clean, and interactive search interface for management.
+ * Optimized for Partner (Company) searching.
+ */
 const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
     open,
     value,
@@ -11,76 +17,141 @@ const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
     onReset,
     onClose,
 }) => {
+    const { t } = useTranslation();
+
     if (!open) return null;
 
     return (
-        <div className="w-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="space-y-3">
-                <div className="flex flex-col items-end gap-3">
-                    <div className="grid grid-cols-3 gap-3 w-full">
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-sm text-slate-700">{t('partner.search_user_name')}</label>
-                            <Input
-                                value={value.user_name || ''}
-                                onChange={(e) => onChange({ ...value, user_name: e.target.value })}
-                                placeholder={t('partner.search_user_name_placeholder')}
-                                className="h-9"
-                            />
-                        </div>
+        <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
+                <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+                        <Search className="size-4" />
+                    </div>
+                    <h3 className="text-sm font-bold tracking-tight text-slate-800">
+                      {t('common.advanced_filter', { defaultValue: "Lọc nâng cao" })}
+                    </h3>
+                </div>
+                <button 
+                  onClick={onClose}
+                  className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                    <X className="size-4" />
+                </button>
+            </div>
 
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-sm text-slate-700">{t('partner.search_province_name')}</label>
-                            <Input
-                                value={value.province_name || ''}
-                                onChange={(e) => onChange({ ...value, province_name: e.target.value })}
-                                placeholder={t('partner.search_province_placeholder')}
-                                className="h-9"
-                            />
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-sm text-slate-700">{t('partner.search_ward_name')}</label>
-                            <Input
-                                value={value.ward_name || ''}
-                                onChange={(e) => onChange({ ...value, ward_name: e.target.value })}
-                                placeholder={t('partner.search_ward_name_placeholder')}
-                                className="h-9"
-                            />
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-sm text-slate-700">{t('partner.search_phone')}</label>
-                            <Input
-                                value={value.phone || ''}
-                                onChange={(e) => onChange({ ...value, phone: e.target.value })}
-                                placeholder={t('partner.search_phone_placeholder')}
-                                className="h-9"
-                            />
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-sm text-slate-700">{t('partner.search_address')}</label>
-                            <Input
-                                value={value.address || ''}
-                                onChange={(e) => onChange({ ...value, address: e.target.value })}
-                                placeholder={t('partner.search_address_placeholder')}
-                                className="h-9"
-                            />
-                        </div>
+            <div className="p-8">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {/* Company Name Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.company_name', { defaultValue: "Tên công ty" })}
+                        </label>
+                        <Input
+                            value={value.company_name || ''}
+                            onChange={(e) => onChange({ ...value, company_name: e.target.value })}
+                            placeholder={t('partner.company_name_placeholder', { defaultValue: "Nhập tên công ty..." })}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
                     </div>
 
+                    {/* Website Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.website', { defaultValue: "Website" })}
+                        </label>
+                        <Input
+                            value={value.website || ''}
+                            onChange={(e) => onChange({ ...value, website: e.target.value })}
+                            placeholder={t('partner.website_placeholder', { defaultValue: "Nhập website..." })}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
 
-                    <div className="flex gap-2">
-                        <Button variant="secondary" size="sm" onClick={onReset} type="button" className="h-9">
-                            {t('common.reset')}
-                        </Button>
-                        <Button variant="secondary" size="sm" onClick={onClose} className="h-9">
-                            {t('common.close')}
-                        </Button>
+                    {/* Username Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.representative', { defaultValue: "Người đại diện" })}
+                        </label>
+                        <Input
+                            value={value.user_name || ''}
+                            onChange={(e) => onChange({ ...value, user_name: e.target.value })}
+                            placeholder={t('partner.search_user_name_placeholder')}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+
+                    {/* Phone Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.search_phone')}
+                        </label>
+                        <Input
+                            value={value.phone || ''}
+                            onChange={(e) => onChange({ ...value, phone: e.target.value })}
+                            placeholder={t('partner.search_phone_placeholder')}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+
+                    {/* Province Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.search_province_name')}
+                        </label>
+                        <Input
+                            value={value.province_name || ''}
+                            onChange={(e) => onChange({ ...value, province_name: e.target.value })}
+                            placeholder={t('partner.search_province_placeholder')}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+
+                    {/* Ward Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.search_ward_name')}
+                        </label>
+                        <Input
+                            value={value.ward_name || ''}
+                            onChange={(e) => onChange({ ...value, ward_name: e.target.value })}
+                            placeholder={t('partner.search_ward_name_placeholder')}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+
+                    {/* Address Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('partner.search_address')}
+                        </label>
+                        <Input
+                            value={value.address || ''}
+                            onChange={(e) => onChange({ ...value, address: e.target.value })}
+                            placeholder={t('partner.search_address_placeholder')}
+                            className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                        />
                     </div>
                 </div>
+
+                <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-50 pt-6">
+                    <Button 
+                      variant="ghost" 
+                      onClick={onReset} 
+                      className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+                    >
+                        <RotateCcw className="size-4" />
+                        {t('common.reset')}
+                    </Button>
+                    <Button 
+                      onClick={onClose}
+                      className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
+                    >
+                        {t('common.apply_filter', { defaultValue: "Áp dụng" })}
+                    </Button>
+                </div>
             </div>
-        </div >
+        </div>
     );
 };
 

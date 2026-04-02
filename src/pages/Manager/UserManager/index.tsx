@@ -1,6 +1,6 @@
 import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
+import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import type { AddUserFormData, UpdateUserProfileRequest, UserFilters, UserProfile } from "@/dataHelper/user.dataHelper";
 import { useCreateUserMutation, useDeleteUserMutation, useGetAllUsersQuery, useResetPasswordMutation, useUpdateUserMutation } from "@/hooks/useUserQuery";
 import { useUserStore } from "@/store/useUserStore";
@@ -8,30 +8,20 @@ import { Filter, UserPlus } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { AddUserDialog, DeleteConfirmDialog, EditUserDialog, ResetPasswordDialog, UserSearchSection, UsersEmptyState } from "./components";
-import UserTable from "./components/UserTable";
+import { AddUserDialog, DeleteConfirmDialog, EditUserDialog, ResetPasswordDialog, UserSearchSection, UsersEmptyState, UserCard } from "./components";
+import { Spinner } from "@/components/ui/spinner";
+import PageBar from "@/components/PageBar";
 
 const UserManagement: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  type SortKey = "id" | "name" | "email" | "phone" | "role" | "status" | "created_at";
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | undefined>(undefined);
   const [searchQ, setSearchQ] = useState("");
   const [searchEmail, setSearchEmail] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
-  const [highlightedId, setHighlightedId] = useState<number | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const currentUserEmail = useUserStore((state) => state.userEmail);
-
-  // hook to clear highlight after 3s
-  useEffect(() => {
-    if (highlightedId) {
-      const timer = setTimeout(() => setHighlightedId(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [highlightedId]);
 
   // hook to debounce search input
   useEffect(() => {
@@ -57,21 +47,6 @@ const UserManagement: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchEmail]);
 
-  // handle sort toggle
-  const toggleSort = (key: SortKey) => {
-    if (sortField === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc");
-      } else {
-        setSortField(undefined);
-        setSortDirection(undefined);
-      }
-    } else {
-      setSortField(key);
-      setSortDirection("asc");
-    }
-  };
-
   // filters state
   const [filters, setFilters] = useState<UserFilters>({
     q: "",
@@ -82,7 +57,7 @@ const UserManagement: React.FC = () => {
     created_at_from: "",
     created_at_to: "",
     page: DEFAULT_PAGE,
-    per_page: DEFAULT_LIMIT,
+    per_page: DEFAULT_CARD_LIMIT,
     sort_field: undefined,
     sort_direction: undefined,
   });
@@ -90,7 +65,7 @@ const UserManagement: React.FC = () => {
   const { data: apiData, isLoading } = useGetAllUsersQuery(filters);
 
   const page = filters.page ?? DEFAULT_PAGE;
-  const perPage = filters.per_page ?? DEFAULT_LIMIT;
+  const perPage = filters.per_page ?? DEFAULT_CARD_LIMIT;
 
   // map api data to user profile
   const serverRows: UserProfile[] = React.useMemo(() => {
@@ -138,7 +113,7 @@ const UserManagement: React.FC = () => {
     setSearchQ("");
     setSearchEmail("");
     setSearchPhone("");
-    setFilters({ q: "", email: "", role: "", phone: "", status: "", created_at_from: "", created_at_to: "", page: DEFAULT_PAGE, per_page: DEFAULT_LIMIT, sort_field: undefined, sort_direction: undefined });
+    setFilters({ q: "", email: "", role: "", phone: "", status: "", created_at_from: "", created_at_to: "", page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: undefined, sort_direction: undefined });
     setSortField(undefined);
     setSortDirection(undefined);
   };
@@ -237,7 +212,6 @@ const UserManagement: React.FC = () => {
         id: editTarget.id,
         data: data,
       });
-      setHighlightedId(editTarget.id);
       setEditUserOpen(false);
       setEditTarget(null);
     } catch (error: any) {
@@ -270,20 +244,32 @@ const UserManagement: React.FC = () => {
   }, [addUserOpen]);
 
   return (
-    <div className="flex w-full flex-col gap-6 p-[12px_24px]">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t("user.user_list")}</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 py-2 border-primary text-primary hover:bg-primary/5" onClick={() => setOpen((v) => !v)}>
-            <Filter className="size-4" />
-            {t("user.filter_search")}
-          </Button>
-          <Button variant="default" size="sm" className="flex items-center gap-2 px-4 py-2" onClick={() => setAddUserOpen(true)}>
-            <UserPlus className="size-4" />
-            {t("user.add_user")}
-          </Button>
-        </div>
-      </div>
+    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+      <PageBar
+        subtitle={t("user.user_list_subtitle") || "Quản lý danh sách thành viên và quyền hạn truy cập."}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              onClick={() => setOpen((v) => !v)}
+            >
+              <Filter className="size-4" />
+              {t("common.filter")}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              onClick={() => setAddUserOpen(true)}
+            >
+              <UserPlus className="size-4" />
+              {t("user.add_user")}
+            </Button>
+          </div>
+        }
+      />
 
       <UserSearchSection
         open={open}
@@ -300,27 +286,25 @@ const UserManagement: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+          <Spinner size="lg" showText text={t("common.loading_data")} />
+        </div>
       ) : totalItems === 0 ? (
         <UsersEmptyState onOpenFilter={() => setOpen(true)} />
       ) : (
-        <div className="flex flex-1 flex-col px-4">
-          <div className="w-full overflow-auto rounded-xl border border-slate-200 bg-white">
-            <UserTable
-              users={filtered}
-              currentUserEmail={currentUserEmail}
-              highlightedId={highlightedId}
-              onView={handleViewUser}
-              onEdit={askEdit}
-              onDelete={askDelete}
-              onResetPassword={askResetPassword}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              toggleSort={toggleSort}
-              onViewModal={setSelectedImage}
-              selectedImage={selectedImage}
-              filters={filters}
-            />
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+            {filtered.map((user: UserProfile) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                isCurrentUser={user.email === currentUserEmail}
+                onView={handleViewUser}
+                onEdit={askEdit}
+                onDelete={askDelete}
+                onResetPassword={askResetPassword}
+              />
+            ))}
           </div>
           {totalItems > 0 && (
             <div className="p-4">
@@ -333,6 +317,7 @@ const UserManagement: React.FC = () => {
                   setFilters((prev) => ({ ...prev, per_page: pp, page: DEFAULT_PAGE }));
                 }}
                 totalItems={totalItems}
+                perPageOptions={[12, 24, 48]}
               />
             </div>
           )}

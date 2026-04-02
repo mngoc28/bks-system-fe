@@ -1,25 +1,26 @@
 import EmptyPage from "@/components/EmptyPage";
 import Pagination from "@/components/Pagination";
-import { DEFAULT_LIMIT, DEFAULT_PAGE, ROUTERS, SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
+import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS, SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
 import { Building, SearchBuildingRequest } from "@/dataHelper/building.dataHelper";
 import { useBuildingsQuery, useDeleteBuildingMutation } from "@/hooks/useBuildingQuery";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { BuildingHeader, BuildingSearchSection, BuildingTable, DeleteConfirmDialog } from "./components";
+import { BuildingHeader, BuildingSearchSection, BuildingCard, DeleteConfirmDialog } from "./components";
 import { useBuildingSort } from "./hooks";
+import { Spinner } from "@/components/ui/spinner";
 
 const Buildings: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Sort logic
-  const { sort, getSortDirection, toggleSort, clearSort } = useBuildingSort();
+  const { sort, clearSort } = useBuildingSort();
 
   // Search params
   const [searchParams, setSearchParams] = useState<SearchBuildingRequest>({
     page: DEFAULT_PAGE,
-    per_page: DEFAULT_LIMIT,
+    per_page: DEFAULT_CARD_LIMIT,
     name: "",
     area_max: undefined,
     area_min: undefined,
@@ -36,7 +37,7 @@ const Buildings: React.FC = () => {
   // Extract data
   const buildings = dataBuilding?.data?.data ?? [];
   const page = dataBuilding?.data?.current_page ?? searchParams.page ?? DEFAULT_PAGE;
-  const perPage = dataBuilding?.data?.per_page ?? DEFAULT_LIMIT;
+  const perPage = dataBuilding?.data?.per_page ?? DEFAULT_CARD_LIMIT;
   const totalPages = dataBuilding?.data?.last_page ?? 1;
   const totalItems = dataBuilding?.data?.total ?? 0;
 
@@ -44,7 +45,7 @@ const Buildings: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<SearchBuildingRequest>({
     page: DEFAULT_PAGE,
-    per_page: DEFAULT_LIMIT,
+    per_page: DEFAULT_CARD_LIMIT,
     name: "",
     area_max: undefined,
     area_min: undefined,
@@ -57,7 +58,7 @@ const Buildings: React.FC = () => {
   const handleResetFilters = () => {
     const resetFilters = {
       page: DEFAULT_PAGE,
-      per_page: DEFAULT_LIMIT,
+      per_page: DEFAULT_CARD_LIMIT,
       name: "",
       area_max: undefined,
       area_min: undefined,
@@ -136,21 +137,27 @@ const Buildings: React.FC = () => {
         onConfirm={confirmDelete}
       />
       {isLoadingBuilding ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.loading")}</div>
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
+          <Spinner size="lg" showText text={t("common.loading_data")} />
+        </div>
       ) : errorBuilding ? (
         <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.error")}</div>
       ) : totalItems === 0 ? (
         <EmptyPage />
       ) : (
-        <>
-          <BuildingTable
-            buildings={buildings}
-            sort={sort}
-            getSortDirection={getSortDirection}
-            onToggleSort={toggleSort}
-            onClearSort={clearSort}
-            onDelete={askDelete}
-          />
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {buildings.map((building: Building) => (
+              <BuildingCard
+                key={building.id}
+                building={building}
+                onView={(b: Building) => navigate(`${ROUTERS.BUILDINGS_EDIT}/detail-building/${b.user_id}/${b.id}`)}
+                onEdit={(b: Building) => navigate(`${ROUTERS.BUILDINGS_EDIT}/edit-building/${b.user_id}/${b.id}`)}
+                onDelete={(b: Building) => askDelete(Number(b.id))}
+                isDeleting={deleteLoading && deleteTarget?.id === building.id}
+              />
+            ))}
+          </div>
           {totalItems > 0 && (
             <div className="p-4">
               <Pagination
@@ -160,10 +167,11 @@ const Buildings: React.FC = () => {
                 perPage={perPage}
                 onPerPageChange={(perPage) => setSearchParams((prev) => ({ ...prev, per_page: perPage }))}
                 totalItems={totalItems}
+                perPageOptions={[12, 24, 48]}
               />
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

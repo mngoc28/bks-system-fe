@@ -4,6 +4,7 @@ import { ProvinceDetailFormProps } from "@/dataHelper/province.dataHelper";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Hash, Home, MapPinned } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
     onCancel,
@@ -18,8 +19,8 @@ const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
                     <h2 className="text-2xl font-bold">{t("province.detail_province")}</h2>
                 </div>
                 <Card>
-                    <CardContent className="p-6">
-                        <p className="text-center text-slate-500">{t("common.loading")}</p>
+                    <CardContent className="flex min-h-[200px] items-center justify-center p-6">
+                        <Spinner size="md" showText text={t("common.loading_data")} />
                     </CardContent>
                 </Card>
             </div>

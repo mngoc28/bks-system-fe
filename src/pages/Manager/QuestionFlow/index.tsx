@@ -28,6 +28,7 @@ import { ArrowLeft, Eye, RotateCw, SquarePen, Trash2, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTERS } from "@/constant";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 import {
   useChatbotFlowQuery,
   useDeleteChatbotMutation,
@@ -757,12 +758,9 @@ useEffect(() => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 px-4 py-4 text-sm text-slate-600">
-        <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
-          <span className="size-2 animate-ping rounded-full bg-blue-500" aria-hidden="true" />
-          {t("common.loading")}
-        </span>
-        <p>{t("questions.flow.loading", { defaultValue: "Loading chatbot flow..." })}</p>
+      <div className="flex h-full flex-col items-center justify-center gap-4 px-4 py-8">
+        <Spinner size="lg" showText text={t("common.loading_data")} />
+        <p className="text-sm text-slate-500">{t("questions.flow.loading", { defaultValue: "Loading chatbot flow..." })}</p>
       </div>
     );
   }
