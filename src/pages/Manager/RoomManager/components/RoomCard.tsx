@@ -22,14 +22,6 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
   const mainImage = room.images?.find(img => img.sort === 1)?.image_url || room.images?.[0]?.image_url;
   const imageUrl = mainImage ? `${CLOUDINARY_HEADER_IMAGE_URL}${mainImage.startsWith('/') ? '' : '/'}${mainImage}` : null;
 
-  const getRoomTypeName = (type: number) => {
-    switch (type) {
-      case 1: return t("rooms.room_type_single");
-      case 2: return t("rooms.room_type_double");
-      case 3: return t("rooms.room_type_mini_apartment");
-      default: return "-";
-    }
-  };
 
   const price = room.prices?.[0]?.price || 0;
 
@@ -53,8 +45,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
         />
 
         {/* Status Badge */}
-        <div className="absolute left-4 top-4">
-          <Badge className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg ${room.status ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+        <div className="absolute left-4 top-4 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
+          <Badge className={`border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg w-fit ${room.status ? 'bg-emerald-500' : 'bg-rose-500'}`}>
             {room.status ? t("rooms.status_public") : t("rooms.status_private")}
           </Badge>
         </div>
@@ -123,13 +115,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
         <div className="mt-4 flex items-center justify-between">
           <div className="flex flex-col">
             <p className="text-[10px] uppercase text-slate-400 font-bold leading-none mb-1">{t("rooms.price")}</p>
-            <p className="text-base font-black text-indigo-600 dark:text-indigo-400">
+            <p className="text-base font-black text-indigo-600 dark:text-indigo-400 leading-none">
               {price > 0 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price) : t("rooms.contact_price")}
             </p>
           </div>
-          <Badge className="bg-slate-100 text-slate-600 border-none font-bold text-[10px]">
-            {getRoomTypeName(room.room_type)}
-          </Badge>
         </div>
       </div>
     </Card>

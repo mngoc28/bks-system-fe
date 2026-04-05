@@ -4,6 +4,7 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { Building,BuildingDetail, CreateBuildingRequest,BuildingListDataResponse, BuildingType, SearchBuildingRequest, UpdateBuildingRequest } from "@/dataHelper/building.dataHelper";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { partnerService } from "@/services/partnerService";
 
 // search buildings
 export const useBuildingsQuery = (params: SearchBuildingRequest) => {
@@ -20,13 +21,24 @@ export const useBuildingsQuery = (params: SearchBuildingRequest) => {
   });
 };
 
-// get building types
+// get building types (Admin)
 export const useBuildingTypesQuery = () => {
   return useQuery<ApiResponse<BuildingType[]>, Error>({
-    queryKey: ["building-types"],
+    queryKey: ["building-types-admin"],
     queryFn: async () => {
       const response = await buildingApi.getBuildingTypes();
       return response;
+    },
+  });
+};
+
+// get building types (Partner)
+export const usePartnerBuildingTypesQuery = () => {
+  return useQuery<ApiResponse<BuildingType[]>, Error>({
+    queryKey: ["building-types-partner"],
+    queryFn: async () => {
+      const response = await partnerService.getBuildingTypes();
+      return response.data as ApiResponse<BuildingType[]>;
     },
   });
 };

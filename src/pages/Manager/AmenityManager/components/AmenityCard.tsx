@@ -39,7 +39,7 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400">
            <Clock className="size-3.5 text-indigo-500" />
-           <span>{t("common.updated")}: {safeFormatDateTime(amenity.updated_at)}</span>
+           <span>{t("common.last_updated")}: {safeFormatDateTime(amenity.updated_at)}</span>
         </div>
       </div>
 

@@ -27,7 +27,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
           <LayoutGrid className="size-5" />
         </div>
-        <Badge className="bg-emerald-50 text-emerald-600 border-none px-2 py-0.5 text-[10px] font-bold">ACTIVE</Badge>
+        <Badge className="bg-emerald-50 text-emerald-600 border-none px-2 py-0.5 text-[10px] font-bold">
+          {t("services.status_active")}
+        </Badge>
       </div>
 
       <h3
@@ -39,17 +41,17 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
 
       <div className="mb-4 flex items-center gap-2 text-xs text-slate-400">
         <Clock className="size-3" />
-        <span>{t("common.updated")}: {safeFormatDateTime(service.updated_at)}</span>
+        <span>{t("common.last_updated")}: {safeFormatDateTime(service.updated_at)}</span>
       </div>
 
       <p className="mb-6 line-clamp-3 text-sm leading-relaxed text-slate-400 flex-1">
-        {service.description || t("serviceManagement.no_description")}
+        {service.description || t("services.no_description")}
       </p>
 
       <div className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
         <div className="flex items-center gap-2">
           <CreditCard className="size-4 text-emerald-500" />
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("serviceManagement.price")}</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("services.price")}</span>
         </div>
         <span className="text-lg font-black text-emerald-600">{formatPrice(service.price)}</span>
       </div>

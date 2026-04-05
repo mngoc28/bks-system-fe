@@ -64,6 +64,21 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
     const hasChildren = !!item.children?.length;
     const isOpen = openMenus[item.id];
 
+    if (item.isHeader) {
+      if (compact) return <div key={item.id} className="my-4 h-px bg-white/10 mx-2" />;
+      return (
+        <li
+          key={item.id}
+          className={cn(
+            "px-4 py-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 transition-opacity duration-200",
+            showLabels ? "opacity-100" : "opacity-0"
+          )}
+        >
+          {item.label}
+        </li>
+      );
+    }
+
     if (hasChildren) {
       return (
         <li key={item.id}>
@@ -188,20 +203,25 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
     <div
       className={cn(
         "flex h-full flex-col border-r border-white/10 bg-gradient-to-b from-primary via-[#1e3a8a] to-[#1e40af] transition-[width] duration-200 ease-in-out",
-        isCollapsed ? "w-[88px] px-3 py-6" : "w-[300px] p-6",
+        isCollapsed ? "w-[72px] px-3 py-6" : "w-[260px] p-6",
         className,
       )}
     >
-      <div className={cn("flex items-center", isCollapsed ? "justify-center gap-3" : "justify-between")}>
-        <span
-          className={cn(
-            "font-extrabold tracking-tight text-white transition-all duration-200",
-            isCollapsed ? "text-xl" : "text-2xl",
-            !isCollapsed && !showLabels ? "opacity-0 translate-x-2" : "opacity-100 translate-x-0",
-          )}
-        >
-          {isCollapsed ? classInfo.acronym : classInfo.name.toUpperCase()}
-        </span>
+      <div className={cn("flex", isCollapsed ? "flex-col items-center gap-4" : "items-center justify-between gap-3")}>
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/10 shadow-lg backdrop-blur-sm">
+            <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-7 w-7 object-contain" />
+          </div>
+          <span
+            className={cn(
+              "font-extrabold tracking-tight text-white transition-all duration-200 whitespace-nowrap",
+              isCollapsed ? "hidden" : "text-xl",
+              !isCollapsed && !showLabels ? "opacity-0 translate-x-2" : "opacity-100 translate-x-0",
+            )}
+          >
+            {classInfo.name.toUpperCase()}
+          </span>
+        </div>
         <button
           type="button"
           onClick={onToggleCollapse}
@@ -223,9 +243,11 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
   );
 
   const renderMobileSidebar = () => (
-    <div className="flex h-full w-[80px] flex-col border-r border-white/10 bg-gradient-to-b from-primary via-[#1e3a8a] to-[#1e40af] p-4">
+    <div className="flex h-full w-[72px] flex-col border-r border-white/10 bg-gradient-to-b from-primary via-[#1e3a8a] to-[#1e40af] p-4">
       <div className="flex items-center justify-center">
-        <span className="text-xl font-bold text-white">{classInfo.acronym}</span>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 border border-white/10 shadow-lg backdrop-blur-sm">
+          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-7 w-7 object-contain" />
+        </div>
       </div>
       <nav className="mt-4 flex-1 overflow-y-auto">
         <ul className="space-y-3">{menuItems.map((item) => renderMenuItem(item, { isMobileView: true }))}</ul>
@@ -238,7 +260,7 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
       <>
         {renderMobileSidebar()}
         <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <DialogContent className="h-full w-[300px] max-w-none p-0">{renderFullSidebar()}</DialogContent>
+          <DialogContent className="h-full w-[260px] max-w-none p-0">{renderFullSidebar()}</DialogContent>
         </Dialog>
       </>
     );

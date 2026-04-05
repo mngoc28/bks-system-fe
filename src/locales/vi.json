@@ -300,6 +300,7 @@
     "end_date": "Ngày kết thúc",
     "created_at": "Ngày tạo",
     "updated_at": "Ngày cập nhật",
+    "last_updated": "Cập nhật lần cuối",
     "deleted_at": "Ngày xóa",
     "created_by": "Người tạo",
     "updated_by": "Người cập nhật",
@@ -887,18 +888,24 @@
     "setting": "Cài đặt"
   },
   "menu": {
-    "user-management": "Quản lý người dùng",
+    "header_general": "TỔNG QUAN",
+    "header_system": "QUẢN LÝ HỆ THỐNG",
+    "header_property": "QUẢN LÝ TÀI SẢN",
+    "header_services": "DỊCH VỤ & TIN TỨC",
+    "user-management": "Người dùng",
     "dashboard": "Bảng điều khiển",
-    "buildings": "Quản lý tòa nhà",
-    "rooms": "Quản lý phòng",
-    "bookings": "Quản lý đặt phòng",
-    "province-management": "Quản lý tỉnh/thành phố",
-    "amenities": "Quản lý tiện ích",
-    "chatbot": "Quản lý Chatbot",
-    "service": "Quản lý dịch vụ",
-    "news": "Quản lý tin tức",
-    "users": "Quản lý người dùng",
-    "partner": "Quản lý đối tác"
+    "buildings": "Tòa nhà",
+    "properties": "Tài sản",
+    "rooms": "Phòng",
+    "bookings": "Đặt phòng",
+    "province-management": "Khu vực",
+    "amenities": "Tiện ích",
+    "chatbot": "Chatbot",
+    "service": "Dịch vụ",
+    "news": "Tin tức",
+    "users": "Người dùng",
+    "partner": "Đối tác",
+    "maintenances": "Bảo trì"
   },
   "endUserPartners": {
     "title": "Công ty quản lý phòng/căn hộ hàng tháng tại",
@@ -959,7 +966,19 @@
     "total_public_rooms": "Tổng số phòng mở",
     "total_available_rooms": "Tổng số phòng trống",
     "booking_statistics": "Thống kê đặt phòng",
-    "total_bookings": "Tổng đặt phòng",
+    "building_type": {
+      "1": "Căn hộ",
+      "2": "Nhà nguyên căn",
+      "3": "Văn phòng",
+      "4": "Cửa hàng",
+      "5": "Kho bãi",
+      "6": "Khác"
+    },
+    "rent_category": {
+      "1": "Nguyên căn",
+      "2": "Theo phòng",
+      "3": "Theo giường"
+    },
     "pending": "Đang chờ",
     "confirmed": "Đã xác nhận",
     "completed": "Hoàn thành",
@@ -1016,6 +1035,10 @@
     "table_province": "Tỉnh/Thành phố",
     "table_ward": "Phường/Xã",
     "table_number_of_floors": "Số tầng",
+    "floors": "Số tầng",
+    "status": {
+      "active": "Hoạt động"
+    },
     "table_number_of_units": "Số phòng",
     "table_year_built": "Năm xây dựng",
     "table_building_type": "Loại tòa nhà",
@@ -1025,6 +1048,7 @@
     "create_building": "Thêm tòa nhà",
     "add_image": "Thêm hình ảnh tòa nhà",
     "created_by": "Người tạo",
+    "created_at": "Ngày tạo",
     "updated_at": "Cập nhật lúc",
     "confirm_delete": "Bạn có chắc chắn muốn xóa tòa nhà này không?",
     "error_getting_buildings": "Lỗi khi tải danh sách tòa nhà",
@@ -1043,8 +1067,10 @@
     "filter_province_placeholder": "Nhập tỉnh/thành phố...",
     "filter_year_built": "Năm xây dựng",
     "filter_year_built_placeholder": "Nhập năm xây dựng...",
-    "filter_building_type": "Loại tòa nhà",
-    "filter_building_type_placeholder": "Chọn loại tòa nhà...",
+    "filter_building_type": "Loại hình bất động sản",
+    "filter_building_type_placeholder": "Chọn loại hình...",
+    "filter_rent_category": "Hình thức cho thuê",
+    "filter_rent_category_placeholder": "Chọn hình thức...",
     "filter_area": "Diện tích",
     "filter_area_placeholder": "Nhập diện tích...",
     "delete_confirm_message": "Bạn có chắc chắn muốn xóa tòa nhà này không?",
@@ -1071,14 +1097,17 @@
     "ward_name_placeholder": "Chọn phường/xã...",
     "address_detail": "Địa chỉ chi tiết",
     "address_detail_placeholder": "Nhập địa chỉ chi tiết...",
+    "no_address_provided": "Chưa cung cấp địa chỉ chi tiết",
     "number_of_floors": "Số tầng",
     "number_of_floors_placeholder": "Nhập số tầng...",
     "number_of_units": "Số phòng",
     "number_of_units_placeholder": "Nhập số phòng...",
     "year_built": "Năm xây dựng",
     "year_built_placeholder": "Nhập năm xây dựng...",
-    "building_type_name": "Loại tòa nhà",
-    "building_type_placeholder": "Chọn loại tòa nhà...",
+    "building_type_name": "Loại hình bất động sản",
+    "building_type_placeholder": "Chọn loại hình...",
+    "rent_category_name": "Hình thức cho thuê",
+    "rent_category_placeholder": "Chọn hình thức...",
     "area_square_meter": "Diện tích (m²)",
     "area_square_meter_placeholder": "Nhập diện tích (m²)...",
     "description": "Mô tả",
@@ -1202,6 +1231,7 @@
     "deposit_placeholder": "Nhập tiền đặt cọc...",
     "area": "Diện tích",
     "area_placeholder": "Nhập diện tích phòng...",
+    "price": "Giá thuê",
     "floor_number": "Tầng",
     "floor_number_placeholder": "Chọn tầng...",
     "people": "Số người tối đa",
@@ -1291,7 +1321,10 @@
     "search_name_placeholder": "Nhập tên tiện ích để tìm kiếm..."
   },
   "services": {
-    "error_getting_services": "Lỗi khi tải danh sách dịch vụ"
+    "error_getting_services": "Lỗi khi tải danh sách dịch vụ",
+    "price": "Giá",
+    "no_description": "Chưa có mô tả",
+    "status_active": "Hoạt động"
   },
   "price_packages": {
     "error_getting_price_packages": "Lỗi khi tải danh sách gói giá"
@@ -1350,6 +1383,7 @@
       "room": "Số phòng",
       "start_date": "Ngày bắt đầu",
       "end_date": "Ngày kết thúc",
+      "duration": "Thời gian",
       "price": "Giá phòng",
       "status": "Trạng thái",
       "assignee": "Người phụ trách",
@@ -2001,5 +2035,10 @@
         "maxLength": "Yêu cầu đặc biệt không được vượt quá 500 ký tự"
       }
     }
+  },
+  "RENT_CATEGORY": {
+    "1": "Nguyên căn",
+    "2": "Theo phòng",
+    "3": "Theo giường"
   }
 }

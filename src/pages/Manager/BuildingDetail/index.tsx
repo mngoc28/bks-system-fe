@@ -1,9 +1,9 @@
 import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { BUILDING_TYPE, CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { useImagesByBuildingIdQuery } from "@/hooks/useBuildingImageQuery";
-import { useBuildingQuery } from "@/hooks/useBuildingQuery";
+import { useBuildingQuery, useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
+import { safeFormatDateTime } from "@/utils/dateUtils";
 import { ArrowLeftIcon, EditIcon, ImageIcon, Loader2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ const BuildingDetail: React.FC = () => {
     const { data: buildingData, isLoading: buildingLoading, isError: buildingError } = useBuildingQuery(buildingId);
     const { data: imagesData, isLoading: imagesLoading, isError: imagesError } = useImagesByBuildingIdQuery(buildingId);
     let indexImage = 1;
+    const { data: buildingTypes } = useBuildingTypesQuery();
     const navigate = useNavigate();
     const building = buildingData?.data || null;
     const [open, setOpen] = React.useState(false);
@@ -74,63 +75,103 @@ const BuildingDetail: React.FC = () => {
                 </>}
                 {building && !buildingError && <div className="flex flex-col gap-2 md:gap-1">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.building_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.name}</p>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.building_name")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.name || ""}</div>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.user_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.user?.name}</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.address")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.address_detail}</p>
-                        </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.area")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.area}</p>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.user_name")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.user?.name || ""}</div>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.number_of_floors")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.number_of_floors}</p>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.address")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.address_detail || ""}</div>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.number_of_units")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.number_of_units}</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.year_built")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.year_built}</p>
-                        </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.building_type_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.building_type && BUILDING_TYPE[building?.building_type as keyof typeof BUILDING_TYPE]
-                                ? t(BUILDING_TYPE[building?.building_type as keyof typeof BUILDING_TYPE])
-                                : "-"}</p>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.area")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.area || ""}</div>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.ward_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.ward?.name}</p>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.number_of_floors")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.number_of_floors || ""}</div>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.province_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{building?.province?.name}</p>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.number_of_units")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.number_of_units || ""}</div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.year_built")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.year_built || ""}</div>
+                        </div>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.building_type_name")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">
+                                {building?.property_type_id ? (buildingTypes?.data?.find(t => t.id === building.property_type_id)?.name || building.property_type_id) : "-"}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.rent_category")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">
+                                {building?.rent_category ? t(`RENT_CATEGORY.${building.rent_category}`) : "-"}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.ward_name")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.ward?.name || ""}</div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-1">
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.province_name")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{building?.province?.name || ""}</div>
+                        </div>
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.created_at")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">{safeFormatDateTime((building as any)?.created_at)}</div>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 gap-1">
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("buildings.description")} :</Label>
-                            <div
-                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(building?.description || "") }}
-                            />
+                        <div className="grid grid-cols-10 border border-gray-200 rounded-md overflow-hidden">
+                            <div className="col-span-3 flex items-center px-3 bg-slate-100 border-r border-slate-200 font-medium">
+                                {t("buildings.description")}
+                            </div>
+                            <div className="col-span-7 p-3 min-h-[52px]">
+                                <div
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(building?.description || "") }}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

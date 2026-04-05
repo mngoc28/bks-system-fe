@@ -69,9 +69,11 @@ export type PaginationItemProps = {
 export type MenuItem = {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   path?: string;
   children?: MenuItem[];
+  isHeader?: boolean;
+  permissionKey?: string;
 };
 
 export interface ClassSidebarProps {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Plus, MapPin, Maximize, AirVent, Zap, Wallet, Edit, Trash2, X, Loader2 } from 'lucide-react';
-import { Building, Room, PropertyType } from './types';
+import { Building, Room } from './types';
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlainTextarea } from "@/components/ui/textarea";
 import { partnerService } from '@/services/partnerService';
+import { usePartnerBuildingTypesQuery } from '@/hooks/useBuildingQuery';
+import { RENT_CATEGORY } from '@/constant';
+import { useTranslation } from 'react-i18next';
 
 const Properties: React.FC = () => {
+  const { t } = useTranslation();
   const [buildings, setBuildings] = useState<Building[]>([]);
+  const { data: buildingTypes } = usePartnerBuildingTypesQuery();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -131,7 +136,10 @@ const Properties: React.FC = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded uppercase tracking-wider">
-                    {building.type}
+                    {building.rent_category ? t(`RENT_CATEGORY.${building.rent_category}`) : t("common.property")}
+                  </span>
+                  <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded uppercase tracking-wider">
+                    {buildingTypes?.data?.find(type => type.id === building.property_type_id)?.name || building.property_type_id}
                   </span>
                   <h2 className="text-xl font-bold text-gray-800">{building.name}</h2>
                 </div>
@@ -230,16 +238,22 @@ const Properties: React.FC = () => {
         isOpen={isBuildingModalOpen} 
         onClose={() => setIsBuildingModalOpen(false)} 
         building={editingBuilding}
+        buildingTypes={buildingTypes?.data || []}
         onSave={async (data) => {
           try {
             if (editingBuilding) {
               await partnerService.updateBuilding(String(editingBuilding.id), data);
             } else {
-              await partnerService.createBuilding(data);
+              const submitData = {
+                ...data,
+                user_id: 0,
+              };
+              await partnerService.createBuilding(submitData);
             }
             fetchData();
             setIsBuildingModalOpen(false);
           } catch (error) {
+            console.error('Save error:', error);
             alert('Lỗi khi lưu thông tin bất động sản.');
           }
         }}
@@ -268,12 +282,19 @@ const Properties: React.FC = () => {
   );
 };
 
-// Internal Modal Components for staged implementation
-const BuildingModal: React.FC<{ isOpen: boolean, onClose: () => void, building: Building | null, onSave: (data: Partial<Building>) => void }> = ({ isOpen, onClose, building, onSave }) => {
+const BuildingModal: React.FC<{ 
+  isOpen: boolean, 
+  onClose: () => void, 
+  building: Building | null, 
+  buildingTypes: any[],
+  onSave: (data: Partial<Building>) => void 
+}> = ({ isOpen, onClose, building, buildingTypes, onSave }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<Building>>({
     name: building?.name || '',
     address: building?.address || '',
-    type: building?.type || 'Tòa nhà',
+    property_type_id: building?.property_type_id || 0,
+    rent_category: building?.rent_category || 0,
     description: building?.description || ''
   });
 
@@ -282,11 +303,12 @@ const BuildingModal: React.FC<{ isOpen: boolean, onClose: () => void, building: 
       setFormData({
         name: building.name,
         address: building.address,
-        type: building.type,
+        property_type_id: building.property_type_id,
+        rent_category: building.rent_category,
         description: building.description
       });
     } else {
-      setFormData({ name: '', address: '', type: 'Tòa nhà', description: '' });
+      setFormData({ name: '', address: '', property_type_id: 0, rent_category: 0, description: '' });
     }
   }, [building, isOpen]);
 
@@ -306,15 +328,27 @@ const BuildingModal: React.FC<{ isOpen: boolean, onClose: () => void, building: 
             <select 
               id="type" 
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus:ring-2 focus:ring-ring"
-              value={formData.type}
-              onChange={e => setFormData({...formData, type: e.target.value as PropertyType})}
+              value={formData.property_type_id}
+              onChange={e => setFormData({...formData, property_type_id: Number(e.target.value)})}
             >
-              <option value="Tòa nhà">Tòa nhà</option>
-              <option value="Resort">Resort</option>
-              <option value="Villa">Villa</option>
-              <option value="Căn hộ">Căn hộ</option>
-              <option value="Nhà nguyên căn">Nhà nguyên căn</option>
-              <option value="Khách sạn">Khách sạn</option>
+              <option value={0}>Chọn loại hình</option>
+              {buildingTypes.map(type => (
+                <option key={type.id} value={type.id}>{type.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="rent_category">Hình thức cho thuê</Label>
+            <select 
+              id="rent_category" 
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus:ring-2 focus:ring-ring"
+              value={formData.rent_category}
+              onChange={e => setFormData({...formData, rent_category: Number(e.target.value)})}
+            >
+              <option value={0}>Chọn hình thức</option>
+              {Object.entries(RENT_CATEGORY).map(([value, labelKey]) => (
+                <option key={value} value={value}>{t(labelKey as string)}</option>
+              ))}
             </select>
           </div>
           <div className="grid gap-2">

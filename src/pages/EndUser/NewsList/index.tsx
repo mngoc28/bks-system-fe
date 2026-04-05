@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, TrendingUp, Sparkles } from "lucide-react";
+import { format } from "date-fns";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { useListNewsPublicQuery, useLatestNewsQuery } from "@/hooks/useNewsQuery";
@@ -144,12 +145,17 @@ const NewsList = () => {
                   to={ROUTERS.PUBLIC_NEWS_DETAIL.replace(":newsId", item.id.toString())}
                   className="group block space-y-4"
                 >
-                  <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-slate-100 shadow-sm transition group-hover:shadow-xl group-hover:-translate-y-1">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-100 shadow-sm transition group-hover:shadow-xl group-hover:-translate-y-1">
                     <img 
                       src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : "https://images.unsplash.com/photo-1585829365234-781fcd50c40b?q=80&w=2070&auto=format&fit=crop"} 
                       alt={item.title} 
                       className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
                     />
+                    <div className="absolute left-4 top-4 z-10">
+                      <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+                        {item.published_at ? format(new Date(item.published_at), "dd/MM/yyyy") : "-"}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2">
@@ -208,12 +214,17 @@ const NewsList = () => {
                   to={ROUTERS.PUBLIC_NEWS_DETAIL.replace(":newsId", item.id.toString())}
                   className="group block space-y-3"
                 >
-                  <div className="aspect-square overflow-hidden rounded-2xl border border-slate-100 shadow-sm group-hover:shadow-md transition">
+                  <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-100 shadow-sm group-hover:shadow-md transition">
                     <img 
                       src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : "https://images.unsplash.com/photo-1585829365234-781fcd50c40b?q=80&w=2070&auto=format&fit=crop"} 
                       alt={item.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
+                    <div className="absolute left-3 top-3 z-10">
+                      <Badge className="gradient-indigo border-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-lg">
+                        {item.published_at ? format(new Date(item.published_at), "dd/MM/yyyy") : "-"}
+                      </Badge>
+                    </div>
                   </div>
                   <h4 className="font-bold text-sm text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2 leading-tight">
                     {item.title}

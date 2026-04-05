@@ -39,8 +39,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete }) =
         />
 
         {/* Status Badge */}
-        <div className="absolute left-4 top-4">
-          <Badge className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg ${news.status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+        <div className="absolute left-4 top-4 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
+          <Badge className={`border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg w-fit ${news.status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}`}>
             {news.status === 1 ? t("news.status_published") : t("news.status_draft")}
           </Badge>
         </div>

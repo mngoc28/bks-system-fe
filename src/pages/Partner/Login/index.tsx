@@ -3,7 +3,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { toastError, toastSuccess } from "@/components/ui/toast";
-import { useLoginMutation } from "@/hooks/useAuthQuery";
+import { usePartnerLoginMutation } from "@/hooks/useAuthQuery";
 import { loginFormSchema } from "@/shared/shema";
 import { useUserStore } from "@/store/useUserStore";
 import { setAccessToken, setUserEmail } from "@/utils/storage";
@@ -23,7 +23,7 @@ export default function PartnerLogin() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
-  const { mutate, status } = useLoginMutation();
+  const { mutate, status } = usePartnerLoginMutation();
 
   const form = useForm({
     resolver: zodResolver(loginFormSchema(t)),

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/dataHelper/booking.dataHelper";
-import { Edit, Trash2, Calendar, User, Home, CreditCard, UserCheck, Clock } from "lucide-react";
+import { Edit, Trash2, Calendar, User, Home, CreditCard, UserCheck, Clock, ArrowDown } from "lucide-react";
 import { formatDateVietnam, safeFormatDateTime } from "@/utils/dateUtils";
 import { formatPrice } from "@/utils/utils";
 
@@ -57,6 +57,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
 
       {/* Booking Details Grid */}
       <div className="mb-6 grid grid-cols-1 gap-4 border-y border-slate-50 py-5 dark:border-slate-800">
+        {/* Room Info */}
         <div className="flex items-start gap-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 shrink-0 dark:bg-cyan-900/30">
             <Home className="size-4" />
@@ -67,34 +68,43 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
           </div>
         </div>
 
+        {/* Duration Info */}
         <div className="flex items-start gap-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shrink-0 dark:bg-indigo-900/30">
             <Calendar className="size-4" />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t("bookings.table.duration")}</p>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-              {formatDateVietnam(booking.start_date)} - {formatDateVietnam(booking.end_date)}
-            </p>
+            <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">{t("bookings.table.duration")}</p>
+            <div className="flex flex-col text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">
+              <span>{formatDateVietnam(booking.start_date)}</span>
+              <div className="flex items-center gap-2 h-4 my-0.5">
+                <ArrowDown className="size-3 text-indigo-400/50" />
+                <div className="h-px w-8 bg-indigo-100 dark:bg-indigo-900/30" />
+              </div>
+              <span>{formatDateVietnam(booking.end_date)}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-start gap-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shrink-0 dark:bg-emerald-900/30">
-              <CreditCard className="size-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t("bookings.table.price")}</p>
-              <p className="text-base font-black text-emerald-600">{formatPrice(booking.price)}</p>
-            </div>
+        {/* Price Info */}
+        <div className="flex items-start gap-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shrink-0 dark:bg-emerald-900/30">
+            <CreditCard className="size-4" />
           </div>
-          <div className="text-right">
+          <div>
+            <p className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t("bookings.table.price")}</p>
+            <p className="text-base font-black text-emerald-600 leading-none">{formatPrice(booking.price)}</p>
+          </div>
+        </div>
+
+        {/* Assignee Info */}
+        <div className="flex items-start gap-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 shrink-0 dark:bg-violet-900/30">
+            <UserCheck className="size-4" />
+          </div>
+          <div>
             <p className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t("bookings.table.assignee")}</p>
-            <div className="flex items-center gap-1.5 justify-end text-sm font-bold text-slate-700 dark:text-slate-200">
-              <UserCheck className="size-3.5 text-indigo-500" />
-              {booking.assignee || "-"}
-            </div>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none">{booking.assignee || "-"}</p>
           </div>
         </div>
       </div>

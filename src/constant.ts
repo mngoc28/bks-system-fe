@@ -44,6 +44,17 @@ export const enum ROUTERS {
   NEWS_EDIT = "/admin/news/edit",
   NEWS_DETAIL = "/admin/news/detail",
   PARTNER_MANAGEMENT = "/admin/partner-information",
+  
+  // Partner Routes
+  PARTNER_LOGIN = "/partner/login",
+  PARTNER_DASHBOARD = "/partner/dashboard",
+  PARTNER_PROPERTIES = "/partner/properties",
+  PARTNER_BOOKINGS = "/partner/bookings",
+  PARTNER_SERVICES = "/partner/services",
+  PARTNER_AMENITIES = "/partner/amenities",
+  PARTNER_NEWS = "/partner/news",
+  PARTNER_MAINTENANCE = "/partner/maintenances",
+
   // End User Routes
   PARTNERS = "/:provinceNameEn/partners",
   PARTNER_DETAIL = "/partner/detail/:partner_id",
@@ -61,14 +72,6 @@ export const enum ROUTERS {
   RESET_TOKEN_SUCCESS = "/reset-token-success",
   PUBLIC_NEWS_DETAIL = "/news/:newsId",
   PUBLIC_NEWS_LIST = "/news-list",
-  PARTNER_LOGIN = "/partner/login",
-  PARTNER_DASHBOARD = "/partner/dashboard",
-  PARTNER_PROPERTIES = "/partner/properties",
-  PARTNER_BOOKINGS = "/partner/bookings",
-  PARTNER_SERVICES = "/partner/services",
-  PARTNER_AMENITIES = "/partner/amenities",
-  PARTNER_NEWS = "/partner/news",
-  PARTNER_MAINTENANCE = "/partner/maintenances",
 }
 
 export const STORAGE_VAR = {
@@ -165,6 +168,13 @@ export const BUILDING_TYPE = {
   8: "buildings.building_type.8",
   9: "buildings.building_type.9",
 };
+
+export const RENT_CATEGORY = {
+  1: "buildings.rent_category.1",
+  2: "buildings.rent_category.2",
+  3: "buildings.rent_category.3",
+};
+
 export const BUILDING_IMAGE_TYPE = {
   1: "buildings.building_image_type.1",
   2: "buildings.building_image_type.2",

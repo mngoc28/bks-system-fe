@@ -10,19 +10,22 @@ import { buildingFormSchema } from "@/shared/shema";
 import { CreateBuildingRequest } from "@/dataHelper/building.dataHelper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
-import { BUILDING_TYPE, ROUTERS } from "@/constant";
+import { ROUTERS } from "@/constant";
 import { useGetWardsByProvinceId } from "@/hooks/useWardQuery";
 import { Ward } from "@/dataHelper/ward.dataHelper";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { useCreateBuildingMutation } from "@/hooks/useBuildingQuery";
+import { useBuildingTypesQuery, useCreateBuildingMutation } from "@/hooks/useBuildingQuery";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
+import { BuildingType } from "@/dataHelper/building.dataHelper";
+import { RENT_CATEGORY } from "@/constant";
 
 const BuildingAddForm: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: provincesTypes } = useGetAllProvincesTypes();
   const createBuildingMutation = useCreateBuildingMutation();
+  const { data: buildingTypes } = useBuildingTypesQuery();
   const { data: profileData } = useGetUserProfileQuery();
   const userId = profileData?.data?.id ?? 0;
   const provincesTypesData = provincesTypes?.data || [];
@@ -36,13 +39,13 @@ const BuildingAddForm: React.FC = () => {
     number_of_floors: 0,
     number_of_units: 0,
     year_built: 0,
-    building_type: null,
+    property_type_id: 0,
+    rent_category: 0,
     area: 0,
     description: "",
   });
 
-  // get all building types
-  const buildingTypesData = Object.entries(BUILDING_TYPE);
+  const buildingTypesData = buildingTypes?.data || [];
 
   // handle form
   const form = useForm<CreateBuildingRequest>({
@@ -91,7 +94,8 @@ const BuildingAddForm: React.FC = () => {
       number_of_floors: 0,
       number_of_units: 0,
       year_built: 0,
-      building_type: null,
+      property_type_id: 0,
+      rent_category: 0,
       area: 0,
       description: "",
     });
@@ -104,7 +108,8 @@ const BuildingAddForm: React.FC = () => {
       number_of_floors: 0,
       number_of_units: 0,
       year_built: 0,
-      building_type: null,
+      property_type_id: 0,
+      rent_category: 0,
       area: 0,
       description: "",
     });
@@ -220,21 +225,57 @@ const BuildingAddForm: React.FC = () => {
                   )}
                 />
 
-                {/* Building Type */}
+                {/* Property Type */}
                 <FormField
                   control={form.control}
-                  name="building_type"
+                  name="property_type_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.building_type_name")}</FormLabel>
+                      <div className="flex items-center justify-start gap-1">
+                        <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.building_type_name")}</FormLabel>
+                        <Star fill="#EF4444" className="size-2 text-red-500" />
+                      </div>
                       <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value?.toString() || ""}>
+                        <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value?.toString() || ""}>
                           <SelectTrigger>
                             <SelectValue placeholder={t("buildings.building_type_placeholder")} />
                           </SelectTrigger>
                           <SelectContent>
                             {
-                              buildingTypesData.map(([key, value]) => {
+                              buildingTypesData.map((type: BuildingType) => {
+                                return (
+                                  <SelectItem key={type.id} value={type.id.toString()}>
+                                    {type.name}
+                                  </SelectItem>
+                                );
+                              })
+                            }
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Rent Category */}
+                <FormField
+                  control={form.control}
+                  name="rent_category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-start gap-1">
+                        <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.rent_category_name")}</FormLabel>
+                        <Star fill="#EF4444" className="size-2 text-red-500" />
+                      </div>
+                      <FormControl>
+                        <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value?.toString() || ""}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("buildings.rent_category_placeholder")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {
+                              Object.entries(RENT_CATEGORY).map(([key, value]) => {
                                 return (
                                   <SelectItem key={key} value={key}>
                                     {t(value)}
@@ -245,6 +286,7 @@ const BuildingAddForm: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

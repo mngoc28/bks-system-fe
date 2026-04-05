@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import AuthImageOutlet from "./components/layout/AuthImageOutlet";
 import { ROUTERS } from "./constant";
 import { useCheckTokenStore } from "./store/useCheckTokenStore";
@@ -110,6 +110,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const userRole = useUserStore((state) => state.userRole);
   const logout = useUserStore((state) => state.logout);
   const [token, setToken] = useState<string | null>(getAccessToken());
+  const location = useLocation();
 
   useEffect(() => {
     const currentToken = getAccessToken();
@@ -140,10 +141,14 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    if (role === 'partner') {
+    // if is partner and try to access /partner/login -> redirect to /partner/dashboard
+    if (role === 'partner' && location.pathname === ROUTERS.PARTNER_LOGIN) {
       return <Navigate to="/partner/dashboard" replace />;
     }
-    return <Navigate to={ROUTERS.CONTROL} replace />;
+    // if is admin (or other role)  and try to login admin page -> redirect to /admin/dashboard
+    if (role !== 'partner' && location.pathname === ROUTERS.LOGIN) {
+      return <Navigate to={ROUTERS.CONTROL} replace />;
+    }
   }
 
   return <>{children}</>;

@@ -20,6 +20,18 @@ export const useLoginMutation = () => {
   });
 };
 
+export const usePartnerLoginMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: LoginPayload) => authApi.partnerLogin(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: () => {},
+  });
+};
+
 export const useRegisterMutation = () => {
   return useMutation({
     mutationFn: (data: RegisterPayload) => authApi.register(data),
@@ -42,6 +54,24 @@ export const useLogoutMutation = () => {
     },
     onError: () => {
       toastError(t("auth.logout_failed"));
+    },
+  });
+};
+
+export const usePartnerLogoutMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.partnerLogout,
+    onSuccess: () => {
+      localStorage.removeItem("token");
+      queryClient.removeQueries({ queryKey: ["profile"] });
+      clearAllDashboardDateRanges();
+      toastSuccess(t("partner_auth.logout_success") || "Đã đăng xuất khỏi cổng Đối tác");
+    },
+    onError: () => {
+      toastError(t("partner_auth.logout_failed") || "Đăng xuất thất bại");
     },
   });
 };

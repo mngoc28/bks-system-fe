@@ -9,7 +9,8 @@ export interface Building {
   number_of_floors: number;
   number_of_units: number;
   year_built: string | null;
-  building_type?: number | null;
+  property_type_id: number;
+  rent_category: number;
   area: number;
   description: string;
   user_id: number;
@@ -18,6 +19,7 @@ export interface Building {
   user_name:string;
   province_name:string;
   ward_name:string;
+  address_detail: string;
   created_by: number;
   updated_by: number;
   created_at: string;
@@ -30,7 +32,8 @@ export interface BuildingDetail {
   number_of_floors: number;
   number_of_units: number;
   year_built: number | null;
-  building_type?: number | null;
+  property_type_id: number;
+  rent_category: number;
   address_detail: string;
   area: number;
   description: string;
@@ -51,7 +54,8 @@ export interface SearchBuildingRequest {
   province_name?: string | null;
   ward_name?: string | null;
   year_built?: string | null;
-  building_type?: number | null;
+  property_type_id?: number | null;
+  rent_category?: number | null;
   sort?: TypeSort[] | null;
   page?: number | typeof DEFAULT_PAGE;
   per_page?: number | typeof DEFAULT_LIMIT;
@@ -79,8 +83,8 @@ export interface BuildingListDataResponse {
 }
 
 export interface BuildingType {
-  value: number;
-  label: string;
+  id: number;
+  name: string;
 }
 export interface PaginationLink {
   url: string | null;
@@ -97,7 +101,8 @@ export interface CreateBuildingRequest {
   number_of_floors: number;
   number_of_units: number;
   year_built: number | null;
-  building_type?: number | null;
+  property_type_id: number;
+  rent_category: number;
   area: number;
   description: string;
 }

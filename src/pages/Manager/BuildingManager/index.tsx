@@ -27,7 +27,7 @@ const Buildings: React.FC = () => {
     province_name: "",
     ward_name: "",
     year_built: "",
-    building_type: undefined,
+    property_type_id: undefined,
     sort: null,
   });
 
@@ -52,7 +52,7 @@ const Buildings: React.FC = () => {
     province_name: "",
     ward_name: "",
     year_built: "",
-    building_type: undefined,
+    property_type_id: undefined,
   });
 
   const handleResetFilters = () => {
@@ -65,7 +65,7 @@ const Buildings: React.FC = () => {
       province_name: "",
       ward_name: "",
       year_built: "",
-      building_type: undefined,
+      property_type_id: undefined,
       sort: null,
     };
     setFilters(resetFilters);
@@ -151,7 +151,7 @@ const Buildings: React.FC = () => {
               <BuildingCard
                 key={building.id}
                 building={building}
-                onView={(b: Building) => navigate(`${ROUTERS.BUILDINGS_EDIT}/detail-building/${b.user_id}/${b.id}`)}
+                onView={(b: Building) => navigate(`${ROUTERS.BUILDINGS_DETAIL}/${b.user_id}/${b.id}`)}
                 onEdit={(b: Building) => navigate(`${ROUTERS.BUILDINGS_EDIT}/edit-building/${b.user_id}/${b.id}`)}
                 onDelete={(b: Building) => askDelete(Number(b.id))}
                 isDeleting={deleteLoading && deleteTarget?.id === building.id}

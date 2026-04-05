@@ -1,3 +1,4 @@
+import { getAccessToken } from "@/utils/storage";
 import axios, { AxiosRequestConfig } from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -13,8 +14,8 @@ const axiosInstance = axios.create({
 // Thêm interceptor cho request
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Lấy token từ localStorage
-    const token = localStorage.getItem("token");
+    // Lấy token chuẩn từ storage utility
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
