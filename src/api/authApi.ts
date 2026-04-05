@@ -6,8 +6,10 @@ import { ApiResponse } from "./types";
 
 export const authApi = {
   login: (data: User): Promise<LoginResponse> => axiosClient.post("admin/auth/login", data),
+  partnerLogin: (data: User): Promise<LoginResponse> => axiosClient.post("partner/auth/login", data),
   register: (data: User): Promise<LoginResponse> => axiosClient.post("admin/auth/register", data),
   logout: (): Promise<LogoutResponse> => axiosClient.post("admin/auth/logout"),
+  partnerLogout: (): Promise<LogoutResponse> => axiosClient.post("partner/auth/logout"),
   refresh: (): Promise<RefreshTokenResponse> => axiosClient.post("auth/refresh"),
   checkPermission: (): Promise<ApiResponse<CheckPermissionResponse>> => axiosClient.get("auth/check-permission"),
   // Verify email token

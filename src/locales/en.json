@@ -300,6 +300,7 @@
     "end_date": "End Date",
     "created_at": "Created Date",
     "updated_at": "Updated Date",
+    "last_updated": "Last updated",
     "deleted_at": "Deleted Date",
     "created_by": "Created By",
     "updated_by": "Updated By",
@@ -872,18 +873,24 @@
     "setting": "Settings"
   },
   "menu": {
-    "user-management": "User Management",
+    "header_general": "GENERAL",
+    "header_system": "SYSTEM MANAGEMENT",
+    "header_property": "PROPERTY MANAGEMENT",
+    "header_services": "SERVICES & NEWS",
+    "user-management": "Users",
     "dashboard": "Dashboard",
-    "buildings": "Building Management",
-    "rooms": "Room Management",
-    "bookings": "Booking Management",
-    "province-management": "Province/City Management",
-    "amenities": "Amenity Management",
-    "chatbot": "Chatbot Management",
-    "service": "Service Management",
-    "news": "News Management",
-    "users": "User Management",
-    "partner": "Partner"
+    "buildings": "Buildings",
+    "properties": "Properties",
+    "rooms": "Rooms",
+    "bookings": "Bookings",
+    "province-management": "Locations",
+    "amenities": "Amenities",
+    "chatbot": "Chatbot",
+    "service": "Services",
+    "news": "News",
+    "users": "Users",
+    "partner": "Partners",
+    "maintenances": "Maintenance"
   },
   "endUserPartners": {
     "title": "Monthly apartment management companies in Vietnam",
@@ -1009,6 +1016,7 @@
     "create_building": "Add Building",
     "add_image": "Add Building Image",
     "created_by": "Created By",
+    "created_at": "Created At",
     "updated_at": "Updated At",
     "confirm_delete": "Are you sure you want to delete this building?",
     "error_getting_buildings": "Error loading building list",
@@ -1027,8 +1035,10 @@
     "filter_province_placeholder": "Enter province/city...",
     "filter_year_built": "Year Built",
     "filter_year_built_placeholder": "Enter year built...",
-    "filter_building_type": "Building Type",
-    "filter_building_type_placeholder": "Select building type...",
+    "filter_building_type": "Property Type",
+    "filter_building_type_placeholder": "Select property type...",
+    "filter_rent_category": "Rent Category",
+    "filter_rent_category_placeholder": "Select rent category...",
     "filter_area": "Area",
     "filter_area_placeholder": "Enter area...",
     "delete_confirm_message": "Are you sure you want to delete this building?",
@@ -1056,13 +1066,19 @@
     "address_detail": "Detailed Address",
     "address_detail_placeholder": "Enter detailed address...",
     "number_of_floors": "Number of Floors",
+    "floors": "Floors",
+    "status": {
+      "active": "Active"
+    },
     "number_of_floors_placeholder": "Enter number of floors...",
     "number_of_units": "Number of Rooms",
     "number_of_units_placeholder": "Enter number of rooms...",
     "year_built": "Year Built",
     "year_built_placeholder": "Enter year built...",
-    "building_type_name": "Building Type",
-    "building_type_placeholder": "Select building type...",
+    "building_type_name": "Property Type",
+    "building_type_placeholder": "Select property type...",
+    "rent_category_name": "Rent Category",
+    "rent_category_placeholder": "Select rent category...",
     "area_square_meter": "Area (m²)",
     "area_square_meter_placeholder": "Enter area (m²)...",
     "description": "Description",
@@ -1074,17 +1090,17 @@
     "image_sort_placeholder": "Select sort order...",
     "delete_sort": "Delete Sort",
     "building_type": {
-      "0": "Other",
-      "1": "Apartment Building",
-      "2": "Building",
-      "3": "Villa",
-      "4": "Townhouse",
-      "5": "Serviced Apartment",
-      "6": "Boarding House",
-      "7": "Hotel",
-      "8": "Office",
-      "9": "Unknown",
-      "null": "Not Updated"
+      "1": "Apartment",
+      "2": "House",
+      "3": "Office",
+      "4": "Shop",
+      "5": "Warehouse",
+      "6": "Other"
+    },
+    "rent_category": {
+      "1": "Whole unit",
+      "2": "By room",
+      "3": "By bed"
     },
     "warning": {
       "select_image_type": "Please select image type",
@@ -1118,7 +1134,8 @@
     "empty_title_images": "Building image data is corrupted",
     "empty_description": "Please refresh the page to continue",
     "drag_drop_or_click": "Drag and drop images here or click to select",
-    "select_multiple_images": "You can select multiple images at once"
+    "select_multiple_images": "You can select multiple images at once",
+    "no_address_provided": "No detailed address provided"
   },
   "building-images": {
     "upload_images": "Click on the image to upload",
@@ -1185,6 +1202,7 @@
     "deposit_placeholder": "Enter deposit...",
     "area": "Area",
     "area_placeholder": "Enter room area...",
+    "price": "Rent Price",
     "floor_number": "Floor",
     "floor_number_placeholder": "Select floor...",
     "people": "Maximum People",
@@ -1274,7 +1292,10 @@
     "search_name_placeholder": "Enter amenity name to search..."
   },
   "services": {
-    "error_getting_services": "Error loading services list"
+    "error_getting_services": "Error loading services list",
+    "price": "Price",
+    "no_description": "No description provided",
+    "status_active": "Active"
   },
   "price_packages": {
     "error_getting_price_packages": "Error loading price packages list"
@@ -1334,6 +1355,7 @@
       "room": "Room Number",
       "start_date": "Start Date",
       "end_date": "End Date",
+      "duration": "Duration",
       "price": "Room Price",
       "status": "Status",
       "assignee": "Assignee",
@@ -1984,5 +2006,10 @@
         "maxLength": "Special requests cannot exceed 500 characters"
       }
     }
+  },
+  "RENT_CATEGORY": {
+    "1": "Whole unit",
+    "2": "By room",
+    "3": "By bed"
   }
 }

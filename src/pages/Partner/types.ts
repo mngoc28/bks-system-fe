@@ -6,15 +6,15 @@ export interface SystemStats {
   estimatedRevenue: number;
 }
 
-export type PropertyType = 'Tòa nhà' | 'Resort' | 'Villa' | 'Căn hộ' | 'Nhà nguyên căn' | 'Khách sạn';
-
 export interface Building {
   id: string | number;
   name: string;
   address: string;
   totalRooms: number;
-  type: PropertyType;
+  property_type_id: number;
+  rent_category: number;
   description?: string;
+  property_type_name?: string;
 }
 
 export interface Amenity {

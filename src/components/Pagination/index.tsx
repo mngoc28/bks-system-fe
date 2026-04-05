@@ -53,74 +53,83 @@ const Pagination = ({ currentPage, totalPages, onPageChange, perPage, onPerPageC
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <UIPagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              className="size-8 min-w-8 rounded bg-slate-100 p-0"
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                if (currentPage > 1) onPageChange(currentPage - 1);
-              }}
-            />
-          </PaginationItem>
+    <div className="grid w-full grid-cols-1 items-center gap-4 md:grid-cols-3">
+      {/* Empty space on the left to balance the grid and keep pagination centered */}
+      <div className="hidden md:block" />
 
-          {getVisiblePages(currentPage, totalPages, maxVisiblePages).map((page, idx) => {
-            if (page === "start-ellipsis" || page === "end-ellipsis") {
+      {/* Centered Pagination Buttons */}
+      <div className="flex justify-center">
+        <UIPagination className="mx-0 w-auto">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                className="size-8 min-w-8 rounded bg-slate-100 p-0"
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  if (currentPage > 1) onPageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+
+            {getVisiblePages(currentPage, totalPages, maxVisiblePages).map((page, idx) => {
+              if (page === "start-ellipsis" || page === "end-ellipsis") {
+                return (
+                  <PaginationItem key={page + idx}>
+                    <PaginationEllipsis className="text-slate-500 opacity-70" />
+                  </PaginationItem>
+                );
+              }
+              const pageNumber = page as number;
               return (
-                <PaginationItem key={page + idx}>
-                  <PaginationEllipsis className="text-slate-500 opacity-70" />
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    href="#"
+                    className={`size-8 min-w-8 rounded ${pageNumber === currentPage ? "bg-slate-100 font-bold" : "p-0 text-slate-500 opacity-70"}`}
+                    isActive={pageNumber === currentPage}
+                    onClick={(e: React.MouseEvent) => handlePageClick(e, pageNumber)}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
                 </PaginationItem>
               );
-            }
-            const pageNumber = page as number;
-            return (
-              <PaginationItem key={pageNumber}>
-                <PaginationLink
-                  href="#"
-                  className={`size-8 min-w-8 rounded ${pageNumber === currentPage ? "bg-slate-100 font-bold" : "p-0 text-slate-500 opacity-70"}`}
-                  isActive={pageNumber === currentPage}
-                  onClick={(e: React.MouseEvent) => handlePageClick(e, pageNumber)}
-                >
-                  {pageNumber}
-                </PaginationLink>
-              </PaginationItem>
-            );
-          })}
+            })}
 
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              className="size-8 min-w-8 rounded bg-slate-100 p-0"
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                if (currentPage < totalPages) onPageChange(currentPage + 1);
-              }}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </UIPagination>
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                className="size-8 min-w-8 rounded bg-slate-100 p-0"
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages) onPageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </UIPagination>
+      </div>
 
-      {onPerPageChange && perPage && (
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded bg-slate-100 px-3 py-1.5">
-            <select className="bg-transparent text-sm text-slate-700 outline-none" value={perPage} onChange={handlePerPageChange} aria-label={t("pagination.items_per_page")}>
-              {perPageOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+      {/* Right-aligned Results and Per Page selection */}
+      <div className="flex justify-center md:justify-end">
+        {onPerPageChange && perPage && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded bg-slate-100 px-3 py-1.5">
+              <select className="bg-transparent text-sm text-slate-700 outline-none" value={perPage} onChange={handlePerPageChange} aria-label={t("pagination.items_per_page")}>
+                {perPageOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {totalItems !== undefined && (
+              <span className="whitespace-nowrap text-sm text-slate-700">
+                {totalItems} {resultsText || t("pagination.results")}
+              </span>
+            )}
           </div>
-          {totalItems !== undefined && (
-            <span className="whitespace-nowrap text-sm text-slate-700">
-              {totalItems} {resultsText || t("pagination.results")}
-            </span>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

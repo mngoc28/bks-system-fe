@@ -1,6 +1,6 @@
 import apiService from './apiService';
 
-const BASE_URL = '/api/v1/admin';
+const BASE_URL = '/api/v1/partner';
 
 export const partnerService = {
   // --- BUILDINGS ---

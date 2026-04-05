@@ -12,7 +12,7 @@ import ClassSidebar from "../ClassSidebar";
 
 // Mock class info
 const classInfo = {
-  name: " BKS Dashboard",
+  name: "ADMIN",
   acronym: "BKS",
 };
 
@@ -48,6 +48,12 @@ const Layout = () => {
 
   const menuItems: MenuItem[] = [
     {
+      id: "header-general",
+      isHeader: true,
+      label: t("menu.header_general"),
+      permissionKey: "dashboard:view",
+    },
+    {
       id: "dashboard",
       permissionKey: "dashboard:view",
       label: t("menu.dashboard"),
@@ -55,11 +61,17 @@ const Layout = () => {
       icon: <House />,
     },
     {
+      id: "header-system",
+      isHeader: true,
+      label: t("menu.header_system"),
+      permissionKey: "partner-management:view",
+    },
+    {
       id: "partner-information",
       permissionKey: "partner-management:view",
       label: t("menu.partner"),
       path: ROUTERS.PARTNER_MANAGEMENT,
-      icon: <Handshake />
+      icon: <Handshake />,
     },
     {
       id: "buildings",
@@ -101,7 +113,7 @@ const Layout = () => {
       permissionKey: "news:view",
       label: t("menu.news"),
       path: ROUTERS.NEWS,
-      icon: <Newspaper/>,
+      icon: <Newspaper />,
     },
     {
       id: "province-manage",

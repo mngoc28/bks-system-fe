@@ -6,16 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
 import { ChevronUp, ChevronDown, Search, X, RotateCcw } from "lucide-react";
+import { RENT_CATEGORY } from "@/constant";
 
 const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = false, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   const { data: buildingTypes } = useBuildingTypesQuery();
 
   const [areaMode, setAreaMode] = useState<"min" | "max">("max");
-  const dataBuildingTypes = buildingTypes?.data?.map((item: BuildingType) => {
-    const label = t(`buildings.building_type.${item.value}`);
-    return { value: item.value, label };
-  });
 
   if (!open) return null;
 
@@ -95,22 +92,44 @@ const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = fa
             />
           </div>
 
-          {/* Building Type */}
+          {/* Property Type */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
               {t("buildings.filter_building_type")}
             </label>
             <Select
-              value={filters.building_type ? String(filters.building_type) : ""}
-              onValueChange={(value) => setFilters({ ...filters, building_type: value ? Number(value) : 0 })}
+              value={filters.property_type_id ? String(filters.property_type_id) : ""}
+              onValueChange={(value) => setFilters({ ...filters, property_type_id: value ? Number(value) : null })}
             >
               <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-indigo-100">
                 <SelectValue placeholder={t("buildings.filter_building_type_placeholder")} />
               </SelectTrigger>
               <SelectContent>
-                {dataBuildingTypes?.map((item: { value: number; label: string }) => (
-                  <SelectItem key={item.value} value={String(item.value)}>
-                    {item.label}
+                {buildingTypes?.data?.map((item: BuildingType) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Rent Category */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {t("buildings.filter_rent_category")}
+            </label>
+            <Select
+              value={filters.rent_category ? String(filters.rent_category) : ""}
+              onValueChange={(value) => setFilters({ ...filters, rent_category: value ? Number(value) : null })}
+            >
+              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-indigo-100">
+                <SelectValue placeholder={t("buildings.filter_rent_category_placeholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(RENT_CATEGORY).map(([value, labelKey]) => (
+                  <SelectItem key={value} value={value}>
+                    {t(labelKey as string)}
                   </SelectItem>
                 ))}
               </SelectContent>

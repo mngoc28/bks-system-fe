@@ -4,10 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Building, BuildingCardProps } from "@/dataHelper/building.dataHelper";
-import { Edit, Trash2, MapPin, Layers, Maximize2, Calendar } from "lucide-react";
+import { Map, MapPin, Layers, Maximize2, Calendar, Edit, Trash2 } from "lucide-react";
 import { useGetUserProfileByIdQuery } from "@/hooks/useUserQuery";
 import { useImagesByBuildingIdQuery } from "@/hooks/useBuildingImageQuery";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { safeFormatDateTime } from "@/utils/dateUtils";
 
 const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building) => void }> = ({ building, onEdit, onDelete, onView, isDeleting = false }) => {
   const { t } = useTranslation();
@@ -38,13 +39,6 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
           }}
         />
 
-        {/* Status Badge */}
-        <div className="absolute left-4 top-4 transform -translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
-            {building.building_type ? t(`buildings.types.${building.building_type}`) : t("buildings.status.active")}
-          </Badge>
-        </div>
-
         {/* Action Overlay */}
         <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100">
           <Button
@@ -65,6 +59,13 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
             <Trash2 className="size-5" />
           </Button>
         </div>
+
+        {/* Property Type/Rent Category Badge */}
+        <div className="absolute left-4 top-4 flex flex-col gap-1 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
+          <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+            {building.rent_category ? t(`RENT_CATEGORY.${building.rent_category}`) : t("buildings.status.active")}
+          </Badge>
+        </div>
       </div>
 
       {/* Content Section */}
@@ -78,9 +79,15 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
           </Badge>
         </div>
 
-        <div className="mb-4 flex items-center gap-1.5 text-xs text-slate-500">
-          <MapPin className="size-3.5 text-indigo-500" />
-          <span className="truncate">{building.province_name} - {building.ward_name}</span>
+        <div className="mb-4 space-y-2 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <Map className="size-3.5 text-indigo-500 shrink-0" />
+            <span className="truncate">{building.province_name} - {building.ward_name}</span>
+          </div>
+          <div className="flex items-center gap-1.5 opacity-80 underline decoration-slate-200 underline-offset-4">
+            <MapPin className="size-3.5 text-slate-400 shrink-0" />
+            <span className="truncate">{building.address_detail || t("buildings.no_address_provided")}</span>
+          </div>
         </div>
 
         {/* Icon Grid for Specs */}
@@ -115,7 +122,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="size-3 text-slate-300" />
-            <span>{new Date(building.updated_at).toLocaleDateString()}</span>
+            <span>{t("common.last_updated")}: {safeFormatDateTime(building.updated_at)}</span>
           </div>
         </div>
       </div>

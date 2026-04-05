@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PartnerInfor } from "@/dataHelper/partner.dataHelper";
-import { MapPin, Phone, Building, Edit, Globe } from "lucide-react";
+import { Map, MapPin, Phone, Edit, Globe } from "lucide-react";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 
 interface PartnerCardProps {
@@ -49,14 +49,18 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit }) =>
       </div>
 
       <div className="p-6">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-start justify-between gap-2">
           <h3
             className="truncate text-xl font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
             title={partner.company_name || partner.user_name}
           >
             {partner.company_name || partner.user_name}
           </h3>
-          <Badge className="bg-indigo-50 text-indigo-600 border-none px-2 py-0.5 text-[10px] font-bold">PARTNER</Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant="outline" className="text-[10px] border-slate-100 text-slate-400 whitespace-nowrap px-2 py-0.5 font-bold">
+              ID: {partner.id}
+            </Badge>
+          </div>
         </div>
 
         {partner.company_name && partner.user_name && (
@@ -67,7 +71,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit }) =>
 
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm text-slate-500">
-            <MapPin className="size-4 text-indigo-500 shrink-0" />
+            <Map className="size-4 text-indigo-500 shrink-0" />
             <span className="truncate">{partner.province_name} - {partner.ward_name}</span>
           </div>
           <div className="flex items-center gap-3 text-sm text-slate-500">
@@ -81,7 +85,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit }) =>
             </div>
           )}
           <div className="flex items-center gap-3 text-sm text-slate-500 opacity-80">
-            <Building className="size-4 text-slate-400 shrink-0" />
+            <MapPin className="size-4 text-slate-400 shrink-0" />
             <span className="truncate text-xs">{partner.address || t("partner.no_address_provided")}</span>
           </div>
         </div>

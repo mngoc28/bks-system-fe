@@ -160,7 +160,8 @@ export const buildingFormSchema = (t: (key: string) => string) =>
     number_of_floors: z.number().min(1, { message: t("buildings.table_number_of_floors") + " " + t("common.is_required") }),
     number_of_units: z.number().min(1, { message: t("buildings.table_number_of_units") + " " + t("common.is_required") }),
     year_built: z.number().nullable(),
-    building_type: z.number().nullable().optional(),
+    property_type_id: z.number().min(1, { message: t("buildings.building_type_name") + " " + t("common.is_required") }),
+    rent_category: z.number().min(1, { message: t("buildings.rent_category_name") + " " + t("common.is_required") }),
     area: z.number().min(1, { message: t("buildings.area") + " " + t("common.is_required") }),
     description: z.string(),
   });
