@@ -6,6 +6,10 @@ import { useTranslation } from "react-i18next";
 import { Search, X, RotateCcw } from "lucide-react";
 import type { BookingSearchSectionProps } from "@/dataHelper/booking.dataHelper";
 
+/**
+ * Booking Search Section
+ * An expandable filter panel for searching bookings by user, room, status, assignee, dates, and price.
+ */
 const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   const { data: userProfile } = useGetUserProfileQuery();

@@ -7,6 +7,10 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { RoomDetailView } from "./components";
 
+/**
+ * Room Detail Page
+ * Fetches and displays comprehensive information about a specific room, including its building association, pricing, and availability status.
+ */
 const RoomDetail: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

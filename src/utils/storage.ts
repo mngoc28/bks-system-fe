@@ -1,11 +1,17 @@
 import { STORAGE_VAR } from "../constant";
 
 export const getAccessToken = () => {
-  return localStorage.getItem(STORAGE_VAR.ACCESS_TOKEN);
+  // Priority: localStorage (persistent) > sessionStorage (session)
+  return localStorage.getItem(STORAGE_VAR.ACCESS_TOKEN) || sessionStorage.getItem(STORAGE_VAR.ACCESS_TOKEN);
 };
 
-export const setAccessToken = (token: string) => {
-  localStorage.setItem(STORAGE_VAR.ACCESS_TOKEN, token);
+export const setAccessToken = (token: string, remember: boolean = true) => {
+  if (remember) {
+    localStorage.setItem(STORAGE_VAR.ACCESS_TOKEN, token);
+  } else {
+    // If not remembering, store in sessionStorage (cleared when closing tab)
+    sessionStorage.setItem(STORAGE_VAR.ACCESS_TOKEN, token);
+  }
 };
 
 export const removeAccessToken = () => {
@@ -22,6 +28,27 @@ export const setUserEmail = (email: string) => {
 
 export const removeUserEmail = () => {
   localStorage.removeItem(STORAGE_VAR.USER_EMAIL);
+};
+
+/**
+ * Persist the email specifically for the "Remember Me" pre-fill feature.
+ */
+export const setRememberedEmail = (email: string) => {
+  localStorage.setItem("remembered_email", email);
+};
+
+/**
+ * Get the email specifically for the "Remember Me" pre-fill feature.
+ */
+export const getRememberedEmail = () => {
+  return localStorage.getItem("remembered_email");
+};
+
+/**
+ * Remove the email specifically for the "Remember Me" pre-fill feature.
+ */
+export const removeRememberedEmail = () => {
+  localStorage.removeItem("remembered_email");
 };
 
 const DASHBOARD_DATE_RANGE_KEYS = {

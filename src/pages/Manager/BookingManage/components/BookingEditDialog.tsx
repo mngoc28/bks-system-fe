@@ -12,6 +12,10 @@ import { getStatusClass, mapBookingStatus, mapStatusToNumber } from "@/utils/uti
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Booking Edit Dialog
+ * Provides a form to update booking details such as dates, status, and notes, with permission-based read-only fields.
+ */
 const BookingEditDialog: React.FC<BookingEditDialogProps> = ({ id, open, onClose, onSuccess }) => {
   const { t } = useTranslation();
   const { data, isLoading } = useBookingDetailQuery(id, open);

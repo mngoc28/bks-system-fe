@@ -11,6 +11,10 @@ import PageBar from "@/components/PageBar";
 import Pagination from "@/components/Pagination";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Amenity Management Page
+ * Handles listing, filtering, creating, updating, and deleting amenities for the system.
+ */
 const AmenityManagement: React.FC = () => {
   const { t } = useTranslation();
   const [highlightedId, setHighlightedId] = useState<number | null>(null);

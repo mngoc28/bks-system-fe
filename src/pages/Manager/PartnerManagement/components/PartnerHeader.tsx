@@ -10,6 +10,10 @@ interface PartnerHeaderProps {
   // onCreatePartner?: () => void;
 }
 
+/**
+ * Partner Header
+ * Displays the management section header with access to filtering tools.
+ */
 const PartnerHeader: React.FC<PartnerHeaderProps> = ({ onOpenFilter }) => {
   const { t } = useTranslation();
 

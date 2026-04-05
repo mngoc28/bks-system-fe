@@ -5,6 +5,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X, RotateCcw } from "lucide-react";
 
+/**
+ * Amenity Search Section
+ * An expandable filter panel used to search amenities by name.
+ */
 const AmenitySearchSection: React.FC<AmenitySearchSectionProps> = ({
   open,
   searchValue,

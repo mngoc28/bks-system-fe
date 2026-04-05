@@ -9,6 +9,10 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import ContactCard from "@/components/common/ContactCard";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Company Hub Page
+ * Serves as the landing page for selecting a province to view associated partners.
+ */
 const CompanyHub = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

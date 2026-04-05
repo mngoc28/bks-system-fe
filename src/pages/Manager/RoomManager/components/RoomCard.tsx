@@ -16,6 +16,10 @@ interface RoomCardProps {
   highlighted?: boolean;
 }
 
+/**
+ * Room Card
+ * A visually rich card component for the room manager grid, displaying a room's main image, key specifications (area, capacity), and pricing.
+ */
 const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isDeleting = false, highlighted = false }) => {
   const { t } = useTranslation();
 

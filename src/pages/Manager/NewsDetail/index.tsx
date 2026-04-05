@@ -13,6 +13,10 @@ import { useTranslation } from "react-i18next";
 import { ThreeDot } from "react-loading-indicators";
 import { useNavigate, useParams } from "react-router";
 
+/**
+ * News Detail Page
+ * Displays the full content of a news article, including metadata and the featured image.
+ */
 const NewsDetail: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

@@ -5,6 +5,10 @@ import { Loader2, Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Delete Booking Confirmation Dialog
+ * Shows a warning and requires confirmation before deleting a booking record.
+ */
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ booking, isOpen, isLoading = false, onClose, onConfirm }) => {
   const { t } = useTranslation();
   const handleOpenChange = (open: boolean) => {

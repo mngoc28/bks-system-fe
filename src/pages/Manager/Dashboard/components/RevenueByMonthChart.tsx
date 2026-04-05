@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { getDashboardDateRange, setDashboardDateRange } from "@/utils/storage";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Revenue By Month Chart
+ * Tracks monthly revenue generated across the system with filtering.
+ */
 const RevenueByMonthChart: React.FC = () => {
   const { t } = useTranslation();
 

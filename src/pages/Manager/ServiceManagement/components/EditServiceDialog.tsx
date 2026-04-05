@@ -12,6 +12,10 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import z from "zod"
 
+/**
+ * Edit Service Dialog
+ * A modification form pre-populated with existing service details, allowing managers to update names, descriptions, or pricing.
+ */
 const EditServiceDialog: React.FC<EditServiceDialogProps> = ({ service, isOpen, isLoading = false, editServerError, onClose, onSubmit }) => {
     const schema = editServiceSchema(t);
     const form = useForm<z.infer<typeof schema>>({

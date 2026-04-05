@@ -10,6 +10,10 @@ import { useImagesByBuildingIdQuery } from "@/hooks/useBuildingImageQuery";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { safeFormatDateTime } from "@/utils/dateUtils";
 
+/**
+ * Building Card component
+ * Displays a summary of building information with thumbnail, key specs, and action buttons.
+ */
 const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building) => void }> = ({ building, onEdit, onDelete, onView, isDeleting = false }) => {
   const { t } = useTranslation();
   const { data: createdByData } = useGetUserProfileByIdQuery(building.created_by);

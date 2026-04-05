@@ -3,6 +3,10 @@ import { UserCog } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Partner Overview Cards
+ * Displays metrics related to partners, such as new partners this month and pending approvals.
+ */
 const PartnerViewCards: React.FC = () => {
   const { t } = useTranslation();
 

@@ -12,6 +12,10 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import z from "zod"
 
+/**
+ * Add Service Dialog
+ * A modal form for defining a new service offering, including validation to ensure service names are unique within the system.
+ */
 const AddServiceDialog: React.FC<AddServiceDialogProps> = ({ isOpen, isLoading = false, serverError, existingServices = [], onClose, onSubmit }) => {
     const schema = addServiceSchema(t, existingServices);
     const form = useForm<z.infer<typeof schema>>({

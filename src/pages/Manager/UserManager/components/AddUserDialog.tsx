@@ -12,6 +12,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+/**
+ * Add User Dialog
+ * A modal form for creating new user accounts, performing extensive validation on name, email, phone, and password match.
+ */
 const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false, serverError, onClose, onSubmit }) => {
   const { t } = useTranslation();
   const schema = createUserSchema(t);

@@ -4,6 +4,10 @@ import { DeleteRoomDialogProps } from "@/dataHelper/room.dataHelper";
 import { useTranslation } from "react-i18next";
 
 // Delete Room Confirmation Dialog Component
+/**
+ * Delete Room Dialog
+ * A confirmation modal that ensures property managers intentionally remove a room listing, displaying room details for verification.
+ */
 const DeleteRoomDialog: React.FC<DeleteRoomDialogProps> = ({ isOpen, room, onCancel, onConfirm, isLoading }) => {
   const { t } = useTranslation();
 

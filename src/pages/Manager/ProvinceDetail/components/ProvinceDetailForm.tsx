@@ -6,6 +6,10 @@ import { useTranslation } from "react-i18next";
 import { Hash, Home, MapPinned } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Province Detail Form
+ * Renders the full details of a province, including associated wards and rooms, in a structured layout.
+ */
 const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
     onCancel,
     isLoading,

@@ -7,6 +7,10 @@ interface Props {
   onOpenFilter?: () => void;
 }
 
+/**
+ * Bookings Empty State
+ * Displayed when no bookings match the current filters or the list is empty.
+ */
 const BookingsEmptyState: React.FC<Props> = ({ onOpenFilter }) => {
   const { t } = useTranslation();
   return (

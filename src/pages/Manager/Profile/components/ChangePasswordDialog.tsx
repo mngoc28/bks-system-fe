@@ -10,6 +10,10 @@ import { useChangePasswordMutation } from "@/hooks/useUserQuery";
 import { toast } from "sonner";
 import { ChangePasswordDialogProps } from "@/dataHelper/user.dataHelper";
 
+/**
+ * Change Password Dialog
+ * A security sub-modal that allows users to update their account password with validation.
+ */
 const ChangePasswordDialog = ({ open, onClose }: ChangePasswordDialogProps) => {
   const { t } = useTranslation();
   const changePasswordMutation = useChangePasswordMutation();

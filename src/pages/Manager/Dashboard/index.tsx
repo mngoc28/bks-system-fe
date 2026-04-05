@@ -11,6 +11,10 @@ import { Spinner } from "@/components/ui/spinner";
 
 type ChartType = "bookingsPerMonth" | "revenueByMonth" | "bookingsByBuilding";
 
+/**
+ * Dashboard Page
+ * Provides a high-level overview of system metrics (users, partners, rooms) and various analytical charts.
+ */
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const [selectedChart, setSelectedChart] = React.useState<ChartType | null>(null);

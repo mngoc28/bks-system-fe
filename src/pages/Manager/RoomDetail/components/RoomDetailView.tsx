@@ -12,6 +12,10 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Room Detail View
+ * A read-only presentation of a room's full profile, organized into logical sections like basic info, pricing, amenities, and an image gallery.
+ */
 export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, onBack }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();

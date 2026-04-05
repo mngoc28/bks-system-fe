@@ -4,6 +4,10 @@ import { DeleteConfirmDialogProps } from "@/dataHelper/service.dataHelper";
 import { t } from "i18next";
 import { Loader2, Trash2 } from "lucide-react";
 
+/**
+ * Delete Confirm Dialog
+ * A critical confirmation modal that prevents accidental deletion of services, highlighting the specific service name and ID being removed.
+ */
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ service, isOpen, isLoading = false, onClose, onConfirm }) => {
     const handleOpenChange = (open: boolean) => {
         if (!open && !isLoading) onClose();

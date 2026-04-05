@@ -12,6 +12,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+/**
+ * Edit User Dialog
+ * A modification form pre-populated with existing user data, allowing administrators to update names, phone numbers, and roles while keeping the email fixed for record-keeping.
+ */
 const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading = false, serverError, onClose, onSubmit }) => {
   const { t } = useTranslation();
   const schema = userFormSchema(t);

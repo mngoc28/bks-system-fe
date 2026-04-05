@@ -13,6 +13,10 @@ import EmptyPage from "@/components/EmptyPage";
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 
+/**
+ * Question Manager Page
+ * Manages the collection of chatbot questions, providing search, filtering, and access to visual flow management.
+ */
 const QuestionManagerPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

@@ -12,6 +12,10 @@ import { AlertCircle, Image as ImageIcon, Upload, X } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Upload Room Image Modal
+ * An interactive upload dialog that supports drag-and-drop, client-side image compression, and category assignment for room photos.
+ */
 export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClose }) => {
   const { t } = useTranslation();
   const [files, setFiles] = useState<FilePreview[]>([]);

@@ -7,6 +7,10 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Question Table
+ * A tabular display of chatbot questions, supporting sorting, pagination, and row-level management actions.
+ */
 const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems, isLoading, onPageChange, onPerPageChange, onView, onEdit, onDelete }: QuestionsProps) => {
   const { t } = useTranslation();
 

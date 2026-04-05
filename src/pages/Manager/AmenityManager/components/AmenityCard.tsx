@@ -14,6 +14,10 @@ interface AmenityCardProps {
   isHighlighted?: boolean;
 }
 
+/**
+ * Amenity Card Component
+ * Displays a single amenity's information with edit and delete actions.
+ */
 const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, isHighlighted }) => {
   const { t } = useTranslation();
 

@@ -13,6 +13,10 @@ interface PartnerCardProps {
   onEdit: (id: number) => void;
 }
 
+/**
+ * Partner Card
+ * A visual summary of partner information used in the management grid, featuring company logo and contact details.
+ */
 const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit }) => {
   const { t } = useTranslation();
   const imageUrl = partner.image_1 ? `${CLOUDINARY_HEADER_IMAGE_URL}/${partner.image_1}` : null;

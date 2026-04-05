@@ -15,6 +15,10 @@ interface BookingCardProps {
   onDelete: (id: string) => void;
 }
 
+/**
+ * Booking Card component
+ * Displays a summary of a booking, including status, user info, room details, and stay duration.
+ */
 const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDelete }) => {
   const { t } = useTranslation();
 

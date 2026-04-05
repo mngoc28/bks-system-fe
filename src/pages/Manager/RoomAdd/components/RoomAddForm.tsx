@@ -17,6 +17,10 @@ import { useTranslation } from "react-i18next";
 import ReactSelect from "react-select";
 import { z } from "zod";
 
+/**
+ * Room Add Form
+ * A complex, dynamic form for entering room details, including specifications, amenities, services, and multiple pricing packages.
+ */
 export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, isLoading = false, currentUser }) => {
   const { t } = useTranslation();
   const schema = roomFormSchema(t);

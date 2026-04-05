@@ -9,6 +9,10 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Partner Management Page
+ * Handles the listing, searching, and navigation to partner details or edit forms.
+ */
 const Partners: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

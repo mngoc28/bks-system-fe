@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { ROUTERS } from "@/constant";
 
+/**
+ * 404 Not Found Page
+ * A fallback page displayed when the requested route does not exist.
+ */
 const NotFound: React.FC = () => {
   const { t } = useTranslation();
 

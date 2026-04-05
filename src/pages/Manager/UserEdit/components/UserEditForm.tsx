@@ -10,6 +10,10 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
+/**
+ * User Edit Form
+ * A comprehensive form for updating a user's core profile attributes, including name, email, phone, and system role.
+ */
 const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSubmit, onCancel, isLoading = false }) => {
   const { t } = useTranslation();
 

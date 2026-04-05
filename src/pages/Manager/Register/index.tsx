@@ -19,6 +19,10 @@ import SearchableSelect from "@/components/ui/searchable-select";
 import { ProvinceTypes } from "@/dataHelper/province.dataHelper";
 import { Ward } from "@/dataHelper/ward.dataHelper";
 
+/**
+ * Partner Registration Page
+ * A comprehensive multi-field form for new partners to join the BKS ecosystem, featuring real-time validation and location selection.
+ */
 export default function Register() {
   const navigate = useNavigate();
   const { t } = useTranslation();

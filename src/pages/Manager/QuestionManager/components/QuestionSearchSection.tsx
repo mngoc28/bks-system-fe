@@ -5,6 +5,10 @@ import { useTranslation } from "react-i18next";
 import { Spinner } from "@/components/ui/spinner";
 import { Search, X, RotateCcw } from "lucide-react";
 
+/**
+ * Question Search Section
+ * An advanced filtering interface that allows managers to search through chatbot questions by content.
+ */
 const QuestionSearchSection = ({
   open,
   filters: _filters,

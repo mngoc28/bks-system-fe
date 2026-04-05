@@ -10,6 +10,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+/**
+ * Reset Password Dialog
+ * An administrative tool allowing managers to manually reset a user's password, featuring real-time validation for password strength and confirmation match.
+ */
 const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen, isLoading, onClose, onConfirm }) => {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);

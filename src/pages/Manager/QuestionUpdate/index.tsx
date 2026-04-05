@@ -8,6 +8,10 @@ import { useChatbotDetailQuery, useUpdateChatbotMutation } from "@/hooks/useChat
 import type { CreateQuestionFormValues } from "@/dataHelper/chatbot.dataHelper";
 import { CreateQuestionForm } from "@/pages/Manager/QuestionCreate/components";
 
+/**
+ * Question Update Page
+ * Provides an interface for editing existing chatbot questions, updating their content, type, or associated answers.
+ */
 const QuestionUpdatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

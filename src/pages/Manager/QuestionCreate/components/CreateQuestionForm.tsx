@@ -20,6 +20,10 @@ const QuestionTypeOptions = [
   { label: "questions.create.type_answer", value: 1 },
 ];
 
+/**
+ * Create Question Form
+ * A comprehensive form for defining chatbot questions, types, and branching logic with multiple answers.
+ */
 const CreateQuestionForm = ({ defaultValues, onSubmit, isSubmitting, submitLabel, showResetButton = true, currentQuestionId }: CreateQuestionProps) => {
   const { t } = useTranslation();
   const schema = chatbotQuestionCreateSchema(t);

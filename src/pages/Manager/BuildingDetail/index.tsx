@@ -12,6 +12,10 @@ import { useNavigate, useParams } from "react-router";
 import ImageLightbox from "@/components/ui/image-lightbox";
 import DOMPurify from 'dompurify';
 
+/**
+ * Building Detail Page
+ * Displays comprehensive information about a specific building, including specs and a gallery of images.
+ */
 const BuildingDetail: React.FC = () => {
     const { t } = useTranslation();
     const { user_id, building_id } = useParams<{ user_id: string, building_id: string }>();

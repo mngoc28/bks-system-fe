@@ -7,6 +7,10 @@ import { useState, useEffect } from "react";
 import { ThreeDot } from "react-loading-indicators";
 import { ROUTERS } from "@/constant";
 
+/**
+ * Verify Email Token Page
+ * Processes the email verification token from the URL, providing visual feedback on success or failure and allowing users to request a new token if necessary.
+ */
 const VerifyEmailToken: React.FC = () => {
     const { t } = useTranslation();
     const { token } = useParams();

@@ -15,6 +15,10 @@ import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 
 // Main Room Manager Component
+/**
+ * Room Manager Page
+ * The central hub for property managers to oversee all room listings, featuring advanced search filters, status tracking, and quick actions for editing or deletion.
+ */
 const RoomManager: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

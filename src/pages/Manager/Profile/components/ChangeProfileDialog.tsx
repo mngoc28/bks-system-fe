@@ -12,6 +12,10 @@ import { userApi } from "@/api/userApi";
 import { toast } from "sonner";
 import { ChangeProfileDialogProps } from "@/dataHelper/user.dataHelper";
 
+/**
+ * Change Profile Dialog
+ * A modal form allowing users to update their personal information, such as name, email, and phone number.
+ */
 const ChangeProfileDialog = ({
   open,
   onClose,

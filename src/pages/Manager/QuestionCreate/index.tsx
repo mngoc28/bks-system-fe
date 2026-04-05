@@ -7,6 +7,10 @@ import { CreateQuestionForm } from "./components";
 import { useCreateChatbotMutation } from "@/hooks/useChatbotQuery";
 import { CreateQuestionFormValues } from "@/dataHelper/chatbot.dataHelper";
 
+/**
+ * Question Create Page
+ * Provides an interface for managers to define new chatbot questions and their corresponding automated answers.
+ */
 const QuestionCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

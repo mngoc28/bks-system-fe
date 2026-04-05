@@ -14,6 +14,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
 
+/**
+ * Partner Edit Page
+ * Provides a form interface for managers to update partner information, including company details and branding images.
+ */
 const PartnerEdit: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

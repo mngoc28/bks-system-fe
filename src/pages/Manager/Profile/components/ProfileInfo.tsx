@@ -11,6 +11,10 @@ import { useUpdateUserProfileMutation} from "@/hooks/useUserQuery";
 import { ThreeDot } from "react-loading-indicators";
 import { useDeleteImageMutation, useUploadImageMutation } from "@/hooks/useCloudinariQuery";
 
+/**
+ * Profile Info Component
+ * Displays detailed user profile information, including contact details, role, and registration timestamps.
+ */
 const ProfileInfo = ({
   profile,
   onEditClick,

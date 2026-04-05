@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 import { Bot, MapPinned, PlayCircle, Shuffle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Question Detail Section
+ * Renders the core information of a question, including its position in the flowchart and a table of possible answers.
+ */
 const QuestionDetailSection = ({ detail, onNavigateNext }: QuestionDetailProps) => {
   const { t } = useTranslation();
   const totalAnswers = detail.answers.length;

@@ -13,6 +13,10 @@ interface QuestionCardProps {
   onDelete: (id: number) => void;
 }
 
+/**
+ * Question Card
+ * Summarizes a chatbot question's content, type, and answer count in a grid layout, with quick actions for management.
+ */
 const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, onDelete }) => {
   const { t } = useTranslation();
 

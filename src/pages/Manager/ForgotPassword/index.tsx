@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { ROUTERS } from "@/constant";
 
+/**
+ * Forgot Password Page
+ * Allows users to request a password reset link by providing their email address.
+ */
 const ForgotPassword: React.FC = () => {
   const { t } = useTranslation();
 

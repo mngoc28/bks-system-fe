@@ -10,6 +10,10 @@ import { BuildingHeader, BuildingSearchSection, BuildingCard, DeleteConfirmDialo
 import { useBuildingSort } from "./hooks";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Buildings Management Page
+ * Handles the display, search, filtering, and deletion of buildings in the system.
+ */
 const Buildings: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

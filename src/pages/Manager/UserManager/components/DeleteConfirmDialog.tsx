@@ -5,6 +5,10 @@ import { Loader2, Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Delete Confirm Dialog
+ * A security-focused confirmation modal that prevents accidental user deletion by displaying the target's ID, name, and email for verification.
+ */
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ user, isOpen, isLoading = false, onClose, onConfirm }) => {
   const { t } = useTranslation();
   const handleOpenChange = (open: boolean) => {

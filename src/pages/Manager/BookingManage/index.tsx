@@ -12,6 +12,10 @@ import BookingCreateDialog from "./components/BookingCreateDialog";
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 
+/**
+ * Booking Management Page
+ * Handles the display, search, filtering, and management of user bookings.
+ */
 export default function BookingManagePage() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);

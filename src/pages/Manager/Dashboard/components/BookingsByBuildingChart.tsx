@@ -7,6 +7,10 @@ type BookingsByBuildingChartProps = {
   bookingsByBuilding: BookingByBuilding[];
 };
 
+/**
+ * Bookings By Building Chart
+ * Displays a horizontal bar chart of the top buildings by total booking volume.
+ */
 const BookingsByBuildingChart: React.FC<BookingsByBuildingChartProps> = ({ bookingsByBuilding }) => {
   const { t } = useTranslation();
 

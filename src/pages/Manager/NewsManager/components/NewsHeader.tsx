@@ -4,6 +4,10 @@ import { Filter, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageBar from "@/components/PageBar";
 
+/**
+ * News Header
+ * Displays the page title and providing action buttons for filtering and creating news.
+ */
 const NewsHeader: React.FC<NewsHeaderProps> = ({ onCreateNews, onOpenFilter }) => {
   const { t } = useTranslation();
 
