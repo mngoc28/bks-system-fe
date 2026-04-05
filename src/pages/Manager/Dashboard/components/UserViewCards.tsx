@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next";
 import { useTotalUser } from "@/hooks/useDashboardQuery";
 import { User } from "lucide-react";
 
+/**
+ * User Overview Cards
+ * Displays key user-related metrics like new users this month, pending registrations, and total users.
+ */
 const UserViewCards: React.FC = () => {
   const { t } = useTranslation();
   const { data } = useTotalUser();

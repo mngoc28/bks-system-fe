@@ -15,6 +15,10 @@ interface UserCardProps {
   isCurrentUser?: boolean;
 }
 
+/**
+ * User Card
+ * A visual representation of a user profile used in the management grid, providing quick access to contact info, role identification, and administrative actions.
+ */
 const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onResetPassword, isCurrentUser = false }) => {
   const { t } = useTranslation();
 

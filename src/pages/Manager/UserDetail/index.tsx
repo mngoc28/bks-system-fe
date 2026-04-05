@@ -7,7 +7,10 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { UserDetailView } from "./components/UserDetailView";
 
-// User Detail Page Component
+/**
+ * User Detail Page
+ * A read-only profile view that fetches and displays comprehensive information for a specific user, including their account metrics and administrative status.
+ */
 const UserDetail: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

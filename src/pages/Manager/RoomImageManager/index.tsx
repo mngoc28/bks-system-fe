@@ -6,6 +6,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { RoomImageList } from "./components/RoomImageList";
 import { UploadRoomImage } from "./components/UploadRoomImage";
 
+/**
+ * Room Image Manager Page
+ * A dedicated workspace for managing room photography, allowing partners to upload, reorder, and delete images for room listings.
+ */
 const RoomImageManager: React.FC = () => {
   const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();

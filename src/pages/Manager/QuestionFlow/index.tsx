@@ -47,7 +47,11 @@ import type {
 import QuestionDeleteDialog from "../QuestionManager/components/QuestionDeleteDialog";
 import isEqual from "lodash/isEqual";
 
-  const QuestionFlowPage: React.FC = () => {
+  /**
+ * Question Flow Page
+ * An interactive React Flow-based visual canvas for managing chatbot conversational logic, branching, and node positioning.
+ */
+const QuestionFlowPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();

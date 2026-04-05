@@ -13,6 +13,10 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+/**
+ * User Detail View
+ * A presentation component that renders a comprehensive profile for a user, including avatar management, role badges, and detailed account metadata.
+ */
 export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, onBack }) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

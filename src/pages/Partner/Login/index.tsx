@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/ui/loading-screen";
@@ -6,7 +7,7 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { usePartnerLoginMutation } from "@/hooks/useAuthQuery";
 import { loginFormSchema } from "@/shared/shema";
 import { useUserStore } from "@/store/useUserStore";
-import { setAccessToken, setUserEmail } from "@/utils/storage";
+import { setAccessToken, setUserEmail, getRememberedEmail, setRememberedEmail, removeRememberedEmail } from "@/utils/storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
 import { useState } from "react";
@@ -17,7 +18,8 @@ import { ROUTERS } from "@/constant";
 
 /**
  * Modern Partner Login Screen
- * Featuring Rich Aesthetics, Glassmorphism, and BKS Brand Identity
+ * Featuring Rich Aesthetics, Glassmorphism, and BKS Brand Identity.
+ * Implements "Remember Me" functionality to persist sessions and pre-fill user email.
  */
 export default function PartnerLogin() {
   const navigate = useNavigate();
@@ -25,15 +27,18 @@ export default function PartnerLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const { mutate, status } = usePartnerLoginMutation();
 
+  const savedEmail = getRememberedEmail();
+
   const form = useForm({
     resolver: zodResolver(loginFormSchema(t)),
     defaultValues: {
-      email: "",
+      email: savedEmail || "",
       password: "",
+      rememberMe: !!savedEmail,
     },
   });
 
-  const onSubmit = (values: { email: string; password: string }) => {
+  const onSubmit = (values: { email: string; password: string; rememberMe?: boolean }) => {
     mutate(
       { email: values.email, password: values.password },
       {
@@ -48,8 +53,16 @@ export default function PartnerLogin() {
               return;
             }
 
-            setAccessToken(token);
+            // Persist session based on rememberMe preference
+            setAccessToken(token, values.rememberMe);
             setUserEmail(values.email);
+
+            // Persist or remove email for pre-fill next time
+            if (values.rememberMe) {
+              setRememberedEmail(values.email);
+            } else {
+              removeRememberedEmail();
+            }
             
             // Normalize role to lowercase and save
             const user_role = (userData?.role || 'partner').toLowerCase();
@@ -186,10 +199,24 @@ export default function PartnerLogin() {
                   />
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="remember" className="h-4 w-4 rounded border-slate-700 bg-slate-800 transition-colors focus:ring-blue-500/20" />
-                      <label htmlFor="remember" className="text-xs font-medium text-slate-400 cursor-pointer hover:text-slate-300">{t("login.remember_me")}</label>
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="rememberMe"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="h-4 w-4 rounded border-slate-700 bg-slate-800 transition-colors data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-xs font-medium text-slate-400 cursor-pointer hover:text-slate-300">
+                            {t("login.remember_me")}
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
                     <Button 
                       type="button" 
                       variant="ghost" 

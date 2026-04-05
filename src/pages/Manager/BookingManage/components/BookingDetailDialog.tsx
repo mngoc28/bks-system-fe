@@ -14,6 +14,10 @@ function safeDT(v?: string | null) {
   return formatDateTimeVietnam(v);
 }
 
+/**
+ * Booking Detail Dialog
+ * Fetches and displays the full details of a specific booking, with loading skeletons and fallback support.
+ */
 const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onClose, fallback }) => {
   const { t } = useTranslation();
   const { data, isLoading } = useBookingDetailQuery(id, open);

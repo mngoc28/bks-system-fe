@@ -3,34 +3,38 @@ import { Building } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-const PartnerViewCards: React.FC = () => {
+/**
+ * Room Overview Cards
+ * Displays metrics for total rooms, private vs public, and currently available units.
+ */
+const RoomViewCards: React.FC = () => {
   const { t } = useTranslation();
 
   const { data } = useSystemRoom();
-  const partner = data?.data;
+  const room = data?.data;
 
   const cards = [
     {
       label: t("dashboard.total_rooms"),
-      value: partner?.totalRooms ?? 0,
+      value: room?.totalRooms ?? 0,
       icon: Building,
       color: "text-primary",
     },
     {
       label: t("dashboard.total_private_rooms"),
-      value: partner?.totalPrivateRooms ?? 0,
+      value: room?.totalPrivateRooms ?? 0,
       icon: Building,
       color: "text-red-600",
     },
     {
       label: t("dashboard.total_public_rooms"),
-      value: partner?.totalPublicRooms ?? 0,
+      value: room?.totalPublicRooms ?? 0,
       icon: Building,
       color: "text-green-700",
     },
     {
       label: t("dashboard.total_available_rooms"),
-      value: partner?.totalAvailableRooms ?? 0,
+      value: room?.totalAvailableRooms ?? 0,
       icon: Building,
       color: "text-emerald-700",
     },
@@ -58,4 +62,4 @@ const PartnerViewCards: React.FC = () => {
   );
 };
 
-export default PartnerViewCards;
+export default RoomViewCards;

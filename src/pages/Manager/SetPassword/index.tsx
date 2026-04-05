@@ -11,6 +11,10 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
+/**
+ * Set Password Page
+ * A secure interface for users to establish their first password or update it via a verification token, ensuring account security through enforced complexity and confirmation.
+ */
 const SetPassword: React.FC = () => {
     const { token } = useParams<{ token: string }>();
     const navigate = useNavigate();

@@ -23,6 +23,10 @@ import { generateSlug } from "@/utils/stringUtils";
 
 
 
+/**
+ * News Edit Page
+ * Provides an interface to modify existing news articles, including image replacement and metadata updates.
+ */
 const NewsEdit: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

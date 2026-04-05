@@ -10,6 +10,10 @@ import React from "react";
 import { ThreeDot } from "react-loading-indicators";
 import { useNavigate, useParams } from "react-router";
 
+/**
+ * Partner Detail Page
+ * Provides a comprehensive view of a partner's profile, including contact info, company details, and uploaded images.
+ */
 const PartnerDetail: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

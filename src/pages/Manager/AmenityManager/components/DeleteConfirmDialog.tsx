@@ -5,6 +5,10 @@ import { Loader2, Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Delete Amenity Confirmation Dialog
+ * Shows a warning and requires confirmation before deleting an amenity record.
+ */
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ amenity, isOpen, isLoading = false, onClose, onConfirm }) => {
   const { t } = useTranslation();
   const handleOpenChange = (open: boolean) => {

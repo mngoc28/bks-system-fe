@@ -21,6 +21,10 @@ import { useNavigate } from "react-router";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import { generateSlug } from "@/utils/stringUtils";
 
+/**
+ * News Add Page
+ * Provides a specialized form for creating news articles, including image upload and rich text editing.
+ */
 const NewsAdd: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

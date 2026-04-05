@@ -6,6 +6,10 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
 import { ProvinceDetailForm } from "./components";
 
+/**
+ * Province Detail Page
+ * Fetches and displays the configuration of a specific geographical province, including its localized metadata.
+ */
 const ProvinceDetail: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();

@@ -8,6 +8,10 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { RoomAddForm } from "./components";
 
+/**
+ * Room Add Page
+ * Provides the interface for creating new room listings, linking them to buildings, and defining detailed specifications like area and amenities.
+ */
 const RoomAdd: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();

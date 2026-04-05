@@ -11,6 +11,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+/**
+ * Edit Amenity Dialog
+ * Provides a form to update an existing amenity's name.
+ */
 const EditAmenityDialog: React.FC<EditAmenityDialogProps> = ({ amenity, isOpen, isLoading = false, serverError, onClose, onSubmit }) => {
   const { t } = useTranslation();
   const schema = amenityFormSchema(t);

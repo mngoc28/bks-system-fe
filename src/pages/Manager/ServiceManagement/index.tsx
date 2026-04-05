@@ -11,6 +11,10 @@ import { AddServiceDialog, DeleteConfirmDialog, DetailServiceDialog, EditService
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 
+/**
+ * Service Management Page
+ * A comprehensive interface for property managers to define and maintain add-on services, including descriptions and pricing, which can be attached to room listings.
+ */
 const ServiceManagement: React.FC = () => {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);

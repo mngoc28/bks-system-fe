@@ -15,6 +15,10 @@ interface NewsCardProps {
   onDelete: (id: number) => void;
 }
 
+/**
+ * News Card Component
+ * A visual representation of a news article in a grid, featuring cover image, summary, and action buttons.
+ */
 const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete }) => {
   const { t } = useTranslation();
   const imageUrl = news.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${news.image_url}` : null;

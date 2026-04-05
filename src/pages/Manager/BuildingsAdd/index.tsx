@@ -1,6 +1,10 @@
 import React from "react";
 import { BuildingAddForm } from "./components";
 
+/**
+ * Add Building Page
+ * A simple container for the building creation form.
+ */
 const BuildingsAdd: React.FC = () => {
 
   return (

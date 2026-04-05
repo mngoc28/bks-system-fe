@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
+/**
+ * Detail Service Dialog
+ * A read-only preview modal that displays all metadata for a specific service, including creation and update timestamps.
+ */
 const DetailServiceDialog: React.FC<DetailServiceDialogProps> = ({
     service,
     isOpen,

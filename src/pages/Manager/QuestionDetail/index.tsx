@@ -8,6 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ROUTERS } from "@/constant";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Question Detail Page
+ * Displays the specific details of a chatbot question, including its type, content, and linked answers/navigation.
+ */
 const QuestionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const numericId = id ? Number(id) : undefined;

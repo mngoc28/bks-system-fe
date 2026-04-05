@@ -5,6 +5,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X, RotateCcw } from "lucide-react";
 
+/**
+ * Service Search Section
+ * A filtering interface for the service management page, allowing property managers to find services by name or price range.
+ */
 const ServiceSearchSection: React.FC<ServiceSearchSectionProps> = ({
   open,
   value,

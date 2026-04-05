@@ -8,6 +8,10 @@ import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
 import { ChevronUp, ChevronDown, Search, X, RotateCcw } from "lucide-react";
 import { RENT_CATEGORY } from "@/constant";
 
+/**
+ * Building Search Section
+ * An expandable filter panel for searching buildings by name, location, year, type, and area.
+ */
 const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = false, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   const { data: buildingTypes } = useBuildingTypesQuery();

@@ -12,6 +12,10 @@ import { AddUserDialog, DeleteConfirmDialog, EditUserDialog, ResetPasswordDialog
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 
+/**
+ * User Management Page
+ * A centralized administrative panel for managing platform users, including staff and partners, with capabilities for role assignment, account status control, and password resets.
+ */
 const UserManagement: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

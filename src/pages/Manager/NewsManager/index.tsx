@@ -10,6 +10,10 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { useNavigate } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * News Management Page
+ * Orchestrates the display, search, and deletion of news articles in a paginated grid.
+ */
 const NewsManager: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

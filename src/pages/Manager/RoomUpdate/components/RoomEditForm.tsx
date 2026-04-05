@@ -17,6 +17,10 @@ import { useTranslation } from "react-i18next";
 import ReactSelect from "react-select";
 import { z } from "zod";
 
+/**
+ * Room Edit Form
+ * A comprehensive form for updating room specifications, amenities, and services, pre-populated with existing room data for efficient editing.
+ */
 const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading = false, currentUser }) => {
   const { t } = useTranslation();
   const schema = roomFormSchema(t);

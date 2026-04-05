@@ -4,6 +4,10 @@ import { Filter, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageBar from "@/components/PageBar";
 
+/**
+ * Building Header component
+ * Displays the page title, subtitle, and primary actions (Filter and Create).
+ */
 const BuildingHeader: React.FC<BuildingHeaderProps> = ({ onCreateBuilding, onOpenFilter }) => {
   const { t } = useTranslation();
 

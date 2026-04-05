@@ -6,6 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { DeleteNewsDialogProps } from "@/dataHelper/news.dataHelper";
 import { statusNews } from "@/utils/utils";
 
+/**
+ * Delete News Dialog
+ * A confirmation modal used to verify news article deletion, displaying affected article details.
+ */
 const DeleteNewsDialog: React.FC<DeleteNewsDialogProps> = ({ news, isOpen, onClose, onConfirm, isLoading = false }) => {
   const { t } = useTranslation();
 

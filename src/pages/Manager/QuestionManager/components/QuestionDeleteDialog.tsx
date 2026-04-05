@@ -4,6 +4,10 @@ import { QuestionDeleteDialogProps } from "@/dataHelper/chatbot.dataHelper";
 import { Loader2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Question Delete Dialog
+ * A confirmation modal that ensures users intend to permanently remove a chatbot question and its associated logic.
+ */
 const QuestionDeleteDialog = ({ isOpen, onClose, onConfirm, target, isLoading }: QuestionDeleteDialogProps) => {
   const { t } = useTranslation();
 

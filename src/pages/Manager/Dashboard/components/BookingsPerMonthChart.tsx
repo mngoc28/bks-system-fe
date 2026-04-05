@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { getDashboardDateRange, setDashboardDateRange } from "@/utils/storage";
 import { Spinner } from "@/components/ui/spinner";
 
+/**
+ * Bookings Per Month Chart
+ * Visualizes the trends in booking volume over time with custom date range filtering.
+ */
 const BookingsPerMonthChart: React.FC = () => {
   const { t } = useTranslation();
 

@@ -7,6 +7,10 @@ import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Amenity Table Component
+ * Displays the list of amenities in a table format with sorting and pagination.
+ */
 const AmenityTable: React.FC<AmenityTableProps> = ({
   filtered,
   page,

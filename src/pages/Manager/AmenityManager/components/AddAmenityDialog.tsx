@@ -11,6 +11,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+/**
+ * Add Amenity Dialog
+ * Provides a form to create a new amenity with validation against existing names.
+ */
 const AddAmenityDialog: React.FC<AddAmenityDialogProps> = ({ isOpen, isLoading = false, serverError, existingAmenities = [], onClose, onSubmit }) => {
   const { t } = useTranslation();
   const schema = addAmenitySchema(t, existingAmenities);

@@ -11,6 +11,10 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { RoomEditForm } from "./components";
 
+/**
+ * Room Update Page
+ * Facilitates the modification of existing room data, ensuring that changes to pricing, amenities, or status are correctly synchronized with the backend.
+ */
 const RoomUpdate: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

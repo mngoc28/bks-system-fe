@@ -8,6 +8,10 @@ import { useNavigate } from "react-router-dom"
 
 const VITE_IMAGES_URL = import.meta.env.VITE_IMAGES_URL || ''
 
+/**
+ * Partner Table
+ * A tabular representation of partners, supporting sorting and direct access to row actions like viewing and editing.
+ */
 const PartnerTable: React.FC<PartnerTableProps> = ({
     filtered,
     onSort,

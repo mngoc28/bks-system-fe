@@ -14,6 +14,10 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROOM_IMAGE_TYPE } from "@/constant";
 import { RoomImage, RoomImageListProps, SortableItemProps } from "@/dataHelper/roomImage.dataHelper";
 import { useDeleteMultipleRoomImagesMutation, useRoomImagesQuery, useUpdateMultipleRoomImageTypesMutation, useUpdateRoomImageSortMutation } from "@/hooks/useRoomImageQuery";
 
+/**
+ * Sortable Item
+ * A draggable image component representing a single room photo, integrated with dnd-kit for reordering and type selection.
+ */
 const SortableItem: React.FC<SortableItemProps> =
   ({
     image,
@@ -142,6 +146,10 @@ const getImageTypeLabel = (type: number, t: (key: string) => string) => {
   }
 };
 
+/**
+ * Room Image List
+ * Manages the interactive grid of room images, supporting drag-and-drop reordering, bulk deletion, and category updates.
+ */
 export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) => {
   const { t } = useTranslation();
   const deleteMultipleMutation = useDeleteMultipleRoomImagesMutation();

@@ -11,6 +11,10 @@ import { ImageIcon, ChevronDown, ChevronUp, ChevronsUpDown, X } from "lucide-rea
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Room Table
+ * A tabular list of rooms providing high-density information including ID, thumbnail, status, and capacity, with support for sorting and pagination.
+ */
 const RoomTable: React.FC<RoomTableProps> = ({
   sorted,
   page,

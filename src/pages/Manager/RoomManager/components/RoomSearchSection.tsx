@@ -5,6 +5,10 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X, RotateCcw } from "lucide-react";
 
+/**
+ * Room Search Section
+ * An advanced filtering dashboard that allows managers to narrow down room lists by title, number, type, and status with real-time feedback.
+ */
 const RoomSearchSection: React.FC<RoomSearchSectionProps> = ({ filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   const [localTitle, setLocalTitle] = useState(filters.title || "");

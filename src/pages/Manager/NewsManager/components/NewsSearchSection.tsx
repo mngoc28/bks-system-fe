@@ -7,6 +7,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X, RotateCcw } from "lucide-react";
 
+/**
+ * News Search Section
+ * An expandable filter panel allowing users to search news by title, author, status, and publication date range.
+ */
 const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   if (!open) return null;

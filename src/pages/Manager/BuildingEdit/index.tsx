@@ -12,6 +12,10 @@ import { ArrowLeftIcon, ImageIcon, Save, TrashIcon } from "lucide-react";
 import { buildingImage, BuildingImageEditFormRef } from "@/dataHelper/buildingImage.dataHelper";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 
+/**
+ * Building Edit Page
+ * A multi-mode page for editing building details or managing its image gallery.
+ */
 const BuildingEdit: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

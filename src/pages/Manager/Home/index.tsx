@@ -30,6 +30,10 @@ const PROVINCE_IMAGE_POOL = [
   "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?auto=format&fit=crop&w=1200&q=80",
 ];
 
+/**
+ * Public Home Page
+ * The primary landing page for the public-facing site, featuring search, featured rooms, partners, and news.
+ */
 const PublicHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

@@ -7,6 +7,10 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { UserEditForm } from "./components";
 
+/**
+ * User Edit Page
+ * A dedicated interface for modifying user credentials and contact details, ensuring data integrity through backend synchronization and validation.
+ */
 const UserEdit: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

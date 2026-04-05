@@ -587,7 +587,8 @@
     "login_as_manager": "Sign in as Manager",
     "login_as_partner": "Switch to Partner Portal",
     "register_here": "Register Now",
-    "or_continue_with": "Or switch user"
+    "or_continue_with": "Or switch user",
+    "remember_me": "Remember Me"
   },
   "forgotPassword": {
     "title": "Forgot Password",

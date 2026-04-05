@@ -36,6 +36,7 @@ export const loginFormSchema = (t: (key: string) => string) =>
       .min(1, { message: t("validation.password.required") })
       .min(MIN_LENGTH, { message: t("validation.password.invalid") })
       .max(MAX_LENGTH, { message: t("validation.password.maxLength") }),
+    rememberMe: z.boolean().optional(),
   });
 
 export const registerFormSchema = (t: (key: string) => string) =>

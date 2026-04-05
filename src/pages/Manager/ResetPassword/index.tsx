@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { ROUTERS } from "@/constant";
 
+/**
+ * Reset Password Page
+ * Allows users to set a new password after a successful recovery request, ensuring account security through re-authentication.
+ */
 const ResetPassword: React.FC = () => {
   const { t } = useTranslation();
 

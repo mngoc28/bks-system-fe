@@ -11,6 +11,10 @@ import EmptyPage from "@/components/EmptyPage";
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 
+/**
+ * Province Management Page
+ * Provides a searchable list of provinces, displaying counts for associated wards and rooms.
+ */
 const ProvinceManage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

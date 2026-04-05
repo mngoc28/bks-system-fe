@@ -3,6 +3,10 @@ import { useNavigate } from "react-router";
 import { ROUTERS } from "@/constant";
 import { FaFacebookF, FaGoogle, FaMap, FaPhone } from "react-icons/fa";
 
+/**
+ * Reset Token Success Page
+ * A confirmation view displayed after a user successfully resets their account token, offering next steps and support links.
+ */
 const ResetTokenSuccess: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

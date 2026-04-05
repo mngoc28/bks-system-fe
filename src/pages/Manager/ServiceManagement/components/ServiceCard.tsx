@@ -15,6 +15,10 @@ interface ServiceCardProps {
   onDelete: (id: number) => void;
 }
 
+/**
+ * Service Card
+ * A visually engaging card used in the service management grid to display service summaries, pricing, and last-updated timestamps.
+ */
 const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDelete }) => {
   const { t } = useTranslation();
 

@@ -19,6 +19,10 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+/**
+ * Booking Create Dialog
+ * Handles the creation of new bookings by selecting a building, room, price package, and duration.
+ */
 const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose, onSuccess }) => {
   const { t } = useTranslation();
   const schema = bookingCreateSchema(t);

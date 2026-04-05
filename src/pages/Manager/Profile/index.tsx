@@ -13,6 +13,10 @@ type ProfileDialogProps = {
   onClose: () => void;
 };
 
+/**
+ * Profile Dialog
+ * A modal providing access to user profile information, avatar management, and account security settings.
+ */
 export default function ProfileDialog({ open, onClose }: ProfileDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

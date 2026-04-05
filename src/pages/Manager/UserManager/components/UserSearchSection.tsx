@@ -5,6 +5,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X, RotateCcw } from "lucide-react";
 
+/**
+ * User Search Section
+ * An advanced filtering dashboard for the user management page, enabling targeted searches by name, email, phone, role, and account status.
+ */
 const UserSearchSection: React.FC<UserSearchSectionProps> = ({
   open,
   searchQ,

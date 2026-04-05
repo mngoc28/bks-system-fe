@@ -10,6 +10,10 @@ interface ProvinceCardProps {
   onView: (id: number) => void;
 }
 
+/**
+ * Province Card
+ * A visual summary of a province's data in the management grid, showing associated ward and room counts.
+ */
 const ProvinceCard: React.FC<ProvinceCardProps> = ({ province, onView }) => {
   const { t } = useTranslation();
 
