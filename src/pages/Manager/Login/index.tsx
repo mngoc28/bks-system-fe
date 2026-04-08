@@ -97,8 +97,11 @@ export default function Login() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,99,235,0.05),transparent_60%)]"></div>
             
             <div className="relative z-10 space-y-8">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md transition-transform hover:scale-110 active:scale-95 duration-500">
-                <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-10 w-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md transition-transform hover:scale-110 active:scale-95 duration-500">
+                  <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-10 w-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                </div>
+                <span className="text-2xl font-bold tracking-tight text-white uppercase italic">BKS System</span>
               </div>
 
               <div>
