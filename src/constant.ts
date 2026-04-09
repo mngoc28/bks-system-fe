@@ -72,6 +72,17 @@ export const enum ROUTERS {
   RESET_TOKEN_SUCCESS = "/reset-token-success",
   PUBLIC_NEWS_DETAIL = "/news/:newsId",
   PUBLIC_NEWS_LIST = "/news-list",
+  BKS_STAY = "/bks-stay",
+  BKS_STAY_DASHBOARD = "/bks-stay/dashboard",
+  BKS_STAY_HISTORY = "/bks-stay/bookings",
+  BKS_STAY_DETAILS = "/bks-stay/bookings/:id",
+  BKS_STAY_ACCOUNT = "/bks-stay/account",
+  BKS_STAY_SUPPORT = "/bks-stay/support",
+  BKS_STAY_SERVICES = "/bks-stay/services",
+  BKS_STAY_CONTRACTS = "/bks-stay/contracts",
+  BKS_STAY_CONTRACT_DETAIL = "/bks-stay/contracts/:id",
+  BKS_STAY_LOGIN = "/bks-stay/login",
+  BKS_STAY_FORCE_CHANGE_PASSWORD = "/bks-stay/force-change-password",
 }
 
 export const STORAGE_VAR = {

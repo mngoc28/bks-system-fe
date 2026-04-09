@@ -101,12 +101,12 @@ const PublicRoomDetail = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
       <PublicHeader />
 
-      <section className="relative overflow-hidden bg-slate-950 text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
+      <section className="relative overflow-hidden bg-primary text-white">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200 transition hover:bg-white/20"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary-light transition hover:bg-white/20"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -114,7 +114,7 @@ const PublicRoomDetail = () => {
           </button>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{room?.title || "Chi tiết phòng"}</h1>
           <p className="mt-3 inline-flex items-center gap-2 text-slate-200">
-            <MapPin className="h-4 w-4 text-sky-300" />
+            <MapPin className="h-4 w-4 text-primary-light" />
             {room?.building_address || "Đang cập nhật địa chỉ"}
           </p>
         </div>
@@ -163,7 +163,7 @@ const PublicRoomDetail = () => {
               <Card className="rounded-3xl border-slate-200 shadow-sm">
                 <CardContent className="space-y-5 p-6">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="rounded-full bg-sky-100 text-sky-700">Phòng sẵn sàng</Badge>
+                    <Badge variant="secondary" className="rounded-full bg-primary-light text-primary">Phòng sẵn sàng</Badge>
                     <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700">{room.province_name || "Việt Nam"}</Badge>
                   </div>
 
@@ -171,21 +171,21 @@ const PublicRoomDetail = () => {
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Sức chứa</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <Users className="h-4 w-4 text-sky-500" />
+                        <Users className="h-4 w-4 text-primary" />
                         {room.people || 0} khách
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Diện tích</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <Ruler className="h-4 w-4 text-sky-500" />
+                        <Ruler className="h-4 w-4 text-primary" />
                         {room.area || "--"} m2
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Linh hoạt</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <CalendarDays className="h-4 w-4 text-sky-500" />
+                        <CalendarDays className="h-4 w-4 text-primary" />
                         Đặt theo ngày
                       </p>
                     </div>
@@ -221,7 +221,7 @@ const PublicRoomDetail = () => {
                               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                               {service.name}
                             </span>
-                            <span className="font-semibold text-sky-600">{formatPrice(service.price)}</span>
+                            <span className="font-semibold text-primary">{formatPrice(service.price)}</span>
                           </div>
                         ))}
                       </div>
@@ -238,7 +238,7 @@ const PublicRoomDetail = () => {
             <CardContent className="space-y-5 p-6">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
-                <p className="mt-2 text-3xl font-bold text-sky-600">{formatPrice(room?.cheapest_daily_price || 0)}</p>
+                <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
                 <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
               </div>
 
@@ -247,7 +247,7 @@ const PublicRoomDetail = () => {
                 <p>Hỗ trợ xác nhận nhanh qua email và số điện thoại.</p>
               </div>
 
-              <Button asChild className="w-full rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
+              <Button asChild className="w-full rounded-xl gradient-primary hover:opacity-90 shadow-md transition-all active:scale-95">
                 <Link to={`${ROUTERS.BOOKING}/${id}`}>Đặt phòng ngay</Link>
               </Button>
             </CardContent>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, MapPin, CheckCircle, AlertTriangle, Play, Check, Filter, Loader2 } from 'lucide-react';
+import { Wrench, MapPin, CheckCircle, Filter, Loader2 } from 'lucide-react';
 import { MaintenanceRequest } from './types';
 import { Button } from "@/components/ui/button";
 import { partnerService } from '@/services/partnerService';
@@ -97,7 +97,7 @@ const Maintenances: React.FC = () => {
                        { (request.status === 'Đang chờ' || request.status === 'Chờ xử lý') && (
                          <Button onClick={() => safeHandleUpdate(request.id, 'Đang xử lý')} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-8">Tiếp nhận</Button>
                        )}
-                       { (request.status === 'Đan xử lý' || request.status === 'Đang sửa' ) && (
+                       { (request.status === 'Đang xử lý' || request.status === 'Đang sửa' ) && (
                          <Button onClick={() => safeHandleUpdate(request.id, 'Đã hoàn thành')} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8">Xong</Button>
                        )}
                        { request.status === 'Đã hoàn thành' && (

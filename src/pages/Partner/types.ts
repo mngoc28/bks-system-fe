@@ -11,10 +11,11 @@ export interface Building {
   name: string;
   address: string;
   totalRooms: number;
-  property_type_id: number;
-  rent_category: number;
+  property_type_id?: number;
+  rent_category?: number;
   description?: string;
   property_type_name?: string;
+  type?: string; 
 }
 
 export interface Amenity {
@@ -57,7 +58,11 @@ export interface Booking {
   guestName: string; // Đồng bộ với UI
   roomName: string;
   checkIn: string; // Đồng bộ với UI
-  checkOut: string; // Đồng bộ với UI
+  checkOut: string; 
+  services?: string[];
+  customerName?: string; // Support for legacy naming
+  checkInDate?: string; // Support for legacy naming
+  checkOutDate?: string; // Support for legacy naming
   totalAmount: number;
   status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành';
 }
@@ -65,10 +70,12 @@ export interface Booking {
 export interface MaintenanceRequest {
   id: string | number;
   roomName: string;
-  type: string; // Loại sự cố
-  description: string;
+  type?: string; 
+  description?: string; 
   status: 'Đang chờ' | 'Đang xử lý' | 'Đã hoàn thành' | 'Chờ xử lý' | 'Đang sửa';
   createdAt: string;
+  customerName?: string; 
+  issueDescription?: string;
 }
 
 export interface NewsPost {
@@ -76,6 +83,8 @@ export interface NewsPost {
   title: string;
   content: string;
   thumbnail: string;
+  imageUrl?: string; 
+  excerpt?: string;
   createdAt: string;
   status: 'Nháp' | 'Đã đăng';
 }

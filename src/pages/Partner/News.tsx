@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Calendar, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { NewsPost } from './types';
 import {
   Dialog,
