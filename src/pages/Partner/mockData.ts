@@ -56,8 +56,8 @@ export const mockRooms: Room[] = [
 ];
 
 export const mockBookings: Booking[] = [
-  { id: 'bk1', customerName: 'Nguyễn Văn A', roomName: 'Phòng 101 - Alpha', checkInDate: '2026-04-01', checkOutDate: '2026-10-01', services: ['Dọn dẹp', 'Internet'], totalAmount: 30000000, status: 'Chờ duyệt' },
-  { id: 'bk2', customerName: 'Trần Thị B', roomName: 'Phòng Master 01 - Sunny', checkInDate: '2026-03-15', checkOutDate: '2027-03-15', services: ['Internet'], totalAmount: 180000000, status: 'Đang ở' },
+  { id: 'bk1', guestName: 'Nguyễn Văn A', roomName: 'Phòng 101 - Alpha', checkIn: '2026-04-01', checkOut: '2026-10-01', services: ['Dọn dẹp', 'Internet'], totalAmount: 30000000, status: 'Chờ duyệt' },
+  { id: 'bk2', guestName: 'Trần Thị B', roomName: 'Phòng Master 01 - Sunny', checkIn: '2026-03-15', checkOut: '2027-03-15', services: ['Internet'], totalAmount: 180000000, status: 'Đang ở' },
 ];
 
 export const mockMaintenances: MaintenanceRequest[] = [
@@ -76,7 +76,7 @@ export const mockNews: NewsPost[] = [
     title: 'Khuyến mãi mùa hè tại Alpha Resort',
     excerpt: 'Giảm giá cực sốc lên đến 30% cho khách hàng đặt phòng trên 3 tháng.',
     content: 'Chi tiết nội dung bài viết khuyến mãi...',
-    imageUrl: 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    thumbnail: 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     createdAt: '2026-03-25T08:15:00Z',
     status: 'Đã đăng'
   },
@@ -85,8 +85,14 @@ export const mockNews: NewsPost[] = [
     title: 'Cập nhật bảng giá dịch vụ dọn phòng',
     excerpt: 'Điều chỉnh giá dịch vụ dọn phòng chuyên nghiệp từ tháng 4/2026.',
     content: 'Nội dung thông báo điều chỉnh giá...',
-    imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    thumbnail: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     createdAt: '2026-03-28T14:30:00Z',
     status: 'Nháp'
   }
+];
+
+export const mockTransactions = [
+  { id: 'tx1', type: 'Thu nhập', amount: 15000000, date: '2026-04-05', description: 'Tiền thuê phòng 101 - Alpha' },
+  { id: 'tx2', type: 'Phí dịch vụ', amount: -500000, date: '2026-04-04', description: 'Phí dọn dẹp tháng 3' },
+  { id: 'tx3', type: 'Thu nhập', amount: 22000000, date: '2026-04-02', description: 'Tiền thuê phòng Master 01 - Sunny' },
 ];

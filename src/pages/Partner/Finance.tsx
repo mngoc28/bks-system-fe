@@ -1,5 +1,5 @@
 import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Wallet, TrendingUp, HandCoins, ArrowRightLeft } from 'lucide-react';
 import { mockRevenueData, mockTransactions } from './mockData';
 
@@ -95,11 +95,11 @@ const Finance: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {mockTransactions.map(tx => (
+            {mockTransactions.map((tx: any) => (
               <div key={tx.id} className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${tx.type === 'Booking' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
-                    {tx.type === 'Booking' ? <TrendingUp size={16} /> : <Wallet size={16} />}
+                  <div className={`p-2 rounded-full ${tx.type === 'Thu nhập' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {tx.type === 'Thu nhập' ? <TrendingUp size={16} /> : <Wallet size={16} />}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-gray-800 line-clamp-1">{tx.description}</p>
@@ -107,11 +107,11 @@ const Finance: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right whitespace-nowrap ml-4">
-                  <p className={`text-sm font-bold ${tx.type === 'Booking' ? 'text-emerald-600' : 'text-blue-600'}`}>
-                    {tx.type === 'Booking' ? '+' : ''}{tx.amount.toLocaleString('vi-VN')} ₫
+                  <p className={`text-sm font-bold ${tx.type === 'Thu nhập' ? 'text-emerald-600' : 'text-blue-600'}`}>
+                    {tx.type === 'Thu nhập' ? '+' : ''}{tx.amount.toLocaleString('vi-VN')} ₫
                   </p>
-                  <p className={`text-[10px] font-medium px-2 py-0.5 mt-1 rounded-full inline-block ${tx.status === 'Thành công' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                    {tx.status}
+                  <p className={`text-[10px] font-medium px-2 py-0.5 mt-1 rounded-full inline-block bg-emerald-50 text-emerald-600`}>
+                    Thành công
                   </p>
                 </div>
               </div>

@@ -61,6 +61,19 @@ const PartnerDetailManager = React.lazy(() => import("./pages/Manager/PartnerDet
 const PartnerEditManager = React.lazy(() => import("./pages/Manager/PartnerEdit"));
 const Booking = React.lazy(() => import("./pages/EndUser/Booking/BookingPage"));
 
+// BKS Stay Portal
+const BksStayLayout = React.lazy(() => import("./pages/EndUser/BksStay/BksStayLayout"));
+const BksStayDashboard = React.lazy(() => import("./pages/EndUser/BksStay/Dashboard"));
+const BksStayHistory = React.lazy(() => import("./pages/EndUser/BksStay/History"));
+const BksStayDetail = React.lazy(() => import("./pages/EndUser/BksStay/BookingDetail"));
+const BksStayAccount = React.lazy(() => import("./pages/EndUser/BksStay/Account"));
+const BksStaySupport = React.lazy(() => import("./pages/EndUser/BksStay/Support"));
+const BksStayServices = React.lazy(() => import("./pages/EndUser/BksStay/InStayServices.tsx"));
+const BksStayContracts = React.lazy(() => import("./pages/EndUser/BksStay/Contracts.tsx"));
+const BksStayContractDetail = React.lazy(() => import("./pages/EndUser/BksStay/ContractDetail.tsx"));
+const BksStayLogin = React.lazy(() => import("./pages/EndUser/BksStay/Login"));
+const BksStayForceChangePassword = React.lazy(() => import("./pages/EndUser/BksStay/ForceChangePassword"));
+
 // Partner Routes
 const PartnerLayout = React.lazy(() => import("./pages/Partner/PartnerLayout"));
 const PartnerDashboard = React.lazy(() => import("./pages/Partner/Dashboard"));
@@ -179,6 +192,30 @@ export default function Router() {
           <Route path={ROUTERS.PUBLIC_NEWS_DETAIL} element={<PublicNewsDetail />} />
           <Route path={ROUTERS.PUBLIC_NEWS_LIST} element={<PublicNewsList />} />
         </Route>
+
+        {/* BKS Stay Standalone Portal */}
+        <Route
+          path={ROUTERS.BKS_STAY}
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <BksStayLayout />
+            </Suspense>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<BksStayDashboard />} />
+          <Route path="bookings" element={<BksStayHistory />} />
+          <Route path="bookings/:id" element={<BksStayDetail />} />
+          <Route path="account" element={<BksStayAccount />} />
+          <Route path="support" element={<BksStaySupport />} />
+          <Route path="services" element={<BksStayServices />} />
+          <Route path="contracts" element={<BksStayContracts />} />
+          <Route path="contracts/:id" element={<BksStayContractDetail />} />
+        </Route>
+
+        {/* Guest Auth Routes - Standalone */}
+        <Route path="/bks-stay/login" element={<BksStayLogin />} />
+        <Route path="/bks-stay/force-change-password" element={<BksStayForceChangePassword />} />
 
         {/* Public Routes */}
         <Route

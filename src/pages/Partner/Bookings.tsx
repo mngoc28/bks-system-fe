@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Home, CheckCircle, XCircle, MoreVertical, Search, Filter, Clock, Loader2 } from 'lucide-react';
+import { Calendar, User, Home, MoreVertical, Search, Loader2 } from 'lucide-react';
 import { Booking } from './types';
 import { Button } from "@/components/ui/button";
 import { partnerService } from '@/services/partnerService';

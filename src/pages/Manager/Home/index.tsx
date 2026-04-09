@@ -273,14 +273,14 @@ const PublicHome = () => {
       <main className="flex flex-col gap-14 pb-14 text-[15px]">
         <section
           id="hero"
-          className="relative z-[60] isolate bg-slate-950 text-white min-h-[520px] md:h-[560px] lg:h-[600px]"
+          className="relative z-[60] isolate bg-slate-950 text-white min-h-[520px] md:h-[560px] lg:h-[600px] overflow-hidden"
         >
           <img
-            src="/assets/images/banner.webp"
+            src="/assets/images/luxury_banner.png"
             alt={t("public.home.hero.alt")}
-            className="absolute inset-0 size-full object-cover"
+            className="absolute inset-0 size-full object-cover animate-slow-zoom scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-900/30 to-slate-800/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 md:bg-gradient-to-r md:from-slate-950/80 md:via-slate-900/30 md:to-transparent" />
 
           <div className="relative z-20 mx-auto flex h-full w-full max-w-6xl flex-col justify-center gap-10 px-6 py-16">
             <div className="max-w-2xl space-y-4">
@@ -296,7 +296,7 @@ const PublicHome = () => {
             </div>
 
             <form
-              className="relative z-[200] grid gap-3 rounded-3xl bg-white/12 p-5 shadow-2xl backdrop-blur md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+              className="relative z-[200] grid gap-4 rounded-[32px] bg-white/10 p-4 shadow-2xl backdrop-blur-2xl border border-white/20 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] hover:bg-white/15 transition-all duration-500"
               onSubmit={handleSearchSubmit}
             >
               <SearchableSelect
@@ -378,6 +378,17 @@ const PublicHome = () => {
       </main>
 
       <PublicFooter />
+
+      <style>{`
+        @keyframes slow-zoom {
+          0% { transform: scale(1.05); }
+          50% { transform: scale(1.15); }
+          100% { transform: scale(1.05); }
+        }
+        .animate-slow-zoom {
+          animation: slow-zoom 30s infinite ease-in-out;
+        }
+      `}</style>
     </div>
   );
 };
