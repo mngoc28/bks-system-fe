@@ -158,9 +158,13 @@ export interface BuildingListRequestForRoom {
   name?: string;
 }
 
+import { ViewMode } from "@/components/LayoutToggle";
+
 export interface BuildingHeaderProps {
   onCreateBuilding: () => void;
   onOpenFilter: () => void;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
 export type SortKey = "id" | "name" | "user_name" | "province_name" | "ward_name" | "area";

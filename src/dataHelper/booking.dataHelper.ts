@@ -197,3 +197,11 @@ export interface RowActionsProps {
 	onEdit?: (id: string) => void;
 	onDelete?: (id: string) => void;
 }
+
+export interface BookingTableProps {
+	filtered: Booking[];
+	onView: (id: string) => void;
+	onEdit: (id: string) => void;
+	onDelete: (id: string) => void;
+	filters: BookingFilters;
+}

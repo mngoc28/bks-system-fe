@@ -87,3 +87,10 @@ export interface ProvinceCarouselProps {
   heading?: string;
   description?: string;
 }
+
+export interface ProvinceTableProps {
+  filtered: Provinces[];
+  onView: (id: number) => void;
+  onSort: (field: string) => void;
+  filters: ProvinceFilter;
+}

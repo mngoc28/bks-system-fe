@@ -9,7 +9,7 @@ import { isTokenExpired } from "./utils/tokenUtils";
 
 const Layout = React.lazy(() => import("./components/layout"));
 const AuthLayout = React.lazy(() => import("./components/layout/AuthLayout"));
-const Home = React.lazy(() => import("./pages/Manager/Home"));
+const Home = React.lazy(() => import("./pages/Admin/Home"));
 const PublicLayout = React.lazy(() => import("./components/layout/PublicLayout/PublicLayout"));
 const PartnerList = React.lazy(() => import("./pages/EndUser/PartnerList"));
 const PartnerDetail = React.lazy(() => import("./pages/EndUser/PartnerDetail"));
@@ -20,45 +20,45 @@ const MyBookings = React.lazy(() => import("./pages/EndUser/MyBookings"));
 const BookingSuccess = React.lazy(() => import("./pages/EndUser/BookingSuccess"));
 const PublicNewsDetail = React.lazy(() => import("./pages/EndUser/NewsDetail"));
 const PublicNewsList = React.lazy(() => import("./pages/EndUser/NewsList"));
-const Login = React.lazy(() => import("./pages/Manager/Login"));
-const Register = React.lazy(() => import("./pages/Manager/Register"));
-const CompanyHub = React.lazy(() => import("./pages/Manager/CompanyHub"));
-const Dashboard = React.lazy(() => import("./pages/Manager/Dashboard"));
-const Buildings = React.lazy(() => import("./pages/Manager/BuildingManager"));
-const BookingManage = React.lazy(() => import("./pages/Manager/BookingManage"));
-const BuildingsAdd = React.lazy(() => import("./pages/Manager/BuildingsAdd"));
-const BuildingEdit = React.lazy(() => import("./pages/Manager/BuildingEdit"));
-const BuildingDetail = React.lazy(() => import("./pages/Manager/BuildingDetail"));
-const BuildingEditImages = React.lazy(() => import("./pages/Manager/BuildingEdit"));
-const Rooms = React.lazy(() => import("./pages/Manager/RoomManager"));
-const RoomAdd = React.lazy(() => import("./pages/Manager/RoomAdd"));
-const RoomDetail = React.lazy(() => import("./pages/Manager/RoomDetail"));
-const RoomImageManager = React.lazy(() => import("./pages/Manager/RoomImageManager"));
-const RoomUpdate = React.lazy(() => import("./pages/Manager/RoomUpdate"));
-const ResetPassword = React.lazy(() => import("./pages/Manager/ResetPassword"));
-const ForgotPassword = React.lazy(() => import("./pages/Manager/ForgotPassword"));
-const UserManagement = React.lazy(() => import("./pages/Manager/UserManager"));
-const UserDetail = React.lazy(() => import("./pages/Manager/UserDetail"));
-const UserEdit = React.lazy(() => import("./pages/Manager/UserEdit"));
-const ProvinceManage = React.lazy(() => import("./pages/Manager/ProvinceManage"));
-const ProvinceDetail = React.lazy(() => import("./pages/Manager/ProvinceDetail"));
-const AmenityManagement = React.lazy(() => import("./pages/Manager/AmenityManager"));
-const QuestionDetail = React.lazy(() => import("./pages/Manager/QuestionDetail"));
-const QuestionManagement = React.lazy(() => import("./pages/Manager/QuestionManager"));
-const QuestionCreate = React.lazy(() => import("./pages/Manager/QuestionCreate"));
-const QuestionUpdate = React.lazy(() => import("./pages/Manager/QuestionUpdate"));
-const QuestionFlow = React.lazy(() => import("./pages/Manager/QuestionFlow"));
-const ServiceManagement = React.lazy(() => import("./pages/Manager/ServiceManagement"));
-const VerifyEmailToken = React.lazy(() => import("./pages/Manager/VerifyEmailToken"));
-const ResetTokenSuccess = React.lazy(() => import("./pages/Manager/ResetTokenSuccess"));
-const SetPassword = React.lazy(() => import("./pages/Manager/SetPassword"));
-const News = React.lazy(() => import("./pages/Manager/NewsManager"));
-const NewsDetail = React.lazy(() => import("./pages/Manager/NewsDetail"));
-const NewsEdit = React.lazy(() => import("./pages/Manager/NewsEdit"));
-const NewsAdd = React.lazy(() => import("./pages/Manager/NewsAdd"));
-const PartnerManagement = React.lazy(() => import("./pages/Manager/PartnerManagement"));
-const PartnerDetailManager = React.lazy(() => import("./pages/Manager/PartnerDetail"));
-const PartnerEditManager = React.lazy(() => import("./pages/Manager/PartnerEdit"));
+const Login = React.lazy(() => import("./pages/Admin/Login"));
+const Register = React.lazy(() => import("./pages/Admin/Register"));
+const CompanyHub = React.lazy(() => import("./pages/Admin/CompanyHub"));
+const Dashboard = React.lazy(() => import("./pages/Admin/Dashboard"));
+const Buildings = React.lazy(() => import("./pages/Admin/BuildingManager"));
+const BookingManage = React.lazy(() => import("./pages/Admin/BookingManage"));
+const BuildingsAdd = React.lazy(() => import("./pages/Admin/BuildingsAdd"));
+const BuildingEdit = React.lazy(() => import("./pages/Admin/BuildingEdit"));
+const BuildingDetail = React.lazy(() => import("./pages/Admin/BuildingDetail"));
+const BuildingEditImages = React.lazy(() => import("./pages/Admin/BuildingEdit"));
+const Rooms = React.lazy(() => import("./pages/Admin/RoomManager"));
+const RoomAdd = React.lazy(() => import("./pages/Admin/RoomAdd"));
+const RoomDetail = React.lazy(() => import("./pages/Admin/RoomDetail"));
+const RoomImageManager = React.lazy(() => import("./pages/Admin/RoomImageManager"));
+const RoomUpdate = React.lazy(() => import("./pages/Admin/RoomUpdate"));
+const ResetPassword = React.lazy(() => import("./pages/Admin/ResetPassword"));
+const ForgotPassword = React.lazy(() => import("./pages/Admin/ForgotPassword"));
+const UserManagement = React.lazy(() => import("./pages/Admin/UserManager"));
+const UserDetail = React.lazy(() => import("./pages/Admin/UserDetail"));
+const UserEdit = React.lazy(() => import("./pages/Admin/UserEdit"));
+const ProvinceManage = React.lazy(() => import("./pages/Admin/ProvinceManage"));
+const ProvinceDetail = React.lazy(() => import("./pages/Admin/ProvinceDetail"));
+const AmenityManagement = React.lazy(() => import("./pages/Admin/AmenityManager"));
+const QuestionDetail = React.lazy(() => import("./pages/Admin/QuestionDetail"));
+const QuestionManagement = React.lazy(() => import("./pages/Admin/QuestionManager"));
+const QuestionCreate = React.lazy(() => import("./pages/Admin/QuestionCreate"));
+const QuestionUpdate = React.lazy(() => import("./pages/Admin/QuestionUpdate"));
+const QuestionFlow = React.lazy(() => import("./pages/Admin/QuestionFlow"));
+const ServiceManagement = React.lazy(() => import("./pages/Admin/ServiceManagement"));
+const VerifyEmailToken = React.lazy(() => import("./pages/Admin/VerifyEmailToken"));
+const ResetTokenSuccess = React.lazy(() => import("./pages/Admin/ResetTokenSuccess"));
+const SetPassword = React.lazy(() => import("./pages/Admin/SetPassword"));
+const News = React.lazy(() => import("./pages/Admin/NewsManager"));
+const NewsDetail = React.lazy(() => import("./pages/Admin/NewsDetail"));
+const NewsEdit = React.lazy(() => import("./pages/Admin/NewsEdit"));
+const NewsAdd = React.lazy(() => import("./pages/Admin/NewsAdd"));
+const PartnerManagement = React.lazy(() => import("./pages/Admin/PartnerManagement"));
+const PartnerDetailManager = React.lazy(() => import("./pages/Admin/PartnerDetail"));
+const PartnerEditManager = React.lazy(() => import("./pages/Admin/PartnerEdit"));
 const Booking = React.lazy(() => import("./pages/EndUser/Booking/BookingPage"));
 
 // BKS Stay Portal
@@ -116,6 +116,13 @@ const PartnerPrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = !!token && !isTokenExpired(token) && role === 'partner';
 
   return isAuthenticated ? <>{children}</> : <Navigate to={ROUTERS.PARTNER_LOGIN} replace />;
+};
+
+const StayPrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = getAccessToken();
+  const isAuthenticated = !!token && !isTokenExpired(token);
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/bks-stay/login" replace />;
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -197,9 +204,11 @@ export default function Router() {
         <Route
           path={ROUTERS.BKS_STAY}
           element={
-            <Suspense fallback={<LoadingFallback />}>
-              <BksStayLayout />
-            </Suspense>
+            <StayPrivateRoute>
+              <Suspense fallback={<LoadingFallback />}>
+                <BksStayLayout />
+              </Suspense>
+            </StayPrivateRoute>
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />

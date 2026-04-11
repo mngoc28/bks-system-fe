@@ -10,7 +10,7 @@ export interface PartnerInfor {
     province_name: string;
     ward_name: string;
     address: string | null;
-    company_name: string | null;
+    company_name: string;
     phone: string | null;
     website: string | null;
     description: string | null;
@@ -128,18 +128,19 @@ export interface PartnerSearchSectionProps {
 
 export interface PartnerTableProps {
     filtered: Partner[];
-    onSort: (key: "id" | "user_name" | "province_name" | "ward_name") => void;
+    onSort: (key: "id" | "company_name" | "user_name" | "province_name" | "ward_name") => void;
     filters: PartnerFilter;
 }
 
 export interface Partner {
     id: number;
+    company_name: string;
     user_name: string;
     province_name: string;
     ward_name: string;
-    address: string;
-    phone: string;
-    image_1: string;
+    address: string | null;
+    phone: string | null;
+    image_1: string | null;
 }
 
 export interface PartnerCard {

@@ -12,23 +12,44 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTERS } from "@/constant";
+import { useLoginMutation } from "@/hooks/useAuthQuery";
+import { useUserStore } from "@/store/useUserStore";
+import { toast } from "sonner";
 
 const GuestLogin = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { mutate: loginMutate } = useLoginMutation();
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      toast.error("Vui lòng nhập đầy đủ email và mật khẩu");
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate API call for the purpose of this demonstration
-    setTimeout(() => {
-      // In a real app, logic would check if it's the first time
-      // For this demo, we always redirect to force change password
-      navigate(ROUTERS.BKS_STAY_FORCE_CHANGE_PASSWORD);
-      setIsLoading(false);
-    }, 1500);
+    loginMutate({ email, password }, {
+      onSuccess: (response: any) => {
+        const { token, role, name, email } = response.data;
+        useUserStore.getState().login(token, email, role, name);
+        toast.success(`Chào mừng trở lại, ${name}!`);
+        navigate(ROUTERS.BKS_STAY_DASHBOARD);
+        setIsLoading(false);
+      },
+      onError: (error: any) => {
+        console.error("Login failed", error);
+        toast.error(error?.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+        setIsLoading(false);
+      }
+    });
   };
 
   return (
@@ -97,9 +118,11 @@ const GuestLogin = () => {
                        <div className="relative group">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-sky-400 transition-colors" />
                           <Input 
+                            name="email"
                             type="email" 
                             placeholder="example@gmail.com" 
                             className="h-14 pl-12 rounded-2xl bg-white/10 border-white/10 text-white placeholder:text-slate-600 focus:bg-white/20 focus:border-sky-500/50 transition-all font-medium"
+                            required
                           />
                        </div>
                     </div>
@@ -109,9 +132,11 @@ const GuestLogin = () => {
                        <div className="relative group">
                           <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-sky-400 transition-colors" />
                           <Input 
+                            name="password"
                             type={showPassword ? "text" : "password"} 
                             placeholder="••••••••" 
                             className="h-14 pl-12 pr-12 rounded-2xl bg-white/10 border-white/10 text-white placeholder:text-slate-600 focus:bg-white/20 focus:border-sky-500/50 transition-all font-medium"
+                            required
                           />
                           <button 
                             type="button"

@@ -66,7 +66,7 @@ export default function PartnerLogin() {
             
             // Normalize role to lowercase and save
             const user_role = (userData?.role || 'partner').toLowerCase();
-            useUserStore.getState().login(token, values.email, user_role);
+            useUserStore.getState().login(token, values.email, user_role, userData?.name || "");
             
             toastSuccess(t("login.success"));
             navigate("/partner/dashboard");

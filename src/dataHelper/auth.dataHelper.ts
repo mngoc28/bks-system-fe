@@ -10,6 +10,9 @@ export interface RegisterPayload {
 }
 export interface LoginResponse {
   token: string;
+  name: string;
+  role: string;
+  email: string;
 }
 
 export interface RefreshTokenResponse {

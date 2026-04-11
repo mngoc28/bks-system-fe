@@ -4,7 +4,6 @@ import {
   House, 
   History, 
   User, 
-  ShieldCheck, 
   Menu, 
   X, 
   LogOut, 
@@ -16,10 +15,27 @@ import {
 import { ROUTERS } from "@/constant";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
+import { useUserStore } from "@/store/useUserStore";
+import { useLogoutMutation } from "@/hooks/useAuthQuery";
+import { useNavigate } from "react-router-dom";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 const BksStayLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const userEmail = useUserStore((state) => state.userEmail);
+  const user = useUserStore((state) => state.userName);
+  const logoutMutate = useLogoutMutation();
+
+  const handleLogout = () => {
+    logoutMutate.mutate(undefined, {
+      onSuccess: () => {
+        useUserStore.getState().logout();
+        navigate("/bks-stay/login");
+      }
+    });
+  };
 
   const menuItems = [
     { id: "dashboard", label: "Tổng quan", path: ROUTERS.BKS_STAY_DASHBOARD, icon: <House className="h-5 w-5" /> },
@@ -56,20 +72,24 @@ const BksStayLayout = () => {
           {/* Sidebar Header */}
           <div className="h-20 flex items-center px-8 border-b border-white/5">
             <Link to={ROUTERS.HOME} className="flex items-center gap-3">
-              <img src="/app/images/front/bks-icon.svg" alt="BKS Icon" className="h-10 w-10 drop-shadow-[0_0_8px_rgba(14,165,233,0.3)]" />
-              <span className="text-xl font-black tracking-tight text-white">Stay <span className="text-sky-400">Portal</span></span>
+              <img src="/app/images/front/bks-icon.svg" alt="BKS Icon" className="h-10 w-10 drop-shadow-[0_0_8px_rgba(15,23,42,0.5)]" />
+              <span className="text-xl font-black tracking-tight text-white uppercase italic">Stay <span className="text-sky-500 not-italic">Portal</span></span>
             </Link>
           </div>
 
           {/* User Profile Summary */}
           <div className="px-8 py-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 font-bold border border-sky-500/20">
-                A
+              <div className="h-10 w-10 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 font-bold border border-sky-500/20 overflow-hidden">
+                {user ? (
+                   <img src={`https://ui-avatars.com/api/?name=${user}&background=random`} alt={user} className="h-full w-full object-cover" />
+                ) : (
+                  "U"
+                )}
               </div>
               <div>
-                <p className="text-sm font-bold text-white leading-tight underline underline-offset-4 decoration-sky-500/50">Nguyễn Văn A</p>
-                <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mt-0.5">MEMBER ID: #8283</p>
+                <p className="text-sm font-bold text-white leading-tight underline underline-offset-4 decoration-sky-500/50 truncate max-w-[150px]">{user || "Người dùng"}</p>
+                <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mt-0.5 truncate">{userEmail || "GUEST"}</p>
               </div>
             </div>
             
@@ -104,9 +124,9 @@ const BksStayLayout = () => {
                 </Button>
             </div>
             
-            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-400 hover:text-rose-400 transition-colors px-4 h-12 rounded-xl">
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-400 hover:text-rose-400 transition-colors px-4 h-12 rounded-xl" onClick={handleLogout}>
               <LogOut className="h-5 w-5" />
-              <span className="text-sm font-medium">Thoát Portal</span>
+              <span className="text-sm font-medium">Đăng xuất</span>
             </Button>
           </div>
         </div>
@@ -121,11 +141,8 @@ const BksStayLayout = () => {
                {menuItems.find(i => i.path === location.pathname)?.label || "Portal Hub"}
              </h2>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-sky-600 relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
-            </Button>
+           <div className="flex items-center gap-4">
+            <NotificationBell />
             <div className="h-8 w-[1px] bg-slate-100" />
             <div className="flex items-center gap-3">
                <div className="text-right">
