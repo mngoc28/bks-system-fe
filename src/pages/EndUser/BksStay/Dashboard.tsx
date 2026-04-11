@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   CalendarDays, 
@@ -29,52 +29,86 @@ import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
 import { toast } from "sonner";
 
+import stayService, { StayDashboardData } from "@/services/stayService";
+
 const Dashboard = () => {
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
-  const [newEndDate, setNewEndDate] = useState("25/04/2026");
+  const [newEndDate, setNewEndDate] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<StayDashboardData | null>(null);
 
-  // Mock data for the dashboard
-  const activeBooking = {
-    id: "BKS-99283",
-    roomTitle: "Phòng Luxury Ocean View",
-    startDate: "20/04/2026",
-    endDate: "23/04/2026",
-    status: "Upcoming",
-    image: "https://images.unsplash.com/photo-1590490359683-658d3d23f972?auto=format&fit=crop&q=80&w=800"
-  };
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await stayService.getDashboard();
+        setData(response.data);
+        if (response.data?.active_booking) {
+          setNewEndDate(response.data.active_booking.end_date);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const stats = [
-    { label: "Tổng số kỳ nghỉ", value: "12", icon: <CalendarDays className="h-5 w-5 text-sky-600" />, color: "bg-sky-50" },
-    { label: "Điểm thưởng", value: "2,450", icon: <Star className="h-5 w-5 text-amber-600" />, color: "bg-amber-50" },
-    { label: "Chi tiêu tích lũy", value: "15.4M", icon: <Wallet className="h-5 w-5 text-emerald-600" />, color: "bg-emerald-50" },
-    { label: "Cấp bậc vinh dự", value: "Gold Member", icon: <TrendingUp className="h-5 w-5 text-indigo-600" />, color: "bg-indigo-50" },
-  ];
-
-  const recentHistory = [
-    { id: "BKS-99120", hotel: "BKS Đà Nẵng River", date: "12/03/2026", amount: 2400000, status: "Completed" },
-    { id: "BKS-98045", hotel: "BKS Hà Nội Boutique", date: "05/01/2026", amount: 1850000, status: "Completed" },
-  ];
+    fetchDashboard();
+  }, []);
 
   const handleExtendSubmit = () => {
     toast.success(`Yêu cầu gia hạn đến ngày ${newEndDate} đã được gửi! Chúng tôi sẽ phản hồi trong 15 phút.`);
     setIsExtendDialogOpen(false);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-600"></div>
+      </div>
+    );
+  }
+
+  // Mega Safe Check
+  if (!data || !data.user || !data.stats) {
+    return (
+      <div className="p-8 text-center bg-rose-50 rounded-[32px] border border-rose-100">
+        <h3 className="text-xl font-black text-rose-900 mb-2">Thông tin không khả dụng</h3>
+        <p className="text-rose-700/70 mb-4 font-medium">Chúng tôi không thể tải được thông tin tài khoản của bạn lúc này.</p>
+        <Button onClick={() => window.location.reload()} className="bg-rose-600 hover:bg-rose-500 rounded-xl">Thử tải lại trang</Button>
+      </div>
+    );
+  }
+
+  const user = data.user;
+  const statsData = data.stats;
+  const activeBooking = data.active_booking;
+  
+  const stats = [
+    { label: "Tổng số kỳ nghỉ", value: statsData.total_stays?.toString() || "0", icon: <CalendarDays className="h-5 w-5 text-sky-600" />, color: "bg-sky-50" },
+    { label: "Điểm thưởng", value: user.reward_points?.toLocaleString() || "0", icon: <Star className="h-5 w-5 text-amber-600" />, color: "bg-amber-50" },
+    { label: "Chi tiêu tích lũy", value: formatPrice(statsData.accumulated_spending || 0), icon: <Wallet className="h-5 w-5 text-emerald-600" />, color: "bg-emerald-50" },
+    { label: "Cấp bậc vinh dự", value: user.membership_level || "Bronze", icon: <TrendingUp className="h-5 w-5 text-indigo-600" />, color: "bg-indigo-50" },
+  ];
+
+  const recentHistory = data.recent_history || [];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       {/* Pending Contract Alert */}
-      <div className="bg-amber-50 border border-amber-100 rounded-[28px] p-6 flex flex-col md:flex-row items-center gap-6 animate-in slide-in-from-top-4 duration-500">
-         <div className="h-14 w-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-amber-600 shrink-0">
-            <FileText className="h-7 w-7" />
-         </div>
-         <div className="flex-1 text-center md:text-left">
-            <h4 className="text-lg font-black text-amber-900">Hợp đồng chờ ký kết</h4>
-            <p className="text-sm text-amber-700/70 font-medium">Bạn có 1 hợp đồng thuê phòng chưa được ký. Vui lòng hoàn tất để nhận mã cửa phòng.</p>
-         </div>
-         <Button asChild className="rounded-xl h-12 px-6 bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-lg shadow-amber-600/10">
-            <Link to={ROUTERS.BKS_STAY_CONTRACTS}>Ký ngay bây giờ</Link>
-         </Button>
-      </div>
+      {data.has_pending_contract && (
+        <div className="bg-amber-50 border border-amber-100 rounded-[28px] p-6 flex flex-col md:flex-row items-center gap-6 animate-in slide-in-from-top-4 duration-500">
+           <div className="h-14 w-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-amber-600 shrink-0">
+              <FileText className="h-7 w-7" />
+           </div>
+           <div className="flex-1 text-center md:text-left">
+              <h4 className="text-lg font-black text-amber-900">Hợp đồng chờ ký kết</h4>
+              <p className="text-sm text-amber-700/70 font-medium">Bạn có hợp đồng thuê phòng chưa được ký. Vui lòng hoàn tất để nhận mã cửa phòng.</p>
+           </div>
+           <Button asChild className="rounded-xl h-12 px-6 bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-lg shadow-amber-600/10">
+              <Link to={ROUTERS.BKS_STAY_CONTRACTS}>Ký ngay bây giờ</Link>
+           </Button>
+        </div>
+      )}
 
       {/* Welcome Banner */}
       <div className="bg-slate-900 rounded-[32px] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl shadow-slate-900/20">
@@ -82,14 +116,14 @@ const Dashboard = () => {
            <Zap className="h-full w-full transform translate-x-12 -translate-y-12 rotate-12" />
         </div>
         <div className="relative z-10">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4">Chào mừng trở lại, Anh A! 👋</h1>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4">Chào mừng trở lại, {user.name || "Bạn"}! 👋</h1>
           <p className="text-slate-400 max-w-lg mb-8">
             Hệ thống BKS Stay luôn sẵn sàng hỗ trợ bạn quản lý mọi kỳ nghỉ tại Việt Nam. 
-            Bạn đang có <span className="text-sky-400 font-bold">1 đơn đặt phòng sắp tới</span> cần chú ý.
+            Bạn đang có <span className="text-sky-400 font-bold">{activeBooking ? "1 đơn đặt phòng" : "0 đơn đặt phòng"} sắp tới</span> cần chú ý.
           </p>
           <div className="flex gap-4">
-             <Button className="rounded-2xl h-12 px-8 bg-sky-600 hover:bg-sky-500 font-bold transition-all shadow-lg shadow-sky-600/30">Đặt thêm phòng mới</Button>
-             <Button variant="outline" className="rounded-2xl h-12 px-8 bg-white/5 border-white/10 hover:bg-white/10 border-none">Xem khuyến mãi</Button>
+             <Button className="rounded-2xl h-12 px-8 bg-white text-slate-900 hover:bg-slate-100 font-bold transition-all shadow-lg shadow-white/10">Đặt thêm phòng mới</Button>
+             <Button variant="outline" className="rounded-2xl h-12 px-8 bg-white/5 border-white/10 hover:bg-white/10 border-none text-white">Xem khuyến mãi</Button>
           </div>
         </div>
       </div>
@@ -112,12 +146,12 @@ const Dashboard = () => {
       {/* Quick Actions Grid */}
       <div className="space-y-6">
         <h3 className="text-xl font-black text-slate-900 px-2">Phím tắt thông minh</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
            {[
-             { label: "Đặt dịch vụ", icon: <Zap className="h-6 w-6" />, color: "bg-sky-600 shadow-sky-600/20", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
-             { label: "Xem Wifi", icon: <Wifi className="h-6 w-6" />, color: "bg-indigo-600 shadow-indigo-600/20", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
-             { label: "Gia hạn ở", icon: <CalendarDays className="h-6 w-6" />, color: "bg-amber-600 shadow-amber-600/20", onClick: () => setIsExtendDialogOpen(true), type: "button" },
-             { label: "Báo cáo sự cố", icon: <Wrench className="h-6 w-6" />, color: "bg-rose-600 shadow-rose-600/20", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
+             { label: "Đặt dịch vụ", icon: <Zap className="h-6 w-6" />, color: "bg-slate-900 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
+             { label: "Xem Wifi", icon: <Wifi className="h-6 w-6" />, color: "bg-slate-800 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
+             { label: "Gia hạn ở", icon: <CalendarDays className="h-6 w-6" />, color: "bg-slate-700 shadow-slate-900/10", onClick: () => setIsExtendDialogOpen(true), type: "button" },
+             { label: "Báo cáo sự cố", icon: <Wrench className="h-6 w-6" />, color: "bg-slate-600 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
            ].map((action, i) => (
              action.type === "link" ? (
                <Link key={i} to={action.path || "#"} className={`group relative p-6 rounded-[32px] ${action.color} text-white shadow-xl transition-all hover:scale-105 active:scale-95 overflow-hidden`}>
@@ -148,30 +182,42 @@ const Dashboard = () => {
             <Link to={ROUTERS.BKS_STAY_HISTORY} className="text-sm font-bold text-sky-600 hover:underline">Xem tất cả</Link>
           </div>
           
-          <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[32px] overflow-hidden bg-white">
-            <CardContent className="p-0">
-              <div className="grid sm:grid-cols-5">
-                <div className="sm:col-span-2 h-48 sm:h-auto overflow-hidden">
-                  <img src={activeBooking.image} alt="Room" className="w-full h-full object-cover" />
-                </div>
-                <div className="sm:col-span-3 p-8 flex flex-col justify-between">
-                  <div>
-                    <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-none mb-3 px-3 py-1 font-bold rounded-full">Sắp diễn ra</Badge>
-                    <h4 className="text-2xl font-black text-slate-900 mb-2">{activeBooking.roomTitle}</h4>
-                    <div className="flex items-center gap-4 text-slate-500 text-sm mb-6">
-                       <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {activeBooking.startDate}</span>
-                       <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> Đà Nẵng</span>
-                    </div>
+          {activeBooking ? (
+            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[32px] overflow-hidden bg-white">
+              <CardContent className="p-0">
+                <div className="grid sm:grid-cols-5">
+                  <div className="sm:col-span-2 h-48 sm:h-auto overflow-hidden">
+                    <img src={activeBooking.room?.room_images?.[0]?.image_url || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800"} alt="Room" className="w-full h-full object-cover" />
                   </div>
-                  <Button asChild className="w-fit rounded-2xl h-12 px-8 bg-slate-900 hover:bg-slate-800 transition-all font-bold group shadow-lg shadow-slate-900/10">
-                    <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", activeBooking.id)}>
-                      Quản lý kỳ nghỉ này <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
+                  <div className="sm:col-span-3 p-8 flex flex-col justify-between">
+                    <div>
+                      <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-none mb-3 px-3 py-1 font-bold rounded-full">
+                        {activeBooking.status === 2 ? "ĐANG Ở" : "ĐÃ XÁC NHẬN"}
+                      </Badge>
+                      <h4 className="text-2xl font-black text-slate-900 mb-2">{activeBooking.room?.title}</h4>
+                      <div className="flex items-center gap-4 text-slate-500 text-sm mb-6">
+                         <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {new Date(activeBooking.start_date).toLocaleDateString("vi-VN")}</span>
+                         <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {activeBooking.room?.building?.name}</span>
+                      </div>
+                    </div>
+                    <Button asChild className="w-fit rounded-2xl h-12 px-8 bg-slate-900 hover:bg-slate-800 transition-all font-bold group shadow-lg shadow-slate-900/10">
+                      <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", activeBooking.id.toString())}>
+                        Quản lý kỳ nghỉ này <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="h-64 rounded-[32px] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-400">
+               <CalendarDays className="h-10 w-10 mb-4 opacity-20" />
+               <p className="font-bold">Bạn chưa có đơn đặt phòng nào sắp tới</p>
+                <Button variant="ghost" asChild className="text-sky-600">
+                  <Link to="/">Khám phá ngay</Link>
+                </Button>
+            </div>
+          )}
         </div>
 
         {/* Recent History Sidebar */}
@@ -219,7 +265,7 @@ const Dashboard = () => {
                <div className="space-y-6 mb-8">
                   <div className="p-4 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100">
                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Ngày checkout cũ</span>
-                     <span className="font-bold text-slate-600">{activeBooking.endDate}</span>
+                     <span className="font-bold text-slate-600">{activeBooking?.end_date}</span>
                   </div>
                   
                   <div className="space-y-2">

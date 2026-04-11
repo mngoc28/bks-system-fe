@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft,
@@ -29,6 +29,7 @@ import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
 import { toast } from "sonner";
 import SignaturePad from "@/components/shared/SignaturePad";
+import stayService, { Contract } from "@/services/stayService";
 
 const ContractDetail = () => {
   const { id } = useParams();
@@ -38,21 +39,31 @@ const ContractDetail = () => {
   const [hasSigned, setHasSigned] = useState(false);
   const [signMethod, setSignMethod] = useState<"draw" | "upload">("draw");
   const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [contract, setContract] = useState<Contract | null>(null);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock data for the contract
-  const contract = {
-    id: id || "CON-2026-001",
-    roomTitle: "Hợp đồng thuê phòng Luxury Ocean View",
-    property: "BKS Đà Nẵng River",
-    address: "Số 123, Võ Nguyên Giáp, Đà Nẵng",
-    date: "09/04/2026",
-    status: id === "CON-2026-001" ? "Chờ ký" : "Hiệu lực",
-    guestName: "Nguyễn Văn A",
-    startDate: "20/04/2026",
-    endDate: "23/04/2026",
-    totalPrice: 4500000,
-  };
+  useEffect(() => {
+    const fetchContract = async () => {
+      if (!id) return;
+      try {
+        const response: any = await stayService.getContractDetail(id);
+        const data = response?.data;
+        if (data) {
+          setContract(data);
+          if (data.status === 1 || data.status === 2) {
+            setHasSigned(true);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch contract details", error);
+        toast.error("Không tìm thấy hợp đồng");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContract();
+  }, [id]);
 
   const handleSign = () => {
     if (!signatureData) {
@@ -83,6 +94,43 @@ const ContractDetail = () => {
       }
     }
   };
+
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 0: return "Chờ ký";
+      case 1: return "Hiệu lực";
+      case 2: return "Đã xong";
+      default: return "N/A";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-600"></div>
+      </div>
+    );
+  }
+
+  if (!contract) {
+    return (
+      <div className="text-center py-20">
+         <p className="text-slate-400 font-bold">Không tìm thấy hợp đồng.</p>
+         <Button variant="ghost" asChild className="text-sky-600 mt-4">
+            <Link to={ROUTERS.BKS_STAY_CONTRACTS}>Quay lại danh sách</Link>
+         </Button>
+      </div>
+    );
+  }
+
+  // Derived display values with safe optional chaining
+  const guestName = contract.booking?.user?.name ?? "Khách thuê";
+  const roomTitle = contract.booking?.room?.title ?? "N/A";
+  const buildingAddress = contract.booking?.room?.building?.address ?? "theo thỏa thuận";
+  const startDate = contract.booking?.start_date ?? "N/A";
+  const endDate = contract.booking?.end_date ?? "N/A";
+  const totalPrice = contract.booking?.price?.price ?? 0;
+  const bookingId = contract.booking?.id ?? contract.booking_id;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -131,8 +179,8 @@ const ContractDetail = () => {
                     <div className="space-y-4">
                        <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">BÊN THUÊ (BÊN B)</p>
-                          <p className="font-bold text-slate-900">{contract.guestName.toUpperCase()}</p>
-                          <p className="text-slate-500 text-xs mt-1">Loại khách: Thành viên Gold hạng thẻ #8283</p>
+                          <p className="font-bold text-slate-900">{guestName.toUpperCase()}</p>
+                          <p className="text-slate-500 text-xs mt-1">Loại khách: Thành viên</p>
                        </div>
                     </div>
                  </div>
@@ -141,16 +189,16 @@ const ContractDetail = () => {
               <div className="p-12 flex-1 space-y-8 text-slate-600 text-sm leading-relaxed">
                  <section className="space-y-4">
                     <h5 className="font-bold text-slate-900">ĐIỀU 1: THÔNG TIN PHÒNG THUÊ</h5>
-                    <p>Bên A đồng ý cho Bên B thuê phòng <span className="font-bold text-slate-900">"{contract.roomTitle}"</span> tọa lạc tại địa chỉ: {contract.address}.</p>
+                    <p>Bên A đồng ý cho Bên B thuê phòng <span className="font-bold text-slate-900">"{roomTitle}"</span> tọa lạc tại địa chỉ: {buildingAddress}.</p>
                     <p>Dịch vụ bao gồm: Wifi tốc độ cao, Nước suối hàng ngày, Dọn phòng định kỳ (nếu yêu cầu).</p>
                  </section>
 
                  <section className="space-y-4">
                     <h5 className="font-bold text-slate-900">ĐIỀU 2: THỜI HẠN VÀ GIÁ THUÊ</h5>
                     <ul className="list-disc pl-5 space-y-2">
-                       <li>Thời gian bắt đầu: {contract.startDate} (Nhận phòng từ 14:00)</li>
-                       <li>Thời gian kết thúc: {contract.endDate} (Trả phòng trước 12:00)</li>
-                       <li>Tổng giá giá trị hợp đồng: <span className="font-bold text-slate-900">{formatPrice(contract.totalPrice)}</span></li>
+                       <li>Thời gian bắt đầu: {startDate} (Nhận phòng từ 14:00)</li>
+                       <li>Thời gian kết thúc: {endDate} (Trả phòng trước 12:00)</li>
+                       <li>Tổng giá giá trị hợp đồng: <span className="font-bold text-slate-900">{formatPrice(totalPrice)}</span></li>
                     </ul>
                  </section>
 
@@ -169,12 +217,12 @@ const ContractDetail = () => {
                     <div className="space-y-10">
                        <p>Bên B (Ký và ghi rõ họ tên)</p>
                        <div className="h-32 flex flex-col items-center justify-center">
-                          {(hasSigned || contract.status === "Hiệu lực") ? (
+                          {(hasSigned || contract.status !== 0) ? (
                              <div className="animate-in fade-in zoom-in-95 duration-500 text-center">
                                 {signatureData ? (
                                   <img src={signatureData} alt="Signature" className="h-20 object-contain mx-auto mix-blend-multiply" />
                                 ) : (
-                                  <div className="text-sky-600 font-mono text-2xl font-bold">{contract.guestName}</div>
+                                  <div className="text-sky-600 font-mono text-2xl font-bold">{guestName}</div>
                                 )}
                                 <p className="text-[10px] font-mono mt-2 text-slate-400">Đã xác thực điện tử</p>
                              </div>
@@ -198,12 +246,12 @@ const ContractDetail = () => {
                        <div className="p-2 bg-white rounded-xl shadow-sm"><Clock className="h-4 w-4 text-amber-600" /></div>
                        <span className="text-xs font-bold text-slate-600 text-[10px] uppercase tracking-widest">Trạng thái</span>
                     </div>
-                    <Badge className={`rounded-full px-3 py-1 font-bold ${contract.status === "Chờ ký" && !hasSigned ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                       {hasSigned ? "HIỆU LỰC" : contract.status.toUpperCase()}
+                    <Badge className={`rounded-full px-3 py-1 font-bold ${(!hasSigned && contract.status === 0) ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                       {hasSigned ? "HIỆU LỰC" : getStatusLabel(contract.status).toUpperCase()}
                     </Badge>
                  </div>
 
-                 {(!hasSigned && contract.status === "Chờ ký") ? (
+                 {(!hasSigned && contract.status === 0) ? (
                     <div className="space-y-4">
                        <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3">
                           <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
@@ -227,10 +275,10 @@ const ContractDetail = () => {
                              <p className="text-[10px] leading-relaxed opacity-70">Hợp đồng này được bảo vệ bởi chứng chỉ số SHA-256 của BKS Systems.</p>
                           </div>
                        </div>
-                       <Button className="w-full h-14 rounded-2xl bg-slate-900 border-none font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(ROUTERS.BKS_STAY_DETAILS.replace(":id", "BKS-99283"))}>
+                       <Button className="w-full h-14 rounded-2xl bg-slate-900 border-none font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId)))}>
                           Xem kỳ nghỉ liên quan
                        </Button>
-                       {hasSigned && (
+                       {hasSigned && contract.status === 0 && (
                          <Button variant="ghost" className="w-full text-xs text-slate-400" onClick={() => { setHasSigned(false); setSignatureData(null); }}>Hủy và ký lại</Button>
                        )}
                     </div>

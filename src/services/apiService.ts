@@ -29,7 +29,7 @@ axiosInstance.interceptors.request.use(
 // Thêm interceptor cho response
 axiosInstance.interceptors.response.use(
   (response) => {
-    return response;
+    return response.data ?? response;
   },
   (error) => {
     // Xử lý lỗi: 401 Unauthorized, 403 Forbidden, v.v.

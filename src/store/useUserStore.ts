@@ -4,9 +4,10 @@ import { getAccessToken, removeAccessToken, setAccessToken, clearAllDashboardDat
 
 interface UserStore {
   userEmail: string;
-  userRole: string; // Thêm trường Role
+  userRole: string;
+  userName: string;
   get isAuthenticated(): boolean;
-  login: (token: string, email: string, role: string) => void; // Cập nhật hàm login
+  login: (token: string, email: string, role: string, name: string) => void;
   logout: () => void;
 }
 
@@ -15,17 +16,19 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
     (set, get) => ({
       userEmail: "",
       userRole: "",
+      userName: "",
       get isAuthenticated() {
         const token = getAccessToken();
         const state = get();
         const result = !!token && !!state.userEmail;
         return result;
       },
-      login(token: string, email: string, role: string) {
+      login(token: string, email: string, role: string, name: string) {
         setAccessToken(token);
         set(() => ({
           userEmail: email,
-          userRole: role ? role.toLowerCase() : ""
+          userRole: role ? role.toLowerCase() : "",
+          userName: name || ""
         }));
       },
       logout() {
@@ -33,7 +36,8 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
         clearAllDashboardDateRanges();
         set(() => ({
           userEmail: "",
-          userRole: ""
+          userRole: "",
+          userName: ""
         }));
       },
     }),
@@ -42,7 +46,8 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         userEmail: state.userEmail,
-        userRole: state.userRole
+        userRole: state.userRole,
+        userName: state.userName
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

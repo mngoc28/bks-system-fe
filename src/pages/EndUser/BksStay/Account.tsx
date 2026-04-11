@@ -17,7 +17,70 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
+import { useEffect, useState } from "react";
+import stayService from "@/services/stayService";
+import { useUpdateUserProfileMutation } from "@/hooks/useUserQuery";
+import { useUserStore } from "@/store/useUserStore";
+
 const Account = () => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    address: ""
+  });
+  const updateProfileMutate = useUpdateUserProfileMutation();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await stayService.getDashboard();
+        const userData = response?.data?.user;
+        if (userData) {
+          setUser(userData);
+          setFormData({
+            name: userData.name || "",
+            phone: userData.phone || "",
+            address: userData.address || ""
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch account info", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = () => {
+    updateProfileMutate.mutate(formData, {
+      onSuccess: () => {
+        toast.success("Đã cập nhật thông tin cá nhân!");
+        // Update user store
+        useUserStore.setState({ userName: formData.name });
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Cập nhật hồ sơ thất bại.");
+      }
+    });
+  };
+
+  if (loading) {
+     return (
+       <div className="flex items-center justify-center min-h-[400px]">
+         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-600"></div>
+       </div>
+     );
+  }
+
+  const membershipLevel = user?.membership_level?.toUpperCase() || "MEMBER";
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -26,7 +89,7 @@ const Account = () => {
            <p className="text-slate-500 text-sm mt-1">Quản lý thông tin cá nhân và bảo mật tài khoản BKS của bạn.</p>
         </div>
         <Button variant="ghost" className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 font-bold gap-2 rounded-xl h-12 px-6 border border-transparent hover:border-rose-100">
-           <LogOut className="h-4 w-4" /> Thoát Portal
+           <LogOut className="h-4 w-4" /> Đăng xuất
         </Button>
       </div>
 
@@ -35,12 +98,12 @@ const Account = () => {
            {/* Profile Header Card */}
            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[32px] bg-white overflow-hidden relative">
               <div className="h-24 bg-gradient-to-r from-sky-600 to-indigo-600 opacity-90" />
-              <CardContent className="p-8 pt-0 -mt-12 relative z-10">
-                 <div className="flex flex-col md:flex-row items-end gap-6 mb-8">
+              <CardContent className="p-6 md:p-8 pt-0 -mt-10 md:-mt-12 relative z-10">
+                 <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 mb-8">
                     <div className="relative group">
                        <div className="h-32 w-32 rounded-[40px] bg-white p-1 shadow-2xl">
                           <div className="h-full w-full rounded-[38px] bg-slate-100 flex items-center justify-center text-4xl font-black text-slate-400 overflow-hidden">
-                             <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200" alt="Avatar" className="h-full w-full object-cover" />
+                             <img src={`https://ui-avatars.com/api/?name=${user?.name}&background=random`} alt="Avatar" className="h-full w-full object-cover" />
                           </div>
                        </div>
                        <button className="absolute bottom-2 right-2 p-2 bg-slate-900 text-white rounded-2xl shadow-lg border-2 border-white hover:scale-110 transition-transform">
@@ -49,10 +112,10 @@ const Account = () => {
                     </div>
                     <div className="flex-1 pb-2">
                        <div className="flex items-center gap-3">
-                          <h2 className="text-2xl font-black text-slate-900 leading-none">Nguyễn Văn A</h2>
-                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 font-bold border-none rounded-full px-3">GOLD MEMBER</Badge>
+                          <h2 className="text-2xl font-black text-slate-900 leading-none">{user?.name}</h2>
+                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 font-bold border-none rounded-full px-3">{membershipLevel} MEMBER</Badge>
                        </div>
-                       <p className="text-slate-400 text-sm font-medium mt-2">Thành viên từ Tháng 01, 2024</p>
+                       <p className="text-slate-400 text-sm font-medium mt-2">Hội viên với {user?.reward_points || 0} điểm thưởng</p>
                     </div>
                  </div>
 
@@ -61,29 +124,48 @@ const Account = () => {
                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Họ và tên</label>
                        <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                          <Input defaultValue="Nguyễn Văn A" className="h-12 pl-12 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold" />
+                          <Input 
+                            value={formData.name} 
+                            onChange={(e) => handleInputChange("name", e.target.value)}
+                            className="h-12 pl-12 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold" 
+                          />
                        </div>
                     </div>
                     <div className="space-y-2">
                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
                        <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                          <Input defaultValue="nguyenvana@gmail.com" disabled className="h-12 pl-12 rounded-2xl border-slate-100 bg-slate-200/50 text-slate-500 font-bold" />
+                          <Input value={user?.email} disabled className="h-12 pl-12 rounded-2xl border-slate-100 bg-slate-200/50 text-slate-500 font-bold" />
                        </div>
                     </div>
                     <div className="space-y-2">
                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
                        <div className="relative">
                           <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                          <Input defaultValue="0912 345 678" className="h-12 pl-12 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold" />
+                          <Input 
+                            value={formData.phone} 
+                            onChange={(e) => handleInputChange("phone", e.target.value)}
+                            className="h-12 pl-12 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold" 
+                          />
                        </div>
                     </div>
                     <div className="space-y-2">
                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Địa chỉ (Tùy chọn)</label>
-                       <Input placeholder="Nhập địa chỉ thường trú" className="h-12 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold" />
+                       <Input 
+                         value={formData.address} 
+                         onChange={(e) => handleInputChange("address", e.target.value)}
+                         placeholder="Nhập địa chỉ thường trú" 
+                         className="h-12 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold" 
+                       />
                     </div>
                  </div>
-                 <Button className="mt-8 rounded-2xl h-12 bg-slate-900 px-8 font-black shadow-xl shadow-slate-900/20 active:scale-95 transition-all" onClick={() => toast.success("Đã lưu thông tin cá nhân!")}>Lưu thay đổi</Button>
+                 <Button 
+                    className="mt-8 rounded-2xl h-12 bg-slate-900 px-8 font-black shadow-xl shadow-slate-900/20 active:scale-95 transition-all" 
+                    onClick={handleSaveProfile}
+                    disabled={updateProfileMutate.isPending}
+                  >
+                    {updateProfileMutate.isPending ? "Đang lưu..." : "Lưu thay đổi"}
+                  </Button>
               </CardContent>
            </Card>
 

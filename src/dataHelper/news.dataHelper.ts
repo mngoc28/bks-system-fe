@@ -1,8 +1,11 @@
+import { ViewMode } from "@/components/LayoutToggle";
 
 // news header props
 export interface NewsHeaderProps {
   onCreateNews: () => void;
   onOpenFilter: () => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 // news filters
