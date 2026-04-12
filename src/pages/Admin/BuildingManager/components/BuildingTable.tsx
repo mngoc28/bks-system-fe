@@ -13,7 +13,10 @@ const BuildingTable: React.FC<BuildingTableProps> = ({
   onToggleSort,
   onClearSort,
   onDelete,
+  highlightTerms,
 }) => {
+  const hasSort = sort.length > 0;
+
   const {
     tableScrollRef,
     // canScrollLeft,
@@ -25,16 +28,18 @@ const BuildingTable: React.FC<BuildingTableProps> = ({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-row justify-between items-center gap-2 mb-2 sticky top-[2px] z-10">
-        <SortControls hasSort={sort.length > 0} onClearSort={onClearSort} />
-        {/* <ScrollControls
-          hasScroll={hasScroll}
-          canScrollLeft={canScrollLeft}
-          canScrollRight={canScrollRight}
-          onScrollLeft={handleScrollLeft}
-          onScrollRight={handleScrollRight}
-        /> */}
-      </div>
+      {hasSort && (
+        <div className="mb-2 flex flex-row items-center justify-between gap-2">
+          <SortControls hasSort={hasSort} onClearSort={onClearSort} />
+          {/* <ScrollControls
+            hasScroll={hasScroll}
+            canScrollLeft={canScrollLeft}
+            canScrollRight={canScrollRight}
+            onScrollLeft={handleScrollLeft}
+            onScrollRight={handleScrollRight}
+          /> */}
+        </div>
+      )}
       <div
         ref={tableScrollRef}
         className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm"
@@ -50,6 +55,7 @@ const BuildingTable: React.FC<BuildingTableProps> = ({
                 key={building.id}
                 building={building}
                 onDelete={onDelete}
+                highlightTerms={highlightTerms}
               />
             ))}
           </TableBody>

@@ -14,6 +14,11 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROOM_IMAGE_TYPE } from "@/constant";
 import { RoomImage, RoomImageListProps, SortableItemProps } from "@/dataHelper/roomImage.dataHelper";
 import { useDeleteMultipleRoomImagesMutation, useRoomImagesQuery, useUpdateMultipleRoomImageTypesMutation, useUpdateRoomImageSortMutation } from "@/hooks/useRoomImageQuery";
 
+const getRoomImageSrc = (imageUrl: string) => {
+  if (!imageUrl) return "";
+  return imageUrl.startsWith("http") ? imageUrl : `${CLOUDINARY_HEADER_IMAGE_URL}/${imageUrl}`;
+};
+
 /**
  * Sortable Item
  * A draggable image component representing a single room photo, integrated with dnd-kit for reordering and type selection.
@@ -53,7 +58,7 @@ const SortableItem: React.FC<SortableItemProps> =
         {...listeners}
       >
         <img
-          src={CLOUDINARY_HEADER_IMAGE_URL + image.image_url}
+          src={getRoomImageSrc(image.image_url)}
           alt={`${t("rooms.image")} ${image.sort}`}
           className="w-full aspect-[4/3] object-cover"
         />

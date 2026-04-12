@@ -6,19 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Amenity } from "@/dataHelper/amenity.dataHelper";
 import { Edit, Trash2, ShieldCheck, Clock, User2 } from "lucide-react";
 import { safeFormatDateTime } from "@/utils/dateUtils";
+import { highlightText } from "@/utils/utils";
 
 interface AmenityCardProps {
   amenity: Amenity;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   isHighlighted?: boolean;
+  searchTerm?: string;
 }
 
 /**
  * Amenity Card Component
  * Displays a single amenity's information with edit and delete actions.
  */
-const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, isHighlighted }) => {
+const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, isHighlighted, searchTerm }) => {
   const { t } = useTranslation();
 
   return (
@@ -33,7 +35,7 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
       </div>
 
       <h3 className="mb-4 line-clamp-1 text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors" title={amenity.name}>
-        {amenity.name}
+        {highlightText(amenity.name, searchTerm || "")}
       </h3>
 
       <div className="mb-6 space-y-3 flex-1 border-t border-slate-50 pt-4 dark:border-slate-800">

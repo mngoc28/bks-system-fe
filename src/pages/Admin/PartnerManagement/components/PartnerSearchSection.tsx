@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import FilterPortal from "@/components/common/FilterPortal";
 import { PartnerSearchSectionProps } from "@/dataHelper/partner.dataHelper";
 import { useTranslation } from "react-i18next";
 import React from "react";
@@ -19,9 +20,8 @@ const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    if (!open) return null;
-
     return (
+        <FilterPortal open={open} onClose={onClose}>
         <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
             <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
                 <div className="flex items-center gap-2">
@@ -66,6 +66,23 @@ const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
                             placeholder={t('partner.website_placeholder', { defaultValue: "Nhập website..." })}
                             className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
                         />
+                    </div>
+
+                    {/* Status Filter */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          {t('user.filter_status', { defaultValue: "Trạng thái" })}
+                        </label>
+                        <select
+                            value={value.status || ''}
+                            onChange={(e) => onChange({ ...value, status: e.target.value })}
+                            className="flex h-10 w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 text-sm text-slate-600 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        >
+                            <option value="">{t('user.filter_all', { defaultValue: "-- Tất cả --" })}</option>
+                            <option value="0">{t('common.pending', { defaultValue: "Đang chờ" })}</option>
+                            <option value="1">{t('common.active', { defaultValue: "Hoạt động" })}</option>
+                            <option value="2">{t('common.blocked', { defaultValue: "Đã khóa" })}</option>
+                        </select>
                     </div>
 
                     {/* Username Filter */}
@@ -143,15 +160,10 @@ const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
                         <RotateCcw className="size-4" />
                         {t('common.reset')}
                     </Button>
-                    <Button 
-                      onClick={onClose}
-                      className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
-                    >
-                        {t('common.apply_filter', { defaultValue: "Áp dụng" })}
-                    </Button>
                 </div>
             </div>
         </div>
+        </FilterPortal>
     );
 };
 

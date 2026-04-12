@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { highlightText } from "@/utils/utils";
 
 /**
  * Question Table
@@ -17,13 +18,13 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
   const renderSortIcon = (key: QuestionSortKey) => {
-    if (filters.sort_by !== key) return <ChevronsUpDown className="size-4 text-slate-500" />;
-    return filters.direction === "asc" ? <ChevronUp className="size-4 text-slate-700" /> : <ChevronDown className="size-4 text-slate-700" />;
+    if (filters.sort_by !== key) return <ChevronsUpDown className="size-4" />;
+    return filters.direction === "asc" ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />;
   };
 
   const sortableHead = (key: QuestionSortKey, label: string, className?: string) => (
     <TableHead
-      className={cn("cursor-pointer select-none px-4 py-3 text-slate-700", className ?? "text-center")}
+      className={cn("cursor-pointer select-none whitespace-nowrap px-4 py-3 text-slate-700", className ?? "text-center")}
       onClick={() => onToggleSort(key)}
       aria-sort={filters.sort_by === key ? (filters.direction === "asc" ? "ascending" : "descending") : "none"}
     >
@@ -37,10 +38,10 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
   const showEmptyState = rows.length === 0 && !isLoading;
   const showInitialLoading = rows.length === 0 && isLoading;
   return (
-    <div className="flex flex-1 flex-col px-4">
+    <div className="flex flex-1 flex-col">
       <div className="relative w-full overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
         <div className="w-full overflow-x-auto">
-          <Table className="min-w-[640px] table-fixed text-sm text-slate-700">
+          <Table className="min-w-max text-sm text-slate-700">
             <TableHeader className="sticky top-0 z-10 bg-slate-100">
               <tr className="border-b border-gray-300">
                 {sortableHead("id", t("questions.table.id"), "w-[72px] text-center")}
@@ -68,10 +69,10 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
                 }
 
                 return (
-                  <TableRow key={row.id}>
+                  <TableRow key={row.id} className="hover:bg-muted/50">
                     <TableCell className="w-[72px] px-4 py-3 text-center align-middle">{row.id}</TableCell>
                     <TableCell className="max-w-[420px] px-4 py-3 text-left align-middle">
-                      <p className="line-clamp-2 whitespace-pre-wrap break-words text-slate-700">{row.content}</p>
+                      <p className="line-clamp-2 whitespace-pre-wrap break-words text-slate-700">{highlightText(row.content, filters.content || "")}</p>
                     </TableCell>
                     <TableCell className="w-1/6 px-4 py-3 text-center align-middle font-medium text-slate-700">{row.total_answers}</TableCell>
                     <TableCell className="w-[140px] px-4 py-3 text-center align-middle">
@@ -92,7 +93,7 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
               })}
               {showEmptyState && (
                 <TableRow>
-                  <TableCell colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <TableCell colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">
                     {t("questions.empty")}
                   </TableCell>
                 </TableRow>
@@ -109,7 +110,7 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
         </div>
 
         {totalItems > 0 && !isLoading && (
-          <div className="border-t border-blue-100 bg-white p-4">
+          <div className="border-t border-slate-100 bg-white p-4">
             <Pagination
               currentPage={page}
               totalPages={totalPages}

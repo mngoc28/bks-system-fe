@@ -3,6 +3,7 @@ import RowActions from "@/components/RowActions/RowActions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AmenityTableProps } from "@/dataHelper/amenity.dataHelper";
 import { safeFormatDateTime } from "@/utils/dateUtils";
+import { highlightText } from "@/utils/utils";
 import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +28,7 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-1 flex-col px-4">
+    <div className="flex flex-1 flex-col">
       <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
         <Table className="min-w-max text-sm text-slate-700">
           <TableHeader className="sticky top-0 z-10 bg-slate-100">
@@ -41,12 +42,12 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
                   ID
                   {filters.sort_field === "id" ? (
                     filters.sort_direction === "asc" ? (
-                      <ChevronUp className="size-4 text-slate-700" />
+                      <ChevronUp className="size-4" />
                     ) : (
-                      <ChevronDown className="size-4 text-slate-700" />
+                      <ChevronDown className="size-4" />
                     )
                   ) : (
-                    <ChevronsUpDown className="size-4 text-slate-500" />
+                    <ChevronsUpDown className="size-4" />
                   )}
                 </span>
               </TableHead>
@@ -59,12 +60,12 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
                   {t("amenities.table_name")}
                   {filters.sort_field === "name" ? (
                     filters.sort_direction === "asc" ? (
-                      <ChevronUp className="size-4 text-slate-700" />
+                      <ChevronUp className="size-4" />
                     ) : (
-                      <ChevronDown className="size-4 text-slate-700" />
+                      <ChevronDown className="size-4" />
                     )
                   ) : (
-                    <ChevronsUpDown className="size-4 text-slate-500" />
+                    <ChevronsUpDown className="size-4" />
                   )}
                 </span>
               </TableHead>
@@ -77,12 +78,12 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
                   {t("amenities.table_created_at")}
                   {filters.sort_field === "created_at" ? (
                     filters.sort_direction === "asc" ? (
-                      <ChevronUp className="size-4 text-slate-700" />
+                      <ChevronUp className="size-4" />
                     ) : (
-                      <ChevronDown className="size-4 text-slate-700" />
+                      <ChevronDown className="size-4" />
                     )
                   ) : (
-                    <ChevronsUpDown className="size-4 text-slate-500" />
+                    <ChevronsUpDown className="size-4" />
                   )}
                 </span>
               </TableHead>
@@ -95,12 +96,12 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
                   {t("amenities.table_updated_at")}
                   {filters.sort_field === "updated_at" ? (
                     filters.sort_direction === "asc" ? (
-                      <ChevronUp className="size-4 text-slate-700" />
+                      <ChevronUp className="size-4" />
                     ) : (
-                      <ChevronDown className="size-4 text-slate-700" />
+                      <ChevronDown className="size-4" />
                     )
                   ) : (
-                    <ChevronsUpDown className="size-4 text-slate-500" />
+                    <ChevronsUpDown className="size-4" />
                   )}
                 </span>
               </TableHead>
@@ -112,10 +113,10 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
             {filtered.map((amenity) => (
               <TableRow key={amenity.id} className={`hover:bg-muted/50 ${highlightedId === amenity.id ? 'bg-green-100 animate-pulse' : ''}`}>
                 <TableCell className="px-4 py-3 text-center align-middle">{amenity.id}</TableCell>
-                <TableCell className="px-4 py-3 align-middle">{amenity.name}</TableCell>
-                <TableCell className="px-4 py-3 align-middle">{safeFormatDateTime(amenity.created_at)}</TableCell>
-                <TableCell className="px-4 py-3 align-middle">{safeFormatDateTime(amenity.updated_at)}</TableCell>
-                <TableCell className="px-4 py-3 align-middle">
+                <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(amenity.name, filters.name || "")}</TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">{safeFormatDateTime(amenity.created_at)}</TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">{safeFormatDateTime(amenity.updated_at)}</TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">
                   <RowActions
                     id={amenity.id.toString()}
                     onEdit={(id: string | number) => onEdit(Number(id))}

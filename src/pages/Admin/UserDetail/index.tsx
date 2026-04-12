@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { UserDetailView } from "./components/UserDetailView";
+import { UserDetailView } from "./components";
 
 /**
  * User Detail Page
@@ -26,11 +26,6 @@ const UserDetail: React.FC = () => {
     if (!userData?.data) return undefined;
     return userData.data;
   }, [userData]);
-
-  // Handle edit button click
-  const handleEdit = () => {
-    navigate(`${ROUTERS.USER_MANAGEMENT}`, { state: { ...location.state, editUserId: userId } });
-  };
 
   // Handle back button click
   const handleBack = () => {
@@ -75,7 +70,6 @@ const UserDetail: React.FC = () => {
     <div className="flex flex-col gap-6 p-3 sm:p-6 overflow-hidden">
       <UserDetailView
         user={user}
-        onEdit={handleEdit}
         onBack={handleBack}
       />
     </div>

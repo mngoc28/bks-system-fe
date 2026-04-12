@@ -13,7 +13,7 @@ interface PaginationProps {
   resultsText?: string;
 }
 
-const Pagination = ({ currentPage, totalPages, onPageChange, perPage, onPerPageChange, totalItems, maxVisiblePages = 5, perPageOptions = [5, 10, 20, 50], resultsText }: PaginationProps) => {
+const Pagination = ({ currentPage, totalPages, onPageChange, perPage, onPerPageChange, totalItems, maxVisiblePages = 5, perPageOptions = [12, 24, 48], resultsText }: PaginationProps) => {
   const { t } = useTranslation();
 
   const handlePageClick = (e: React.MouseEvent, page: number) => {

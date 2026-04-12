@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import FilterPortal from "@/components/common/FilterPortal";
+import { SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,17 +22,17 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, q: localQ })), 500);
+    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, q: localQ })), SEARCH_DEBOUNCE_DELAY_MS);
   }, [localQ]);
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, room: localRoom })), 500);
+    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, room: localRoom })), SEARCH_DEBOUNCE_DELAY_MS);
   }, [localRoom]);
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, assignee: localAssignee })), 500);
+    timeoutRef.current = setTimeout(() => setFilters((s) => ({ ...s, assignee: localAssignee })), SEARCH_DEBOUNCE_DELAY_MS);
   }, [localAssignee]);
 
   useEffect(() => {
@@ -39,11 +41,10 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
     setLocalAssignee(filters.assignee);
   }, [filters.q, filters.room, filters.assignee]);
 
-  if (!open) return null;
-
   const isPartner = userProfile?.data?.role === "partner";
 
   return (
+    <FilterPortal open={open} onClose={onClose}>
     <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
@@ -191,15 +192,10 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
             <RotateCcw className="size-4" />
             {t("common.reset")}
           </Button>
-          <Button
-            onClick={onClose}
-            className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
-          >
-            {t("common.apply_filter", { defaultValue: "Áp dụng bộ lọc" })}
-          </Button>
         </div>
       </div>
     </div>
+    </FilterPortal>
   );
 };
 

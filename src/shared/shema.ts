@@ -154,16 +154,43 @@ export const resetPasswordSchema = (t: (key: string) => string) =>
 export const buildingFormSchema = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, { message: t("buildings.building_name") + " " + t("common.is_required") }),
-    user_id: z.number().min(1, { message: t("buildings.address") + " " + t("common.is_required") }),
-    province_id: z.number().min(1, { message: t("buildings.table_province") + " " + t("common.is_required") }),
-    ward_id: z.number().min(1, { message: t("buildings.table_ward") + " " + t("common.is_required") }),
+    user_id: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.address") + " " + t("common.is_required") })
+    ),
+    province_id: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.table_province") + " " + t("common.is_required") })
+    ),
+    ward_id: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.table_ward") + " " + t("common.is_required") })
+    ),
     address_detail: z.string().min(1, { message: t("buildings.address") + " " + t("common.is_required") }),
-    number_of_floors: z.number().min(1, { message: t("buildings.table_number_of_floors") + " " + t("common.is_required") }),
-    number_of_units: z.number().min(1, { message: t("buildings.table_number_of_units") + " " + t("common.is_required") }),
-    year_built: z.number().nullable(),
-    property_type_id: z.number().min(1, { message: t("buildings.building_type_name") + " " + t("common.is_required") }),
-    rent_category: z.number().min(1, { message: t("buildings.rent_category_name") + " " + t("common.is_required") }),
-    area: z.number().min(1, { message: t("buildings.area") + " " + t("common.is_required") }),
+    number_of_floors: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.table_number_of_floors") + " " + t("common.is_required") })
+    ),
+    number_of_units: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.table_number_of_units") + " " + t("common.is_required") })
+    ),
+    year_built: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? null : Number(v)),
+      z.number().nullable()
+    ),
+    property_type_id: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.building_type_name") + " " + t("common.is_required") })
+    ),
+    rent_category: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.rent_category_name") + " " + t("common.is_required") })
+    ),
+    area: z.preprocess(
+      (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
+      z.number().min(1, { message: t("buildings.area") + " " + t("common.is_required") })
+    ),
     description: z.string(),
   });
 
@@ -418,6 +445,14 @@ export const editPartnerSchema = (t: (key: string) => string) => z.object({
   company_name: z.string()
     .max(255, { message: t("partner.company_name") + " " + t("partner.max_length_255") })
     .optional(),
+  province_id: z.preprocess(
+    (v) => (v === null || v === undefined || v === "" ? 0 : Number(v)),
+    z.number().min(1, { message: t("validation.province_name_required") })
+  ).optional(),
+  ward_id: z.preprocess(
+    (v) => (v === null || v === undefined || v === "" ? 0 : Number(v)),
+    z.number().min(1, { message: t("validation.ward_name_required") })
+  ).optional(),
   phone: z
     .string()
     .regex(/^$|^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ')

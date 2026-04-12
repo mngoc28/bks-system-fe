@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import FilterPortal from "@/components/common/FilterPortal";
+import { SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
 import { RoomSearchSectionProps } from "@/dataHelper/room.dataHelper";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,18 +11,18 @@ import { Search, X, RotateCcw } from "lucide-react";
  * Room Search Section
  * An advanced filtering dashboard that allows managers to narrow down room lists by title, number, type, and status with real-time feedback.
  */
-const RoomSearchSection: React.FC<RoomSearchSectionProps> = ({ filters, setFilters, onReset, onClose }) => {
+const RoomSearchSection: React.FC<RoomSearchSectionProps> = ({ open, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   const [localTitle, setLocalTitle] = useState(filters.title || "");
   const [localRoomNumber, setLocalRoomNumber] = useState(filters.room_number || "");
 
   useEffect(() => {
-    const timer = setTimeout(() => setFilters((s) => ({ ...s, title: localTitle })), 1000);
+    const timer = setTimeout(() => setFilters((s) => ({ ...s, title: localTitle })), SEARCH_DEBOUNCE_DELAY_MS);
     return () => clearTimeout(timer);
   }, [localTitle, setFilters]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setFilters((s) => ({ ...s, room_number: localRoomNumber })), 1000);
+    const timer = setTimeout(() => setFilters((s) => ({ ...s, room_number: localRoomNumber })), SEARCH_DEBOUNCE_DELAY_MS);
     return () => clearTimeout(timer);
   }, [localRoomNumber, setFilters]);
 
@@ -28,6 +30,7 @@ const RoomSearchSection: React.FC<RoomSearchSectionProps> = ({ filters, setFilte
   useEffect(() => setLocalRoomNumber(filters.room_number || ""), [filters.room_number]);
 
   return (
+    <FilterPortal open={open} onClose={onClose}>
     <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
@@ -123,15 +126,10 @@ const RoomSearchSection: React.FC<RoomSearchSectionProps> = ({ filters, setFilte
             <RotateCcw className="size-4" />
             {t("common.reset")}
           </Button>
-          <Button
-            onClick={onClose}
-            className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
-          >
-            {t("common.apply_filter", { defaultValue: "Áp dụng bộ lọc" })}
-          </Button>
         </div>
       </div>
     </div>
+    </FilterPortal>
   );
 };
 

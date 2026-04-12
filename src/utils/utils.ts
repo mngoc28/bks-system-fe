@@ -162,7 +162,8 @@ export function validateCurrencyInput(value: string): string | null {
  */
 export function highlightText(text: string, search: string): React.ReactNode {
   if (!search) return text;
-  const regex = new RegExp(`(${search})`, "gi");
+  const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedSearch})`, "gi");
   return text.split(regex).map((part, i) =>
     part.toLowerCase() === search.toLowerCase()
       ? React.createElement('span', { key: i, style: { background: '#ffe066', fontWeight: 600 } }, part)

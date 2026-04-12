@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { PartnerTable } from "./components";
 import { ViewMode } from "@/components/LayoutToggle";
+import { useSearchParams } from "react-router-dom";
 
 /**
  * Partner Management Page
@@ -18,20 +19,28 @@ import { ViewMode } from "@/components/LayoutToggle";
 const Partners: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     // Filters state
     const [open, setOpen] = useState(false);
     const [filters, setFilters] = useState<PartnerFilter>({
-        user_name: "",
-        company_name: "",
-        province_name: "",
-        ward_name: "",
-        phone: "",
-        website: "",
-        address: "",
-        page: DEFAULT_PAGE,
-        per_page: DEFAULT_CARD_LIMIT,
+        user_name: searchParams.get("user_name") || "",
+        company_name: searchParams.get("company_name") || "",
+        status: searchParams.get("status") || "",
+        province_name: searchParams.get("province_name") || "",
+        ward_name: searchParams.get("ward_name") || "",
+        phone: searchParams.get("phone") || "",
+        website: searchParams.get("website") || "",
+        address: searchParams.get("address") || "",
+        page: Number(searchParams.get("page") || DEFAULT_PAGE),
+        per_page: Number(searchParams.get("per_page") || DEFAULT_CARD_LIMIT),
     });
+
+    useEffect(() => {
+        if (searchParams.get("source") === "dashboard") {
+            setOpen(true);
+        }
+    }, [searchParams]);
 
     // View mode state with localStorage persistence
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -58,9 +67,24 @@ const Partners: React.FC = () => {
     // Fetch API data
     const { data: dataPartner, isLoading } = useListPartnerQuery(debouncedFilters);
 
+    // Normalize payload shape to keep pagination numbers consistent.
+    const paginationData = useMemo(() => {
+        const payload: any = dataPartner;
+
+        if (Array.isArray(payload?.data?.data)) {
+            return payload.data;
+        }
+
+        if (Array.isArray(payload?.data)) {
+            return payload;
+        }
+
+        return null;
+    }, [dataPartner]);
+
     // Map API data to list data
     const serverRows: PartnerInfor[] = useMemo(() => {
-        const list: any[] = (dataPartner as any)?.data?.data || [];
+        const list: any[] = paginationData?.data || [];
 
         return list.map((item: any) => ({
             id: item.id,
@@ -73,23 +97,25 @@ const Partners: React.FC = () => {
             phone: item.phone ?? "",
             image_1: item.image_1 ?? "",
         })) as PartnerInfor[];
-    }, [dataPartner]);
+    }, [paginationData]);
 
     // Reset filter
     const handleResetFilters = () => {
         setFilters({
             user_name: "",
+            company_name: "",
+            status: "",
             province_name: "",
             ward_name: "",
             phone: "",
+            website: "",
             address: "",
             page: DEFAULT_PAGE,
             per_page: DEFAULT_CARD_LIMIT,
         });
     };
 
-    const paginationData = (dataPartner as any)?.data;
-    const totalItems = paginationData?.total ?? 0;
+    const totalItems = paginationData?.total ?? serverRows.length;
     const totalPages = paginationData?.last_page ?? Math.max(1, Math.ceil(totalItems / (filters.per_page ?? DEFAULT_CARD_LIMIT)));
 
     return (
@@ -119,7 +145,7 @@ const Partners: React.FC = () => {
             ) : totalItems === 0 ? (
                 <EmptyPage />
             ) : (
-                <div className="flex flex-col gap-10">
+                <div className="flex flex-col gap-8">
                     {viewMode === "grid" ? (
                         <>
                             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -127,13 +153,22 @@ const Partners: React.FC = () => {
                                     <PartnerCard
                                         key={partner.id}
                                         partner={partner as any}
+                                        highlightTerms={{
+                                            company_name: filters.company_name || "",
+                                            user_name: filters.user_name || "",
+                                            province_name: filters.province_name || "",
+                                            ward_name: filters.ward_name || "",
+                                            phone: filters.phone || "",
+                                            website: filters.website || "",
+                                            address: filters.address || "",
+                                        }}
                                         onView={(id) => navigate(`${ROUTERS.PARTNER_MANAGEMENT}/detail/${id}`)}
                                         onEdit={(id) => navigate(`${ROUTERS.PARTNER_MANAGEMENT}/edit/${id}`)}
                                     />
                                 ))}
                             </div>
                             {totalItems > 0 && (
-                                <div className="flex justify-center border-t border-slate-100 pt-8 mt-4">
+                                <div className="mt-4 flex justify-center border-t border-slate-100 pt-8">
                                     <Pagination
                                         currentPage={filters.page ?? DEFAULT_PAGE}
                                         totalPages={totalPages}
@@ -147,7 +182,7 @@ const Partners: React.FC = () => {
                             )}
                         </>
                     ) : (
-                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm p-4">
+                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                             <PartnerTable
                                 filtered={serverRows}
                                 onSort={(key: string) => {
@@ -159,19 +194,19 @@ const Partners: React.FC = () => {
                                 }}
                                 filters={filters}
                             />
-                            {totalItems > 0 && (
-                                <div className="flex justify-center border-t border-slate-100 pt-8 mt-4">
-                                    <Pagination
-                                        currentPage={filters.page ?? DEFAULT_PAGE}
-                                        totalPages={totalPages}
-                                        onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-                                        perPage={filters.per_page ?? DEFAULT_CARD_LIMIT}
-                                        onPerPageChange={(pp) => setFilters(prev => ({ ...prev, per_page: pp, page: DEFAULT_PAGE }))}
-                                        totalItems={totalItems}
-                                        perPageOptions={[12, 24, 48]}
-                                    />
-                                </div>
-                            )}
+                        </div>
+                    )}
+                    {viewMode === "table" && totalItems > 0 && (
+                        <div className="p-4">
+                            <Pagination
+                                currentPage={filters.page ?? DEFAULT_PAGE}
+                                totalPages={totalPages}
+                                onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+                                perPage={filters.per_page ?? DEFAULT_CARD_LIMIT}
+                                onPerPageChange={(pp) => setFilters(prev => ({ ...prev, per_page: pp, page: DEFAULT_PAGE }))}
+                                totalItems={totalItems}
+                                perPageOptions={[12, 24, 48]}
+                            />
                         </div>
                     )}
                 </div>

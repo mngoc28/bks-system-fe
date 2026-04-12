@@ -21,7 +21,7 @@ export const useBuildingImageQuery = (buildingImageId: number) => {
 }
 
 // get image by building id
-export const useImagesByBuildingIdQuery = (buildingid: number) => {
+export const useImagesByBuildingIdQuery = (buildingid: number, options?: { enabled?: boolean }) => {
     return useQuery<ApiResponse<buildingImage[]>, Error>({
         queryKey: ["building-images", buildingid],
         queryFn: async () => {
@@ -31,7 +31,10 @@ export const useImagesByBuildingIdQuery = (buildingid: number) => {
             } catch (error) {
                 throw error;
             }
-        }
+        },
+        enabled: options?.enabled ?? true,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 }
 

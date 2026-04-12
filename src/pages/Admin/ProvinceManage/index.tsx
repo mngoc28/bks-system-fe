@@ -135,7 +135,7 @@ const ProvinceManage: React.FC = () => {
                )}
              </>
            ) : (
-             <div className="mx-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <ProvinceTable
                   filtered={serverRows}
                   onView={(id) => navigate(`${ROUTERS.PROVINCE_DETAIL}/${id}`)}
@@ -160,7 +160,7 @@ const ProvinceManage: React.FC = () => {
                        setFilters((prev) => ({ ...prev, per_page: pp, page: DEFAULT_PAGE }))
                      }
                      totalItems={totalItems}
-                     perPageOptions={[24, 48, 96]}
+                       perPageOptions={[12, 24, 48]}
                    />
                  </div>
                )}

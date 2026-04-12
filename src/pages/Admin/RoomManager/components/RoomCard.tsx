@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/dataHelper/room.dataHelper";
-import { Edit, Trash2, MapPin, Maximize2, Users } from "lucide-react";
+import { Edit, Trash2, MapPin, Maximize2, Users, ImageIcon } from "lucide-react";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { highlightText } from "@/utils/utils";
 
 interface RoomCardProps {
   room: Room;
@@ -14,17 +16,22 @@ interface RoomCardProps {
   onDelete: (room: Room) => void;
   isDeleting?: boolean;
   highlighted?: boolean;
+  highlightTerms?: {
+    title?: string;
+    room_number?: string;
+  };
 }
 
 /**
  * Room Card
  * A visually rich card component for the room manager grid, displaying a room's main image, key specifications (area, capacity), and pricing.
  */
-const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isDeleting = false, highlighted = false }) => {
+const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isDeleting = false, highlighted = false, highlightTerms }) => {
   const { t } = useTranslation();
 
   const mainImage = room.images?.find(img => img.sort === 1)?.image_url || room.images?.[0]?.image_url;
-  const imageUrl = mainImage ? `${CLOUDINARY_HEADER_IMAGE_URL}${mainImage.startsWith('/') ? '' : '/'}${mainImage}` : null;
+  const imageUrl = resolveImageUrl(mainImage, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+  const fallbackImage = "/assets/images/photo_error2.png";
 
 
   const price = room.prices?.[0]?.price || 0;
@@ -37,16 +44,23 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
     >
       {/* 16/9 Image Section */}
       <div className="relative aspect-[16/9] w-full overflow-hidden">
-        <img
-          src={imageUrl || "/assets/images/photo_error2.png"}
-          alt={room.title}
-          className={`h-full w-full transition-transform duration-500 group-hover:scale-110 ${imageUrl ? 'object-cover' : 'object-contain bg-white p-4'}`}
-          onError={(e) => { 
-            e.currentTarget.src = "/assets/images/photo_error2.png"; 
-            e.currentTarget.className = e.currentTarget.className.replace('object-cover', 'object-contain') + ' bg-white p-4';
-            e.currentTarget.parentElement?.classList.add('bg-white');
-          }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={room.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              if (e.currentTarget.src !== fallbackImage) {
+                e.currentTarget.src = fallbackImage;
+              }
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+          </div>
+        )}
 
         {/* Status Badge */}
         <div className="absolute left-4 top-4 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
@@ -81,10 +95,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
       <div className="p-5">
         <div className="mb-2 flex items-start justify-between gap-2">
           <h3 className="truncate text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors" title={room.title}>
-            {room.title}
+            {highlightText(room.title, highlightTerms?.title || "")}
           </h3>
           <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500 whitespace-nowrap">
-            #{room.room_number || "N/A"}
+            #{highlightText(room.room_number || "N/A", highlightTerms?.room_number || "")}
           </Badge>
         </div>
 

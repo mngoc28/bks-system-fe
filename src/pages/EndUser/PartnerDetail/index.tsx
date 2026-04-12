@@ -5,6 +5,7 @@ import { CLOUDINARY_HEADER_IMAGE_URL, PROVINCES, ROUTERS } from "@/constant";
 import { Room } from "@/dataHelper/EU/room.dataHelper";
 import { usePartnerDetailQuery } from "@/hooks/EU/usePartnerQuery";
 import { useRoomsQuery } from "@/hooks/EU/useRoomQuery";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { formatCurrencyInput } from "@/utils/utils";
 import { ArrowRight, ChevronLeft, ChevronRight, Globe, Mail, MapPin, Phone, Users } from "lucide-react";
 import { useRef, useState } from "react";
@@ -142,9 +143,12 @@ const PartnerDetail = () => {
                         {partnerImages.map((img, index) => (
                             <div key={index} className="aspect-video rounded-lg overflow-hidden shadow-lg">
                                 <img
-                                    src={img ? (img.startsWith('http') ? img : `${CLOUDINARY_HEADER_IMAGE_URL}/${img}`) : ''}
+                                    src={resolveImageUrl(img, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png"}
                                     alt={`Partner image ${index + 1}`}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.currentTarget.src = "/assets/images/photo_error2.png";
+                                    }}
                                 />
                             </div>
                         ))}

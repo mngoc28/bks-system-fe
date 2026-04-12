@@ -2,6 +2,7 @@ import RowActions from "@/components/RowActions/RowActions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ServiceTableProps } from "@/dataHelper/service.dataHelper"
 import { safeFormatDateTime } from "@/utils/dateUtils";
+import { highlightText } from "@/utils/utils";
 import { t } from "i18next";
 import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react"
 
@@ -14,11 +15,11 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
     filters,
 }) => {
     return (
-            <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+            <div className="flex flex-1 flex-col">
+                <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
                 <Table className="min-w-max text-sm text-slate-700">
                     <TableHeader className="sticky top-0 z-10 bg-slate-100">
                         <tr className="border-b border-gray-300">
-...
                             <TableHead
                                 className="cursor-pointer select-none whitespace-nowrap px-4 py-3 text-center text-slate-700"
                                 onClick={() => onSort("id")}
@@ -28,12 +29,12 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
                                     {t('serviceManagement.id')}
                                     {filters.sort_field === "id" ? (
                                         filters.sort_direction === "asc" ? (
-                                            <ChevronUp className="size-4 text-slate-700" />
+                                            <ChevronUp className="size-4" />
                                         ) : (
-                                            <ChevronDown className="size-4 text-slate-700" />
+                                            <ChevronDown className="size-4" />
                                         )
                                     ) : (
-                                            <ChevronsUpDown className="size-4 text-slate-500" />
+                                            <ChevronsUpDown className="size-4" />
                                     )}
                                 </span>
                             </TableHead>
@@ -46,12 +47,12 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
                                     {t('serviceManagement.name')}
                                     {filters.sort_field === "name" ? (
                                         filters.sort_direction === "asc" ? (
-                                            <ChevronUp className="size-4 text-slate-700" />
+                                            <ChevronUp className="size-4" />
                                         ) : (
-                                            <ChevronDown className="size-4 text-slate-700" />
+                                            <ChevronDown className="size-4" />
                                         )
                                     ) : (
-                                        <ChevronsUpDown className="size-4 text-slate-500" />
+                                        <ChevronsUpDown className="size-4" />
                                     )}
                                 </span>
                             </TableHead>
@@ -72,12 +73,12 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
                                     {t('serviceManagement.create_at')}
                                     {filters.sort_field === "created_at" ? (
                                         filters.sort_direction === "asc" ? (
-                                            <ChevronUp className="size-4 text-slate-700" />
+                                            <ChevronUp className="size-4" />
                                         ) : (
-                                            <ChevronDown className="size-4 text-slate-700" />
+                                            <ChevronDown className="size-4" />
                                         )
                                     ) : (
-                                        <ChevronsUpDown className="size-4 text-slate-500" />
+                                        <ChevronsUpDown className="size-4" />
                                     )}
                                 </span>
                             </TableHead>
@@ -90,12 +91,12 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
                                     {t('serviceManagement.update_at')}
                                     {filters.sort_field === "updated_at" ? (
                                         filters.sort_direction === "asc" ? (
-                                            <ChevronUp className="size-4 text-slate-700" />
+                                            <ChevronUp className="size-4" />
                                         ) : (
-                                            <ChevronDown className="size-4 text-slate-700" />
+                                            <ChevronDown className="size-4" />
                                         )
                                     ) : (
-                                        <ChevronsUpDown className="size-4 text-slate-500" />
+                                        <ChevronsUpDown className="size-4" />
                                     )}
                                 </span>
                             </TableHead>
@@ -104,13 +105,13 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
                     </TableHeader>
                     <TableBody>
                         {filtered.map((service) => (
-                            <TableRow key={service.id} className="">
-                                <TableCell className="px-4 py-3 text-center text-slate-700">{service.id}</TableCell>
-                                <TableCell className="px-4 py-3 text-slate-700">{service.name}</TableCell>
-                                <TableCell className="px-4 py-3 text-slate-700">{service.price.toLocaleString()}</TableCell>
-                                <TableCell className="px-4 py-3 text-slate-700">{safeFormatDateTime(service.created_at)}</TableCell>
-                                <TableCell className="px-4 py-3 text-slate-700">{safeFormatDateTime(service.updated_at)}</TableCell>
-                                <TableCell className="px-4 py-3 text-slate-700">
+                            <TableRow key={service.id} className="hover:bg-muted/50">
+                                <TableCell className="px-4 py-3 text-center align-middle text-slate-700">{service.id}</TableCell>
+                                <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(service.name, filters.name || "")}</TableCell>
+                                <TableCell className="px-4 py-3 align-middle text-slate-700">{service.price.toLocaleString()}</TableCell>
+                                <TableCell className="px-4 py-3 align-middle text-slate-700">{safeFormatDateTime(service.created_at)}</TableCell>
+                                <TableCell className="px-4 py-3 align-middle text-slate-700">{safeFormatDateTime(service.updated_at)}</TableCell>
+                                <TableCell className="px-4 py-3 align-middle text-slate-700">
                                     <RowActions
                                         id={service.id.toString()}
                                         onView={(id: string |number) => onView(Number(id))}
@@ -122,6 +123,7 @@ const ServiceTable: React.FC<ServiceTableProps> = ({
                         ))}
                     </TableBody>
                 </Table>
+                </div>
             </div>
     )
 };

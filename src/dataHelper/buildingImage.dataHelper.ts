@@ -35,10 +35,15 @@ export interface BuildingImageEditFormProps{
     updatingImageIds?: Set<number>;
     isErrorUpdate?: boolean;
     isErrorDelete?: boolean;
+    onDeleteSelected?: () => void;
+    isBusy?: boolean;
+    onStateChange?: (state: { hasChanges: boolean; selectedCount: number; totalCount: number }) => void;
 }
 export interface BuildingImageEditFormRef {
     getUpdatedImages: () => buildingImage[];
     getSelectedImages: () => number[];
+    selectAllImages: () => void;
+    clearSelectedImages: () => void;
     resetImages: () => void;
 }
 export interface BuildingAddImageProps {

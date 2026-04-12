@@ -1,23 +1,23 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input, ReactQuillEditor } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RENT_CATEGORY } from "@/constant";
-import { BuildingEditFormProps, BuildingEditFormRef, BuildingType, CreateBuildingRequest, UpdateBuildingRequest } from "@/dataHelper/building.dataHelper";
+import { BuildingEditFormProps, BuildingType, CreateBuildingRequest, UpdateBuildingRequest } from "@/dataHelper/building.dataHelper";
 import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
 import { Ward } from "@/dataHelper/ward.dataHelper";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetWardsByProvinceId } from "@/hooks/useWardQuery";
 import { buildingFormSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Star } from "lucide-react";
+import { ArrowLeft, Loader2, Star } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormProps>(
-  ({ building, userId, isLoading = false, isError = false }, ref) => {
+const BuildingEditForm: React.FC<BuildingEditFormProps> = ({ building, userId, onSubmit, onCancel, isLoading = false, isError = false }) => {
     const { t } = useTranslation();
     // get all provinces types
     const { data: provincesTypes } = useGetAllProvincesTypes();
@@ -58,28 +58,7 @@ const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormP
       if (provinceId && provinceId !== building?.province_id) {
         form.setValue('ward_id', 0);
       }
-    }, [provinceId]);
-
-    // handle form data
-    React.useImperativeHandle(ref, () => ({
-      getFormData: () => form.getValues() as UpdateBuildingRequest,
-      resetForm: () => {
-        form.reset({
-          name: "",
-          user_id: userId,
-          province_id: 0,
-          ward_id: 0,
-          address_detail: "",
-          number_of_floors: 0,
-          number_of_units: 0,
-          year_built: 0,
-          property_type_id: 0,
-          rent_category: 0,
-          area: 0,
-          description: "",
-        });
-      }
-    }));
+    }, [provinceId, building?.province_id, form]);
 
     // handle reset form when building data arrives
     useEffect(() => {
@@ -101,6 +80,10 @@ const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormP
       }
     }, [building, form, userId]);
 
+    const handleSubmit = (data: CreateBuildingRequest) => {
+      onSubmit(data as UpdateBuildingRequest);
+    };
+
     return (
       <>
         {isError && <></>}
@@ -110,7 +93,7 @@ const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormP
             <div className="">
               {/* Form */}
               <Form {...form}>
-                <form className="flex flex-col gap-6">
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Building Name */}
                     <FormField
@@ -341,6 +324,17 @@ const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormP
                       </FormItem>
                     )}
                   />
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+                      <ArrowLeft className="mr-2 size-4" />
+                      {t("common.back")}
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                      {t("common.save")}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </div>
@@ -348,7 +342,6 @@ const BuildingEditForm = React.forwardRef<BuildingEditFormRef, BuildingEditFormP
         )}
       </>
     );
-  }
-);
+  };
 
 export default BuildingEditForm;

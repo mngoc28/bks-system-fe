@@ -8,9 +8,21 @@ interface ExtendedRowActionsProps extends RowActionsProps {
   onResetPassword?: (id: string | number) => void;
   isDisabledEdit?: boolean;
   isDisabledDelete?: boolean;
+  viewLabel?: string;
+  hideEdit?: boolean;
 }
 
-export const RowActions: React.FC<ExtendedRowActionsProps> = ({ id, onView, onEdit, onDelete, onResetPassword, isDisabledEdit = false, isDisabledDelete = false }) => {
+export const RowActions: React.FC<ExtendedRowActionsProps> = ({
+  id,
+  onView,
+  onEdit,
+  onDelete,
+  onResetPassword,
+  isDisabledEdit = false,
+  isDisabledDelete = false,
+  viewLabel,
+  hideEdit = false,
+}) => {
   const { t } = useTranslation();
   return (
     <DropdownMenu>
@@ -28,11 +40,11 @@ export const RowActions: React.FC<ExtendedRowActionsProps> = ({ id, onView, onEd
             }}
           >
             <Eye className="size-4" />
-            <span className="ml-2">{t("common.view_details")}</span>
+            <span className="ml-2">{viewLabel || t("common.view_details")}</span>
           </DropdownMenuItem>
         )}
 
-        {onEdit && !isDisabledEdit && (
+        {onEdit && !isDisabledEdit && !hideEdit && (
           <DropdownMenuItem
             onClick={() => {
               onEdit(id);

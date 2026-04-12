@@ -7,19 +7,21 @@ import { Service } from "@/dataHelper/service.dataHelper";
 import { Edit, Trash2, LayoutGrid, CreditCard, Clock } from "lucide-react";
 import { formatPrice } from "@/utils/utils";
 import { safeFormatDateTime } from "@/utils/dateUtils";
+import { highlightText } from "@/utils/utils";
 
 interface ServiceCardProps {
   service: Service;
   onView: (id: number) => void;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
+  searchTerm?: string;
 }
 
 /**
  * Service Card
  * A visually engaging card used in the service management grid to display service summaries, pricing, and last-updated timestamps.
  */
-const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDelete }) => {
+const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDelete, searchTerm }) => {
   const { t } = useTranslation();
 
   return (
@@ -40,7 +42,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
         className="mb-2 line-clamp-1 text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
         title={service.name}
       >
-        {service.name}
+        {highlightText(service.name, searchTerm || "")}
       </h3>
 
       <div className="mb-4 flex items-center gap-2 text-xs text-slate-400">

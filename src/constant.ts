@@ -181,9 +181,9 @@ export const BUILDING_TYPE = {
 };
 
 export const RENT_CATEGORY = {
-  1: "buildings.rent_category.1",
-  2: "buildings.rent_category.2",
-  3: "buildings.rent_category.3",
+  1: "RENT_CATEGORY.1",
+  2: "RENT_CATEGORY.2",
+  3: "RENT_CATEGORY.3",
 };
 
 export const BUILDING_IMAGE_TYPE = {

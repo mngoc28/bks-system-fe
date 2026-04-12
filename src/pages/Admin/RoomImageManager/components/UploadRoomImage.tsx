@@ -20,8 +20,6 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
   const { t } = useTranslation();
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [imageType, setImageType] = useState<number>(ROOM_IMAGE_TYPE.MAIN_ROOM);
-  const [customTypeName, setCustomTypeName] = useState<string>("");
   const uploadMutation = useUploadRoomImageMutation();
   const { data: images } = useRoomImagesQuery(roomId);
 
@@ -81,12 +79,14 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
           const compressedFile = await compressImage(file);
           newPreviews.push({
             file: compressedFile,
-            url: URL.createObjectURL(compressedFile)
+            url: URL.createObjectURL(compressedFile),
+            imageType: ROOM_IMAGE_TYPE.MAIN_ROOM,
           });
         } catch {
           newPreviews.push({
             file,
-            url: URL.createObjectURL(file)
+            url: URL.createObjectURL(file),
+            imageType: ROOM_IMAGE_TYPE.MAIN_ROOM,
           });
         }
       }
@@ -145,24 +145,15 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
       return;
     }
 
-    if (imageType === ROOM_IMAGE_TYPE.OTHER && !customTypeName.trim()) {
-      toastError(t('room_images.custom_type_required'));
-      return;
-    }
-
     try {
-      const formData = new FormData();
-      validFiles.forEach(filePreview => {
+      await Promise.all(validFiles.map(async (filePreview) => {
+        const formData = new FormData();
         formData.append('images[]', filePreview.file);
-      });
-      formData.append('room_id', roomId.toString());
-      formData.append('image_type', imageType.toString());
-      if (imageType === ROOM_IMAGE_TYPE.OTHER) {
-        formData.append('custom_type_name', customTypeName);
-      }
-      formData.append('folder', IMAGE_FOLDER);
-
-      await uploadMutation.mutateAsync(formData);
+        formData.append('room_id', roomId.toString());
+        formData.append('image_type', String(filePreview.imageType ?? ROOM_IMAGE_TYPE.MAIN_ROOM));
+        formData.append('folder', IMAGE_FOLDER);
+        await uploadMutation.mutateAsync(formData);
+      }));
 
       // Clean up all preview URLs
       files.forEach(file => URL.revokeObjectURL(file.url));
@@ -230,9 +221,9 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
           {files.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium">{t('room_images.selected_files', { count: files.length })}</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
                 {files.map((filePreview, index) => (
-                  <div key={index} className="relative group">
+                  <div key={index} className="relative group border rounded-md p-2 bg-white">
                     <img
                       src={filePreview.url}
                       alt={`Preview ${index + 1}`}
@@ -269,50 +260,34 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
                         {filePreview.error}
                       </div>
                     )}
+
+                    {!filePreview.error && (
+                      <div className="mt-2">
+                        <Label className="text-xs text-gray-600">{t('room_images.image_type')}</Label>
+                        <Select
+                          value={String(filePreview.imageType ?? ROOM_IMAGE_TYPE.MAIN_ROOM)}
+                          onValueChange={(value) => {
+                            setFiles((prev) => prev.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, imageType: Number(value) } : item
+                            ));
+                          }}
+                        >
+                          <SelectTrigger className="h-8 mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(ROOM_IMAGE_TYPE).map(([key, value]) => (
+                              <SelectItem key={value} value={value.toString()}>
+                                {t(`room_images.types.${key.toLowerCase()}`)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-
-              {/* Image Type Selection */}
-                <div className="space-y-4">
-                  <Label htmlFor="image-type" className="text-sm font-medium text-gray-700">
-                    {t('room_images.image_type')}
-                  </Label>
-                  <Select value={imageType.toString()} onValueChange={(value) => {
-                    const numValue = Number(value);
-                    setImageType(numValue);
-                    if (numValue !== ROOM_IMAGE_TYPE.OTHER) {
-                      setCustomTypeName('');
-                    }
-                  }}>
-                    <SelectTrigger id="image-type" className="w-full">
-                      <SelectValue placeholder={t('room_images.select_type')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(ROOM_IMAGE_TYPE).map(([key, value]) => (
-                        <SelectItem key={value} value={value.toString()}>
-                          {t(`room_images.types.${key.toLowerCase()}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {/* Input for custom type name */}
-                  {imageType === ROOM_IMAGE_TYPE.OTHER && (
-                    <div className="space-y-3">
-                      <Label htmlFor="custom-type" className="text-sm font-medium text-gray-700">
-                        {t('room_images.custom_type_label')}
-                      </Label>
-                      <Input
-                        id="custom-type"
-                        type="text"
-                        value={customTypeName}
-                        onChange={(e) => setCustomTypeName(e.target.value)}
-                        placeholder={t('room_images.custom_type_placeholder')}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-                </div>
             </div>
           )}
 

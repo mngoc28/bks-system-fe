@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import FilterPortal from "@/components/common/FilterPortal";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toastError } from "@/components/ui/toast";
@@ -13,7 +14,6 @@ import { Search, X, RotateCcw } from "lucide-react";
  */
 const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
-  if (!open) return null;
 
   const isValidTimeRange = (nextFilters = filters) => {
     const start = nextFilters.published_at_start;
@@ -38,6 +38,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
   };
 
   return (
+    <FilterPortal open={open} onClose={onClose}>
     <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
@@ -144,15 +145,10 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
             <RotateCcw className="size-4" />
             {t("common.reset")}
           </Button>
-          <Button
-            onClick={onClose}
-            className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
-          >
-            {t("common.apply_filter", { defaultValue: "Áp dụng bộ lọc" })}
-          </Button>
         </div>
       </div>
     </div>
+    </FilterPortal>
   );
 };
 

@@ -61,6 +61,10 @@ export interface NewsTableProps {
   onSort: (key: string) => void;
   sortField?: string;
   sortDirection?: 'asc' | 'desc';
+  highlightTerms?: {
+    user_name?: string;
+    title?: string;
+  };
 }
 
 // news list data response

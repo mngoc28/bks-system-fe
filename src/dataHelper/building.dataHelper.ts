@@ -19,6 +19,7 @@ export interface Building {
   user_name:string;
   province_name:string;
   ward_name:string;
+  cover_image_url?: string | null;
   address_detail: string;
   created_by: number;
   updated_by: number;
@@ -123,6 +124,11 @@ export interface BuildingCardProps {
   onEdit: (building: Building) => void;
   onDelete: (building: Building) => void;
   isDeleting?: boolean;
+  highlightTerms?: {
+    name?: string;
+    province_name?: string;
+    ward_name?: string;
+  };
 }
 
 export interface BuildingSearchSectionProps {
@@ -137,13 +143,10 @@ export interface BuildingEditFormProps {
   userId?: number;
   buildingId?: number;
   building: BuildingDetail;
+  onSubmit: (data: UpdateBuildingRequest) => void | Promise<void>;
+  onCancel: () => void;
   isLoading?: boolean;
   isError?: boolean;
-}
-
-export interface BuildingEditFormRef {
-  getFormData: () => UpdateBuildingRequest;
-  resetForm: () => void;
 }
 export interface BuildingAddFormProps {
   onSubmit: (data: CreateBuildingRequest) => Promise<void>;
@@ -177,6 +180,11 @@ export interface BuildingTableProps {
   onToggleSort: (key: SortKey) => void;
   onClearSort: () => void;
   onDelete: (id: number) => void;
+  highlightTerms?: {
+    name?: string;
+    province_name?: string;
+    ward_name?: string;
+  };
 }
 
 export interface BuildingTableHeaderProps {
@@ -187,6 +195,11 @@ export interface BuildingTableHeaderProps {
 export interface BuildingTableRowProps {
   building: Building;
   onDelete: (id: number) => void;
+  highlightTerms?: {
+    name?: string;
+    province_name?: string;
+    ward_name?: string;
+  };
 }
 
 export interface ScrollControlsProps {

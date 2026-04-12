@@ -1,9 +1,9 @@
 import { useDeleteNewsMutation, useNewsQuery } from "@/hooks/useNewsQuery";
 import { DeleteNewsDialog, NewsHeader, NewsSearchSection, NewsCard, NewsTable } from "./components";
-import { DEFAULT_PAGE, DEFAULT_CARD_LIMIT, DEFAULT_TOTAL, ROUTERS } from "@/constant";
+import { DEFAULT_PAGE, DEFAULT_CARD_LIMIT, DEFAULT_TOTAL, ROUTERS, SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
 import { useTranslation } from "react-i18next";
 import EmptyPage from "@/components/EmptyPage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { News, NewsFilters } from "@/dataHelper/news.dataHelper";
 import Pagination from "@/components/Pagination";
 import { toastError, toastSuccess } from "@/components/ui/toast";
@@ -27,6 +27,14 @@ const NewsManager: React.FC = () => {
     title: "",
     content: "",
   });
+  const [filters, setFilters] = useState<NewsFilters>({
+    page: DEFAULT_PAGE,
+    per_page: DEFAULT_CARD_LIMIT,
+    sort_field: "",
+    sort_direction: undefined,
+    title: "",
+    content: "",
+  });
 
   // View mode state with localStorage persistence
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -41,6 +49,20 @@ const NewsManager: React.FC = () => {
 
   const { data: news, isLoading: isLoadingNews, isError: errorNews } = useNewsQuery(searchParams);
   const deleteNewsMutation = useDeleteNewsMutation();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParams((prev) => ({
+        ...filters,
+        page: DEFAULT_PAGE,
+        per_page: prev.per_page,
+        sort_field: prev.sort_field,
+        sort_direction: prev.sort_direction,
+      }));
+    }, SEARCH_DEBOUNCE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [filters]);
 
   const [deleteTarget, setDeleteTarget] = useState<News | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -65,7 +87,8 @@ const NewsManager: React.FC = () => {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const handleOpenSearch = () => {
-    setSearchParams((prev) => ({ ...prev, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "" }));
+    setFilters((prev) => ({ ...prev, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "", user_name: "" }));
+    setSearchParams((prev) => ({ ...prev, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "", user_name: "" }));
     setSearchOpen(true);
   };
   const handleCloseSearch = () => {
@@ -106,9 +129,9 @@ const NewsManager: React.FC = () => {
       />
       <NewsSearchSection
         open={searchOpen}
-        filters={searchParams}
-        setFilters={setSearchParams}
-        onReset={() => setSearchParams({ ...searchParams, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "" })}
+        filters={filters}
+        setFilters={setFilters}
+        onReset={() => setFilters({ ...filters, page: DEFAULT_PAGE, per_page: DEFAULT_CARD_LIMIT, sort_field: "", sort_direction: undefined, title: "", content: "", status: undefined, published_at_start: "", published_at_end: "", user_name: "" })}
         onClose={handleCloseSearch}
       />
       {
@@ -130,6 +153,10 @@ const NewsManager: React.FC = () => {
                       <NewsCard
                         key={item.id}
                         news={item}
+                        highlightTerms={{
+                          title: searchParams.title || "",
+                          user_name: searchParams.user_name || "",
+                        }}
                         onView={showDetailNews}
                         onEdit={showEditNews}
                         onDelete={askDeleteNews}
@@ -151,21 +178,30 @@ const NewsManager: React.FC = () => {
                   )}
                 </>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm mx-4 px-4">
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                     <NewsTable
                         news={news?.data}
                         onView={showDetailNews}
                         onEdit={showEditNews}
                         onDelete={askDeleteNews}
                         onSort={(key: string) => {
-                            setSearchParams(prev => ({
+                          setSearchParams(prev => ({
                                 ...prev,
                                 sort_field: key,
                                 sort_direction: prev.sort_field === key && prev.sort_direction === 'asc' ? 'desc' : 'asc'
                             }))
+                          setFilters(prev => ({
+                            ...prev,
+                            sort_field: key,
+                            sort_direction: prev.sort_field === key && prev.sort_direction === 'asc' ? 'desc' : 'asc'
+                          }))
                         }}
                         sortField={searchParams.sort_field}
                         sortDirection={searchParams.sort_direction}
+                        highlightTerms={{
+                          title: searchParams.title || "",
+                          user_name: searchParams.user_name || "",
+                        }}
                     />
                     {totalItems > 0 && (
                         <div className="p-4 border-t border-slate-100">

@@ -34,6 +34,7 @@ const Rooms = React.lazy(() => import("./pages/Admin/RoomManager"));
 const RoomAdd = React.lazy(() => import("./pages/Admin/RoomAdd"));
 const RoomDetail = React.lazy(() => import("./pages/Admin/RoomDetail"));
 const RoomImageManager = React.lazy(() => import("./pages/Admin/RoomImageManager"));
+const BuildingImageManager = React.lazy(() => import("./pages/Admin/BuildingImageManager"));
 const RoomUpdate = React.lazy(() => import("./pages/Admin/RoomUpdate"));
 const ResetPassword = React.lazy(() => import("./pages/Admin/ResetPassword"));
 const ForgotPassword = React.lazy(() => import("./pages/Admin/ForgotPassword"));
@@ -306,8 +307,9 @@ export default function Router() {
           <Route path={ROUTERS.BOOKING_MANAGE} element={<BookingManage />} />
           <Route path={ROUTERS.BUILDINGS} element={<Buildings />} />
           <Route path={ROUTERS.BUILDINGS_ADD} element={<BuildingsAdd />} />
-          <Route path={`${ROUTERS.BUILDINGS_EDIT}/:action/:user_id/:building_id`} element={<BuildingEdit />} />
-          <Route path={`${ROUTERS.BUILDINGS_EDIT_IMAGES}/:action/:user_id/:building_id`} element={<BuildingEditImages />} />
+          <Route path={`${ROUTERS.BUILDINGS_EDIT}/:action/:building_id`} element={<BuildingEdit />} />
+          <Route path={`${ROUTERS.BUILDINGS_EDIT_IMAGES}/:action/:building_id`} element={<BuildingEditImages />} />
+          <Route path={`${ROUTERS.BUILDINGS_DETAIL}/:buildingId/images`} element={<BuildingImageManager />} />
           <Route path={ROUTERS.ROOMS} element={<Rooms />} />
           <Route path={ROUTERS.ROOMS_ADD} element={<RoomAdd />} />
           <Route path={`${ROUTERS.ROOMS_DETAIL}/:id`} element={<RoomDetail />} />
@@ -324,7 +326,7 @@ export default function Router() {
           <Route path={ROUTERS.QUESTION_UPDATE} element={<QuestionUpdate />} />
           <Route path={ROUTERS.QUESTION_DETAIL} element={<QuestionDetail />} />
           <Route path={ROUTERS.QUESTION_FLOW} element={<QuestionFlow />} />
-          <Route path={`${ROUTERS.BUILDINGS_DETAIL}/:user_id/:building_id`} element={<BuildingDetail />} />
+          <Route path={`${ROUTERS.BUILDINGS_DETAIL}/:building_id`} element={<BuildingDetail />} />
           <Route path={ROUTERS.SERVICE_MANAGEMENT} element={<ServiceManagement />} />
           <Route path={ROUTERS.NEWS} element={<News />} />
           <Route path={`${ROUTERS.NEWS_DETAIL}/:id`} element={<NewsDetail />} />

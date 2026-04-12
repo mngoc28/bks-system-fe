@@ -4,25 +4,31 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { News } from "@/dataHelper/news.dataHelper";
-import { Edit, Trash2, Calendar, User } from "lucide-react";
+import { Edit, Trash2, Calendar, User, ImageIcon } from "lucide-react";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { format } from "date-fns";
+import { highlightText } from "@/utils/utils";
 
 interface NewsCardProps {
   news: News;
   onView: (id: number) => void;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
+  highlightTerms?: {
+    user_name?: string;
+    title?: string;
+  };
 }
 
 /**
  * News Card Component
  * A visual representation of a news article in a grid, featuring cover image, summary, and action buttons.
  */
-const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete }) => {
+const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, highlightTerms }) => {
   const { t } = useTranslation();
   const imageUrl = news.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${news.image_url}` : null;
   const publishedDate = news.published_at ? format(new Date(news.published_at), "dd/MM/yyyy") : "-";
+  const fallbackImage = "/assets/images/photo_error2.png";
 
   return (
     <Card
@@ -31,16 +37,23 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete }) =
     >
       {/* 16/9 Image Section */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-        <img
-          src={imageUrl || "/assets/images/photo_error2.png"}
-          alt={news.title}
-          className={`h-full w-full transition-transform duration-500 group-hover:scale-110 ${imageUrl ? 'object-cover' : 'object-contain bg-white p-4'}`}
-          onError={(e) => { 
-            e.currentTarget.src = "/assets/images/photo_error2.png"; 
-            e.currentTarget.className = e.currentTarget.className.replace('object-cover', 'object-contain') + ' bg-white p-4';
-            e.currentTarget.parentElement?.classList.add('bg-white');
-          }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={news.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              if (e.currentTarget.src !== fallbackImage) {
+                e.currentTarget.src = fallbackImage;
+              }
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-500 text-sm">{t("news.no_image")}</p>
+          </div>
+        )}
 
         {/* Status Badge */}
         <div className="absolute left-4 top-4 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
@@ -79,7 +92,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete }) =
           </div>
           <div className="flex items-center gap-1">
             <User className="size-3" />
-            {news.user_name || "Admin"}
+            {highlightText(news.user_name || "Admin", highlightTerms?.user_name || "")}
           </div>
         </div>
 
@@ -87,7 +100,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete }) =
           className="mb-3 line-clamp-2 text-xl font-black leading-tight text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
           title={news.title}
         >
-          {news.title}
+          {highlightText(news.title, highlightTerms?.title || "")}
         </h3>
 
         <p className="line-clamp-2 text-sm leading-relaxed text-slate-400">

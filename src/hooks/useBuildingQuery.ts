@@ -22,13 +22,22 @@ export const useBuildingsQuery = (params: SearchBuildingRequest) => {
 };
 
 // get building types (Admin)
-export const useBuildingTypesQuery = () => {
+export const useBuildingTypesQuery = (enabled = true) => {
   return useQuery<ApiResponse<BuildingType[]>, Error>({
     queryKey: ["building-types-admin"],
     queryFn: async () => {
       const response = await buildingApi.getBuildingTypes();
-      return response;
+      const normalized = (response.data ?? []).map((item: any) => ({
+        id: Number(item?.id ?? item?.value ?? 0),
+        name: String(item?.name ?? item?.label ?? ""),
+      }));
+
+      return {
+        ...response,
+        data: normalized,
+      };
     },
+    enabled,
   });
 };
 
@@ -38,7 +47,16 @@ export const usePartnerBuildingTypesQuery = () => {
     queryKey: ["building-types-partner"],
     queryFn: async () => {
       const response = await partnerService.getBuildingTypes();
-      return response.data as ApiResponse<BuildingType[]>;
+      const payload = response.data as ApiResponse<any[]>;
+      const normalized = (payload.data ?? []).map((item: any) => ({
+        id: Number(item?.id ?? item?.value ?? 0),
+        name: String(item?.name ?? item?.label ?? ""),
+      }));
+
+      return {
+        ...payload,
+        data: normalized,
+      } as ApiResponse<BuildingType[]>;
     },
   });
 };

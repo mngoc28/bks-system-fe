@@ -10,6 +10,7 @@ import { FaPlus } from "react-icons/fa";
 import { useUpdateUserProfileMutation} from "@/hooks/useUserQuery";
 import { ThreeDot } from "react-loading-indicators";
 import { useDeleteImageMutation, useUploadImageMutation } from "@/hooks/useCloudinariQuery";
+import { resolveImageUrl } from "@/utils/imageUtils";
 
 /**
  * Profile Info Component
@@ -27,9 +28,9 @@ const ProfileInfo = ({
   const deleteAvatarMutation = useDeleteImageMutation();
 
   // Get avatar URL from Cloudinary
-  const avatarUrl = useMemo(() => profile.avatar
-    ? `${CLOUDINARY_HEADER_IMAGE_URL}/${profile.avatar}`
-    : "/assets/images/add-user.png", [profile.avatar]);
+  const avatarUrl = useMemo(() => {
+    return resolveImageUrl(profile.avatar, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/add-user.png";
+  }, [profile.avatar]);
 
   // Local preview URL
   const fileInputRef = useRef<HTMLInputElement>(null);
