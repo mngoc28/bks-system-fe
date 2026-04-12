@@ -16,10 +16,11 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PROVINCES, ROUTERS } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, PROVINCES, ROUTERS } from "@/constant";
 import { usePartnerQuery } from "@/hooks/EU/usePartnerQuery";
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
+import { resolveImageUrl } from "@/utils/imageUtils";
 
 const PartnerList = () => {
     const { t } = useTranslation();
@@ -110,33 +111,44 @@ const PartnerList = () => {
                             </Button>
                         </div>
                     ) : (
-                      partners.map((partner) => (
-                        <Link 
-                          key={partner.id} 
-                          to={`${ROUTERS.PARTNER_DETAIL.replace(":partner_id", partner.id.toString())}`}
-                          className="group p-6 bg-white border border-slate-100 rounded-3xl flex gap-6 items-center transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:-translate-y-1"
-                        >
-                          <div className="h-20 w-20 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 border border-slate-100">
-                            {partner.image_1 ? (
-                              <img src={partner.image_1} alt={partner.company_name} className="w-full h-full object-cover" />
-                            ) : (
-                              <Building className="h-8 w-8 text-slate-300" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0 flex flex-col gap-1">
-                            <h3 className="text-lg font-black text-slate-900 group-hover:text-primary transition-colors truncate">
-                              {partner.company_name}
-                            </h3>
-                            <div className="flex items-center gap-1.5 text-slate-500 text-sm">
-                              <MapPin className="h-3.5 w-3.5 text-primary" />
-                              <span className="truncate">{partner.address || "Địa chỉ chưa cập nhật"}</span>
+                      partners.map((partner) => {
+                        const imageUrl = resolveImageUrl(partner.image_1, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+
+                        return (
+                          <Link 
+                            key={partner.id} 
+                            to={`${ROUTERS.PARTNER_DETAIL.replace(":partner_id", partner.id.toString())}`}
+                            className="group p-6 bg-white border border-slate-100 rounded-3xl flex gap-6 items-center transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:-translate-y-1"
+                          >
+                            <div className="h-20 w-20 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 border border-slate-100">
+                              {imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={partner.company_name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/assets/images/photo_error2.png";
+                                  }}
+                                />
+                              ) : (
+                                <Building className="h-8 w-8 text-slate-300" />
+                              )}
                             </div>
-                          </div>
-                          <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary-light group-hover:text-primary transition-all">
-                            <ChevronRight className="h-6 w-6" />
-                          </div>
-                        </Link>
-                      ))
+                            <div className="flex-1 min-w-0 flex flex-col gap-1">
+                              <h3 className="text-lg font-black text-slate-900 group-hover:text-primary transition-colors truncate">
+                                {partner.company_name}
+                              </h3>
+                              <div className="flex items-center gap-1.5 text-slate-500 text-sm">
+                                <MapPin className="h-3.5 w-3.5 text-primary" />
+                                <span className="truncate">{partner.address || "Địa chỉ chưa cập nhật"}</span>
+                              </div>
+                            </div>
+                            <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary-light group-hover:text-primary transition-all">
+                              <ChevronRight className="h-6 w-6" />
+                            </div>
+                          </Link>
+                        );
+                      })
                     )}
                   </div>
                   

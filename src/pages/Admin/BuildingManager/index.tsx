@@ -173,8 +173,13 @@ const Buildings: React.FC = () => {
                 <BuildingCard
                   key={building.id}
                   building={building}
-                  onView={(b: Building) => navigate(`${ROUTERS.BUILDINGS_DETAIL}/${b.user_id}/${b.id}`)}
-                  onEdit={(b: Building) => navigate(`${ROUTERS.BUILDINGS_EDIT}/edit-building/${b.user_id}/${b.id}`)}
+                  highlightTerms={{
+                    name: filters.name || "",
+                    province_name: filters.province_name || "",
+                    ward_name: filters.ward_name || "",
+                  }}
+                  onView={(b: Building) => navigate(`${ROUTERS.BUILDINGS_DETAIL}/${b.id}`)}
+                  onEdit={(b: Building) => navigate(`${ROUTERS.BUILDINGS_EDIT}/edit-building/${b.id}`)}
                   onDelete={(b: Building) => askDelete(Number(b.id))}
                   isDeleting={deleteLoading && deleteTarget?.id === building.id}
                 />
@@ -189,6 +194,11 @@ const Buildings: React.FC = () => {
                     getSortDirection={getSortDirection}
                     onClearSort={clearSort}
                     onDelete={askDelete}
+                    highlightTerms={{
+                      name: filters.name || "",
+                      province_name: filters.province_name || "",
+                      ward_name: filters.ward_name || "",
+                    }}
                 />
             </div>
           )}

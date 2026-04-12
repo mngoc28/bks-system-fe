@@ -2,34 +2,82 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
-import { UserDetailViewProps } from "@/dataHelper/user.dataHelper";
+import { UpdateUserProfileRequest, UserDetailViewProps } from "@/dataHelper/user.dataHelper";
 import { useUpdateUserMutation, useUploadAvatarMutation } from "@/hooks/useUserQuery";
-import { statusNumberToText } from "@/utils/utils";
 import { avatarSchema } from "@/shared/shema";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { statusNumberToText } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Edit, FileText, Upload, User, X } from "lucide-react";
-import React, { useRef, useState } from "react";
+import { ArrowLeft, Edit3, FileText, RotateCcw, Save, Upload, User, X } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+type EditableField = "name" | "email" | "phone" | "role";
+
+type EditableUserForm = {
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+};
+
+const emptyEditState: Record<EditableField, boolean> = {
+  name: false,
+  email: false,
+  phone: false,
+  role: false,
+};
+
 /**
  * User Detail View
- * A presentation component that renders a comprehensive profile for a user, including avatar management, role badges, and detailed account metadata.
+ * Inline editable user detail page with per-field rollback and save confirmation.
  */
-export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, onBack }) => {
+export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
+
+  const [formData, setFormData] = useState<EditableUserForm>({
+    name: "",
+    email: "",
+    phone: "",
+    role: "user",
+  });
+  const [originalData, setOriginalData] = useState<EditableUserForm>({
+    name: "",
+    email: "",
+    phone: "",
+    role: "user",
+  });
+  const [editingFields, setEditingFields] = useState<Record<EditableField, boolean>>(emptyEditState);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadAvatarMutation = useUploadAvatarMutation();
   const updateUserMutation = useUpdateUserMutation();
 
-  // Get role name based on role string
+  useEffect(() => {
+    const nextValue: EditableUserForm = {
+      name: user.name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      role: user.role || "user",
+    };
+
+    setFormData(nextValue);
+    setOriginalData(nextValue);
+    setEditingFields(emptyEditState);
+  }, [user.id, user.name, user.email, user.phone, user.role]);
+
   const getRoleName = (role: string) => {
     switch (role) {
       case "admin":
@@ -43,11 +91,10 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
     }
   };
 
-  // Get status badge based on status number
   const getStatusBadge = (status?: number | string) => {
     if (status === undefined) return null;
-    
-    const statusNum = typeof status === 'string' ? parseInt(status, 10) : status;
+
+    const statusNum = typeof status === "string" ? parseInt(status, 10) : status;
     const statusText = statusNumberToText(statusNum);
     switch (statusNum) {
       case 1:
@@ -61,12 +108,63 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
     }
   };
 
-  // Handle file selection
+  const getAvatarUrl = () => {
+    return resolveImageUrl(user.avatar, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+  };
+
+  const isFieldDirty = (field: EditableField) => formData[field] !== originalData[field];
+
+  const hasChanges = useMemo(
+    () => (Object.keys(formData) as EditableField[]).some((field) => isFieldDirty(field)),
+    [formData, originalData],
+  );
+
+  const startEditField = (field: EditableField) => {
+    setEditingFields((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const stopEditField = (field: EditableField) => {
+    setEditingFields((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const rollbackField = (field: EditableField) => {
+    setFormData((prev) => ({ ...prev, [field]: originalData[field] }));
+    stopEditField(field);
+  };
+
+  const handleFieldChange = (field: EditableField, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleConfirmSave = async () => {
+    if (!hasChanges) {
+      setIsConfirmSaveOpen(false);
+      return;
+    }
+
+    const payload: UpdateUserProfileRequest = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role,
+    };
+
+    try {
+      await updateUserMutation.mutateAsync({ id: user.id, data: payload });
+      setOriginalData(formData);
+      setEditingFields(emptyEditState);
+      setIsConfirmSaveOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["user", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    } catch {
+      setIsConfirmSaveOpen(false);
+    }
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate using schema
     const result = avatarSchema(t).safeParse({ file });
     if (!result.success) {
       toast.error(result.error.issues[0].message);
@@ -81,40 +179,37 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
     reader.readAsDataURL(file);
   };
 
-  // Handle avatar upload
   const handleAvatarUpload = async () => {
     if (!selectedFile) return;
 
     try {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
-      formData.append("folder", 'users');
+      const formDataUpload = new FormData();
+      formDataUpload.append("image", selectedFile);
+      formDataUpload.append("folder", "users");
 
       const uploadResponse = await uploadAvatarMutation.mutateAsync({
         id: user.id,
-        data: formData,
+        data: formDataUpload,
       });
 
       if (uploadResponse.data?.url) {
         toast.success(t("user.avatar_updated_success"), {
-          style: { 
+          style: {
             background: "#10B981",
-            color: "#FFFFFF"
+            color: "#FFFFFF",
           },
         });
 
-         // Invalidate queries to refresh data
         queryClient.invalidateQueries({ queryKey: ["user", user.id] });
         queryClient.invalidateQueries({ queryKey: ["users"] });
 
-        // Close dialog and reset
         setIsAvatarDialogOpen(false);
         setSelectedFile(null);
         setPreviewUrl(null);
       } else {
         toast.error(t("user.avatar_update_failed"));
       }
-    } catch (error) {
+    } catch {
       toast.error(t("user.avatar_update_failed"), {
         style: {
           background: "#EF4444",
@@ -124,30 +219,15 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
     }
   };
 
-  // Handle dialog close
   const handleDialogClose = () => {
     setIsAvatarDialogOpen(false);
     setSelectedFile(null);
     setPreviewUrl(null);
   };
 
-  // Get avatar URL
-  const getAvatarUrl = () => {
-    if (user.avatar) {
-      // Check if it's already a full URL
-      if (user.avatar.startsWith('http')) {
-        return user.avatar;
-      }
-      // Otherwise prepend Cloudinary URL
-      return `${CLOUDINARY_HEADER_IMAGE_URL}/${user.avatar}`;
-    }
-    return null;
-  };
-
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={onBack}>
             <ArrowLeft className="size-4 mr-2" />
@@ -158,29 +238,35 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
             <p className="text-sm text-gray-600">{t("user.user_details")}</p>
           </div>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
-          <Button onClick={onEdit} className="bg-blue-600 hover:bg-blue-700">
-            <Edit className="size-4 mr-2 sm:mr-2" />
-            <span className="hidden sm:inline">{t("user.edit_user_info")}</span>
-          </Button>
-        </div>
+        <Button
+          onClick={() => setIsConfirmSaveOpen(true)}
+          disabled={!hasChanges || updateUserMutation.isPending}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Save className="size-4 mr-2" />
+          {t("common.save")}
+        </Button>
       </div>
 
       <Card className="shadow-lg border-0">
         <CardContent className="p-8">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Avatar Section - Left */}
             <div className="flex flex-col items-center justify-center gap-4 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 lg:min-w-[280px]">
-              <div className="relative group flex items-center justify-center" onClick={() => setIsImageModalOpen(true)}>
+              <div
+                className="relative group flex items-center justify-center"
+                onClick={() => {
+                  if (getAvatarUrl()) setIsImageModalOpen(true);
+                }}
+              >
                 {getAvatarUrl() ? (
                   <img
-                  src={getAvatarUrl()!}
-                  alt={user.name}
-                  className="w-56 h-56 rounded-full object-cover border-4 border-white shadow-xl ring-4 ring-blue-100 transition-transform duration-300 group-hover:scale-105"
+                    src={getAvatarUrl()!}
+                    alt={user.name}
+                    className="w-56 h-56 rounded-full object-cover border-4 border-white shadow-xl ring-4 ring-blue-100 transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <div className="w-56 h-56 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border-4 border-white shadow-xl ring-4 ring-gray-100">
-                  <User className="size-32 text-gray-400" />
+                    <User className="size-32 text-gray-400" />
                   </div>
                 )}
               </div>
@@ -194,44 +280,135 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
               </Button>
             </div>
 
-            {/* Information Section - Right */}
             <div className="flex-1">
-              <div className="mb-8 pb-4 border-b-2 border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <FileText className="size-5 text-blue-600" />
-                  </div>
-                  <span className="text-xl font-bold text-gray-900">{t("user.basic_information")}</span>
+              <div className="mb-8 pb-4 border-b-2 border-gray-100 flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FileText className="size-5 text-blue-600" />
                 </div>
+                <span className="text-xl font-bold text-gray-900">{t("user.basic_information")}</span>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_id")}</label>
                   <p className="text-base font-semibold text-gray-900">#{user.id}</p>
                 </div>
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_name")}</label>
-                  <p className="text-base font-semibold text-gray-900">{user.name}</p>
-                </div>
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_email")}</label>
-                  <p className="text-base font-semibold text-gray-900 truncate" title={user.email}>{user.email}</p>
-                </div>
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_phone")}</label>
-                  <p className="text-base font-semibold text-gray-900">{user.phone || "-"}</p>
-                </div>
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_role")}</label>
-                  <p className="text-base font-semibold text-gray-900">{getRoleName(user.role)}</p>
-                </div>
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_status")}</label>
-                  <div className="mt-1">
-                    {getStatusBadge(user.status)}
+
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_name")}</label>
+                    <div className="flex items-center gap-1">
+                      {isFieldDirty("name") && (
+                        <Button variant="ghost" size="sm" onClick={() => rollbackField("name")}>
+                          <RotateCcw className="size-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => startEditField("name")}>
+                        <Edit3 className="size-4" />
+                      </Button>
+                    </div>
                   </div>
+                  {editingFields.name ? (
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => handleFieldChange("name", e.target.value)}
+                      onBlur={() => stopEditField("name")}
+                    />
+                  ) : (
+                    <p className="text-base font-semibold text-gray-900">{formData.name || "-"}</p>
+                  )}
                 </div>
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
+
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_email")}</label>
+                    <div className="flex items-center gap-1">
+                      {isFieldDirty("email") && (
+                        <Button variant="ghost" size="sm" onClick={() => rollbackField("email")}>
+                          <RotateCcw className="size-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => startEditField("email")}>
+                        <Edit3 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {editingFields.email ? (
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleFieldChange("email", e.target.value)}
+                      onBlur={() => stopEditField("email")}
+                    />
+                  ) : (
+                    <p className="text-base font-semibold text-gray-900 truncate" title={formData.email}>{formData.email || "-"}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_phone")}</label>
+                    <div className="flex items-center gap-1">
+                      {isFieldDirty("phone") && (
+                        <Button variant="ghost" size="sm" onClick={() => rollbackField("phone")}>
+                          <RotateCcw className="size-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => startEditField("phone")}>
+                        <Edit3 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {editingFields.phone ? (
+                    <Input
+                      value={formData.phone}
+                      onChange={(e) => handleFieldChange("phone", e.target.value)}
+                      onBlur={() => stopEditField("phone")}
+                    />
+                  ) : (
+                    <p className="text-base font-semibold text-gray-900">{formData.phone || "-"}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_role")}</label>
+                    <div className="flex items-center gap-1">
+                      {isFieldDirty("role") && (
+                        <Button variant="ghost" size="sm" onClick={() => rollbackField("role")}>
+                          <RotateCcw className="size-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => startEditField("role")}>
+                        <Edit3 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {editingFields.role ? (
+                    <Select
+                      value={formData.role}
+                      onValueChange={(value) => handleFieldChange("role", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">{t("user.role_admin")}</SelectItem>
+                        <SelectItem value="partner">{t("user.role_partner")}</SelectItem>
+                        <SelectItem value="user">{t("user.role_user")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-base font-semibold text-gray-900">{getRoleName(formData.role)}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_status")}</label>
+                  <div className="mt-1">{getStatusBadge(user.status)}</div>
+                </div>
+
+                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_email_verified")}</label>
                   <div className="mt-1">
                     <Badge variant={user.is_email_verified === 1 ? "default" : "secondary"} className={user.is_email_verified === 1 ? "bg-green-500" : ""}>
@@ -239,26 +416,25 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
                     </Badge>
                   </div>
                 </div>
+
                 {user.partner_id && (
-                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_partner_id")}</label>
                     <p className="text-base font-semibold text-gray-900">#{user.partner_id}</p>
                   </div>
                 )}
+
                 {user.created_at && (
-                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_created_at")}</label>
-                    <p className="text-base font-semibold text-gray-900">
-                      {new Date(user.created_at).toLocaleString()}
-                    </p>
+                    <p className="text-base font-semibold text-gray-900">{new Date(user.created_at).toLocaleString()}</p>
                   </div>
                 )}
+
                 {user.updated_at && (
-                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_updated_at")}</label>
-                    <p className="text-base font-semibold text-gray-900">
-                      {new Date(user.updated_at).toLocaleString()}
-                    </p>
+                    <p className="text-base font-semibold text-gray-900">{new Date(user.updated_at).toLocaleString()}</p>
                   </div>
                 )}
               </div>
@@ -267,7 +443,21 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
         </CardContent>
       </Card>
 
-      {/* Avatar Upload Dialog */}
+      <Dialog open={isConfirmSaveOpen} onOpenChange={setIsConfirmSaveOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("common.confirm")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-600">{t("user.update_user_confirmation_message")}</p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsConfirmSaveOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleConfirmSave} disabled={updateUserMutation.isPending}>
+              {updateUserMutation.isPending ? t("common.saving") : t("common.save")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isAvatarDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="w-[600px] h-[600px] max-w-[95vw] max-h-[95vh] overflow-y-auto">
           <DialogHeader>
@@ -278,7 +468,6 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-4">
-              {/* Preview */}
               <div className="w-full h-auto aspect-square rounded-full border-4 border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center max-w-sm">
                 {previewUrl ? (
                   <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
@@ -289,7 +478,6 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
                 )}
               </div>
 
-              {/* File Input */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -298,11 +486,9 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
                 className="hidden"
               />
 
-              {/* Buttons */}
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  // variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {t("user.select_image")}
@@ -350,12 +536,16 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onEdit, on
             <X className="size-4" />
           </Button>
           {getAvatarUrl() && (
-            <img src={getAvatarUrl()!}
-            alt={user.name}
-            className="w-full aspect-[4/3] object-cover rounded-lg" />
+            <img
+              src={getAvatarUrl()!}
+              alt={user.name}
+              className="w-full aspect-[4/3] object-cover rounded-lg"
+            />
           )}
         </DialogContent>
       </Dialog>
     </div>
   );
 };
+
+export default UserDetailView;

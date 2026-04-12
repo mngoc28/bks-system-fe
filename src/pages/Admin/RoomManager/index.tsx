@@ -28,6 +28,7 @@ const RoomManager: React.FC = () => {
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
 
   const [open, setOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Set highlightedId and pagination from navigation state
   useEffect(() => {
@@ -255,6 +256,10 @@ const RoomManager: React.FC = () => {
                 <RoomCard
                   key={room.id}
                   room={room}
+                  highlightTerms={{
+                    title: filters.title || "",
+                    room_number: filters.room_number || "",
+                  }}
                   onView={handleViewRoom}
                   onEdit={handleEditRoom}
                   onDelete={handleDeleteRoom}
@@ -271,7 +276,7 @@ const RoomManager: React.FC = () => {
                     totalPages={totalPages}
                     perPage={perPage}
                     totalItems={totalItems}
-                    selectedImage={null}
+                  selectedImage={selectedImage}
                     onView={handleViewRoom}
                     onEdit={handleEditRoom}
                     onDelete={handleDeleteRoom}
@@ -280,9 +285,14 @@ const RoomManager: React.FC = () => {
                         setPerPage(pp);
                         setPage(DEFAULT_PAGE);
                     }}
-                    onViewModal={() => {}}
+                    onViewModal={setSelectedImage}
                     getBuildingName={(room) => room.building_name || "-"}
-                    getRoomTypeName={(type) => t(`room_type.${type}`)}
+                    getRoomTypeName={(type) => {
+                      if (type === 1) return t("rooms.room_type_single");
+                      if (type === 2) return t("rooms.room_type_double");
+                      if (type === 3) return t("rooms.room_type_mini_apartment");
+                      return "-";
+                    }}
                     toggleSort={(field: any) => {
                         setSortField(field);
                         setSortDirection(sortField === field && sortDirection === "asc" ? "desc" : "asc");

@@ -140,7 +140,6 @@ export interface UserEditFormProps {
 // Props for User Detail View Component
 export interface UserDetailViewProps {
   user: UserProfile;
-  onEdit: () => void;
   onBack: () => void;
 }
 

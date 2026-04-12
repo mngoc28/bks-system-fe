@@ -183,8 +183,8 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                 {/* Main Container - RESPONSIVE */}
                 <div className="
                     bg-white rounded-lg shadow-2xl
-                    w-full max-w-[95vw]
-                    h-full max-h-[90vh]
+                    w-full max-w-2xl
+                    max-h-[90vh]
                     flex flex-col
                     overflow-hidden
                     animate-in fade-in-0 zoom-in-95 duration-200
@@ -249,6 +249,11 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                 multiple
                                 className="hidden"
                             />
+                        </div>
+
+                        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4 md:mb-6">
+                            <p className="text-sm text-blue-800">{t('room_images.drag_drop_instruction')}</p>
+                            <p className="text-xs text-blue-700 mt-1">{t('room_images.max_size_auto_compress')}</p>
                         </div>
 
                         {/* Delete Selected Button - RESPONSIVE */}

@@ -1,4 +1,3 @@
-import Pagination from "@/components/Pagination";
 import RowActions from "@/components/RowActions/RowActions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -6,8 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import type { Room } from "@/dataHelper/room.dataHelper";
 import { RoomTableProps } from "@/dataHelper/room.dataHelper";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
-import { ChevronDown, ChevronUp, ChevronsUpDown, X } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, X } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,13 +17,7 @@ import { useTranslation } from "react-i18next";
  */
 const RoomTable: React.FC<RoomTableProps> = ({
   sorted,
-  page,
-  totalPages,
-  perPage,
-  totalItems,
   selectedImage,
-  onPageChange,
-  onPerPageChange,
   onViewModal,
   onView,
   onEdit,
@@ -134,25 +128,32 @@ const RoomTable: React.FC<RoomTableProps> = ({
                 ${highlightedId === room.id ? 'bg-green-100 animate-pulse' : ''}`}>
                 <TableCell className="px-4 py-3 text-center align-middle">{room.id}</TableCell>
                 <TableCell className="px-4 py-3 align-middle">
-                  {room.images && room.images.length > 0 ? (
+                  {(() => {
+                    const coverImage =
+                      room.images?.find((img) => img.sort === 1 && Boolean(img.image_url)) ||
+                      room.images?.find((img) => Boolean(img.image_url));
+                    const coverImageUrl = resolveImageUrl(coverImage?.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+                    const fallbackImage = '/assets/images/photo_error2.png';
+
+                    return coverImageUrl ? (
                     <img
-                      src={CLOUDINARY_HEADER_IMAGE_URL + room.images[0].image_url}
+                      src={coverImageUrl}
                       alt="Room"
                       className="w-[150px] h-[150px] object-cover rounded cursor-pointer"
-                      onClick={() => onViewModal(CLOUDINARY_HEADER_IMAGE_URL + room.images![0].image_url)}
+                      onClick={() => onViewModal(coverImageUrl)}
                       onError={(e) => {
-                        if (e.currentTarget.src !== '/assets/images/photo_error2.png') {
-                          e.currentTarget.src = '/assets/images/photo_error2.png';
+                        if (e.currentTarget.src !== fallbackImage) {
+                          e.currentTarget.src = fallbackImage;
                         }
                       }}
                     />
                   ) : (
-                    <img
-                      src="/assets/images/photo_error2.png"
-                      alt="Room placeholder"
-                      className="w-[150px] h-[150px] object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                    />
-                  )}
+                    <div className="w-[150px] h-[150px] flex flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
+                      <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
+                      <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+                    </div>
+                  );
+                  })()}
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle">{highlightText(room.title, filters?.title || "")}</TableCell>
                 <TableCell className="px-4 py-3 align-middle">{highlightText(room.room_number || "-", filters?.room_number || "")}</TableCell>
@@ -173,18 +174,6 @@ const RoomTable: React.FC<RoomTableProps> = ({
           </TableBody>
         </Table>
       </div>
-      {totalItems > 0 && (
-        <div className="p-4">
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-            perPage={perPage}
-            onPerPageChange={onPerPageChange}
-            totalItems={totalItems}
-          />
-        </div>
-      )}
 
       {/* Image Modal */}
       {selectedImage && (

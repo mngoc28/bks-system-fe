@@ -175,6 +175,7 @@ const QuestionManagerPage = () => {
                     <QuestionCard
                       key={row.id}
                       question={row}
+                      searchTerm={filters.content || ""}
                       onView={handleViewDetail}
                       onEdit={(id) => navigate(ROUTERS.QUESTION_UPDATE.replace(":id", String(id)), getNavigationState())}
                       onDelete={handleAskDelete}
@@ -196,7 +197,7 @@ const QuestionManagerPage = () => {
                )}
              </>
            ) : (
-             <div className="mx-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <QuestionTable
                   rows={rows}
                   filters={filters}

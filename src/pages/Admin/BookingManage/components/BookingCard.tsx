@@ -6,20 +6,25 @@ import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/dataHelper/booking.dataHelper";
 import { Edit, Trash2, Calendar, User, Home, CreditCard, UserCheck, Clock, ArrowDown } from "lucide-react";
 import { formatDateVietnam, safeFormatDateTime } from "@/utils/dateUtils";
-import { formatPrice } from "@/utils/utils";
+import { formatPrice, highlightText } from "@/utils/utils";
 
 interface BookingCardProps {
   booking: Booking;
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  highlightTerms?: {
+    q?: string;
+    room?: string;
+    assignee?: string;
+  };
 }
 
 /**
  * Booking Card component
  * Displays a summary of a booking, including status, user info, room details, and stay duration.
  */
-const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDelete }) => {
+const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDelete, highlightTerms }) => {
   const { t } = useTranslation();
 
   const getStatusColor = (status: "pending" | "confirmed" | "cancelled" | "completed") => {
@@ -51,7 +56,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
           <User className="size-6" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">{booking.user.name}</h3>
+          <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">{highlightText(booking.user.name, highlightTerms?.q || "")}</h3>
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <Clock className="size-3" />
             {safeFormatDateTime(booking.created_at)}
@@ -68,7 +73,9 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t("bookings.table.room")}</p>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{booking.room.room_number} — {booking.room.building.name}</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+              {highlightText(booking.room.room_number, highlightTerms?.room || "")} — {highlightText(booking.room.building.name, highlightTerms?.room || "")}
+            </p>
           </div>
         </div>
 
@@ -108,7 +115,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t("bookings.table.assignee")}</p>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none">{booking.assignee || "-"}</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none">{highlightText(booking.assignee || "-", highlightTerms?.assignee || "")}</p>
           </div>
         </div>
       </div>

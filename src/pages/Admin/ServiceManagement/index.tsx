@@ -226,6 +226,7 @@ const ServiceManagement: React.FC = () => {
                                 <ServiceCard
                                     key={service.id}
                                     service={service}
+                                    searchTerm={filters.name || ""}
                                     onView={askViewService}
                                     onEdit={askEditService}
                                     onDelete={askDeleteService}
@@ -233,7 +234,7 @@ const ServiceManagement: React.FC = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="px-4">
+                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                             <ServiceTable 
                                 filtered={filtered}
                                 onView={askViewService}

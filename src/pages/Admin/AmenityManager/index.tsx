@@ -208,6 +208,7 @@ const AmenityManagement: React.FC = () => {
                     onEdit={askEdit}
                     onDelete={askDelete}
                     isHighlighted={highlightedId === m.id}
+                    searchTerm={searchName}
                   />
                 ))}
               </div>
@@ -229,7 +230,7 @@ const AmenityManagement: React.FC = () => {
               )}
             </>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm mx-4">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <AmenityTable
                     filtered={filtered}
                     page={page}

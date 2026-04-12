@@ -26,10 +26,10 @@ export const useUpdatePartnerQuery = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-      mutationFn: ({ id, data }: { id: number; data: PartnerUpdate }) => partnerApi.updatePartner(data, id),
+      mutationFn: ({ id, data }: { id: number; data: PartnerUpdate | FormData }) => partnerApi.updatePartner(data, id),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["partner"]});
-        toastSuccess(t('partner.update_service_success'))
+        toastSuccess(t('partner.update_partner_success'))
       },
       onError: () => {
         toastError(t('partner.update_partner_fail'))

@@ -3,8 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { UserProfile } from "@/dataHelper/user.dataHelper";
-import { Edit, Trash2, Mail, Phone, Key, User } from "lucide-react";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { Edit, Trash2, Mail, Phone, Key, ImageIcon } from "lucide-react";
+import { highlightText } from "@/utils/utils";
 
 interface UserCardProps {
   user: UserProfile;
@@ -13,14 +16,21 @@ interface UserCardProps {
   onDelete: (id: number) => void;
   onResetPassword: (id: number) => void;
   isCurrentUser?: boolean;
+  highlightTerms?: {
+    q?: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 /**
  * User Card
  * A visual representation of a user profile used in the management grid, providing quick access to contact info, role identification, and administrative actions.
  */
-const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onResetPassword, isCurrentUser = false }) => {
+const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onResetPassword, isCurrentUser = false, highlightTerms }) => {
   const { t } = useTranslation();
+  const avatarUrl = resolveImageUrl(user.avatar, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+  const fallbackImage = "/assets/images/photo_error2.png";
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -45,26 +55,28 @@ const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onR
       <div className="relative mb-4 mt-2">
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-400 opacity-20 blur-lg group-hover:opacity-40 transition-opacity"></div>
         <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-indigo-50 text-2xl font-black text-indigo-600 shadow-xl dark:border-slate-800">
-          {user.avatar ? (
+          {avatarUrl ? (
             <img 
-              src={user.avatar} 
+              src={avatarUrl} 
               alt={user.name} 
               className="h-full w-full object-cover" 
               onError={(e) => {
-                e.currentTarget.src = "/assets/images/photo_error2.png";
-                e.currentTarget.className = "h-full w-full object-contain p-2 bg-white";
+                if (e.currentTarget.src !== fallbackImage) {
+                  e.currentTarget.src = fallbackImage;
+                }
               }}
             />
           ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              {user.name?.[0]?.toUpperCase() || <User className="size-10" />}
+            <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200">
+              <ImageIcon className="size-8 text-gray-400" />
+              <p className="mt-1 text-[9px] text-gray-500">{t("user.no_images_yet")}</p>
             </div>
           )}
         </div>
       </div>
 
       <div className="mb-6 text-center">
-        <h3 className="mb-1 text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">{user.name || "Anonymous"}</h3>
+        <h3 className="mb-1 text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">{highlightText(user.name || "Anonymous", highlightTerms?.q || "")}</h3>
         <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">ID: {user.id}</p>
       </div>
 
@@ -74,13 +86,13 @@ const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onR
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800">
             <Mail className="size-4 text-slate-400" />
           </div>
-          <span className="truncate flex-1 font-medium" title={user.email}>{user.email}</span>
+          <span className="truncate flex-1 font-medium" title={user.email}>{highlightText(user.email, highlightTerms?.email || "")}</span>
         </div>
         <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800">
             <Phone className="size-4 text-slate-400" />
           </div>
-          <span className="font-medium">{user.phone || "-"}</span>
+          <span className="font-medium">{highlightText(user.phone || "-", highlightTerms?.phone || "")}</span>
         </div>
       </div>
 

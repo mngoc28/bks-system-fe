@@ -3,6 +3,7 @@ import { BuildingSearchSectionProps, BuildingType } from "@/dataHelper/building.
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import FilterPortal from "@/components/common/FilterPortal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
 import { ChevronUp, ChevronDown, Search, X, RotateCcw } from "lucide-react";
@@ -14,13 +15,12 @@ import { RENT_CATEGORY } from "@/constant";
  */
 const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = false, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
-  const { data: buildingTypes } = useBuildingTypesQuery();
+  const { data: buildingTypes } = useBuildingTypesQuery(open);
 
   const [areaMode, setAreaMode] = useState<"min" | "max">("max");
 
-  if (!open) return null;
-
   return (
+    <FilterPortal open={open} onClose={onClose}>
     <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
@@ -189,15 +189,10 @@ const BuildingSearchSection: React.FC<BuildingSearchSectionProps> = ({ open = fa
             <RotateCcw className="size-4" />
             {t("common.reset")}
           </Button>
-          <Button
-            onClick={onClose}
-            className="h-10 gap-2 rounded-xl bg-slate-800 px-6 text-white hover:bg-slate-900 shadow-lg shadow-slate-200"
-          >
-            {t("common.apply_filter", { defaultValue: "Áp dụng bộ lọc" })}
-          </Button>
         </div>
       </div>
     </div>
+    </FilterPortal>
   );
 };
 

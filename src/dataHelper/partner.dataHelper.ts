@@ -26,6 +26,7 @@ export interface PartnerInfor {
 export interface PartnerFilter {
     user_name?: string;
     company_name?: string;
+    status?: string;
     province_name?: string;
     ward_name?: string;
     phone?: string;
@@ -73,6 +74,8 @@ export interface PartnerUpdateResponse {
 
 export interface PartnerUpdate {
     company_name?: string;
+    province_id?: number;
+    ward_id?: number;
     phone?: string;
     address?: string;
     website?: string;
@@ -107,6 +110,7 @@ export interface PartnerSearchSectionProps {
     value:{
         user_name?: string;
         company_name?: string;
+        status?: string;
         province_name?: string;
         ward_name?: string;
         phone?: string;
@@ -116,6 +120,7 @@ export interface PartnerSearchSectionProps {
     onChange: (newValue: {
         user_name?: string;
         company_name?: string;
+        status?: string;
         province_name?: string;
         ward_name?: string;
         phone?: string;

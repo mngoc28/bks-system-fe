@@ -10,18 +10,18 @@ const NewsTableHeader: React.FC<NewsTableHeaderProps> = ({ onSort, sortField, so
     const renderSortIcon = (field: string) => {
         if(field === sortField) {
             if(sortDirection === 'asc') {
-                return <ChevronUp className="size-4 text-slate-700" />
+                return <ChevronUp className="size-4" />
             } else if(sortDirection === 'desc') {
-                return <ChevronDown className="size-4 text-slate-700" />
+                return <ChevronDown className="size-4" />
             }
         }
-        return <ChevronsUpDown className="size-4 text-slate-500" />
+        return <ChevronsUpDown className="size-4" />
     }
     // render sortable header
     const renderSortableHeader = (field: string, label: string) => {
        return (
         <TableHead
-            className="cursor-pointer select-none whitespace-nowrap px-4 py-3 text-center text-slate-700 font-semibold"
+            className="cursor-pointer select-none whitespace-nowrap px-4 py-3 text-slate-700"
             onClick={() => onSort(field)}
             aria-sort={sortField === field ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
         >
@@ -36,7 +36,7 @@ const NewsTableHeader: React.FC<NewsTableHeaderProps> = ({ onSort, sortField, so
       <TableHeader className="sticky top-0 z-10 bg-slate-100">
         <tr className="border-b border-gray-300">
             {renderSortableHeader("id", t("news.table_id"))}
-            <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700 font-semibold text-center">
+                        <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700 text-center">
                 <span className="inline-flex items-center gap-1">
                   {t("news.table_image")}
                 </span>
@@ -46,7 +46,7 @@ const NewsTableHeader: React.FC<NewsTableHeaderProps> = ({ onSort, sortField, so
             {/* {renderSortableHeader("summary", t("news.table_summary"))} */}
             {renderSortableHeader("published_at", t("news.table_published_at"))}           
             {renderSortableHeader("status", t("news.table_status"))}
-            <TableHead className="cursor-pointer whitespace-nowrap border-r border-slate-200 px-4 py-3 text-center text-slate-700 font-semibold">
+            <TableHead className="whitespace-nowrap px-4 py-3 text-center text-slate-700">
                 {t("common.actions")}
             </TableHead>
         </tr>

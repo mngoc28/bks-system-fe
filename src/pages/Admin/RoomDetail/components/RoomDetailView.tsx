@@ -7,6 +7,7 @@ import { RoomDetailViewProps } from "@/dataHelper/room.dataHelper";
 import { RoomImage } from "@/dataHelper/roomImage.dataHelper";
 import { usePricePackagesQuery } from "@/hooks/usePricePackageQuery";
 import { useRoomImagesQuery } from "@/hooks/useRoomImageQuery";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { ArrowLeft, DollarSign, Edit, FileText, Home, ImageIcon, MapPin, Square, Users, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -315,14 +316,14 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
                 .map((image: RoomImage) => (
                   <div key={image.id} className="aspect-[4/3] relative group">
                     <img
-                      src={CLOUDINARY_HEADER_IMAGE_URL + image.image_url}
+                      src={resolveImageUrl(image.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png"}
                       alt={`${t("rooms.image")} ${image.sort}`}
                       className="w-full h-full object-cover rounded-lg border shadow-sm hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedImage(CLOUDINARY_HEADER_IMAGE_URL + image.image_url)}
+                      onClick={() => setSelectedImage(resolveImageUrl(image.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png")}
                     />
                     {/* Sort number badge */}
                     <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm font-medium">
-                      #{image.sort}
+                      #{image.sort > 0 ? image.sort : 1}
                     </div>
                   </div>
                 ))}

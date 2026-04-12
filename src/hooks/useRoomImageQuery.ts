@@ -9,7 +9,13 @@ export const useRoomImagesQuery = (roomId: number) => {
         queryKey: ["room-images", roomId],
         queryFn: async () => {
             const response = await roomImageApi.getByRoomId(roomId);
-            return response.data;
+            if (Array.isArray(response)) {
+                return response;
+            }
+            if (Array.isArray((response as any)?.data)) {
+                return (response as any).data;
+            }
+            return [];
         },
         enabled: !!roomId,
     });

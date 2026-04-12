@@ -6,6 +6,6 @@ export const partnerApi = {
         axiosClient.get("admin/partner/search", { params: data}),
     getPartnerById: (id: number): Promise<PartnerDetailResponse> =>
         axiosClient.get(`admin/partner/${id}`),
-    updatePartner: (data: PartnerUpdate, id: number): Promise<PartnerUpdateResponse> =>
+    updatePartner: (data: PartnerUpdate | FormData, id: number): Promise<PartnerUpdateResponse> =>
         axiosClient.post(`admin/partner/${id}`, data),
 }

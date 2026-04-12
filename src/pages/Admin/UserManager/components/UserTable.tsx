@@ -5,18 +5,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { UserTableProps } from "@/dataHelper/user.dataHelper";
 import { safeFormatDateTime } from "@/utils/dateUtils";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { getStatusClass, highlightText, statusNumberToText } from "@/utils/utils";
-import { ImageIcon, ChevronDown, ChevronsUpDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, ChevronUp, ImageIcon, X } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
 const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highlightedId, onView, onEdit, onDelete, onResetPassword, sortField, sortDirection, toggleSort, onViewModal, selectedImage, filters }) => {
   const { t } = useTranslation();
   return (
-    <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
-      <Table className="min-w-max text-sm text-slate-700">
-        <TableHeader className="sticky top-0 z-10 bg-slate-100">
-          <tr className="border-b border-gray-300">
+    <div className="flex flex-1 flex-col">
+      <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+        <Table className="min-w-max text-sm text-slate-700">
+          <TableHeader className="sticky top-0 z-10 bg-slate-100">
+            <tr className="border-b border-gray-300">
             <TableHead
               className="cursor-pointer select-none whitespace-nowrap px-4 py-3 text-center text-slate-700"
               onClick={() => toggleSort("id")}
@@ -26,12 +28,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_id")}
               {sortField === "id" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
@@ -45,12 +47,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_name")}
               {sortField === "name" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
@@ -63,12 +65,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_email")}
               {sortField === "email" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
@@ -81,12 +83,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_phone")}
               {sortField === "phone" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
@@ -99,12 +101,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_role")}
               {sortField === "role" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
@@ -117,12 +119,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_status")}
               {sortField === "status" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
@@ -135,41 +137,45 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
               {t("user.table_created_at")}
               {sortField === "created_at" ? (
                 sortDirection === "asc" ? (
-                  <ChevronUp className="size-4 text-slate-700" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="size-4 text-slate-700" />
+                  <ChevronDown className="size-4" />
                 )
               ) : (
-                <ChevronsUpDown className="size-4 text-slate-500" />
+                <ChevronsUpDown className="size-4" />
               )}
             </span>
           </TableHead>
           <TableHead className="px-4 py-3 text-slate-700">{t("user.table_actions")}</TableHead>
-        </tr>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow
-            key={user.id}
-            className={`hover:cursor-pointer hover:bg-muted/50 h-[140px] ${highlightedId === user.id ? "bg-yellow-50 animate-pulse" : ""}`}
-            onClick={() => onView(user.id)}
-          >
+          </tr>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => {
+            const avatarUrl = resolveImageUrl(user.avatar, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+            const fallbackImage = "/assets/images/photo_error2.png";
+
+            return (
+            <TableRow
+              key={user.id}
+              className={`h-[140px] hover:cursor-pointer hover:bg-muted/50 ${highlightedId === user.id ? "bg-yellow-50 animate-pulse" : ""}`}
+              onClick={() => onView(user.id)}
+            >
             <TableCell className="px-4 py-3 text-center align-middle">{user.id}</TableCell>
             <TableCell className="px-4 py-3 align-middle">
-              {user.avatar ? (
+              {avatarUrl ? (
                 <img
-                  src={CLOUDINARY_HEADER_IMAGE_URL + user.avatar}
+                  src={avatarUrl}
                   alt={user.name}
                   className="w-[150px] h-[150px] rounded cursor-pointer object-cover"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onViewModal(CLOUDINARY_HEADER_IMAGE_URL + user.avatar)}
-                  }
+                    onViewModal(e.currentTarget.src);
+                  }}
                   onError={(e) => {
-                        if (e.currentTarget.src !== '/assets/images/photo_error2.png') {
-                          e.currentTarget.src = '/assets/images/photo_error2.png';
-                        }
-                      }}
+                    if (e.currentTarget.src !== fallbackImage) {
+                      e.currentTarget.src = fallbackImage;
+                    }
+                  }}
                 />
               ) : (
                 <div className="text-center bg-gray-200 rounded-lg w-[150px] h-[150px] flex flex-col items-center justify-center">
@@ -201,12 +207,16 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
                 onResetPassword={() => onResetPassword(user.id)}
                 isDisabledEdit={user.email === currentUserEmail}
                 isDisabledDelete={user.email === currentUserEmail}
+                viewLabel={t("user.actions_view_and_edit")}
+                hideEdit={true}
               />
             </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+            </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      </div>
 
     {/* Image Modal */}
     {selectedImage && (

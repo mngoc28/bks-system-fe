@@ -23,6 +23,7 @@ export interface UploadRoomImageProps {
 export interface FilePreview {
   file: File;
   url: string;
+  imageType?: number;
   error?: string;
 }
 
@@ -30,13 +31,6 @@ export interface FilePreview {
 export interface RoomImageListProps {
   roomId: number;
   onSave?: (config: { save: () => void; hasChanges: boolean }) => void;
-}
-
-// Props for the file preview component
-export interface FilePreview {
-  file: File;
-  url: string;
-  error?: string;
 }
 
 // Props for a sortable item component representing a room image

@@ -2,7 +2,7 @@ import React from "react";
 import EmptyPage from "@/components/EmptyPage";
 import { BuildingImageEditFormProps, BuildingImageEditFormRef, buildingImage } from "@/dataHelper/buildingImage.dataHelper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ImageIcon, Loader2 } from "lucide-react";
+import { ImageIcon, Loader2, CheckSquare, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BUILDING_IMAGE_TYPE, CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import Lottie from "lottie-react";
@@ -13,10 +13,13 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { SortableImageItem } from "@/components/ui/sortableItem";
 import { useUpdateBuildingImageSortMutation } from "@/hooks/useBuildingImageQuery";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingImageEditFormProps>(
-    ({ images, isLoadingData, isErrorData, updatingImageIds = new Set() }, ref) => {
+    ({ images, isLoadingData, isErrorData, updatingImageIds = new Set(), onStateChange, onDeleteSelected, isBusy = false }, ref) => {
         const { t } = useTranslation();
         const [updatedImages, setUpdatedImages] = React.useState<buildingImage[]>(images || []);
         const [selectedImages, setSelectedImages] = React.useState<Set<number>>(new Set());
@@ -26,7 +29,9 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
         const [_, setListIdsSort] = React.useState<number[]>([]);
         const imagesLightbox = updatedImages
             .filter((image): image is buildingImage & { image_url: string } => Boolean(image.image_url))
-            .map((image) => ({ src: CLOUDINARY_HEADER_IMAGE_URL + '/' + image.image_url }));
+            .map((image) => ({
+                src: resolveImageUrl(image.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png"
+            }));
         let indexImage = 1;
 
         // handle set updated images
@@ -40,11 +45,32 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
         React.useImperativeHandle(ref, () => ({
             getUpdatedImages: () => updatedImages,
             getSelectedImages: () => Array.from(selectedImages),
+            selectAllImages: () => {
+                setSelectedImages(new Set(updatedImages.map((img) => img.id)));
+            },
+            clearSelectedImages: () => {
+                setSelectedImages(new Set());
+            },
             resetImages: () => {
-                setUpdatedImages([]);
+                setUpdatedImages(images || []);
                 setSelectedImages(new Set());
             }
         }));
+
+        React.useEffect(() => {
+            if (!onStateChange) return;
+
+            const hasChanges = updatedImages.some((updatedImage) => {
+                const originalImage = images.find((img) => img.id === updatedImage.id);
+                if (!originalImage) return false;
+                return (
+                    originalImage.image_type !== updatedImage.image_type ||
+                    originalImage.sort !== updatedImage.sort
+                );
+            });
+
+            onStateChange({ hasChanges, selectedCount: selectedImages.size, totalCount: updatedImages.length });
+        }, [images, onStateChange, selectedImages.size, updatedImages]);
 
         // handle image type change
         const handleImageTypeChange = (imageId: number, newImageType: string) => {
@@ -118,6 +144,35 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                 </>}
                 {updatedImages && !isErrorData && (
                     <>
+                        <div className="flex gap-2 mb-4 justify-end">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    if (updatedImages.length === selectedImages.size) {
+                                        setSelectedImages(new Set());
+                                        return;
+                                    }
+                                    setSelectedImages(new Set(updatedImages.map((img) => img.id)));
+                                }}
+                                title={updatedImages.length === selectedImages.size ? t("common.deselect_all") : t("common.select_all")}
+                                className="bg-green-500 hover:bg-green-600 text-white"
+                                disabled={updatedImages.length === 0 || isBusy}
+                            >
+                                <CheckSquare className="size-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onDeleteSelected?.()}
+                                disabled={selectedImages.size === 0 || isBusy}
+                                title={t("common.delete")}
+                                className="bg-red-500 hover:bg-red-600 text-white"
+                            >
+                                <Trash2 className="size-4" />
+                            </Button>
+                        </div>
+
                         <div className="grid grid-cols-1 gap-2 lg:gap-4 relative">
                             <DndContext
                                 sensors={sensors}
@@ -125,7 +180,7 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                 onDragEnd={handleDragEnd}
                             >
                                 <SortableContext items={updatedImages.map((img) => img.id)}>
-                                    <div className="flex flex-wrap justify-start items-center gap-2 lg:gap-4 relative">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
                                         {updatedImages.map((image) => {
                                             const currentIndex = indexImage++;
                                             const imageTypeKey = (image.image_type || 1);
@@ -133,17 +188,26 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                             return (
                                                 <SortableImageItem key={image.id} id={image.id}>
                                                     <div className="relative">
-                                                        <div className="grid grid-rows border border-gray-500 rounded-md relative">
-                                                            <div className="absolute size-6 bg-black opacity-75 rounded-full flex items-center justify-center mt-2 ml-2">
-                                                                <div className="text-[14px] text-center font-semibold text-white">
+                                                        <div className={`relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${selectedImages.has(image.id) ? "border-4 border-red-500" : "border border-gray-200"}`}>
+                                                            <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm font-medium z-10">
+                                                                <div className="text-[14px] text-center font-semibold text-white leading-none">
                                                                     {currentIndex}
                                                                 </div>
                                                             </div>
+
+                                                            <div className="absolute top-2 right-2 z-10">
+                                                                <Checkbox
+                                                                    checked={selectedImages.has(image.id)}
+                                                                    onCheckedChange={(checked) => handleCheckboxChange(image.id, checked as boolean)}
+                                                                    onPointerDown={(e) => e.stopPropagation()}
+                                                                />
+                                                            </div>
+
                                                             {image.image_url !== null && image.image_url !== "" ? (
                                                                 <img
-                                                                    src={CLOUDINARY_HEADER_IMAGE_URL + '/' + image.image_url}
+                                                                    src={resolveImageUrl(image.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png"}
                                                                     alt={image.id_image_cloudinary}
-                                                                    className="md:w-[250px] md:h-[200px] w-[100px] h-[100px] object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                                                    className="w-full aspect-[4/3] object-cover cursor-pointer hover:opacity-80 transition-opacity"
                                                                     onError={(e) => (e.currentTarget.src = "/assets/images/photo_error2.png")}
                                                                     onClick={() => {
                                                                         const filteredImages = updatedImages.filter(
@@ -157,48 +221,30 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                                                     }}
                                                                 />
                                                             ) : (
-                                                                <div className="md:w-[250px] md:h-[200px] w-[100px] h-[100px] text-center flex flex-col items-center justify-center bg-gray-200 p-4">
+                                                                <div className="w-full aspect-[4/3] text-center flex flex-col items-center justify-center bg-gray-200 p-4">
                                                                     <ImageIcon className="size-10 mx-auto mb-4 text-gray-400" />
                                                                     <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
                                                                 </div>
                                                             )
                                                             }
-                                                            {/* Info Panel */}
-                                                            <div>
-                                                                <div className="flex flex-col justify-between items-start w-full p-2">
-                                                                    <div className="flex flex-row justify-between items-start gap-3 w-full">
-                                                                        <div className="w-full">
-                                                                            <div className="flex flex-row justify-between items-center mb-2">
-                                                                                <label className="text-sm font-medium">
-                                                                                    {t("buildings.image_type")}
-                                                                                </label>
 
-                                                                                <div className="flex flex-row justify-end">
-                                                                                    <input
-                                                                                        type="checkbox"
-                                                                                        checked={selectedImages.has(image.id)}
-                                                                                        onChange={(e) => handleCheckboxChange(image.id, e.target.checked)}
-                                                                                        className="checkbox checkbox-info size-6"
-                                                                                    />
-                                                                                </div>
-                                                                            </div>
-                                                                            <Select
-                                                                                value={image.image_type?.toString() || "1"}
-                                                                                onValueChange={(value) => handleImageTypeChange(image.id, value)}
-                                                                            >
-                                                                                <SelectTrigger className="w-full h-auto">
-                                                                                    <SelectValue>{t(imageTypeValue)}</SelectValue>
-                                                                                </SelectTrigger>
-                                                                                <SelectContent className="w-full text-black">
-                                                                                    {Object.entries(BUILDING_IMAGE_TYPE).map(([key, value]) => (
-                                                                                        <SelectItem key={key} value={key}>{t(value)}</SelectItem>
-                                                                                    ))}
-                                                                                </SelectContent>
-                                                                            </Select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                </div>
+                                                            <div className="p-2 bg-white">
+                                                                <label className="text-sm font-medium block mb-2">
+                                                                    {t("buildings.image_type")}
+                                                                </label>
+                                                                <Select
+                                                                    value={image.image_type?.toString() || "1"}
+                                                                    onValueChange={(value) => handleImageTypeChange(image.id, value)}
+                                                                >
+                                                                    <SelectTrigger className="w-full">
+                                                                        <SelectValue>{t(imageTypeValue)}</SelectValue>
+                                                                    </SelectTrigger>
+                                                                    <SelectContent className="w-full text-black">
+                                                                        {Object.entries(BUILDING_IMAGE_TYPE).map(([key, value]) => (
+                                                                            <SelectItem key={key} value={key}>{t(value)}</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
                                                             </div>
                                                         </div>
 

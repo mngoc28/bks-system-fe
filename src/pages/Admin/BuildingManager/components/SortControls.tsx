@@ -10,7 +10,7 @@ const SortControls: React.FC<SortControlsProps> = ({ hasSort, onClearSort }) => 
     <div>
       <button
         type="button"
-        className="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white px-2 py-2 rounded-md text-sm font-medium"
+        className="flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
         onClick={onClearSort}
       >
         {t("buildings.delete_sort")}

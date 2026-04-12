@@ -6,6 +6,7 @@ import { safeFormatDateTime } from "@/utils/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import RowActions from "@/components/RowActions/RowActions";
 import { formatPrice } from "@/utils/utils";
+import { highlightText } from "@/utils/utils";
 
 /**
  * Booking Table Component
@@ -16,6 +17,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  filters,
 }) => {
   const { t } = useTranslation();
 
@@ -35,55 +37,47 @@ const BookingTable: React.FC<BookingTableProps> = ({
   };
 
   return (
-    <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
-      <Table className="min-w-max text-sm text-slate-700">
-        <TableHeader className="sticky top-0 z-10 bg-slate-100">
-          <tr className="border-b border-gray-300">
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold">ID</TableHead>
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold">{t("bookings.table.customer") || "Khách hàng"}</TableHead>
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold">{t("bookings.table.room") || "Phòng"}</TableHead>
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold">{t("bookings.table.duration") || "Thời gian"}</TableHead>
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold">{t("bookings.table.price") || "Giá"}</TableHead>
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold">{t("bookings.table.status") || "Trạng thái"}</TableHead>
-            <TableHead className="px-4 py-3 text-slate-700 font-semibold text-center">{t("common.customize")}</TableHead>
-          </tr>
-        </TableHeader>
-        <TableBody>
-          {filtered.map((booking) => (
-            <TableRow key={booking.id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
-              <TableCell className="px-4 py-4 font-bold text-slate-400">#{booking.id}</TableCell>
-              <TableCell className="px-4 py-4">
-                <div className="font-bold text-slate-800">{booking.user.name}</div>
-              </TableCell>
-              <TableCell className="px-4 py-4">
-                <div className="font-bold text-indigo-700">{booking.room.room_number}</div>
-                <div className="text-xs text-slate-400 font-semibold">{booking.room.building.name}</div>
-              </TableCell>
-              <TableCell className="px-4 py-4">
-                <div className="text-xs font-bold text-slate-700">
+    <div className="flex flex-1 flex-col">
+      <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+        <Table className="min-w-max text-sm text-slate-700">
+          <TableHeader className="sticky top-0 z-10 bg-slate-100">
+            <tr className="border-b border-gray-300">
+              <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700">ID</TableHead>
+              <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700">{t("bookings.table.customer") || "Khách hàng"}</TableHead>
+              <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700">{t("bookings.table.room") || "Phòng"}</TableHead>
+              <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700">{t("bookings.table.duration") || "Thời gian"}</TableHead>
+              <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700">{t("bookings.table.price") || "Giá"}</TableHead>
+              <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700">{t("bookings.table.status") || "Trạng thái"}</TableHead>
+              <TableHead className="whitespace-nowrap px-4 py-3 text-center text-slate-700">{t("common.customize")}</TableHead>
+            </tr>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((booking) => (
+              <TableRow key={booking.id} className="hover:bg-muted/50">
+                <TableCell className="px-4 py-3 align-middle text-slate-700">{booking.id}</TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(booking.user.name, filters.q || "")}</TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">
+                  <div>{highlightText(booking.room.room_number, filters.room || "")}</div>
+                  <div className="text-xs text-slate-500">{highlightText(booking.room.building.name, filters.room || "")}</div>
+                </TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">
                   {safeFormatDateTime(booking.start_date)} - {safeFormatDateTime(booking.end_date)}
-                </div>
-              </TableCell>
-              <TableCell className="px-4 py-4">
-                <div className="font-bold text-slate-900">{formatPrice(booking.price)}</div>
-              </TableCell>
-              <TableCell className="px-4 py-4">
-                {getStatusBadge(booking.status)}
-              </TableCell>
-              <TableCell className="px-4 py-4">
-                <div className="flex justify-center">
+                </TableCell>
+                <TableCell className="px-4 py-3 align-middle text-slate-700">{formatPrice(booking.price)}</TableCell>
+                <TableCell className="px-4 py-3 align-middle">{getStatusBadge(booking.status)}</TableCell>
+                <TableCell className="px-4 py-3 text-center align-middle">
                   <RowActions
                     id={booking.id}
                     onView={(id) => onView(id)}
                     onEdit={(id) => onEdit(id)}
                     onDelete={(id) => onDelete(id)}
                   />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

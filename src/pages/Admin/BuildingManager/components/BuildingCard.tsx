@@ -4,26 +4,22 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Building, BuildingCardProps } from "@/dataHelper/building.dataHelper";
-import { Map, MapPin, Layers, Maximize2, Calendar, Edit, Trash2 } from "lucide-react";
+import { Map, MapPin, Layers, Maximize2, Calendar, Edit, Trash2, ImageIcon } from "lucide-react";
 import { useGetUserProfileByIdQuery } from "@/hooks/useUserQuery";
-import { useImagesByBuildingIdQuery } from "@/hooks/useBuildingImageQuery";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { safeFormatDateTime } from "@/utils/dateUtils";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { highlightText } from "@/utils/utils";
 
 /**
  * Building Card component
  * Displays a summary of building information with thumbnail, key specs, and action buttons.
  */
-const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building) => void }> = ({ building, onEdit, onDelete, onView, isDeleting = false }) => {
+const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building) => void }> = ({ building, onEdit, onDelete, onView, isDeleting = false, highlightTerms }) => {
   const { t } = useTranslation();
   const { data: createdByData } = useGetUserProfileByIdQuery(building.created_by);
-  const { data: imagesData } = useImagesByBuildingIdQuery(building.id);
-
-  const mainImage = React.useMemo(() => {
-    return imagesData?.data?.find(img => img.sort === 1)?.image_url;
-  }, [imagesData]);
-
-  const imageUrl = mainImage ? `${CLOUDINARY_HEADER_IMAGE_URL}/${mainImage}` : null;
+  const imageUrl = resolveImageUrl(building.cover_image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+  const fallbackImage = "/assets/images/photo_error2.png";
 
   return (
     <Card
@@ -32,16 +28,23 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
     >
       {/* 16/9 Image Section */}
       <div className="relative aspect-[16/9] w-full overflow-hidden">
-        <img
-          src={imageUrl || "/assets/images/photo_error2.png"}
-          alt={building.name}
-          className={`h-full w-full transition-transform duration-500 group-hover:scale-110 ${imageUrl ? 'object-cover' : 'object-contain bg-white p-4'}`}
-          onError={(e) => { 
-            e.currentTarget.src = "/assets/images/photo_error2.png"; 
-            e.currentTarget.className = e.currentTarget.className.replace('object-cover', 'object-contain') + ' bg-white p-4';
-            e.currentTarget.parentElement?.classList.add('bg-white');
-          }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={building.name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              if (e.currentTarget.src !== fallbackImage) {
+                e.currentTarget.src = fallbackImage;
+              }
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+          </div>
+        )}
 
         {/* Action Overlay */}
         <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100">
@@ -76,7 +79,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
       <div className="p-5">
         <div className="mb-2 flex items-start justify-between gap-2">
           <h3 className="truncate text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors" title={building.name}>
-            {building.name}
+            {highlightText(building.name, highlightTerms?.name || "")}
           </h3>
           <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500 whitespace-nowrap">
             ID: {building.id}
@@ -86,7 +89,9 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
         <div className="mb-4 space-y-2 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <Map className="size-3.5 text-indigo-500 shrink-0" />
-            <span className="truncate">{building.province_name} - {building.ward_name}</span>
+            <span className="truncate">
+              {highlightText(building.province_name, highlightTerms?.province_name || "")} - {highlightText(building.ward_name, highlightTerms?.ward_name || "")}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 opacity-80 underline decoration-slate-200 underline-offset-4">
             <MapPin className="size-3.5 text-slate-400 shrink-0" />

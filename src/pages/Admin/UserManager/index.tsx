@@ -7,7 +7,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { Filter, UserPlus } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AddUserDialog, DeleteConfirmDialog, EditUserDialog, ResetPasswordDialog, UserSearchSection, UsersEmptyState, UserCard, UserTable } from "./components";
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
@@ -20,12 +20,14 @@ import { ViewMode } from "@/components/LayoutToggle";
 const UserManagement: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | undefined>(undefined);
-  const [searchQ, setSearchQ] = useState("");
-  const [searchEmail, setSearchEmail] = useState("");
-  const [searchPhone, setSearchPhone] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [searchQ, setSearchQ] = useState(searchParams.get("q") || "");
+  const [searchEmail, setSearchEmail] = useState(searchParams.get("email") || "");
+  const [searchPhone, setSearchPhone] = useState(searchParams.get("phone") || "");
   const currentUserEmail = useUserStore((state) => state.userEmail);
   
   // View mode state with localStorage persistence
@@ -65,18 +67,24 @@ const UserManagement: React.FC = () => {
 
   // filters state
   const [filters, setFilters] = useState<UserFilters>({
-    q: "",
-    email: "",
-    role: "",
-    phone: "",
-    status: "",
-    created_at_from: "",
-    created_at_to: "",
-    page: DEFAULT_PAGE,
-    per_page: DEFAULT_CARD_LIMIT,
+    q: searchParams.get("q") || "",
+    email: searchParams.get("email") || "",
+    role: searchParams.get("role") || "",
+    phone: searchParams.get("phone") || "",
+    status: searchParams.get("status") || "",
+    created_at_from: searchParams.get("created_at_from") || "",
+    created_at_to: searchParams.get("created_at_to") || "",
+    page: Number(searchParams.get("page") || DEFAULT_PAGE),
+    per_page: Number(searchParams.get("per_page") || DEFAULT_CARD_LIMIT),
     sort_field: undefined,
     sort_direction: undefined,
   });
+
+  useEffect(() => {
+    if (searchParams.get("source") === "dashboard") {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   const { data: apiData, isLoading } = useGetAllUsersQuery(filters);
 
@@ -318,6 +326,11 @@ const UserManagement: React.FC = () => {
                 <UserCard
                   key={user.id}
                   user={user}
+                  highlightTerms={{
+                    q: filters.q || "",
+                    email: filters.email || "",
+                    phone: filters.phone || "",
+                  }}
                   isCurrentUser={user.email === currentUserEmail}
                   onView={handleViewUser}
                   onEdit={askEdit}
@@ -327,7 +340,7 @@ const UserManagement: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="px-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <UserTable
                     users={filtered}
                     currentUserEmail={currentUserEmail || ""}
@@ -342,8 +355,8 @@ const UserManagement: React.FC = () => {
                         setSortField(field);
                         setSortDirection(isAsc ? "desc" : "asc");
                     }}
-                    onViewModal={() => {}}
-                    selectedImage={null}
+                    onViewModal={setSelectedImage}
+                    selectedImage={selectedImage}
                     filters={filters}
                     highlightedId={null}
                 />

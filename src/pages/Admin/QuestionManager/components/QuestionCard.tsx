@@ -5,19 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChatbotRecord } from "@/dataHelper/chatbot.dataHelper";
 import { Edit, Trash2, MessageSquare } from "lucide-react";
+import { highlightText } from "@/utils/utils";
 
 interface QuestionCardProps {
   question: ChatbotRecord;
   onView: (id: number) => void;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
+  searchTerm?: string;
 }
 
 /**
  * Question Card
  * Summarizes a chatbot question's content, type, and answer count in a grid layout, with quick actions for management.
  */
-const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, onDelete }) => {
+const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, onDelete, searchTerm }) => {
   const { t } = useTranslation();
 
   return (
@@ -38,7 +40,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
         className="mb-4 line-clamp-3 text-lg font-black leading-tight text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
         title={question.content}
       >
-        {question.content}
+        {highlightText(question.content, searchTerm || "")}
       </h3>
 
       <div className="mb-6 space-y-3 flex-1 border-t border-slate-50 pt-4 dark:border-slate-800">

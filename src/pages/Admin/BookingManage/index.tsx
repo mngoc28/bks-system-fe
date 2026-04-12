@@ -7,6 +7,7 @@ import { mapBookingStatus } from "@/utils/utils";
 import { Filter, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { BookingDetailDialog, BookingEditDialog, BookingSearchSection, BookingsEmptyState, DeleteConfirmDialog, BookingCard } from "./components";
 import BookingCreateDialog from "./components/BookingCreateDialog";
 import { Spinner } from "@/components/ui/spinner";
@@ -20,6 +21,7 @@ import BookingTable from "./components/BookingTable";
  */
 export default function BookingManagePage() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -45,20 +47,26 @@ export default function BookingManagePage() {
 
   // Filters state
   const [filters, setFilters] = useState<BookingFilters>({
-    q: "",
-    room: "",
-    status: "",
-    start_date: "",
-    end_date: "",
-    price_min: "",
-    price_max: "",
-    assignee: "",
+    q: searchParams.get("q") || "",
+    room: searchParams.get("room") || "",
+    status: searchParams.get("status") || "",
+    start_date: searchParams.get("start_date") || "",
+    end_date: searchParams.get("end_date") || "",
+    price_min: searchParams.get("price_min") || "",
+    price_max: searchParams.get("price_max") || "",
+    assignee: searchParams.get("assignee") || "",
   });
 
   // Data state
   const [data, setData] = useState<Booking[]>([]);
-  const [page, setPage] = useState<number>(DEFAULT_PAGE);
-  const [perPage, setPerPage] = useState<number>(DEFAULT_CARD_LIMIT);
+  const [page, setPage] = useState<number>(Number(searchParams.get("page") || DEFAULT_PAGE));
+  const [perPage, setPerPage] = useState<number>(Number(searchParams.get("per_page") || DEFAULT_CARD_LIMIT));
+
+  useEffect(() => {
+    if (searchParams.get("source") === "dashboard") {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   // If any client-aggregation filters are active, fetch a larger page from server and paginate locally.
   const needsClientAggregation = Boolean(
@@ -252,6 +260,11 @@ export default function BookingManagePage() {
                   <BookingCard
                     key={m.id}
                     booking={m}
+                    highlightTerms={{
+                      q: filters.q || "",
+                      room: filters.room || "",
+                      assignee: filters.assignee || "",
+                    }}
                     onView={(id: string) => {
                       setSelectedId(Number(id));
                       const row = data.find((x) => x.id === id);
@@ -290,7 +303,7 @@ export default function BookingManagePage() {
               )}
             </>
           ) : (
-            <div className="mx-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <BookingTable
                     filtered={pageRows}
                     onView={(id: string) => {
@@ -313,7 +326,7 @@ export default function BookingManagePage() {
                     filters={filters}
                 />
                 {totalItems > 0 && (
-                <div className="p-4 border-t border-slate-100">
+                <div className="border-t border-slate-100 p-4">
                   <Pagination
                     currentPage={page}
                     totalPages={totalPages}
@@ -324,7 +337,7 @@ export default function BookingManagePage() {
                       setPage(DEFAULT_PAGE);
                     }}
                     totalItems={totalItems}
-                    perPageOptions={[24, 48, 96]}
+                    perPageOptions={[12, 24, 48]}
                   />
                 </div>
               )}
