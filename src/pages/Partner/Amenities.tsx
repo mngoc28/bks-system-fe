@@ -180,7 +180,7 @@ const Amenities: React.FC = () => {
       fetchAmenities();
       setIsModalOpen(false);
       toastSuccess('Đã lưu tiện ích.');
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi lưu tiện ích.');
     }
   };
@@ -190,7 +190,7 @@ const Amenities: React.FC = () => {
       await partnerService.deleteAmenity(id);
       fetchAmenities();
       toastSuccess('Đã xóa tiện ích.');
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi xóa tiện ích.');
     }
   };
@@ -223,53 +223,53 @@ const Amenities: React.FC = () => {
       
       toastSuccess(`Đã gán tiện ích "${editingAmenity.name}" cho ${roomIds.length} phòng.`);
       setIsModalOpen(false);
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi gán tiện ích hàng loạt.');
     } finally {
       setIsAssigning(false);
     }
   };
 
-  if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+  if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div className="flex items-center gap-6">
           <BuildingSelector 
             selectedId={filterBuildingId} 
             onSelect={setFilterBuildingId} 
             className="w-64"
           />
-          <div className="h-10 w-[1px] bg-gray-100 hidden md:block"></div>
+          <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý Tiện ích</h1>
-            <p className="text-gray-500 mt-1">Danh mục các tiện ích đi kèm trong phòng lưu trú.</p>
+            <p className="mt-1 text-gray-500">Danh mục các tiện ích đi kèm trong phòng lưu trú.</p>
           </div>
         </div>
-        <Button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 font-bold">
+        <Button onClick={() => handleOpenModal()} className="h-10 bg-blue-600 px-4 font-bold text-white hover:bg-blue-700">
           <Plus size={18} className="mr-2" /> Thêm Tiện ích
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {amenities.map((item) => {
               const Icon = iconMap[String(item.icon)] || Wifi;
               return (
-                <div key={item.id} className="group p-4 border border-gray-100 rounded-xl bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all">
+                <div key={item.id} className="group rounded-xl border border-gray-100 bg-slate-50/50 p-4 transition-all hover:border-blue-200 hover:bg-white hover:shadow-md">
                   <div className="flex items-start justify-between">
-                    <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <div className="rounded-lg bg-white p-2 text-blue-600 shadow-sm transition-colors group-hover:bg-blue-600 group-hover:text-white">
                       <Icon size={24} />
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button onClick={() => handleOpenModal(item)} variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-amber-600"><Edit size={14} /></Button>
-                      <Button onClick={() => handleDelete(item.id)} variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-red-600"><Trash2 size={14} /></Button>
+                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Button onClick={() => handleOpenModal(item)} variant="ghost" size="icon" className="size-7 text-gray-400 hover:text-amber-600"><Edit size={14} /></Button>
+                      <Button onClick={() => handleDelete(item.id)} variant="ghost" size="icon" className="size-7 text-gray-400 hover:text-red-600"><Trash2 size={14} /></Button>
                     </div>
                   </div>
                   <div className="mt-4">
                     <h3 className="font-bold text-gray-800">{item.name}</h3>
-                    <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-bold">Category: {item.category || 'N/A'}</p>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Category: {item.category || 'N/A'}</p>
                   </div>
                 </div>
               );
@@ -283,7 +283,7 @@ const Amenities: React.FC = () => {
         title={editingAmenity ? 'Cập nhật tiện ích' : 'Thêm tiện ích mới'}
         widthClassName="max-w-lg"
         footer={
-          <div className="flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between">
             <div>
               {editingAmenity && (
                 <Button 
@@ -293,7 +293,7 @@ const Amenities: React.FC = () => {
                   className="border-blue-200 text-blue-600 hover:bg-blue-50"
                   size="sm"
                 >
-                  {isAssigning ? <Loader2 className="animate-spin mr-2" size={14} /> : <Check size={14} className="mr-2" />}
+                  {isAssigning ? <Loader2 className="mr-2 animate-spin" size={14} /> : <Check size={14} className="mr-2" />}
                   Gán cho tất cả phòng
                 </Button>
               )}
@@ -336,11 +336,11 @@ const Amenities: React.FC = () => {
               </Select>
             </div>
             {editingAmenity && (
-              <div className="grid gap-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                <Label className="text-blue-700 flex items-center gap-2">
+              <div className="grid gap-2 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                <Label className="flex items-center gap-2 text-blue-700">
                   <Building2 size={16} /> Liên kết Tòa nhà
                 </Label>
-                <p className="text-[10px] text-blue-600/70 mb-1 italic">Chọn tòa nhà để gán nhanh tiện ích này cho tất cả các phòng.</p>
+                <p className="mb-1 text-[10px] italic text-blue-600/70">Chọn tòa nhà để gán nhanh tiện ích này cho tất cả các phòng.</p>
                 <BuildingSelector 
                   selectedId={selectedBuildingId} 
                   onSelect={setSelectedBuildingId} 
@@ -360,7 +360,7 @@ const Amenities: React.FC = () => {
                       key={iconName}
                       type="button"
                       onClick={() => setSelectedIconName(iconName)}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs transition-colors ${active ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:bg-slate-50'}`}
+                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-xs transition-colors ${active ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:bg-slate-50'}`}
                     >
                       <Icon size={20} />
                       <span>{iconName}</span>
@@ -369,7 +369,7 @@ const Amenities: React.FC = () => {
                 })}
               </div>
             </div>
-            <div className="grid gap-2 text-xs text-gray-500 italic">* Các icons được lựa chọn từ thư mục hệ thống.</div>
+            <div className="grid gap-2 text-xs italic text-gray-500">* Các icons được lựa chọn từ thư mục hệ thống.</div>
           </div>
       </InlineSheet>
     </div>

@@ -38,7 +38,7 @@ const ReportsPage: React.FC = () => {
     try {
       const res: any = await partnerService.getPartnerReports({ range: timeRange });
       setStats(res?.data || null);
-    } catch (e) {
+    } catch {
       toastError('Không thể tải báo cáo phân tích.');
     }
   };
@@ -46,59 +46,59 @@ const ReportsPage: React.FC = () => {
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 duration-500 animate-in fade-in">
       {/* Header & Filter */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -mr-32 -mt-32 blur-3xl" />
-        <div className="space-y-1 relative z-10">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Trung tâm Phân tích</h1>
+      <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:flex-row md:items-center">
+        <div className="absolute right-0 top-0 -mr-32 -mt-32 size-64 rounded-full bg-blue-50/50 blur-3xl" />
+        <div className="relative z-10 space-y-1">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Trung tâm Phân tích</h1>
           <p className="text-sm font-medium text-slate-500">Theo dõi doanh thu, tỷ lệ lấp đầy và hiệu quả kinh doanh của bạn.</p>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
-           <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 shadow-inner border border-slate-200/50">
+        <div className="relative z-10 flex items-center gap-3">
+           <div className="flex gap-1 rounded-2xl border border-slate-200/50 bg-slate-100 p-1.5 shadow-inner">
              {['7days', '30days', 'month', 'year'].map(range => (
                <Button 
                  key={range}
                  variant={timeRange === range ? 'secondary' : 'ghost'} 
                  size="sm" 
                  onClick={() => setTimeRange(range)}
-                 className={`rounded-xl h-9 px-4 text-xs font-black uppercase tracking-wider transition-all ${timeRange === range ? 'bg-white shadow-md text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                 className={`h-9 rounded-xl px-4 text-xs font-black uppercase tracking-wider transition-all ${timeRange === range ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
                >
                  {range === '7days' ? '7 ngày' : range === '30days' ? '30 ngày' : range === 'month' ? 'Tháng này' : 'Năm qua'}
                </Button>
              ))}
            </div>
-           <Button variant="outline" className="h-11 rounded-xl px-4 gap-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50">
+           <Button variant="outline" className="h-11 gap-2 rounded-xl border-slate-200 px-4 font-bold text-slate-600 hover:bg-slate-50">
               <Download size={18} /> Xuất PDF
            </Button>
         </div>
       </div>
 
       {/* KPI Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
          {[
            { title: 'ADR', value: stats?.adr || 0, unit: '₫', icon: DollarSign, color: 'blue', desc: 'Giá thuê trung bình/phòng' },
            { title: 'RevPAR', value: stats?.revpar || 0, unit: '₫', icon: TrendingUp, color: 'emerald', desc: 'Doanh thu trung bình/phòng' },
            { title: 'Occupancy', value: stats?.occupancy_rate || 0, unit: '%', icon: Activity, color: 'violet', desc: 'Tỷ lệ lấp đầy tất cả phòng' },
            { title: 'Total Revenue', value: stats?.total_revenue || 0, unit: '₫', icon: DollarSign, color: 'amber', desc: 'Tổng doanh thu thực tế' }
          ].map((kpi, i) => (
-           <div key={i} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group overflow-hidden relative">
-              <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-${kpi.color}-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700`} />
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                 <div className={`w-12 h-12 rounded-2xl bg-${kpi.color}-50 flex items-center justify-center text-${kpi.color}-600`}>
+           <div key={i} className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+              <div className={`bg- absolute -bottom-4 -right-4 size-24${kpi.color}-50 rounded-full opacity-50 transition-transform duration-700 group-hover:scale-150`} />
+              <div className="relative z-10 mb-4 flex items-start justify-between">
+                 <div className={`bg- size-12 rounded-2xl${kpi.color}-50 text- flex items-center justify-center${kpi.color}-600`}>
                     <kpi.icon size={24} />
                  </div>
-                 <Badge variant="outline" className={`bg-emerald-50 text-emerald-600 border-emerald-100 flex items-center gap-1 font-bold`}>
+                 <Badge variant="outline" className={`flex items-center gap-1 border-emerald-100 bg-emerald-50 font-bold text-emerald-600`}>
                     <ArrowUpRight size={12} /> 12%
                  </Badge>
               </div>
               <div className="relative z-10">
-                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{kpi.title}</h3>
-                 <div className="text-2xl font-black text-slate-900 leading-none">
+                 <h3 className="mb-1 text-xs font-black uppercase tracking-widest text-slate-400">{kpi.title}</h3>
+                 <div className="text-2xl font-black leading-none text-slate-900">
                     {kpi.value.toLocaleString('vi-VN')}{kpi.unit}
                  </div>
-                 <p className="text-[10px] font-bold text-slate-500 mt-3 flex items-center gap-1">
+                 <p className="mt-3 flex items-center gap-1 text-[10px] font-bold text-slate-500">
                     <CalendarDays size={10} /> {kpi.desc}
                  </p>
               </div>
@@ -106,16 +106,16 @@ const ReportsPage: React.FC = () => {
          ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
          {/* Revenue Trend Chart */}
-         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-6">
+         <div className="space-y-6 rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex items-center justify-between">
                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <h3 className="flex items-center gap-2 text-lg font-black tracking-tight text-slate-900">
                      <BarChart3 className="text-blue-500" size={20} />
                      Xu hướng Doanh thu
                   </h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Biến động theo thời gian</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Biến động theo thời gian</p>
                </div>
             </div>
             <div className="h-[350px] w-full">
@@ -151,17 +151,17 @@ const ReportsPage: React.FC = () => {
          </div>
 
          {/* Occupancy by Property Chart */}
-         <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-6">
+         <div className="space-y-6 rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex items-center justify-between">
                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <h3 className="flex items-center gap-2 text-lg font-black tracking-tight text-slate-900">
                      <PieIcon className="text-emerald-500" size={20} />
                      Tỉ lệ lấp đầy theo tòa nhà
                   </h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Hiệu suất từng bất động sản</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Hiệu suất từng bất động sản</p>
                </div>
             </div>
-            <div className="h-[350px] w-full flex items-center">
+            <div className="flex h-[350px] w-full items-center">
                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                      <Pie
@@ -184,12 +184,12 @@ const ReportsPage: React.FC = () => {
                      />
                   </PieChart>
                </ResponsiveContainer>
-               <div className="w-1/3 flex flex-col gap-3">
+               <div className="flex w-1/3 flex-col gap-3">
                   {(stats?.occupancy_by_property || []).map((entry: any, index: number) => (
                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                        <div className="flex-1 min-w-0">
-                           <div className="text-[10px] font-black text-slate-800 truncate uppercase tracking-tighter">{entry.name}</div>
+                        <div className="size-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <div className="min-w-0 flex-1">
+                           <div className="truncate text-[10px] font-black uppercase tracking-tighter text-slate-800">{entry.name}</div>
                            <div className="text-[10px] font-bold text-slate-400">{entry.occupancy}%</div>
                         </div>
                      </div>
@@ -200,30 +200,30 @@ const ReportsPage: React.FC = () => {
       </div>
 
       {/* Table: Daily KPIs */}
-      <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm overflow-hidden">
-         <h3 className="text-lg font-black text-slate-900 mb-6">Chi tiết chỉ số hàng ngày</h3>
+      <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
+         <h3 className="mb-6 text-lg font-black text-slate-900">Chi tiết chỉ số hàng ngày</h3>
          <div className="overflow-x-auto">
             <table className="w-full text-left">
                <thead>
                   <tr className="border-b border-slate-50">
-                     <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ngày</th>
-                     <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Số phòng bán</th>
-                     <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">ADR</th>
-                     <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">RevPAR</th>
-                     <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Tỷ lệ lấp đầy</th>
+                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Ngày</th>
+                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Số phòng bán</th>
+                     <th className="pb-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">ADR</th>
+                     <th className="pb-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">RevPAR</th>
+                     <th className="pb-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Tỷ lệ lấp đầy</th>
                   </tr>
                </thead>
                <tbody>
                   {(stats?.daily_stats || []).map((row: any, i: number) => (
-                     <tr key={i} className="border-b border-slate-50 last:border-none group hover:bg-slate-50/50 transition-colors">
+                     <tr key={i} className="group border-b border-slate-50 transition-colors last:border-none hover:bg-slate-50/50">
                         <td className="py-4 text-xs font-bold text-slate-700">{row.date}</td>
                         <td className="py-4 text-xs font-bold text-slate-700">{row.rooms_sold}</td>
-                        <td className="py-4 text-xs font-black text-blue-600 text-right">{row.adr.toLocaleString('vi-VN')} ₫</td>
-                        <td className="py-4 text-xs font-black text-emerald-600 text-right">{row.revpar.toLocaleString('vi-VN')} ₫</td>
-                        <td className="py-4 text-xs font-black text-slate-900 text-right">
+                        <td className="py-4 text-right text-xs font-black text-blue-600">{row.adr.toLocaleString('vi-VN')} ₫</td>
+                        <td className="py-4 text-right text-xs font-black text-emerald-600">{row.revpar.toLocaleString('vi-VN')} ₫</td>
+                        <td className="py-4 text-right text-xs font-black text-slate-900">
                            <div className="inline-flex items-center gap-2">
-                              <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                 <div className="h-full bg-blue-500 rounded-full" style={{ width: `${row.occupancy_rate}%` }} />
+                              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
+                                 <div className="h-full rounded-full bg-blue-500" style={{ width: `${row.occupancy_rate}%` }} />
                               </div>
                               <span className="min-w-[40px]">{row.occupancy_rate}%</span>
                            </div>

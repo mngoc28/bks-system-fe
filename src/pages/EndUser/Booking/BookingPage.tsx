@@ -195,35 +195,35 @@ const BookingPage = () => {
             {/* Booking Header */}
             <div className="relative overflow-hidden bg-slate-950 text-white">
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
-                <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 w-full text-center">
+                <div className="relative mx-auto w-full max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
                     {/* Main Title */}
-                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl mb-3">
+                    <h1 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
                         {t("booking.title")}
                     </h1>
 
                     {/* Room Subtitle */}
-                    <p className="mx-auto max-w-3xl text-xl sm:text-2xl text-sky-200 font-semibold mb-5">
+                    <p className="mx-auto mb-5 max-w-3xl text-xl font-semibold text-sky-200 sm:text-2xl">
                         {room?.title || "Loading..."}
                     </p>
 
                     {/* Price and Location */}
-                    <div className="flex items-center justify-center gap-4 mb-4 flex-wrap text-slate-200">
+                    <div className="mb-4 flex flex-wrap items-center justify-center gap-4 text-slate-200">
                         <div className="flex items-center gap-2">
-                            <MapPin className="h-5 w-5 text-sky-300" />
-                            <p className="text-base sm:text-lg text-slate-100">
+                            <MapPin className="size-5 text-sky-300" />
+                            <p className="text-base text-slate-100 sm:text-lg">
                                 {room?.building_address || "Loading..."}
                             </p>
                         </div>
                     </div>
 
                     {/* Decorative line */}
-                    <div className="w-24 h-1 bg-sky-300/70 mx-auto rounded-full"></div>
+                    <div className="mx-auto h-1 w-24 rounded-full bg-sky-300/70"></div>
                 </div>
             </div>
 
             {/* Breadcrumb */}
-            <div className="bg-slate-50 border-b border-slate-200">
-                <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+            <div className="border-b border-slate-200 bg-slate-50">
+                <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
                     <Breadcrumb
                         items={[
                             { label: t("breadcrumb.home"), href: "/" },
@@ -238,63 +238,63 @@ const BookingPage = () => {
                 </div>
             </div>
 
-            <div className="py-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col">
+            <div className="flex flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
 
                 <div className="mx-auto mb-6 flex w-full max-w-7xl items-center gap-3">
                     <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${currentStep === 1 ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
+                        <span className="inline-flex size-5 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
                         Thông tin
                     </div>
                     <div className="h-px flex-1 bg-slate-200" />
                     <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${currentStep === 2 ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">2</span>
+                        <span className="inline-flex size-5 items-center justify-center rounded-full bg-white/20 text-xs">2</span>
                         Xác nhận
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+                <div className="grid flex-1 grid-cols-1 gap-8 lg:grid-cols-2">
                     {/* Left Column - Room Info */}
-                    <div className="space-y-6 flex flex-col">
+                    <div className="flex flex-col space-y-6">
                         <Card className="overflow-hidden border-slate-200/80 shadow-sm">
-                            <div className="flex flex-col md:flex-row p-4">
-                                <div className="relative w-full md:w-2/5 h-64 md:h-auto">
+                            <div className="flex flex-col p-4 md:flex-row">
+                                <div className="relative h-64 w-full md:h-auto md:w-2/5">
                                     <img
                                         src={roomImage}
                                         alt={room.title}
-                                        className="w-full h-full object-cover rounded-lg"
+                                        className="size-full rounded-lg object-cover"
                                     />
                                 </div>
-                                <div className="w-full md:w-3/5 p-4 flex flex-col justify-between pl-6">
-                                    <CardHeader className="p-0 mb-2">
+                                <div className="flex w-full flex-col justify-between p-4 pl-6 md:w-3/5">
+                                    <CardHeader className="mb-2 p-0">
                                         <CardTitle className="text-2xl text-slate-900">{room.title}</CardTitle>
-                                        <p className="text-2xl font-bold text-sky-600 mt-2">
-                                            {formatCurrencyInput(room.cheapest_daily_price?.toString() ?? "0")} {t("booking.money_unit")} <span className="text-base text-slate-500 font-normal">{t("booking.unit")}</span>
+                                        <p className="mt-2 text-2xl font-bold text-sky-600">
+                                            {formatCurrencyInput(room.cheapest_daily_price?.toString() ?? "0")} {t("booking.money_unit")} <span className="text-base font-normal text-slate-500">{t("booking.unit")}</span>
                                         </p>
                                     </CardHeader>
                                     <CardContent className="p-0">
-                                        <div className="flex items-center justify-between text-slate-600 mb-3">
+                                        <div className="mb-3 flex items-center justify-between text-slate-600">
                                             <div className="flex items-center">
-                                                <Users className="h-4 w-4 mr-2 text-sky-500" />
+                                                <Users className="mr-2 size-4 text-sky-500" />
                                                 <span className="text-sm sm:text-base">
                                                     {t("booking.capacity")}: {room.people}
                                                 </span>
                                             </div>
 
                                             <div className="flex items-center">
-                                                <Maximize className="h-4 w-4 mr-2 text-sky-500" />
+                                                <Maximize className="mr-2 size-4 text-sky-500" />
                                                 <span className="text-sm sm:text-base">
                                                     {t("booking.room_area")}: {room.area} m²
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <h4 className="font-medium text-slate-900 text-base">{t("booking.amenities")}</h4>
+                                            <h4 className="text-base font-medium text-slate-900">{t("booking.amenities")}</h4>
                                             <div className="flex flex-wrap gap-2">
                                                 {(Array.isArray(room.amenities)
                                                     ? room.amenities.map((a: any) => a.name || a.toString())
                                                     : (room.amenities?.toString().split(',') || [])
                                                 ).map((amenity: string, idx: number) => (
-                                                    <span key={idx} className="bg-sky-50 text-sky-700 text-xs px-2 py-1 rounded-md border border-sky-100">
+                                                    <span key={idx} className="rounded-md border border-sky-100 bg-sky-50 px-2 py-1 text-xs text-sky-700">
                                                         {amenity.trim()}
                                                     </span>
                                                 ))}
@@ -305,30 +305,30 @@ const BookingPage = () => {
                             </div>
                         </Card>
 
-                        <Card className="border-slate-200/80 shadow-sm flex-1">
+                        <Card className="flex-1 border-slate-200/80 shadow-sm">
                             <CardHeader>
                                 <CardTitle className="text-xl">{t("booking.services")}</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4 h-full">
-                                <p className="text-sm text-slate-600 italic mb-4">
+                            <CardContent className="h-full space-y-4">
+                                <p className="mb-4 text-sm italic text-slate-600">
                                     {t("booking.servicesDescription")}
                                 </p>
                                 {services && services.length > 0 ? (
                                     <div className="space-y-4">
                                         {services.map((service: ServiceItem) => (
-                                            <div key={service.id} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                                            <div key={service.id} className="flex items-center space-x-3 rounded-xl border border-slate-200 p-3 transition-colors hover:bg-slate-50">
                                                 <Checkbox
                                                     id={`service-${service.id}`}
                                                     checked={serviceIds.includes(service.id)}
                                                     onCheckedChange={(checked) => handleServiceChange(service.id, checked === true)}
-                                                    className="h-5 w-5"
+                                                    className="size-5"
                                                 />
                                                 <Label
                                                     htmlFor={`service-${service.id}`}
-                                                    className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex justify-between"
+                                                    className="flex flex-1 cursor-pointer justify-between text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                 >
                                                     <span className="text-slate-900">{service.name}</span>
-                                                    <span className="text-slate-600 font-semibold">
+                                                    <span className="font-semibold text-slate-600">
                                                         {parseFloat(service.price) > 0 ? `${formatCurrencyInput(service.price)} VNĐ` : 'Free'}
                                                     </span>
                                                 </Label>
@@ -336,32 +336,32 @@ const BookingPage = () => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-slate-500 text-sm italic">{t("booking.noExtraServices")}</p>
+                                    <p className="text-sm italic text-slate-500">{t("booking.noExtraServices")}</p>
                                 )}
                             </CardContent>
                         </Card>
 
-                        <Card className="border-slate-200/80 shadow-sm flex-1">
+                        <Card className="flex-1 border-slate-200/80 shadow-sm">
                             <CardHeader>
                                 <CardTitle className="text-xl">{t("booking.policySection.title")}</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4 h-full">
+                            <CardContent className="h-full space-y-4">
                                 <div className="flex items-start text-sm text-slate-700">
-                                    <Clock className="h-5 w-5 mr-3 mt-0.5 text-sky-500" />
+                                    <Clock className="mr-3 mt-0.5 size-5 text-sky-500" />
                                     <span>{t("booking.policySection.time")}</span>
                                 </div>
                                 <div className="flex items-start text-sm text-rose-600">
-                                    <AlertCircle className="h-5 w-5 mr-3 mt-0.5" />
+                                    <AlertCircle className="mr-3 mt-0.5 size-5" />
                                     <span>{t("booking.policySection.cancellation")}</span>
                                 </div>
-                                <div className="border-t pt-4 mt-3">
+                                <div className="mt-3 border-t pt-4">
                                     <ul className="space-y-3 text-sm text-slate-600">
                                         {(() => {
                                             const rules = t("booking.policySection.rules", { returnObjects: true });
                                             const rulesArray = Array.isArray(rules) ? rules : [];
                                             return rulesArray.map((rule: string, index: number) => (
                                                 <li key={index} className="flex items-start">
-                                                    <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                                                    <Check className="mr-3 mt-0.5 size-5 shrink-0 text-green-500" />
                                                     {rule}
                                                 </li>
                                             ));
@@ -374,20 +374,20 @@ const BookingPage = () => {
 
                     {/* Right Column - Booking Form */}
                     <div className="flex">
-                        <Card className="border-slate-200/80 shadow-sm flex-1">
+                        <Card className="flex-1 border-slate-200/80 shadow-sm">
                             <CardHeader className="pb-4">
-                                <CardTitle className="text-xl mb-2">
+                                <CardTitle className="mb-2 text-xl">
                                     {currentStep === 1 ? t("booking.customerInfo") : "Xác nhận đặt phòng"}
                                 </CardTitle>
-                                <p className="text-sm text-slate-500 italic font-normal">
+                                <p className="text-sm font-normal italic text-slate-500">
                                     {currentStep === 1 ? t("booking.helperText") : "Kiểm tra lại thông tin trước khi gửi yêu cầu đặt phòng."}
                                 </p>
                             </CardHeader>
-                            <CardContent className="flex-1 flex flex-col p-6">
+                            <CardContent className="flex flex-1 flex-col p-6">
                                 {currentStep === 1 ? (
-                                    <form className="space-y-8 flex-1 flex flex-col" onSubmit={(event) => event.preventDefault()}>
+                                    <form className="flex flex-1 flex-col space-y-8" onSubmit={(event) => event.preventDefault()}>
                                         {/* Personal Info */}
-                                        <div className="space-y-6 flex-1">
+                                        <div className="flex-1 space-y-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="name" className="text-sm font-semibold">{t("booking.fields.name")} <span className="text-red-500">*</span></Label>
                                                 <Input
@@ -402,7 +402,7 @@ const BookingPage = () => {
                                                 )}
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                                 <div className="space-y-3">
                                                     <Label htmlFor="email" className="text-sm font-semibold">{t("booking.fields.email")}  <span className="text-red-500">*</span></Label>
                                                     <Input
@@ -432,7 +432,7 @@ const BookingPage = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                                 <div className="space-y-3">
                                                     <Label htmlFor="start_date" className="text-sm font-semibold">{t("booking.fields.startDate")} <span className="text-red-500">*</span></Label>
                                                     <Input
@@ -467,31 +467,31 @@ const BookingPage = () => {
                                                     id="note"
                                                     placeholder="..."
                                                     {...register("note")}
-                                                    className="min-h-[120px] text-sm resize-none"
+                                                    className="min-h-[120px] resize-none text-sm"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="bg-sky-50 p-6 rounded-xl border border-sky-100 text-sm text-sky-800 space-y-3">
-                                            <h4 className="font-semibold flex items-center text-base">
-                                                <Check className="h-5 w-5 mr-3" />
+                                        <div className="space-y-3 rounded-xl border border-sky-100 bg-sky-50 p-6 text-sm text-sky-800">
+                                            <h4 className="flex items-center text-base font-semibold">
+                                                <Check className="mr-3 size-5" />
                                                 {t("booking.notes.title")}
                                             </h4>
-                                            <ul className="list-disc list-inside space-y-2 pl-6">
+                                            <ul className="list-inside list-disc space-y-2 pl-6">
                                                 <li className="text-sm">{t("booking.notes.step1")}</li>
                                                 <li className="text-sm">{t("booking.notes.step2")}</li>
                                                 <li className="text-sm">{t("booking.notes.step3")}</li>
                                             </ul>
-                                            <p className="text-xs pt-3 border-t border-sky-200 mt-3 font-medium">
+                                            <p className="mt-3 border-t border-sky-200 pt-3 text-xs font-medium">
                                                 {t("booking.notes.terms")}
                                             </p>
-                                            <p className="text-xs text-sky-600 mt-2 italic">
+                                            <p className="mt-2 text-xs italic text-sky-600">
                                                 {t("booking.notes.help")}
                                             </p>
                                         </div>
                                         <div className="mt-auto">
                                             <Button
                                                 type="button"
-                                                className="w-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90 text-base py-6"
+                                                className="w-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 py-6 text-base hover:opacity-90"
                                                 onClick={handleContinueToConfirm}
                                             >
                                                 Tiếp tục xác nhận
@@ -523,7 +523,7 @@ const BookingPage = () => {
                                                     <span>Dịch vụ bổ sung</span>
                                                     <span className="font-semibold">{formatCurrencyInput(serviceTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
-                                                <div className="border-t border-slate-200 pt-2 mt-2 flex items-center justify-between text-base">
+                                                <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2 text-base">
                                                     <span className="font-semibold">Tổng cộng</span>
                                                     <span className="font-bold text-sky-600">{formatCurrencyInput(estimatedTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>

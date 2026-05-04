@@ -49,7 +49,7 @@ const RoomAdd: React.FC = () => {
       const response = await createRoomMutation.mutateAsync(roomData);
       await queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate(ROUTERS.ROOMS, { state: { highlightedId: response.data.id, sortField: 'id', sortDirection: 'desc' } });
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   };
@@ -59,7 +59,7 @@ const RoomAdd: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-3 sm:p-6 overflow-hidden">
+    <div className="flex flex-col gap-6 overflow-hidden p-3 sm:p-6">
       <h2 className="text-2xl font-bold">{t("rooms.create_room")}</h2>
       <RoomAddForm
         onSubmit={handleCreateSubmit}

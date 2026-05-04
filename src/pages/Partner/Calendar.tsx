@@ -60,7 +60,7 @@ const CalendarPage: React.FC = () => {
       if (list.length > 0) {
         setSelectedBuildingId(String(list[0].id));
       }
-    } catch (e) {
+    } catch {
       toastError('Không thể tải danh sách bất động sản.');
     }
   };
@@ -96,25 +96,25 @@ const CalendarPage: React.FC = () => {
         }
       }));
       setEvents(newEvents);
-    } catch (e) {
+    } catch {
       toastError('Không thể tải lịch đặt phòng.');
     }
   };
 
   const renderEventContent = (eventInfo: any) => {
     return (
-      <div className="p-1 overflow-hidden">
-        <div className="font-bold text-[10px] truncate">{eventInfo.event.extendedProps.roomName}</div>
-        <div className="text-[9px] truncate opacity-90">{eventInfo.event.extendedProps.guestName}</div>
+      <div className="overflow-hidden p-1">
+        <div className="truncate text-[10px] font-bold">{eventInfo.event.extendedProps.roomName}</div>
+        <div className="truncate text-[9px] opacity-90">{eventInfo.event.extendedProps.guestName}</div>
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
             <CalendarIcon className="text-blue-600" />
             Lịch khả dụng & Đặt phòng
           </h1>
@@ -125,7 +125,7 @@ const CalendarPage: React.FC = () => {
           <div className="relative">
             <Home className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <Select value={selectedBuildingId} onValueChange={setSelectedBuildingId}>
-              <SelectTrigger className="w-[240px] pl-10 h-11 rounded-xl border-slate-200">
+              <SelectTrigger className="h-11 w-[240px] rounded-xl border-slate-200 pl-10">
                 <SelectValue placeholder="Chọn bất động sản" />
               </SelectTrigger>
               <SelectContent>
@@ -135,53 +135,53 @@ const CalendarPage: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" className="h-11 rounded-xl gap-2 text-slate-600">
+          <Button variant="outline" className="h-11 gap-2 rounded-xl text-slate-600">
             <Filter size={18} /> Lọc
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-             <h3 className="font-bold text-slate-800 flex items-center gap-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="space-y-6 lg:col-span-1">
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+             <h3 className="flex items-center gap-2 font-bold text-slate-800">
                 <Info size={16} className="text-blue-500" />
                 Chú giải trạng thái
              </h3>
              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      <span className="text-sm text-slate-600 font-medium">Chờ xác nhận</span>
+                      <div className="size-3 rounded-full bg-amber-500" />
+                      <span className="text-sm font-medium text-slate-600">Chờ xác nhận</span>
                    </div>
-                   <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-100 uppercase text-[10px]">Pending</Badge>
+                   <Badge variant="outline" className="border-amber-100 bg-amber-50 text-[10px] uppercase text-amber-600">Pending</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      <span className="text-sm text-slate-600 font-medium">Đã xác nhận</span>
+                      <div className="size-3 rounded-full bg-blue-500" />
+                      <span className="text-sm font-medium text-slate-600">Đã xác nhận</span>
                    </div>
-                   <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-100 uppercase text-[10px]">Confirmed</Badge>
+                   <Badge variant="outline" className="border-blue-100 bg-blue-50 text-[10px] uppercase text-blue-600">Confirmed</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-violet-500" />
-                      <span className="text-sm text-slate-600 font-medium">Đang lưu trú</span>
+                      <div className="size-3 rounded-full bg-violet-500" />
+                      <span className="text-sm font-medium text-slate-600">Đang lưu trú</span>
                    </div>
-                   <Badge variant="outline" className="bg-violet-50 text-violet-600 border-violet-100 uppercase text-[10px]">In Stay</Badge>
+                   <Badge variant="outline" className="border-violet-100 bg-violet-50 text-[10px] uppercase text-violet-600">In Stay</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                      <span className="text-sm text-slate-600 font-medium">Hoàn tất</span>
+                      <div className="size-3 rounded-full bg-emerald-500" />
+                      <span className="text-sm font-medium text-slate-600">Hoàn tất</span>
                    </div>
-                   <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 uppercase text-[10px]">Done</Badge>
+                   <Badge variant="outline" className="border-emerald-100 bg-emerald-50 text-[10px] uppercase text-emerald-600">Done</Badge>
                 </div>
              </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-             <h3 className="font-bold text-slate-800 mb-4">Hoạt động sắp tới</h3>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+             <h3 className="mb-4 font-bold text-slate-800">Hoạt động sắp tới</h3>
              <div className="space-y-4">
                 {events.filter(e => {
                    const eventDate = new Date(e.start);
@@ -189,22 +189,22 @@ const CalendarPage: React.FC = () => {
                    today.setHours(0, 0, 0, 0);
                    return eventDate >= today;
                 }).slice(0, 5).map(e => (
-                   <div key={e.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors cursor-pointer">
-                      <div className="text-xs font-bold text-blue-600 mb-1">{e.extendedProps.roomName}</div>
+                   <div key={e.id} className="cursor-pointer rounded-lg border border-slate-100 bg-slate-50 p-3 transition-colors hover:border-blue-200">
+                      <div className="mb-1 text-xs font-bold text-blue-600">{e.extendedProps.roomName}</div>
                       <div className="text-sm font-semibold text-slate-800">{e.extendedProps.guestName}</div>
-                      <div className="text-[10px] text-slate-500 mt-1">
+                      <div className="mt-1 text-[10px] text-slate-500">
                          {format(new Date(e.start), 'dd/MM')} - {format(new Date(e.end), 'dd/MM')}
                       </div>
                    </div>
                 ))}
                 {events.length === 0 && (
-                   <div className="text-center py-6 text-slate-400 italic text-sm">Không có lịch sắp tới</div>
+                   <div className="py-6 text-center text-sm italic text-slate-400">Không có lịch sắp tới</div>
                 )}
              </div>
           </div>
         </div>
 
-        <div className="lg:col-span-3 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-3">
            <div className="calendar-container">
               <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

@@ -24,13 +24,13 @@ const BookingTable: React.FC<BookingTableProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{t("bookings.status_pending") || "Đang chờ"}</Badge>;
+        return <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">{t("bookings.status_pending") || "Đang chờ"}</Badge>;
       case "confirmed":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t("bookings.status_confirmed") || "Đã xác nhận"}</Badge>;
+        return <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">{t("bookings.status_confirmed") || "Đã xác nhận"}</Badge>;
       case "cancelled":
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">{t("bookings.status_cancelled") || "Đã hủy"}</Badge>;
+        return <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">{t("bookings.status_cancelled") || "Đã hủy"}</Badge>;
       case "completed":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("bookings.status_completed") || "Hoàn thành"}</Badge>;
+        return <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">{t("bookings.status_completed") || "Hoàn thành"}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

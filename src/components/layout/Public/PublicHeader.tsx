@@ -19,7 +19,7 @@ const PublicHeader = ({
     <header className="relative z-[80] border-b border-slate-200/70 bg-white/90 shadow-sm shadow-slate-200/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
         <Link to={ROUTERS.HOME} className="flex items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2">
-          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-11 w-11" />
+          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-11" />
           <div className="leading-tight">
             <p className="text-xl font-bold tracking-tight text-slate-900">{t("public.header.brand.title")}</p>
           </div>
@@ -31,7 +31,7 @@ const PublicHeader = ({
                 to={contactHref}
                 className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 transition hover:border-slate-200 hover:bg-slate-50 hover:text-primary"
               >
-                <Phone className="h-4 w-4" />
+                <Phone className="size-4" />
                 {t("public.header.nav.contact")}
               </Link>
             ) : (
@@ -39,7 +39,7 @@ const PublicHeader = ({
                 href={contactHref}
                 className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 transition hover:border-slate-200 hover:bg-slate-50 hover:text-primary"
               >
-                <Phone className="h-4 w-4" />
+                <Phone className="size-4" />
                 {t("public.header.nav.contact")}
               </a>
             )}
@@ -48,7 +48,7 @@ const PublicHeader = ({
                 to={rewardsHref}
                 className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 transition hover:border-slate-200 hover:bg-slate-50 hover:text-primary"
               >
-                <Star className="h-4 w-4" />
+                <Star className="size-4" />
                 {t("public.header.nav.points")}
               </Link>
             ) : (
@@ -56,7 +56,7 @@ const PublicHeader = ({
                 href={rewardsHref}
                 className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 transition hover:border-slate-200 hover:bg-slate-50 hover:text-primary"
               >
-                <Star className="h-4 w-4" />
+                <Star className="size-4" />
                 {t("public.header.nav.points")}
               </a>
             )}
@@ -65,7 +65,7 @@ const PublicHeader = ({
                 to={favoritesHref}
                 className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 transition hover:border-slate-200 hover:bg-slate-50 hover:text-primary"
               >
-                <Heart className="h-4 w-4" />
+                <Heart className="size-4" />
                 {t("public.header.nav.favorites")}
               </Link>
             ) : (
@@ -73,7 +73,7 @@ const PublicHeader = ({
                 href={favoritesHref}
                 className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 transition hover:border-slate-200 hover:bg-slate-50 hover:text-primary"
               >
-                <Heart className="h-4 w-4" />
+                <Heart className="size-4" />
                 {t("public.header.nav.favorites")}
               </a>
             )}

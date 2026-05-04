@@ -51,7 +51,7 @@ const PageBar: React.FC<PageBarProps> = ({
           />
         )}
         {showLayoutToggle && (viewMode && onViewModeChange) && (
-          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+          <div className="mx-1 hidden h-6 w-px bg-slate-200 sm:block"></div>
         )}
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

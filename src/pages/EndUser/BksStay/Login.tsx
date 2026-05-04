@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; // test edit
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Key, 
@@ -53,89 +53,91 @@ const GuestLogin = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-slate-950 font-sans">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-950 font-sans">
       {/* Cinematic Background */}
       <div className="absolute inset-0">
         <img 
           src="/images/bks_stay_login_bg.png" 
           alt="BKS Stay Luxury Background" 
-          className="w-full h-full object-cover opacity-60 scale-105 animate-slow-zoom"
+          className="animate-slow-zoom size-full scale-105 object-cover opacity-60"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-transparent to-slate-950/60" />
       </div>
 
       {/* Floating Particles Animation Overlay */}
-      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-500 rounded-full blur-[160px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-[160px] animate-pulse delay-700" />
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-30">
+        <div className="absolute left-1/4 top-1/4 size-96 animate-pulse rounded-full bg-sky-500 blur-[160px]" />
+        <div className="absolute bottom-1/4 right-1/4 size-96 animate-pulse rounded-full bg-indigo-500 blur-[160px] delay-700" />
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 w-full max-w-5xl px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="relative z-10 grid w-full max-w-5xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2">
         
         {/* Left Side: Branding / Welcome */}
-        <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-700">
+        <div className="space-y-8 duration-700 animate-in fade-in slide-in-from-left-8">
            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shadow-2xl shadow-white/20">
-                 <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-10 w-10 drop-shadow-md" />
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-white shadow-2xl shadow-white/20">
+                 <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-10 drop-shadow-md" />
               </div>
               <div>
-                 <p className="text-sky-400 font-black text-xs uppercase tracking-[0.3em]">Welcome to</p>
-                 <h1 className="text-3xl font-black text-white tracking-tight">BKS Stay <span className="text-sky-400">Portal</span></h1>
+                 <p className="text-xs font-black uppercase tracking-[0.3em] text-sky-400">Welcome to</p>
+                 <h1 className="text-3xl font-black tracking-tight text-white">BKS Stay <span className="text-sky-400">Portal</span></h1>
               </div>
            </div>
 
            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black text-white leading-[1.1]">Quản lý hành trình <br/>nghỉ dưỡng của bạn.</h2>
-              <p className="text-slate-400 text-lg max-w-md font-medium">
+              <h2 className="text-4xl font-black leading-[1.1] text-white md:text-5xl">Quản lý hành trình <br/>nghỉ dưỡng của bạn.</h2>
+              <p className="max-w-md text-lg font-medium text-slate-400">
                  Đăng nhập để nhận mã cửa phòng, thông tin Wi-Fi và các dịch vụ đặc quyền dành riêng cho khách của BKS.
               </p>
            </div>
 
            <div className="flex flex-wrap gap-6 pt-4">
-              <div className="flex items-center gap-2 text-slate-300 text-sm font-bold">
-                 <ShieldCheck className="h-5 w-5 text-emerald-400" /> Truy cập bảo mật
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-300">
+                 <ShieldCheck className="size-5 text-emerald-400" /> Truy cập bảo mật
               </div>
-              <div className="flex items-center gap-2 text-slate-300 text-sm font-bold">
-                 <ArrowRight className="h-5 w-5 text-sky-400" /> Hỗ trợ 24/7
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-300">
+                 <ArrowRight className="size-5 text-sky-400" /> Hỗ trợ 24/7
               </div>
            </div>
         </div>
 
         {/* Right Side: Login Card */}
-        <div className="animate-in fade-in zoom-in-95 duration-700 delay-300">
-           <Card className="border-white/10 shadow-2xl bg-white/5 backdrop-blur-2xl rounded-[48px] overflow-hidden">
+        <div className="delay-300 duration-700 animate-in fade-in zoom-in-95">
+           <Card className="overflow-hidden rounded-[48px] border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
               <CardContent className="p-10 md:p-12">
                  <div className="mb-10 text-center lg:text-left">
-                    <h3 className="text-2xl font-black text-white mb-2 underline underline-offset-8 decoration-sky-500">Đăng nhập</h3>
-                    <p className="text-slate-400 text-sm">Vui lòng nhập Email và mã đặt phòng (Booking ID) được cung cấp.</p>
+                    <h3 className="mb-2 text-2xl font-black text-white underline decoration-sky-500 underline-offset-8">Đăng nhập</h3>
+                    <p className="text-sm text-slate-400">Vui lòng nhập Email và mã đặt phòng (Booking ID) được cung cấp.</p>
                  </div>
 
                  <form onSubmit={handleLogin} className="space-y-6">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black text-sky-400 uppercase tracking-widest ml-1">Email thành viên</label>
-                       <div className="relative group">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-sky-400 transition-colors" />
+                       <label htmlFor="email" className="ml-1 text-[10px] font-black uppercase tracking-widest text-sky-400">Email thành viên</label>
+                       <div className="group relative">
+                          <Mail className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-sky-400" />
                           <Input 
-                            name="email"
+                            id="email"
+                             name="email"
                             type="email" 
                             placeholder="example@gmail.com" 
-                            className="h-14 pl-12 rounded-2xl bg-white/10 border-white/10 text-white placeholder:text-slate-600 focus:bg-white/20 focus:border-sky-500/50 transition-all font-medium"
+                            className="h-14 rounded-2xl border-white/10 bg-white/10 pl-12 font-medium text-white transition-all placeholder:text-slate-600 focus:border-sky-500/50 focus:bg-white/20"
                             required
                           />
                        </div>
                     </div>
 
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black text-sky-400 uppercase tracking-widest ml-1">Mật khẩu (Gửi kèm Email)</label>
-                       <div className="relative group">
-                          <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-sky-400 transition-colors" />
+                       <label htmlFor="password" className="ml-1 text-[10px] font-black uppercase tracking-widest text-sky-400">Mật khẩu (Gửi kèm Email)</label>
+                       <div className="group relative">
+                          <Key className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-sky-400" />
                           <Input 
-                            name="password"
+                            id="password"
+                             name="password"
                             type={showPassword ? "text" : "password"} 
                             placeholder="••••••••" 
-                            className="h-14 pl-12 pr-12 rounded-2xl bg-white/10 border-white/10 text-white placeholder:text-slate-600 focus:bg-white/20 focus:border-sky-500/50 transition-all font-medium"
+                            className="h-14 rounded-2xl border-white/10 bg-white/10 px-12 font-medium text-white transition-all placeholder:text-slate-600 focus:border-sky-500/50 focus:bg-white/20"
                             required
                           />
                           <button 
@@ -143,36 +145,36 @@ const GuestLogin = () => {
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-white"
                           >
-                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                             {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                           </button>
                        </div>
                     </div>
 
                     <div className="flex items-center justify-between pb-4">
-                       <label className="flex items-center gap-2 cursor-pointer group">
-                          <div className="h-5 w-5 rounded-lg border-2 border-white/10 flex items-center justify-center group-hover:border-sky-400 transition-colors">
-                            <div className="h-2 w-2 rounded-full bg-sky-400 opacity-0 group-hover:opacity-100" />
+                       <div className="group flex cursor-pointer items-center gap-2">
+                          <div className="flex size-5 items-center justify-center rounded-lg border-2 border-white/10 transition-colors group-hover:border-sky-400">
+                            <div className="size-2 rounded-full bg-sky-400 opacity-0 group-hover:opacity-100" />
                           </div>
-                          <span className="text-xs text-slate-400 font-bold">Ghi nhớ tôi</span>
-                       </label>
-                       <Link to="#" className="text-xs font-bold text-sky-400 hover:text-sky-300">Quên mật khẩu?</Link>
+                          <span className="text-xs font-bold text-slate-400">Ghi nhớ tôi</span>
+                       </div>
+                       <Link to="/" className="text-xs font-bold text-sky-400 hover:text-sky-300">Quên mật khẩu?</Link>
                     </div>
 
                     <Button 
                       type="submit" 
                       disabled={isLoading}
-                      className="w-full h-14 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-black text-lg shadow-xl shadow-sky-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      className="h-14 w-full rounded-2xl bg-sky-600 text-lg font-black text-white shadow-xl shadow-sky-600/30 transition-all hover:scale-[1.02] hover:bg-sky-500 active:scale-[0.98]"
                     >
                        {isLoading ? (
-                         <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                         <div className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                        ) : (
                          "Truy cập ngay"
                        )}
                     </Button>
                  </form>
 
-                 <div className="mt-10 pt-8 border-t border-white/10">
-                    <p className="text-center text-slate-500 text-xs font-bold">
+                 <div className="mt-10 border-t border-white/10 pt-8">
+                    <p className="text-center text-xs font-bold text-slate-500">
                        Bạn gặp vấn đề khi đăng nhập? <Link to={ROUTERS.BKS_STAY_SUPPORT} className="text-sky-400 hover:underline">Liên hệ hỗ trợ</Link>
                     </p>
                  </div>
@@ -182,7 +184,7 @@ const GuestLogin = () => {
       </div>
 
       {/* Footer Branding */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-600 font-black text-[10px] uppercase tracking-[0.4em] opacity-40">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 opacity-40">
         POWERED BY BKS STAY ECOSYSTEM
       </div>
 
@@ -201,3 +203,4 @@ const GuestLogin = () => {
 };
 
 export default GuestLogin;
+

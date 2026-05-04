@@ -153,7 +153,7 @@ const BookingEditDialog: React.FC<BookingEditDialogProps> = ({ id, open, onClose
 
             <div className="space-y-1">
               <Label>{t("bookings.edit.note")}</Label>
-              <textarea className="w-full rounded-md border px-3 py-2 text-sm min-h-[96px]" value={note} disabled={isPartner} onChange={(e) => setNote(e.target.value)} />
+              <textarea className="min-h-[96px] w-full rounded-md border px-3 py-2 text-sm" value={note} disabled={isPartner} onChange={(e) => setNote(e.target.value)} />
             </div>
           </div>
         )}

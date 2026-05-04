@@ -39,7 +39,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
         )} 
       />
       {showText && (
-        <p className="text-sm font-medium text-slate-500 animate-pulse">
+        <p className="animate-pulse text-sm font-medium text-slate-500">
           {text || "Đang tải dữ liệu..."}
         </p>
       )}

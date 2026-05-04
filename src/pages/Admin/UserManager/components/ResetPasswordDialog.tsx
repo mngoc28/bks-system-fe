@@ -62,7 +62,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">{t("user.reset_password")}</DialogTitle>
-              <DialogDescription className="text-sm text-gray-500 mt-1">
+              <DialogDescription className="mt-1 text-sm text-gray-500">
                 {t("user.reset_password_for_user", { name: user.name, email: user.email })}
               </DialogDescription>
             </div>
@@ -87,7 +87,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
                         placeholder={t("user.new_password_placeholder")}
                         {...field}
                         disabled={isLoading}
-                        className="border-gray-300 focus:border-primary pr-10"
+                        className="border-gray-300 pr-10 focus:border-primary"
                       />
                       <button
                         type="button"
@@ -120,7 +120,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
                         placeholder={t("user.new_password_confirmation_placeholder")}
                         {...field}
                         disabled={isLoading}
-                        className="border-gray-300 focus:border-primary pr-10"
+                        className="border-gray-300 pr-10 focus:border-primary"
                       />
                       <button
                         type="button"
@@ -137,7 +137,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
               )}
             />
 
-            <DialogFooter className="flex-row gap-3 sm:gap-3 pt-4">
+            <DialogFooter className="flex-row gap-3 pt-4 sm:gap-3">
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading} className="flex-1">
                 {t("common.cancel")}
               </Button>

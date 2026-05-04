@@ -60,7 +60,7 @@ export const usePublicChatbot = ({ type }: UsePublicChatbotOptions = {}) => {
         ]);
         setCurrentQuestion(firstQuestion);
       }
-    } catch (err) {
+    } catch {
       setError(t("publicChatbot.messages.start_load_error"));
     } finally {
       setIsLoading(false);
@@ -104,7 +104,7 @@ export const usePublicChatbot = ({ type }: UsePublicChatbotOptions = {}) => {
         } else {
           setCurrentQuestion(undefined);
       }
-    } catch (err) {
+    } catch {
       setCurrentQuestion(undefined);
     } finally {
       setIsAnswering(false);

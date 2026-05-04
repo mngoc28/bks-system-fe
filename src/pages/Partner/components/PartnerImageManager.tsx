@@ -191,10 +191,10 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="p-6 border-b bg-slate-50">
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
+        <DialogHeader className="border-b bg-slate-50 p-6">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
               <ImageIcon className="text-blue-600" size={24} />
               Quản lý hình ảnh - {targetName}
             </DialogTitle>
@@ -202,20 +202,20 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {/* Upload Button Card */}
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+              className="group flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50"
             >
               {saving ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="animate-spin text-blue-600" size={32} />
-                  <span className="text-xs text-gray-500 font-medium">Đang lưu ảnh...</span>
+                  <span className="text-xs font-medium text-gray-500">Đang lưu ảnh...</span>
                 </div>
               ) : (
                 <>
-                  <div className="p-3 bg-gray-100 rounded-full group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                  <div className="rounded-full bg-gray-100 p-3 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">
                     <Plus size={24} />
                   </div>
                   <span className="text-sm font-semibold text-gray-600 group-hover:text-blue-700">Thêm ảnh mới</span>
@@ -233,21 +233,21 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
             </div>
 
             {pendingImages.map((img) => (
-              <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden border border-blue-200 shadow-sm bg-blue-50/20">
+              <div key={img.id} className="group relative aspect-square overflow-hidden rounded-xl border border-blue-200 bg-blue-50/20 shadow-sm">
                 <img
                   src={img.previewUrl}
                   alt="Pending"
-                  className="w-full h-full object-cover"
+                  className="size-full object-cover"
                 />
-                <div className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-semibold px-2 py-1 rounded-full">
+                <div className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-[10px] font-semibold text-white">
                   Chưa lưu
                 </div>
                 {img.error && (
-                  <div className="absolute bottom-2 left-2 right-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded-md text-center">
+                  <div className="absolute inset-x-2 bottom-2 rounded-md bg-red-600 px-2 py-1 text-center text-[10px] text-white">
                     {img.error}
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button
                     variant="destructive"
                     size="sm"
@@ -263,17 +263,17 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
             {/* Image List */}
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded-xl" />
+                <div key={i} className="aspect-square animate-pulse rounded-xl bg-gray-100" />
               ))
             ) : images.length > 0 ? (
               images.map((img) => (
-                <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100">
+                <div key={img.id} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-sm">
                   <img 
                     src={img.image_url} 
                     alt="Property" 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-110" 
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                     <Button 
                       variant="destructive" 
                       size="sm" 
@@ -287,16 +287,16 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
               ))
             ) : !saving && pendingImages.length === 0 && (
               <div className="col-span-full py-10 text-center">
-                <p className="text-gray-400 italic">Chưa có hình ảnh nào cho {type === 'building' ? 'bất động sản' : 'phòng'} này.</p>
+                <p className="italic text-gray-400">Chưa có hình ảnh nào cho {type === 'building' ? 'bất động sản' : 'phòng'} này.</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 border-t bg-gray-50 p-4">
           {pendingImages.some((item) => !item.error) && (
             <Button onClick={handleCommitPendingImages} disabled={saving}>
-              {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
               Lưu {pendingImages.filter((item) => !item.error).length} ảnh
             </Button>
           )}

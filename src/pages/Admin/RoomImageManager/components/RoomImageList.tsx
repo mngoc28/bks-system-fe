@@ -48,23 +48,23 @@ const SortableItem: React.FC<SortableItemProps> =
         ref={setNodeRef}
         style={style}
         className={`
-          relative group rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow
+          group relative overflow-hidden rounded-lg shadow-sm transition-shadow hover:shadow-md
           ${isDragging ? 'opacity-50' : ''}
           ${hasPending ? 'border-4 border-blue-400' : 'border border-gray-200'}
           ${isSelected ? 'border-4 border-red-500' : ''}
         `}
-        onClick={(e) => { e.stopPropagation(); isSelected && onSelect(image.id, false); }}
+        onClick={(e) => { e.stopPropagation(); if (isSelected) onSelect(image.id, false); }}
         {...attributes}
         {...listeners}
       >
         <img
           src={getRoomImageSrc(image.image_url)}
           alt={`${t("rooms.image")} ${image.sort}`}
-          className="w-full aspect-[4/3] object-cover"
+          className="aspect-[4/3] w-full object-cover"
         />
 
         {/* Checkbox for selection */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute right-2 top-2">
           <Checkbox
             checked={isSelected}
             onCheckedChange={(checked) => onSelect(image.id, checked as boolean)}
@@ -73,14 +73,14 @@ const SortableItem: React.FC<SortableItemProps> =
         </div>
 
         {/* Sort number badge */}
-        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm font-medium">
+        <div className="absolute left-2 top-2 rounded bg-black bg-opacity-50 px-2 py-1 text-sm font-medium text-white">
           #{image.sort}
         </div>
 
         
       </div>
       {/* Select for image type below the image */}
-      <div className="p-2 bg-white">
+      <div className="bg-white p-2">
         <Select
           value={currentType.toString()}
           onValueChange={(value) => {
@@ -199,7 +199,7 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
     setIsUpdating(true);
     try {
       await updateMultipleTypesMutation.mutateAsync(updates);
-    } catch (error) {
+    } catch {
       toastError(t('room_images.update_failed'));
     } finally {
       setIsUpdating(false);
@@ -256,24 +256,24 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
       onDragEnd={handleDragEnd}
     >
       {isLoading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        <div className="py-8 text-center">
+          <div className="mx-auto size-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
           <p className="mt-2 text-gray-600">{t("loading")}</p>
         </div>
       ) : !displayImages || displayImages.length === 0 ? (
-        <div className="text-center py-12">
-          <ImageIcon className="size-12 mx-auto mb-4 text-gray-400" />
+        <div className="py-12 text-center">
+          <ImageIcon className="mx-auto mb-4 size-12 text-gray-400" />
           <p className="text-gray-500">{t("rooms.no_images_yet")}</p>
         </div>
       ) : (
         <>
-          <div className="flex gap-2 mb-4 justify-end">
+          <div className="mb-4 flex justify-end gap-2">
             <Button
               size="sm"
               variant="outline"
               onClick={displayImages.length === selectedImages.size ? handleDeselectAll : handleSelectAll}
               title={displayImages.length === selectedImages.size ? t("common.deselect_all") : t("common.select_all")}
-              className="bg-green-500 hover:bg-green-600 text-white"
+              className="bg-green-500 text-white hover:bg-green-600"
             >
               <CheckSquare className="size-4" />
             </Button>
@@ -282,13 +282,13 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
               onClick={handleDeleteSelected}
               disabled={selectedImages.size === 0}
               title={t("common.delete")}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 text-white hover:bg-red-600"
             >
               <Trash2 className="size-4" />
             </Button>
           </div>
           <SortableContext items={displayImages.map((img: RoomImage) => img.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {displayImages.map((image: RoomImage) => (
                 <SortableItem
                   key={image.id}

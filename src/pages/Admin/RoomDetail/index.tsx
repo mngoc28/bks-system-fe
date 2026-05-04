@@ -66,7 +66,7 @@ const RoomDetail: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-3 sm:p-6 overflow-hidden">
+    <div className="flex flex-col gap-6 overflow-hidden p-3 sm:p-6">
         <RoomDetailView
           room={room}
           onEdit={handleEdit}

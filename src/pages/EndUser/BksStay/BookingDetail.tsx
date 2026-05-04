@@ -82,18 +82,18 @@ const BookingDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-600"></div>
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="size-12 animate-spin rounded-full border-y-2 border-sky-600"></div>
       </div>
     );
   }
 
   if (!booking) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-        <AlertCircle className="h-12 w-12 text-slate-200 mb-4" />
+      <div className="flex min-h-[400px] flex-col items-center justify-center text-center">
+        <AlertCircle className="mb-4 size-12 text-slate-200" />
         <h2 className="text-xl font-bold text-slate-900">Không tìm thấy đơn đặt phòng</h2>
-        <Button asChild variant="link" className="text-sky-600 mt-2">
+        <Button asChild variant="link" className="mt-2 text-sky-600">
           <Link to={ROUTERS.BKS_STAY_HISTORY}>Quay lại danh sách</Link>
         </Button>
       </div>
@@ -110,17 +110,17 @@ const BookingDetail = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-8 pb-20 duration-500 animate-in fade-in slide-in-from-bottom-4">
       {/* Back Navigation & Share */}
       <div className="flex items-center justify-between gap-4">
-        <Button variant="ghost" asChild className="rounded-xl h-10 px-3 hover:bg-white text-slate-500 hover:text-slate-900 border border-transparent hover:border-slate-200 transition-all">
+        <Button variant="ghost" asChild className="h-10 rounded-xl border border-transparent px-3 text-slate-500 transition-all hover:border-slate-200 hover:bg-white hover:text-slate-900">
           <Link to={ROUTERS.BKS_STAY_HISTORY} className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" /> Quay lại danh sách
+            <ArrowLeft className="size-4" /> Quay lại danh sách
           </Link>
         </Button>
         <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" className="rounded-xl h-10 gap-2 border-slate-200" onClick={handleShare}>
-              <Share2 className="h-4 w-4" /> Chia sẻ
+           <Button variant="outline" size="sm" className="h-10 gap-2 rounded-xl border-slate-200" onClick={handleShare}>
+              <Share2 className="size-4" /> Chia sẻ
            </Button>
         </div>
       </div>
@@ -131,86 +131,86 @@ const BookingDetail = () => {
           <img 
             src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=2000" 
             alt="Luxury Room" 
-            className="w-full h-full object-cover"
+            className="size-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/60 to-transparent" />
         </div>
 
-        <div className="relative z-10 h-full flex flex-col justify-center px-10 md:px-12">
-          <div className="inline-flex items-center gap-2 rounded-full bg-sky-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-sky-300 backdrop-blur-md mb-6 border border-sky-500/30 w-fit">
-            <Zap className="h-3 w-3" />
+        <div className="relative z-10 flex h-full flex-col justify-center px-10 md:px-12">
+          <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-sky-300 backdrop-blur-md">
+            <Zap className="size-3" />
             Chi tiết kỳ nghỉ của bạn
           </div>
             {booking.room?.title || "Kỳ nghỉ của bạn"}
           
-          <div className="flex flex-wrap gap-6 items-center">
+          <div className="flex flex-wrap items-center gap-6">
              <div className="flex items-center gap-3">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10 text-center min-w-[60px]">
-                   <div className="text-lg font-bold text-white leading-none">{countdown.days}</div>
-                   <div className="text-[9px] uppercase text-white/60 font-black mt-1">Ngày</div>
+                <div className="min-w-[60px] rounded-xl border border-white/10 bg-white/10 p-2.5 text-center backdrop-blur-md">
+                   <div className="text-lg font-bold leading-none text-white">{countdown.days}</div>
+                   <div className="mt-1 text-[9px] font-black uppercase text-white/60">Ngày</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10 text-center min-w-[60px]">
-                   <div className="text-lg font-bold text-white leading-none">{countdown.hours}</div>
-                   <div className="text-[9px] uppercase text-white/60 font-black mt-1">Giờ</div>
+                <div className="min-w-[60px] rounded-xl border border-white/10 bg-white/10 p-2.5 text-center backdrop-blur-md">
+                   <div className="text-lg font-bold leading-none text-white">{countdown.hours}</div>
+                   <div className="mt-1 text-[9px] font-black uppercase text-white/60">Giờ</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10 text-center min-w-[60px]">
-                   <div className="text-lg font-bold text-white leading-none">{countdown.mins}</div>
-                   <div className="text-[9px] uppercase text-white/60 font-black mt-1">Phút</div>
+                <div className="min-w-[60px] rounded-xl border border-white/10 bg-white/10 p-2.5 text-center backdrop-blur-md">
+                   <div className="text-lg font-bold leading-none text-white">{countdown.mins}</div>
+                   <div className="mt-1 text-[9px] font-black uppercase text-white/60">Phút</div>
                 </div>
              </div>
-             <div className="text-white/60 text-xs font-medium max-w-[150px]">đến thời điểm nhận phòng dự kiến.</div>
+             <div className="max-w-[150px] text-xs font-medium text-white/60">đến thời điểm nhận phòng dự kiến.</div>
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         
         {/* Left Column: Specifics */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8 lg:col-span-2">
           
           {/* Main Booking Details Card */}
-          <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[32px] bg-white overflow-hidden">
+          <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
             <CardContent className="p-8">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900">
+              <div className="mb-8 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
                    Mã đơn hàng <span className="text-sky-600">#{booking.id}</span>
                 </h2>
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-4 py-1.5 rounded-full font-bold">
+                <Badge className="rounded-full border-none bg-emerald-100 px-4 py-1.5 font-bold text-emerald-700 hover:bg-emerald-100">
                    {booking.status === 1 ? "ĐÃ XÁC NHẬN" : booking.status === 2 ? "HOÀN THÀNH" : "CHỜ XÁC NHẬN"}
                 </Badge>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid gap-8 md:grid-cols-2">
                 <div className="space-y-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-slate-50 rounded-2xl text-sky-600 border border-slate-100"><CalendarDays className="h-6 w-6" /></div>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-sky-600"><CalendarDays className="size-6" /></div>
                     <div>
-                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Thời gian lưu trú</p>
+                      <p className="mb-1 text-[10px] font-black uppercase leading-none tracking-widest text-slate-400">Thời gian lưu trú</p>
                       <p className="font-bold text-slate-900">
                          {new Date(booking.start_date).toLocaleDateString("vi-VN")} — {new Date(booking.end_date).toLocaleDateString("vi-VN")}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-slate-50 rounded-2xl text-sky-600 border border-slate-100"><MapPin className="h-6 w-6" /></div>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-sky-600"><MapPin className="size-6" /></div>
                     <div className="flex-1">
-                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Địa chỉ phòng</p>
-                      <p className="font-bold text-slate-900 leading-snug">{booking.room?.building?.address || "Địa chỉ chưa cập nhật"}</p>
-                      <button onClick={openInMaps} className="text-sky-600 text-[10px] font-black uppercase mt-1 flex items-center gap-1 hover:underline">
-                         Mở trong bản đồ <ExternalLink className="h-2 w-2" />
+                      <p className="mb-1 text-[10px] font-black uppercase leading-none tracking-widest text-slate-400">Địa chỉ phòng</p>
+                      <p className="font-bold leading-snug text-slate-900">{booking.room?.building?.address || "Địa chỉ chưa cập nhật"}</p>
+                      <button onClick={openInMaps} className="mt-1 flex items-center gap-1 text-[10px] font-black uppercase text-sky-600 hover:underline">
+                         Mở trong bản đồ <ExternalLink className="size-2" />
                       </button>
                     </div>
                   </div>
                 </div>
-                <div className="bg-slate-900 rounded-[32px] p-6 text-white flex flex-col justify-between shadow-xl shadow-slate-900/10 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-4 opacity-5"><Copy className="h-20 w-20" /></div>
+                <div className="relative flex flex-col justify-between overflow-hidden rounded-[32px] bg-slate-900 p-6 text-white shadow-xl shadow-slate-900/10">
+                   <div className="absolute right-0 top-0 p-4 opacity-5"><Copy className="size-20" /></div>
                    <div className="relative z-10">
-                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Tổng thanh toán</p>
+                      <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">Tổng thanh toán</p>
                       <p className="text-2xl font-black text-white">{formatPrice(booking.price?.price || 0)}</p>
                    </div>
-                   <div className="mt-4 flex items-center justify-between relative z-10">
-                      <p className="text-xs text-slate-400 font-medium">Bao gồm VAT & Phí dịch vụ</p>
-                      <Button variant="ghost" size="sm" className="text-sky-400 hover:text-white hover:bg-white/5 font-bold" onClick={() => toast.success("Đang tải hóa đơn...")}>Hóa đơn</Button>
+                   <div className="relative z-10 mt-4 flex items-center justify-between">
+                      <p className="text-xs font-medium text-slate-400">Bao gồm VAT & Phí dịch vụ</p>
+                      <Button variant="ghost" size="sm" className="font-bold text-sky-400 hover:bg-white/5 hover:text-white" onClick={() => toast.success("Đang tải hóa đơn...")}>Hóa đơn</Button>
                    </div>
                 </div>
               </div>
@@ -218,35 +218,35 @@ const BookingDetail = () => {
           </Card>
 
           {/* Quick Access Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-none shadow-lg rounded-[32px] bg-sky-900 text-white overflow-hidden relative group">
-              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-                <Wifi className="h-32 w-32" />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Card className="group relative overflow-hidden rounded-[32px] border-none bg-sky-900 text-white shadow-lg">
+              <div className="absolute -bottom-4 -right-4 opacity-5 transition-transform duration-500 group-hover:scale-110">
+                <Wifi className="size-32" />
               </div>
-              <CardContent className="p-8 relative z-10">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 bg-sky-500/20 backdrop-blur-md rounded-2xl border border-sky-500/20">
-                    <Wifi className="h-6 w-6 text-sky-400" />
+              <CardContent className="relative z-10 p-8">
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="rounded-2xl border border-sky-500/20 bg-sky-500/20 p-3 backdrop-blur-md">
+                    <Wifi className="size-6 text-sky-400" />
                   </div>
-                  <button onClick={() => setShowWifi(!showWifi)} className="text-[10px] font-black uppercase tracking-widest text-sky-400 hover:text-white transition-colors">
+                  <button onClick={() => setShowWifi(!showWifi)} className="text-[10px] font-black uppercase tracking-widest text-sky-400 transition-colors hover:text-white">
                     {showWifi ? "Ẩn" : "Hiện"} pass
                   </button>
                 </div>
-                <h3 className="text-xl font-bold mb-4">Kết nối Wi-Fi</h3>
+                <h3 className="mb-4 text-xl font-bold">Kết nối Wi-Fi</h3>
                 <div className="space-y-3">
-                   <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                      <span className="text-sky-400 font-medium">SSID</span>
+                   <div className="flex items-center justify-between border-b border-white/5 pb-2 text-sm">
+                      <span className="font-medium text-sky-400">SSID</span>
                       <span className="font-mono font-bold tracking-tight">BKS_Premium_Guest</span>
                    </div>
-                   <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-sky-400 font-medium">Password</span>
+                   <div className="flex items-center justify-between pt-1 text-sm">
+                      <span className="font-medium text-sky-400">Password</span>
                       <div className="flex items-center gap-2">
-                         <span className="font-mono font-bold text-lg tracking-wider">
+                         <span className="font-mono text-lg font-bold tracking-wider">
                            {showWifi ? "stay_at_bks_2026" : "••••••••••••"}
                          </span>
                          {showWifi && (
-                           <button onClick={() => { navigator.clipboard.writeText("stay_at_bks_2026"); toast.success("Đã copy mật khẩu!"); }} className="p-1 hover:bg-white/10 rounded">
-                              <Copy className="h-3 w-3 text-sky-400" />
+                           <button onClick={() => { navigator.clipboard.writeText("stay_at_bks_2026"); toast.success("Đã copy mật khẩu!"); }} className="rounded p-1 hover:bg-white/10">
+                              <Copy className="size-3 text-sky-400" />
                            </button>
                          )}
                       </div>
@@ -255,23 +255,23 @@ const BookingDetail = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg rounded-[32px] bg-white border border-slate-100 relative group overflow-hidden">
-               <div className="absolute -right-4 -bottom-4 p-8 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
-                <Key className="h-32 w-32" />
+            <Card className="group relative overflow-hidden rounded-[32px] border border-none border-slate-100 bg-white shadow-lg">
+               <div className="absolute -bottom-4 -right-4 p-8 opacity-[0.03] transition-transform duration-500 group-hover:scale-110">
+                <Key className="size-32" />
               </div>
               <CardContent className="p-8">
-                <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/10 w-fit mb-6">
-                    <Key className="h-6 w-6 text-amber-600" />
+                <div className="mb-6 w-fit rounded-2xl border border-amber-500/10 bg-amber-500/10 p-3">
+                    <Key className="size-6 text-amber-600" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-4">Truy cập phòng</h3>
+                <h3 className="mb-4 text-xl font-bold text-slate-900">Truy cập phòng</h3>
                 <div className="grid grid-cols-2 gap-4">
                    <div>
-                      <p className="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-1">Số phòng</p>
+                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Số phòng</p>
                       <p className="text-2xl font-black text-slate-900">P.808</p>
                    </div>
                    <div>
-                      <p className="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-1">Mã cửa</p>
-                      <p className="text-2xl font-black bg-gradient-to-br from-amber-600 to-rose-600 bg-clip-text text-transparent tracking-widest">
+                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Mã cửa</p>
+                      <p className="bg-gradient-to-br from-amber-600 to-rose-600 bg-clip-text text-2xl font-black tracking-widest text-transparent">
                         283944
                       </p>
                    </div>
@@ -281,22 +281,22 @@ const BookingDetail = () => {
           </div>
 
           {/* Guide Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button onClick={openInMaps} variant="outline" className="h-auto py-8 rounded-[32px] flex flex-col gap-3 border-slate-200 bg-white hover:border-sky-300 hover:bg-sky-50 transition-all group">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
-                  <Navigation className="h-6 w-6" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Button onClick={openInMaps} variant="outline" className="group flex h-auto flex-col gap-3 rounded-[32px] border-slate-200 bg-white py-8 transition-all hover:border-sky-300 hover:bg-sky-50">
+                <div className="rounded-2xl bg-slate-50 p-3 transition-colors group-hover:bg-sky-600 group-hover:text-white">
+                  <Navigation className="size-6" />
                 </div>
                 <span className="font-bold text-slate-900">Hướng dẫn đường đi</span>
               </Button>
-              <Button variant="outline" className="h-auto py-8 rounded-[32px] flex flex-col gap-3 border-slate-200 bg-white hover:border-sky-300 hover:bg-sky-50 transition-all group" onClick={() => toast.info("Check-in để xem hướng dẫn gửi xe")}>
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
-                  <Car className="h-6 w-6" />
+              <Button variant="outline" className="group flex h-auto flex-col gap-3 rounded-[32px] border-slate-200 bg-white py-8 transition-all hover:border-sky-300 hover:bg-sky-50" onClick={() => toast.info("Check-in để xem hướng dẫn gửi xe")}>
+                <div className="rounded-2xl bg-slate-50 p-3 transition-colors group-hover:bg-sky-600 group-hover:text-white">
+                  <Car className="size-6" />
                 </div>
                 <span className="font-bold text-slate-900">Nơi gửi xe gần nhất</span>
               </Button>
-              <Button variant="outline" className="h-auto py-8 rounded-[32px] flex flex-col gap-3 border-slate-200 bg-white hover:border-sky-300 hover:bg-sky-50 transition-all group" onClick={() => toast.info("Đang liệt kê các dịch vụ lân cận...")}>
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
-                  <Coffee className="h-6 w-6" />
+              <Button variant="outline" className="group flex h-auto flex-col gap-3 rounded-[32px] border-slate-200 bg-white py-8 transition-all hover:border-sky-300 hover:bg-sky-50" onClick={() => toast.info("Đang liệt kê các dịch vụ lân cận...")}>
+                <div className="rounded-2xl bg-slate-50 p-3 transition-colors group-hover:bg-sky-600 group-hover:text-white">
+                  <Coffee className="size-6" />
                 </div>
                 <span className="font-bold text-slate-900">Tiện ích ăn uống</span>
               </Button>
@@ -305,59 +305,59 @@ const BookingDetail = () => {
 
         {/* Right Column: Support & Policy */}
         <div className="space-y-8">
-           <div className="bg-slate-900 rounded-[32px] p-8 text-white relative shadow-xl shadow-slate-900/20 overflow-hidden">
-              <div className="absolute -right-8 -top-8 h-32 w-32 bg-white/5 rounded-full blur-3xl" />
-              <h3 className="text-xl font-bold mb-6">Hỗ trợ khẩn cấp</h3>
+           <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 text-white shadow-xl shadow-slate-900/20">
+              <div className="absolute -right-8 -top-8 size-32 rounded-full bg-white/5 blur-3xl" />
+              <h3 className="mb-6 text-xl font-bold">Hỗ trợ khẩn cấp</h3>
               <div className="space-y-4">
-                 <Button className="w-full h-16 justify-between px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white gap-4 border-none shadow-none">
+                 <Button className="h-16 w-full justify-between gap-4 rounded-2xl border-none bg-white/5 px-6 text-white shadow-none hover:bg-white/10">
                     <div className="flex items-center gap-4">
-                       <div className="p-2 bg-sky-500/20 rounded-xl"><PhoneCall className="h-5 w-5 text-sky-400" /></div>
+                       <div className="rounded-xl bg-sky-500/20 p-2"><PhoneCall className="size-5 text-sky-400" /></div>
                        <div className="text-left leading-tight">
                           <p className="text-sm font-bold">Lễ tân 24/7</p>
-                          <p className="text-[9px] text-white/40 uppercase font-black mt-1">GỌI MIỄN PHÍ</p>
+                          <p className="mt-1 text-[9px] font-black uppercase text-white/40">GỌI MIỄN PHÍ</p>
                        </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-white/20" />
+                    <ChevronRight className="size-4 text-white/20" />
                  </Button>
-                 <Button className="w-full h-16 justify-between px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white gap-4 border-none shadow-none">
+                 <Button className="h-16 w-full justify-between gap-4 rounded-2xl border-none bg-white/5 px-6 text-white shadow-none hover:bg-white/10">
                     <div className="flex items-center gap-4">
-                       <div className="p-2 bg-sky-500/20 rounded-xl"><MessageSquare className="h-5 w-5 text-sky-400" /></div>
+                       <div className="rounded-xl bg-sky-500/20 p-2"><MessageSquare className="size-5 text-sky-400" /></div>
                        <div className="text-left leading-tight">
                           <p className="text-sm font-bold">Trợ lý ảo AI</p>
-                          <p className="text-[9px] text-white/40 uppercase font-black mt-1">PHẢN HỒI NGAY</p>
+                          <p className="mt-1 text-[9px] font-black uppercase text-white/40">PHẢN HỒI NGAY</p>
                        </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-white/20" />
+                    <ChevronRight className="size-4 text-white/20" />
                  </Button>
               </div>
            </div>
 
-           <Card className="border-none shadow-md rounded-[32px] bg-white border border-slate-100 p-8">
+           <Card className="rounded-[32px] border border-none border-slate-100 bg-white p-8 shadow-md">
               <div className="flex gap-4">
-                 <div className="h-10 w-10 bg-sky-50 rounded-xl flex items-center justify-center text-sky-600 shrink-0"><Info className="h-5 w-5" /></div>
+                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600"><Info className="size-5" /></div>
                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 mb-1">Nội quy & Chính sách</h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed mb-4">
+                    <h3 className="mb-1 text-sm font-bold text-slate-900">Nội quy & Chính sách</h3>
+                    <p className="mb-4 text-[11px] leading-relaxed text-slate-500">
                       Vui lòng tham khảo các quy định về giờ giấc, vật nuôi và an toàn phòng cháy chữa cháy của phòng này.
                     </p>
-                    <Button variant="ghost" className="p-0 h-auto w-fit text-sky-600 text-xs font-bold hover:no-underline hover:text-sky-800 hover:bg-transparent flex items-center gap-1 group">
-                       Xem toàn bộ nội quy <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                    <Button variant="ghost" className="group flex h-auto w-fit items-center gap-1 p-0 text-xs font-bold text-sky-600 hover:bg-transparent hover:text-sky-800 hover:no-underline">
+                       Xem toàn bộ nội quy <ChevronRight className="size-3 transition-transform group-hover:translate-x-0.5" />
                     </Button>
                  </div>
               </div>
            </Card>
 
-           <Card className="border-none shadow-md rounded-[32px] bg-rose-50 border border-rose-100 p-8">
+           <Card className="rounded-[32px] border border-none border-rose-100 bg-rose-50 p-8 shadow-md">
               <div className="flex gap-4">
-                 <AlertCircle className="h-6 w-6 text-rose-500 shrink-0" />
+                 <AlertCircle className="size-6 shrink-0 text-rose-500" />
                  <div>
-                    <h3 className="text-sm font-bold text-rose-900 mb-1">Quy tắc hủy phòng</h3>
-                    <p className="text-[11px] text-rose-700/70 leading-relaxed mb-4">
+                    <h3 className="mb-1 text-sm font-bold text-rose-900">Quy tắc hủy phòng</h3>
+                    <p className="mb-4 text-[11px] leading-relaxed text-rose-700/70">
                       Bạn được miễn phí hủy đơn trước ngày 15/04/2026. Phí hủy đơn sau ngày này là 100% giá trị đơn hàng.
                     </p>
                     <div className="flex flex-col gap-2">
-                       <Button variant="ghost" className="p-0 h-auto w-fit text-rose-600 text-xs font-bold hover:no-underline hover:text-rose-800 hover:bg-transparent" onClick={() => toast.warning("Yêu cầu hủy đã được gửi đến quản trị viên")}>Yêu cầu hủy đơn</Button>
-                       <Button variant="ghost" className="p-0 h-auto w-fit text-rose-600 text-xs font-bold hover:no-underline hover:text-rose-800 hover:bg-transparent" onClick={() => toast.info("Vui lòng chọn ngày mới để dời lịch")}>Yêu cầu dời ngày</Button>
+                       <Button variant="ghost" className="h-auto w-fit p-0 text-xs font-bold text-rose-600 hover:bg-transparent hover:text-rose-800 hover:no-underline" onClick={() => toast.warning("Yêu cầu hủy đã được gửi đến quản trị viên")}>Yêu cầu hủy đơn</Button>
+                       <Button variant="ghost" className="h-auto w-fit p-0 text-xs font-bold text-rose-600 hover:bg-transparent hover:text-rose-800 hover:no-underline" onClick={() => toast.info("Vui lòng chọn ngày mới để dời lịch")}>Yêu cầu dời ngày</Button>
                     </div>
                  </div>
               </div>

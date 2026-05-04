@@ -33,7 +33,7 @@ export default function ProfileDialog({ open, onClose }: ProfileDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-3xl w-[92vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[92vw] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{t("profile.title")}</DialogTitle>
         </DialogHeader>

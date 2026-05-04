@@ -173,7 +173,7 @@ const RoomByProvince = () => {
       </div>
 
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
@@ -211,7 +211,7 @@ const RoomByProvince = () => {
           </section>
         ) : totalRooms === 0 ? (
           <section className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
-            <SearchX className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+            <SearchX className="mx-auto mb-3 size-8 text-slate-400" />
             <p className="text-base font-semibold text-slate-700">{t("public.roomByProvince.emptyTitle")}</p>
             <p className="mt-2 text-sm text-slate-500">{t("public.roomByProvince.emptyDescription")}</p>
             <div className="mt-6">
@@ -230,7 +230,7 @@ const RoomByProvince = () => {
                 })}
               </p>
               <Badge variant="secondary" className="w-fit rounded-full bg-sky-50 px-3 py-1 text-sky-700">
-                <Filter className="mr-1 h-3.5 w-3.5" />
+                <Filter className="mr-1 size-3.5" />
                 {t("public.roomByProvince.appliedFilter")}
               </Badge>
             </div>
@@ -247,46 +247,46 @@ const RoomByProvince = () => {
                 return (
                   <Card
                     key={room.id}
-                    className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:border-sky-300 hover:shadow-md flex flex-col md:flex-row"
+                    className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:border-sky-300 hover:shadow-md md:flex-row"
                   >
-                    <div className="relative h-64 md:h-auto md:w-72 lg:w-96 shrink-0 overflow-hidden">
-                      <img src={roomImage} alt={room.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    <div className="relative h-64 shrink-0 overflow-hidden md:h-auto md:w-72 lg:w-96">
+                      <img src={roomImage} alt={room.title} className="size-full object-cover transition duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-900/10 to-transparent md:hidden" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/20 via-transparent to-transparent hidden md:block" />
+                      <div className="absolute inset-0 hidden bg-gradient-to-r from-slate-950/20 via-transparent to-transparent md:block" />
                     </div>
-                    <CardContent className="flex-1 flex flex-col p-6">
-                      <div className="flex flex-col h-full gap-4">
+                    <CardContent className="flex flex-1 flex-col p-6">
+                      <div className="flex h-full flex-col gap-4">
                         <div className="flex flex-col gap-2">
                           <div className="flex items-start justify-between">
-                            <h3 className="line-clamp-2 text-xl font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{room.title}</h3>
-                            <Badge variant="secondary" className={`rounded-full px-3 py-1 shrink-0 ${isAvailable ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-700'}`}>
+                            <h3 className="line-clamp-2 text-xl font-bold text-slate-900 transition-colors group-hover:text-sky-600">{room.title}</h3>
+                            <Badge variant="secondary" className={`shrink-0 rounded-full px-3 py-1 ${isAvailable ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
                               {isAvailable ? t("public.roomByProvince.roomStatus.available") : t("public.roomByProvince.roomStatus.private")}
                             </Badge>
                           </div>
                           
                           <p className="inline-flex items-start gap-2 text-sm text-slate-600">
-                            <MapPin className="mt-0.5 h-4 w-4 text-sky-500 shrink-0" />
+                            <MapPin className="mt-0.5 size-4 shrink-0 text-sky-500" />
                             <span className="line-clamp-2">{room.building_address || t("public.roomByProvince.fallbackAddress")}</span>
                           </p>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-                          <span className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                            <Users className="h-4 w-4 text-sky-500" />
+                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
+                            <Users className="size-4 text-sky-500" />
                             {t("public.roomByProvince.guests", { count: room.people })}
                           </span>
                         </div>
 
-                        <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                        <div className="mt-auto flex flex-col justify-between gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-center">
                           <div className="flex flex-col">
-                            <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{t("public.roomByProvince.priceLabel", "Từ")}</span>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t("public.roomByProvince.priceLabel", "Từ")}</span>
                             <span className="text-2xl font-bold text-sky-600">
                               {formatPrice(room.cheapest_daily_price)}
-                              <span className="text-sm font-normal text-slate-500 ml-1">{t("public.roomByProvince.perNight")}</span>
+                              <span className="ml-1 text-sm font-normal text-slate-500">{t("public.roomByProvince.perNight")}</span>
                             </span>
                           </div>
-                          <div className="flex gap-3 shrink-0">
-                            <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-md shadow-sky-100 px-8">
+                          <div className="flex shrink-0 gap-3">
+                            <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-8 shadow-md shadow-sky-100 hover:from-sky-600 hover:to-blue-700">
                               <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>
                                 {t("public.roomByProvince.viewDetails")}
                               </Link>
@@ -300,7 +300,7 @@ const RoomByProvince = () => {
               })}
             </div>
 
-            <div className="mt-8 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+            <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}

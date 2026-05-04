@@ -80,7 +80,7 @@ const NewsManager: React.FC = () => {
       setDeleteOpen(false);
       setDeleteTarget(null);
       toastSuccess(t("news.delete_news_dialog.confirm_delete_success"));
-    } catch (error) {
+    } catch {
       toastError(t("news.delete_news_dialog.confirm_delete_error"));
     }
   };
@@ -148,7 +148,7 @@ const NewsManager: React.FC = () => {
             <div className="flex flex-col gap-8">
               {viewMode === "grid" ? (
                 <>
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+                  <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {news?.data?.data?.map((item: News) => (
                       <NewsCard
                         key={item.id}
@@ -204,7 +204,7 @@ const NewsManager: React.FC = () => {
                         }}
                     />
                     {totalItems > 0 && (
-                        <div className="p-4 border-t border-slate-100">
+                        <div className="border-t border-slate-100 p-4">
                             <Pagination
                                 currentPage={page}
                                 totalPages={totalPages}

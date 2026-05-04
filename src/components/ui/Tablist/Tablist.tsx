@@ -49,7 +49,7 @@ const Tablist = ({
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="flex justify-between items-center border-b border-slate-200">
+      <div className="flex items-center justify-between border-b border-slate-200">
         <div className="flex">
           {tabs.map((tab) => (
             <button
@@ -76,7 +76,7 @@ const Tablist = ({
 
         <div className="relative">
           <button
-            className="flex items-center justify-between px-4 py-3 text-base border border-slate-200 rounded-md w-[200px]"
+            className="flex w-[200px] items-center justify-between rounded-md border border-slate-200 px-4 py-3 text-base"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             aria-label="Sắp xếp theo"
             aria-expanded={isDropdownOpen}
@@ -112,7 +112,7 @@ const Tablist = ({
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 w-[200px] bg-white border border-slate-200 rounded-md shadow-lg z-10">
+            <div className="absolute right-0 top-full z-10 mt-1 w-[200px] rounded-md border border-slate-200 bg-white shadow-lg">
               {sortOptions.map((option) => (
                 <button
                   key={option.id}

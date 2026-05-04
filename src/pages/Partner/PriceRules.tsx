@@ -59,7 +59,7 @@ const PriceRulesPage: React.FC = () => {
       setLoading(true);
       const res: any = await partnerService.getPriceRules();
       setRules(res?.data || []);
-    } catch (e) {
+    } catch {
       toastError('Không thể tải danh sách quy tắc giá.');
     } finally {
       setLoading(false);
@@ -105,7 +105,7 @@ const PriceRulesPage: React.FC = () => {
       }
       setIsModalOpen(false);
       fetchRules();
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi lưu quy tắc giá.');
     }
   };
@@ -116,7 +116,7 @@ const PriceRulesPage: React.FC = () => {
       await partnerService.deletePriceRule(id);
       toastSuccess('Đã xóa quy tắc giá.');
       fetchRules();
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi xóa quy tắc giá.');
     }
   };
@@ -129,59 +129,59 @@ const PriceRulesPage: React.FC = () => {
       });
       toastSuccess(`Đã ${rule.is_active ? 'tắt' : 'bật'} quy tắc giá.`);
       fetchRules();
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi cập nhật trạng thái.');
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
             <TrendingUp className="text-emerald-600" />
             Cấu hình Giá động
           </h1>
           <p className="text-sm text-slate-500">Tự động điều chỉnh giá theo mùa, ngày lễ hoặc nhu cầu thị trường.</p>
         </div>
-        <Button onClick={handleOpenCreate} className="bg-blue-600 hover:bg-blue-700 h-11 rounded-xl px-6 gap-2 font-semibold shadow-lg shadow-blue-200">
+        <Button onClick={handleOpenCreate} className="h-11 gap-2 rounded-xl bg-blue-600 px-6 font-semibold shadow-lg shadow-blue-200 hover:bg-blue-700">
            <Plus size={20} /> Thêm quy tắc mới
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
          {rules.map(rule => (
-            <div key={rule.id} className={`bg-white rounded-2xl border ${rule.is_active ? 'border-slate-200 shadow-sm' : 'border-slate-100 opacity-75'} p-6 transition-all hover:shadow-md relative overflow-hidden group`}>
-               <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-gradient-to-br ${rule.is_active ? 'from-emerald-500/10' : 'from-slate-500/10'} rounded-full blur-2xl transition-opacity opacity-0 group-hover:opacity-100`} />
+            <div key={rule.id} className={`rounded-2xl border bg-white ${rule.is_active ? 'border-slate-200 shadow-sm' : 'border-slate-100 opacity-75'} group relative overflow-hidden p-6 transition-all hover:shadow-md`}>
+               <div className={`absolute right-0 top-0 -mr-8 -mt-8 size-32 bg-gradient-to-br ${rule.is_active ? 'from-emerald-500/10' : 'from-slate-500/10'} rounded-full opacity-0 blur-2xl transition-opacity group-hover:opacity-100`} />
                
-               <div className="flex justify-between items-start mb-6">
+               <div className="mb-6 flex items-start justify-between">
                   <div className="space-y-1">
-                     <h3 className="font-bold text-slate-900 text-lg">{rule.name}</h3>
-                     <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 uppercase text-[10px] tracking-widest font-bold">
+                     <h3 className="text-lg font-bold text-slate-900">{rule.name}</h3>
+                     <Badge variant="outline" className="border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-500">
                         {rule.rule_type === 'seasonal' ? 'Theo mùa' : rule.rule_type === 'holiday' ? 'Ngày lễ' : 'Sự kiện'}
                      </Badge>
                   </div>
                   <Checkbox 
                     checked={!!rule.is_active} 
                     onCheckedChange={() => toggleStatus(rule)}
-                    className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                    className="data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500"
                   />
                </div>
 
-               <div className="space-y-4 mb-6">
+               <div className="mb-6 space-y-4">
                   <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                     <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         {rule.adjustment_type === 'percentage' ? <Percent size={20} /> : <Tag size={20} />}
                      </div>
                      <div>
-                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Điều chỉnh</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Điều chỉnh</div>
                         <div className="text-xl font-black text-slate-800">
                            {rule.adjustment_value > 0 ? '+' : ''}{rule.adjustment_value}{rule.adjustment_type === 'percentage' ? '%' : ' ₫'}
                         </div>
                      </div>
                   </div>
 
-                  <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
                      <Calendar size={14} className="text-slate-400" />
                      <span className="text-[11px] font-bold text-slate-600">{rule.start_date}</span>
                      <ArrowRight size={12} className="text-slate-300" />
@@ -189,11 +189,11 @@ const PriceRulesPage: React.FC = () => {
                   </div>
                </div>
 
-               <div className="flex items-center gap-2 pt-4 border-t border-slate-50">
-                  <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(rule)} className="flex-1 rounded-lg gap-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50">
+               <div className="flex items-center gap-2 border-t border-slate-50 pt-4">
+                  <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(rule)} className="flex-1 gap-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-600">
                      <Edit size={14} /> Chỉnh sửa
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(rule.id)} className="w-10 h-10 p-0 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50">
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(rule.id)} className="size-10 rounded-lg p-0 text-slate-400 hover:bg-rose-50 hover:text-rose-600">
                      <Trash2 size={16} />
                   </Button>
                </div>
@@ -201,13 +201,13 @@ const PriceRulesPage: React.FC = () => {
          ))}
 
          {rules.length === 0 && !loading && (
-            <div className="col-span-full bg-white rounded-xl border-2 border-dashed border-slate-200 p-20 text-center">
-               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="col-span-full rounded-xl border-2 border-dashed border-slate-200 bg-white p-20 text-center">
+               <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-slate-50">
                   <Settings2 size={32} className="text-slate-300" />
                </div>
                <h3 className="text-lg font-bold text-slate-800">Chưa có quy tắc giá nào</h3>
-               <p className="text-slate-500 mb-6 max-w-md mx-auto small">Tạo quy tắc giá để tự động tăng giá trong mùa cao điểm hoặc giảm giá ưu đãi cho các sự kiện đặc biệt.</p>
-               <Button onClick={handleOpenCreate} variant="outline" className="rounded-xl font-bold h-11 px-8 border-slate-200">
+               <p className="small mx-auto mb-6 max-w-md text-slate-500">Tạo quy tắc giá để tự động tăng giá trong mùa cao điểm hoặc giảm giá ưu đãi cho các sự kiện đặc biệt.</p>
+               <Button onClick={handleOpenCreate} variant="outline" className="h-11 rounded-xl border-slate-200 px-8 font-bold">
                   Thêm quy tắc đầu tiên
                </Button>
             </div>
@@ -215,14 +215,14 @@ const PriceRulesPage: React.FC = () => {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-3xl p-8">
+        <DialogContent className="rounded-3xl p-8 sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-slate-900">{editingRule ? 'Cập nhật quy tắc' : 'Thêm quy tắc mới'}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-5 py-4">
             <div className="space-y-2">
-               <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tên quy tắc</Label>
+               <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Tên quy tắc</Label>
                <Input 
                  placeholder="Ví dụ: Mùa hè cao điểm" 
                  value={formData.name} 
@@ -233,7 +233,7 @@ const PriceRulesPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loại quy tắc</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Loại quy tắc</Label>
                   <Select value={formData.rule_type} onValueChange={v => setFormData({...formData, rule_type: v})}>
                      <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue />
@@ -246,8 +246,8 @@ const PriceRulesPage: React.FC = () => {
                   </Select>
                </div>
                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Trạng thái</Label>
-                  <div className="flex items-center h-12 gap-3 px-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Trạng thái</Label>
+                  <div className="flex h-12 items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4">
                      <Checkbox checked={formData.is_active} onCheckedChange={(v: boolean) => setFormData({...formData, is_active: v})} />
                      <span className="text-sm font-bold text-slate-600">{formData.is_active ? 'Kích hoạt' : 'Vô hiệu'}</span>
                   </div>
@@ -256,7 +256,7 @@ const PriceRulesPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dạng điều chỉnh</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Dạng điều chỉnh</Label>
                   <Select value={formData.adjustment_type} onValueChange={v => setFormData({...formData, adjustment_type: v})}>
                      <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue />
@@ -268,7 +268,7 @@ const PriceRulesPage: React.FC = () => {
                   </Select>
                </div>
                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Giá trị (+ / -)</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Giá trị (+ / -)</Label>
                   <Input 
                     type="number" 
                     value={formData.adjustment_value} 
@@ -280,20 +280,20 @@ const PriceRulesPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 pt-2">
                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Clock size={12} /> Ngày bắt đầu</Label>
+                  <Label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400"><Clock size={12} /> Ngày bắt đầu</Label>
                   <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} className="h-12 rounded-xl" />
                </div>
                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Clock size={12} /> Ngày kết thúc</Label>
+                  <Label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400"><Clock size={12} /> Ngày kết thúc</Label>
                   <Input type="date" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className="h-12 rounded-xl" />
                </div>
-               <p className="col-span-2 text-[10px] text-slate-400 italic">Để trống ngày kết thúc nếu muốn quy tắc áp dụng vĩnh viễn.</p>
+               <p className="col-span-2 text-[10px] italic text-slate-400">Để trống ngày kết thúc nếu muốn quy tắc áp dụng vĩnh viễn.</p>
             </div>
           </div>
 
-          <DialogFooter className="pt-6 border-t border-slate-50 gap-3">
-             <Button variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1 h-12 rounded-xl font-bold text-slate-600">Hủy bỏ</Button>
-             <Button onClick={handleSave} className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-200">Lưu quy tắc</Button>
+          <DialogFooter className="gap-3 border-t border-slate-50 pt-6">
+             <Button variant="outline" onClick={() => setIsModalOpen(false)} className="h-12 flex-1 rounded-xl font-bold text-slate-600">Hủy bỏ</Button>
+             <Button onClick={handleSave} className="h-12 flex-1 rounded-xl bg-blue-600 font-bold shadow-lg shadow-blue-200 hover:bg-blue-700">Lưu quy tắc</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

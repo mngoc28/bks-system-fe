@@ -23,7 +23,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
 
   return (
     <Card
-      className={`glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 ${onView ? 'cursor-pointer' : ''}`}
+      className={`glass-card hover-scale group relative overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 animate-in ${onView ? 'cursor-pointer' : ''}`}
       onClick={() => onView?.(building)}
     >
       {/* 16/9 Image Section */}
@@ -32,7 +32,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
           <img
             src={imageUrl}
             alt={building.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={(e) => {
               if (e.currentTarget.src !== fallbackImage) {
                 e.currentTarget.src = fallbackImage;
@@ -40,9 +40,9 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
             }}
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
-            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
-            <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+          <div className="flex size-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+            <ImageIcon className="mx-auto mb-3 size-10 text-gray-400" />
+            <p className="text-sm text-gray-500">{t("rooms.no_images_yet")}</p>
           </div>
         )}
 
@@ -51,7 +51,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
           <Button
             variant="secondary"
             size="icon"
-            className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white/40 hover:scale-110 transition-transform"
+            className="size-10 rounded-full bg-white/20 text-white backdrop-blur-md transition-transform hover:scale-110 hover:bg-white/40"
             onClick={(e) => { e.stopPropagation(); onEdit(building); }}
           >
             <Edit className="size-5" />
@@ -59,7 +59,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
           <Button
             variant="destructive"
             size="icon"
-            className="h-10 w-10 rounded-full bg-red-500/80 text-white backdrop-blur-md hover:bg-red-600 hover:scale-110 transition-transform"
+            className="size-10 rounded-full bg-red-500/80 text-white backdrop-blur-md transition-transform hover:scale-110 hover:bg-red-600"
             onClick={(e) => { e.stopPropagation(); onDelete(building); }}
             disabled={isDeleting}
           >
@@ -68,7 +68,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
         </div>
 
         {/* Property Type/Rent Category Badge */}
-        <div className="absolute left-4 top-4 flex flex-col gap-1 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
+        <div className="absolute left-4 top-4 z-10 flex flex-col gap-1 duration-500 animate-in fade-in slide-in-from-top-2">
           <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
             {building.rent_category ? t(`RENT_CATEGORY.${building.rent_category}`) : t("buildings.status.active")}
           </Badge>
@@ -78,23 +78,23 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
       {/* Content Section */}
       <div className="p-5">
         <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="truncate text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors" title={building.name}>
+          <h3 className="truncate text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100" title={building.name}>
             {highlightText(building.name, highlightTerms?.name || "")}
           </h3>
-          <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500 whitespace-nowrap">
+          <Badge variant="outline" className="whitespace-nowrap border-slate-200 text-[10px] text-slate-500">
             ID: {building.id}
           </Badge>
         </div>
 
         <div className="mb-4 space-y-2 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
-            <Map className="size-3.5 text-indigo-500 shrink-0" />
+            <Map className="size-3.5 shrink-0 text-indigo-500" />
             <span className="truncate">
               {highlightText(building.province_name, highlightTerms?.province_name || "")} - {highlightText(building.ward_name, highlightTerms?.ward_name || "")}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 opacity-80 underline decoration-slate-200 underline-offset-4">
-            <MapPin className="size-3.5 text-slate-400 shrink-0" />
+          <div className="flex items-center gap-1.5 underline decoration-slate-200 underline-offset-4 opacity-80">
+            <MapPin className="size-3.5 shrink-0 text-slate-400" />
             <span className="truncate">{building.address_detail || t("buildings.no_address_provided")}</span>
           </div>
         </div>
@@ -102,20 +102,20 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
         {/* Icon Grid for Specs */}
         <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-3.5 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
               <Maximize2 className="size-4" />
             </div>
             <div>
-              <p className="text-[10px] uppercase text-slate-400 font-bold leading-none mb-1">{t("buildings.area")}</p>
+              <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400">{t("buildings.area")}</p>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{building.area} m²</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30">
               <Layers className="size-4" />
             </div>
             <div>
-              <p className="text-[10px] uppercase text-slate-400 font-bold leading-none mb-1">{t("buildings.floors")}</p>
+              <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400">{t("buildings.floors")}</p>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{building.number_of_floors}</p>
             </div>
           </div>
@@ -124,7 +124,7 @@ const BuildingCard: React.FC<BuildingCardProps & { onView?: (building: Building)
         {/* Footer Info */}
         <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
           <div className="flex items-center gap-1.5">
-            <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-[10px]">
+            <div className="flex size-6 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600">
               {(createdByData?.data?.name || building.user_name || "A")[0].toUpperCase()}
             </div>
             <span className="font-medium text-slate-500">{createdByData?.data?.name || building.user_name || "-"}</span>

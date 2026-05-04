@@ -59,26 +59,26 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className={`h-11 px-4 flex items-center gap-3 bg-white border-gray-200 hover:bg-slate-50 hover:border-blue-300 rounded-xl transition-all shadow-sm group ${className}`}>
-          <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+        <Button variant="outline" className={`group flex h-11 items-center gap-3 rounded-xl border-gray-200 bg-white px-4 shadow-sm transition-all hover:border-blue-300 hover:bg-slate-50 ${className}`}>
+          <div className="rounded-lg bg-blue-50 p-1.5 text-blue-600 transition-colors group-hover:bg-blue-100">
             <Building2 size={18} />
           </div>
-          <div className="text-left flex-1 overflow-hidden">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1">Tài sản</p>
-            <p className="text-sm font-bold text-gray-700 truncate">
+          <div className="flex-1 overflow-hidden text-left">
+            <p className="mb-1 text-[10px] font-bold uppercase leading-none tracking-widest text-gray-400">Tài sản</p>
+            <p className="truncate text-sm font-bold text-gray-700">
               {selectedBuilding ? selectedBuilding.name : allowAll && selectedId === null ? "Tất cả tòa nhà" : placeholder}
             </p>
           </div>
           <ChevronDown size={16} className="text-gray-400" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 p-2 rounded-xl shadow-xl border-gray-100">
+      <DropdownMenuContent align="start" className="w-64 rounded-xl border-gray-100 p-2 shadow-xl">
         {allowAll && (
           <DropdownMenuItem 
             onClick={() => onSelect(null)}
-            className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-blue-50 hover:text-blue-700 transition-colors"
+            className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-blue-50 hover:text-blue-700"
           >
-            <span className="font-medium text-sm">Tất cả tòa nhà</span>
+            <span className="text-sm font-medium">Tất cả tòa nhà</span>
             {selectedId === null && <Check size={16} className="text-blue-600" />}
           </DropdownMenuItem>
         )}
@@ -86,14 +86,14 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({
           <DropdownMenuItem 
             key={building.id} 
             onClick={() => onSelect(String(building.id))}
-            className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-blue-50 hover:text-blue-700 transition-colors"
+            className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-blue-50 hover:text-blue-700"
           >
-            <span className="font-medium text-sm truncate">{building.name}</span>
+            <span className="truncate text-sm font-medium">{building.name}</span>
             {String(selectedId) === String(building.id) && <Check size={16} className="text-blue-600" />}
           </DropdownMenuItem>
         ))}
         {buildings.length === 0 && !loading && (
-          <div className="p-3 text-center text-xs text-gray-400 italic">Chưa có tòa nhà nào</div>
+          <div className="p-3 text-center text-xs italic text-gray-400">Chưa có tòa nhà nào</div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

@@ -57,7 +57,7 @@ const ChangeProfileDialog = ({
       });
       onClose();
       onSuccess();
-    } catch (err) {
+    } catch {
       toast.error(t("user.profile_failed"), {
         style: { background: "#EF4444", color: "#FFFFFF" },
         className: "border-red-500",
@@ -70,7 +70,7 @@ const ChangeProfileDialog = ({
       <DialogContent className="w-[92vw] max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
+            <User className="size-5" />
             {t("profile.update_info_title")}
           </DialogTitle>
         </DialogHeader>

@@ -134,13 +134,13 @@ const PartnerTable: React.FC<PartnerTableProps> = ({
                                                     e.currentTarget.src = '/assets/images/photo_error2.png';
                                                 }
                                             }}
-                                            className="h-[150px] w-[150px] cursor-pointer rounded object-cover"
+                                            className="size-[150px] cursor-pointer rounded object-cover"
                                             alt="Partner"
                                         />
                                     ) : (
-                                        <div className="h-[150px] w-[150px] flex flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
-                                            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
-                                            <p className="text-gray-500 text-sm">{t("partner.no_images_yet")}</p>
+                                        <div className="flex size-[150px] flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
+                                            <ImageIcon className="mx-auto mb-3 size-10 text-gray-400" />
+                                            <p className="text-sm text-gray-500">{t("partner.no_images_yet")}</p>
                                         </div>
                                     )}
                                 </TableCell>

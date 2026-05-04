@@ -81,35 +81,35 @@ export default function Login() {
       
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4 lg:p-8">
         {/* Dynamic Background Effects */}
-        <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-indigo-900/10 blur-[160px] animate-pulse"></div>
-        <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-blue-900/10 blur-[160px] animate-pulse" style={{ animationDelay: '3s' }}></div>
+        <div className="absolute left-[-20%] top-[-20%] size-3/5 animate-pulse rounded-full bg-indigo-900/10 blur-[160px]"></div>
+        <div className="absolute bottom-[-20%] right-[-20%] size-3/5 animate-pulse rounded-full bg-blue-900/10 blur-[160px]" style={{ animationDelay: '3s' }}></div>
         
         {/* Decorative elements */}
-        <div className="absolute top-40 left-20 w-16 h-16 rounded-full border border-blue-500/10 backdrop-blur-sm shadow-2xl animate-bounce" style={{ animationDuration: '4s' }}></div>
-        <div className="absolute bottom-40 right-20 w-24 h-24 rounded-full border border-indigo-500/10 backdrop-blur-sm shadow-2xl animate-bounce" style={{ animationDuration: '6s', animationDelay: '1s' }}></div>
+        <div className="absolute left-20 top-40 size-16 animate-bounce rounded-full border border-blue-500/10 shadow-2xl backdrop-blur-sm" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute bottom-40 right-20 size-24 animate-bounce rounded-full border border-indigo-500/10 shadow-2xl backdrop-blur-sm" style={{ animationDuration: '6s', animationDelay: '1s' }}></div>
 
         {/* Login Container */}
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-stretch overflow-hidden rounded-[2.5rem] border border-white/5 bg-slate-900/40 shadow-[0_0_80px_rgba(30,58,138,0.15)] backdrop-blur-3xl lg:flex-row">
           
           {/* Left Panel - Hero Section */}
-          <div className="relative flex flex-1 flex-col justify-center bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 p-12 lg:p-16 border-r border-white/5">
+          <div className="relative flex flex-1 flex-col justify-center border-r border-white/5 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 p-12 lg:p-16">
             {/* Mesh Gradient Overlay */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,99,235,0.05),transparent_60%)]"></div>
             
             <div className="relative z-10 space-y-8">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md transition-transform hover:scale-110 active:scale-95 duration-500">
-                  <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-10 w-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                <div className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md transition-transform duration-500 hover:scale-110 active:scale-95">
+                  <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-white uppercase italic">BKS System</span>
+                <span className="text-2xl font-bold uppercase italic tracking-tight text-white">BKS System</span>
               </div>
 
               <div>
-                <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-blue-400/80 mb-4 ml-1">{t("login.portal_manager")}</h2>
-                <h1 className="text-2xl lg:text-3xl font-extrabold leading-[1.1] text-white mb-6">
+                <h2 className="mb-4 ml-1 text-sm font-bold uppercase tracking-[0.2em] text-blue-400/80">{t("login.portal_manager")}</h2>
+                <h1 className="mb-6 text-2xl font-extrabold leading-[1.1] text-white lg:text-3xl">
                   {t("login.hero_title_manager")}
                 </h1>
-                <p className="max-w-[18rem] text-base lg:text-lg text-slate-400/90 font-medium leading-relaxed">
+                <p className="max-w-72 text-base font-medium leading-relaxed text-slate-400/90 lg:text-lg">
                   {t("login.hero_desc_manager")}
                 </p>
               </div>
@@ -117,30 +117,30 @@ export default function Login() {
               <div className="flex items-center gap-6 pt-4">
                 <div className="flex flex-col">
                   <span className="text-2xl font-bold text-white">100%</span>
-                  <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">{t("login.secure_access")}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{t("login.secure_access")}</span>
                 </div>
                 <div className="h-10 w-px bg-white/10"></div>
                 <div className="flex flex-col">
                   <span className="text-2xl font-bold text-white">24/7</span>
-                  <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">{t("login.cloud_uptime")}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{t("login.cloud_uptime")}</span>
                 </div>
               </div>
             </div>
             
             {/* Decorative Grid */}
-            <div className="absolute bottom-0 right-0 w-full h-1/2 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 100%, #1e3a8a 0%, transparent 50%)' }}></div>
+            <div className="pointer-events-none absolute bottom-0 right-0 h-1/2 w-full opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 100% 100%, #1e3a8a 0%, transparent 50%)' }}></div>
           </div>
 
           {/* Right Panel - Login Form */}
           <div className="flex flex-1 flex-col justify-center p-8 sm:p-12 lg:p-16">
             <div className="mx-auto w-full max-w-sm">
               <div className="mb-10 text-center lg:text-left">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-indigo-400 border border-indigo-500/10">
-                  <UserCog className="h-3 w-3" />
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-400">
+                  <UserCog className="size-3" />
                   {t("login.portal_admin")}
                 </div>
-                <h3 className="text-3xl font-extrabold tracking-tight text-white mb-3">{t("login.title")}</h3>
-                <p className="text-slate-400 font-medium">{t("login.subtitle")}</p>
+                <h3 className="mb-3 text-3xl font-extrabold tracking-tight text-white">{t("login.title")}</h3>
+                <p className="font-medium text-slate-400">{t("login.subtitle")}</p>
               </div>
 
               <FormProvider {...form}>
@@ -150,19 +150,19 @@ export default function Login() {
                     name="email"
                     render={({ field }) => (
                       <FormItem className="space-y-3">
-                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">{t("login.email")}</FormLabel>
+                        <FormLabel className="ml-1 text-xs font-bold uppercase tracking-widest text-slate-500">{t("login.email")}</FormLabel>
                         <FormControl>
                           <div className="group relative">
                             <Input 
                               type="email" 
                               placeholder={t("login.email_placeholder")} 
-                              className="h-13 border-white/5 bg-white/[0.02] pl-5 text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all group-hover:bg-white/[0.04] rounded-2xl"
+                              className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 text-white transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20 group-hover:bg-white/[0.04]"
                               {...field} 
                             />
                             <div className="absolute bottom-0 left-0 h-px w-0 bg-indigo-500 transition-all duration-300 group-focus-within:w-full"></div>
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs text-rose-500/90 font-medium" />
+                        <FormMessage className="text-xs font-medium text-rose-500/90" />
                       </FormItem>
                     )}
                   />
@@ -172,13 +172,13 @@ export default function Login() {
                     name="password"
                     render={({ field }) => (
                       <FormItem className="space-y-3">
-                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">{t("login.password")}</FormLabel>
+                        <FormLabel className="ml-1 text-xs font-bold uppercase tracking-widest text-slate-500">{t("login.password")}</FormLabel>
                         <FormControl>
                           <div className="group relative">
                             <Input 
                               type={showPassword ? "text" : "password"} 
                               placeholder={t("login.password_placeholder")} 
-                              className="h-13 border-white/5 bg-white/[0.02] pl-5 text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all group-hover:bg-white/[0.04] rounded-2xl"
+                              className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 text-white transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20 group-hover:bg-white/[0.04]"
                               {...field} 
                             />
                             <button 
@@ -186,12 +186,12 @@ export default function Login() {
                               onClick={() => setShowPassword(!showPassword)} 
                               className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 transition-colors hover:text-white"
                             >
-                              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                              {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                             </button>
                             <div className="absolute bottom-0 left-0 h-px w-0 bg-indigo-500 transition-all duration-300 group-focus-within:w-full"></div>
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs text-rose-500/90 font-medium" />
+                        <FormMessage className="text-xs font-medium text-rose-500/90" />
                       </FormItem>
                     )}
                   />
@@ -206,10 +206,10 @@ export default function Login() {
                             <Checkbox
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              className="border-white/20 bg-white/5 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                              className="border-white/20 bg-white/5 data-[state=checked]:border-indigo-600 data-[state=checked]:bg-indigo-600"
                             />
                           </FormControl>
-                          <FormLabel className="text-xs font-bold text-slate-500 cursor-pointer select-none">
+                          <FormLabel className="cursor-pointer select-none text-xs font-bold text-slate-500">
                             {t("login.remember_me")}
                           </FormLabel>
                         </FormItem>
@@ -219,7 +219,7 @@ export default function Login() {
                       type="button" 
                       variant="ghost" 
                       size="sm" 
-                      className="h-auto p-0 text-xs font-bold text-slate-500 transition-colors hover:text-indigo-400 hover:bg-transparent"
+                      className="h-auto p-0 text-xs font-bold text-slate-500 transition-colors hover:bg-transparent hover:text-indigo-400"
                       onClick={() => navigate(ROUTERS.FORGOT_PASSWORD)}
                     >
                       {t("login.forgot_password")}
@@ -228,11 +228,11 @@ export default function Login() {
 
                   <Button
                     type="submit"
-                    className="group relative flex w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-indigo-600 px-8 font-bold text-white shadow-[0_10px_30px_rgba(79,70,229,0.25)] transition-all duration-300 hover:bg-indigo-500 hover:shadow-[0_15px_40px_rgba(79,70,229,0.35)] active:scale-[0.98]"
+                    className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl bg-indigo-600 px-8 font-bold text-white shadow-[0_10px_30px_rgba(79,70,229,0.25)] transition-all duration-300 hover:bg-indigo-500 hover:shadow-[0_15px_40px_rgba(79,70,229,0.35)] active:scale-[0.98]"
                   >
                     <span className="relative z-10 flex items-center gap-2 tracking-wide">
                       {t("login.login_button")}
-                      <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
                     </span>
                     <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
                   </Button>
@@ -242,7 +242,7 @@ export default function Login() {
                   <div className="pt-6 text-center">
                      <button 
                        type="button"
-                       className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-500/60 hover:text-indigo-400 transition-colors"
+                       className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-500/60 transition-colors hover:text-indigo-400"
                        onClick={() => navigate(ROUTERS.PARTNER_LOGIN)}
                      >
                        {t("login.login_as_partner")}

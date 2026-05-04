@@ -132,8 +132,8 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
             // Format data to save DB
             const uploadedImages: RequestBuildingImage[] =
                 uploadedCloudinaryImages.map((result, index) => ({
-                    image_url: result.data?.url!,
-                    id_image_cloudinary: result.data?.public_id!,
+                    image_url: result.data?.url,
+                    id_image_cloudinary: result.data?.public_id,
                     image_type: listImageLocal[index].type,
                 }));
 
@@ -142,8 +142,8 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                 uploadedImages.map((image) =>
                     createBuildingImageMutation.mutateAsync({
                         building_id: buildingId,
-                        image_url: image.image_url,
-                        id_image_cloudinary: image.id_image_cloudinary,
+                        image_url: image.image_url ?? "",
+                        id_image_cloudinary: image.id_image_cloudinary ?? "",
                         image_type: image.image_type,
                     })
                 )
@@ -165,10 +165,10 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
             try {
                 await Promise.all(
                     uploadedCloudinaryImages.map((img) =>
-                        deleteImageMutation.mutateAsync(img.data?.public_id!)
+                        deleteImageMutation.mutateAsync(img.data?.public_id ?? "")
                     )
                 );
-            } catch (rollbackError) {
+            } catch (_rollbackError) {
                 toastError(t("buildings.warning.rollback_cloudinary_failed"));
             }
         }
@@ -179,31 +179,31 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
     return (
         <>
             {/* Overlay */}
-            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
                 {/* Main Container - RESPONSIVE */}
                 <div className="
-                    bg-white rounded-lg shadow-2xl
-                    w-full max-w-2xl
-                    max-h-[90vh]
-                    flex flex-col
+                    flex max-h-[90vh] w-full
+                    max-w-2xl flex-col
                     overflow-hidden
-                    animate-in fade-in-0 zoom-in-95 duration-200
+                    rounded-lg bg-white
+                    shadow-2xl
+                    duration-200 animate-in fade-in-0 zoom-in-95
                 ">
                     {/* Header - FIXED */}
-                    <div className="shrink-0 flex items-center justify-between p-4 md:p-6 border-b">
+                    <div className="flex shrink-0 items-center justify-between border-b p-4 md:p-6">
                         <div>
-                            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+                            <h2 className="text-lg font-bold text-gray-900 md:text-xl">
                                 {t("common.add")} {t("buildings.table_images")}
                             </h2>
-                            <p className="text-xs md:text-sm text-gray-500 mt-1">
+                            <p className="mt-1 text-xs text-gray-500 md:text-sm">
                                 {t("buildings.drag_drop_or_click")}
                             </p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            className="rounded-full p-2 transition-colors hover:bg-gray-100"
                         >
-                            <X className="h-5 w-5 text-gray-500" />
+                            <X className="size-5 text-gray-500" />
                         </button>
                     </div>
 
@@ -217,10 +217,10 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                             onDrop={handleDrop}
                             onClick={handleClickSelectImage}
                             className={`
-                                flex flex-col justify-center items-center gap-3 
-                                p-4 md:p-8 border-2 border-dashed rounded-lg
-                                mb-4 md:mb-6
-                                min-h-[150px] md:min-h-[180px]
+                                mb-4 flex min-h-[150px] flex-col items-center 
+                                justify-center gap-3 rounded-lg border-2 border-dashed
+                                p-4 md:mb-6
+                                md:min-h-[180px] md:p-8
                                 ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
                                 cursor-pointer transition-colors
                             `}
@@ -228,16 +228,16 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                             <img
                                 src="/assets/images/camera.png"
                                 alt="Upload"
-                                className="w-[60px] h-[60px] md:w-[80px] md:h-[80px] object-contain"
+                                className="size-[60px] object-contain md:size-[80px]"
                             />
                             <div className="text-center">
-                                <p className="text-sm md:text-base font-medium text-gray-700">
+                                <p className="text-sm font-medium text-gray-700 md:text-base">
                                     {t("building-images.upload_images")}
                                 </p>
-                                <p className="text-xs md:text-sm text-gray-500 mt-1">
+                                <p className="mt-1 text-xs text-gray-500 md:text-sm">
                                     {t("buildings.drag_drop_or_click")}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="mt-1 text-xs text-gray-400">
                                     {t("buildings.select_multiple_images")}
                                 </p>
                             </div>
@@ -251,9 +251,9 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                             />
                         </div>
 
-                        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4 md:mb-6">
+                        <div className="mb-4 rounded border border-blue-200 bg-blue-50 p-3 md:mb-6">
                             <p className="text-sm text-blue-800">{t('room_images.drag_drop_instruction')}</p>
-                            <p className="text-xs text-blue-700 mt-1">{t('room_images.max_size_auto_compress')}</p>
+                            <p className="mt-1 text-xs text-blue-700">{t('room_images.max_size_auto_compress')}</p>
                         </div>
 
                         {/* Delete Selected Button - RESPONSIVE */}
@@ -262,16 +262,16 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                 <Button
                                     variant="outline"
                                     className="
-                                        bg-red-600 text-white hover:bg-red-500 
-                                        h-10 md:h-11 
-                                        w-full
-                                        text-sm md:text-base
-                                        font-medium
+                                        h-10 w-full bg-red-600 
+                                        text-sm font-medium 
+                                        text-white
+                                        hover:bg-red-500 md:h-11
+                                        md:text-base
                                     "
                                     onClick={handleDeleteImages}
                                     disabled={listImageChecked.size === 0}
                                 >
-                                    <TrashIcon className="size-4 md:size-5 mr-2" />
+                                    <TrashIcon className="mr-2 size-4 md:size-5" />
                                     {t("common.delete")} ({listImageChecked.size})
                                 </Button>
 
@@ -281,7 +281,7 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                         {/* Image List - RESPONSIVE */}
                         {listImageLocal.length > 0 && (
                             <div className="space-y-4">
-                                <label className="text-sm md:text-base font-medium block">
+                                <label className="block text-sm font-medium md:text-base">
                                     {t("buildings.image_list")} ({listImageLocal.length})
                                 </label>
 
@@ -322,18 +322,18 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                         {listImageLocal.map((image, index) => (
                                             <SwiperSlide key={image.id} className="!w-auto">
                                                 <div className="
-                                                    flex flex-col 
-                                                    bg-white rounded-lg border border-gray-200 
-                                                    shadow-sm hover:shadow-md transition-shadow 
-                                                    p-2 
-                                                    w-[160px] sm:w-[180px] md:w-[200px]
+                                                    flex w-[160px] 
+                                                    flex-col rounded-lg border border-gray-200 
+                                                    bg-white p-2 shadow-sm 
+                                                    transition-shadow 
+                                                    hover:shadow-md sm:w-[180px] md:w-[200px]
                                                 ">
                                                     {/* Image */}
                                                     <div
                                                         className="
-                                                            relative overflow-hidden rounded-md 
-                                                            cursor-pointer group
-                                                            aspect-square
+                                                            group relative aspect-square 
+                                                            cursor-pointer overflow-hidden
+                                                            rounded-md
                                                         "
                                                         onClick={() => {
                                                             setOpenZoom(true);
@@ -344,20 +344,20 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                                             src={URL.createObjectURL(image.file)}
                                                             alt={image.file.name}
                                                             className="
-                                                                w-full h-full object-cover
-                                                                group-hover:scale-105 transition-transform duration-300
+                                                                size-full object-cover transition-transform
+                                                                duration-300 group-hover:scale-105
                                                             "
                                                         />
                                                         <div className="
                                                             absolute inset-0 
                                                             bg-black bg-opacity-0 
-                                                            group-hover:bg-opacity-10 
-                                                            transition-all duration-300
+                                                            transition-all 
+                                                            duration-300 group-hover:bg-opacity-10
                                                         " />
                                                     </div>
 
                                                     {/* Controls */}
-                                                    <div className="flex flex-col gap-2 mt-3 px-1">
+                                                    <div className="mt-3 flex flex-col gap-2 px-1">
                                                         {/* Select */}
                                                         <Select
                                                             value={image.type.toString()}
@@ -372,18 +372,18 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                                             }}
                                                         >
                                                             <SelectTrigger className="
-                                                                w-full h-8 
-                                                                text-xs
+                                                                h-8 w-full 
                                                                 bg-white
+                                                                text-xs
                                                             ">
                                                                 <SelectValue />
                                                             </SelectTrigger>
-                                                            <SelectContent className="w-full max-h-60 overflow-y-auto">
+                                                            <SelectContent className="max-h-60 w-full overflow-y-auto">
                                                                 {Object.entries(BUILDING_IMAGE_TYPE).map(([key, value]) => (
                                                                     <SelectItem
                                                                         key={key}
                                                                         value={key}
-                                                                        className="text-xs py-2"
+                                                                        className="py-2 text-xs"
                                                                     >
                                                                         {t(value)}
                                                                     </SelectItem>
@@ -394,8 +394,8 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                                         {/* Checkbox & Filename */}
                                                         <div className="flex items-center justify-between">
                                                             <span className="
-                                                                text-xs text-gray-500 
-                                                                truncate max-w-[100px]
+                                                                max-w-[100px] truncate 
+                                                                text-xs text-gray-500
                                                             ">
                                                                 {image.file.name.length > 15
                                                                     ? `${image.file.name.substring(0, 12)}...`
@@ -423,27 +423,27 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                         <>
                                             <button className="
                                                 swiper-button-prev 
-                                                absolute left-0 top-1/2 -translate-y-1/2 
-                                                z-10 bg-white/80 hover:bg-white 
-                                                border border-gray-300 rounded-full 
-                                                w-8 h-8 md:w-10 md:h-10 
-                                                flex items-center justify-center shadow-lg 
-                                                transition-all -ml-2 md:-ml-3
+                                                absolute left-0 top-1/2 z-10 
+                                                -ml-2 flex size-8 
+                                                -translate-y-1/2 items-center justify-center 
+                                                rounded-full border border-gray-300 bg-white/80 
+                                                shadow-lg transition-all hover:bg-white md:-ml-3 
+                                                md:size-10
                                             ">
-                                                <svg className="w-4 h-4 md:w-5 md:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="size-4 text-gray-700 md:size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                                 </svg>
                                             </button>
                                             <button className="
                                                 swiper-button-next 
-                                                absolute right-0 top-1/2 -translate-y-1/2 
-                                                z-10 bg-white/80 hover:bg-white 
-                                                border border-gray-300 rounded-full 
-                                                w-8 h-8 md:w-10 md:h-10 
-                                                flex items-center justify-center shadow-lg 
-                                                transition-all -mr-2 md:-mr-3
+                                                absolute right-0 top-1/2 z-10 
+                                                -mr-2 flex size-8 
+                                                -translate-y-1/2 items-center justify-center 
+                                                rounded-full border border-gray-300 bg-white/80 
+                                                shadow-lg transition-all hover:bg-white md:-mr-3 
+                                                md:size-10
                                             ">
-                                                <svg className="w-4 h-4 md:w-5 md:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="size-4 text-gray-700 md:size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </button>
@@ -455,17 +455,17 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                     </div>
 
                     {/* Footer - FIXED */}
-                    <div className="shrink-0 p-4 md:p-6 border-t bg-gray-50">
+                    <div className="shrink-0 border-t bg-gray-50 p-4 md:p-6">
                         <Button
                             variant="outline"
                             className={`
-                                w-full h-12 md:h-14 
-                                text-sm md:text-base font-medium
+                                h-12 w-full text-sm 
+                                font-medium md:h-14 md:text-base
                                 ${uploadImageMutation.isPending || createBuildingImageMutation.isPending
-                                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-300"
-                                    : "bg-blue-600 text-white hover:bg-blue-700 border-blue-600"}
-                                transition-all
-                                flex items-center justify-center gap-2
+                                    ? "border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    : "border-blue-600 bg-blue-600 text-white hover:bg-blue-700"}
+                                flex
+                                items-center justify-center gap-2 transition-all
                             `}
                             onClick={handleUploadImages}
                             disabled={uploadImageMutation.isPending || createBuildingImageMutation.isPending || listImageLocal.length === 0}
@@ -482,7 +482,7 @@ const BuildingAddImage: React.FC<BuildingAddImageProps> = ({ userId, buildingId,
                                         <Save className="size-5 md:size-6" />
                                         <span>{t("common.save")}</span>
                                         <span className="
-                                            bg-white/20 px-2 py-1 rounded-full 
+                                            rounded-full bg-white/20 px-2 py-1 
                                             text-xs md:text-sm
                                         ">
                                             ({listImageLocal.length})

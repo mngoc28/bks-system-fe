@@ -131,30 +131,30 @@ const Maintenances: React.FC = () => {
     toastInfo('Đã cập nhật trạng thái bảo trì.');
   };
 
-  if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+  if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div className="flex items-center gap-6">
           <BuildingSelector 
             selectedId={filterBuildingId} 
             onSelect={setFilterBuildingId} 
             className="w-64"
           />
-          <div className="h-10 w-[1px] bg-gray-100 hidden md:block"></div>
+          <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý Bảo trì & Sự cố</h1>
-            <p className="text-gray-500 mt-1">Xử lý các yêu cầu sửa chữa và bảo trì từ cư dân.</p>
+            <p className="mt-1 text-gray-500">Xử lý các yêu cầu sửa chữa và bảo trì từ cư dân.</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 border-b border-gray-100 uppercase text-[10px] font-bold text-gray-500 tracking-wider">
+              <tr className="border-b border-gray-100 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 <th className="px-6 py-4">Sự cố / Phòng</th>
                 <th className="px-6 py-4">Mô tả chi tiết</th>
                 <th className="px-6 py-4 text-center">Trạng thái</th>
@@ -163,19 +163,19 @@ const Maintenances: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {requests.length > 0 ? requests.map((request) => (
-                <tr key={request.id} className="hover:bg-slate-50/50 transition-colors">
+                <tr key={request.id} className="transition-colors hover:bg-slate-50/50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-slate-50 text-slate-400 rounded-xl border border-slate-100">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-slate-400">
                         <Wrench size={18} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-800 text-sm whitespace-nowrap">{request.type || 'Sửa chữa'}</h3>
-                        <div className="flex flex-col gap-0.5 mt-1">
+                        <h3 className="whitespace-nowrap text-sm font-bold text-gray-800">{request.type || 'Sửa chữa'}</h3>
+                        <div className="mt-1 flex flex-col gap-0.5">
                           {request.buildingName && (
-                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">{request.buildingName}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">{request.buildingName}</span>
                           )}
-                          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
                             <MapPin size={12} className="text-gray-400" /> {request.roomName || 'N/A'}
                           </div>
                         </div>
@@ -183,31 +183,31 @@ const Maintenances: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-xs text-gray-600 line-clamp-2 max-w-xs">{request.description}</p>
-                    <span className="text-[10px] text-gray-400 mt-1 block">Yêu cầu: {new Date(request.createdAt).toLocaleDateString('vi-VN')}</span>
+                    <p className="line-clamp-2 max-w-xs text-xs text-gray-600">{request.description}</p>
+                    <span className="mt-1 block text-[10px] text-gray-400">Yêu cầu: {new Date(request.createdAt).toLocaleDateString('vi-VN')}</span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusStyle(request.status)}`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold ${getStatusStyle(request.status)}`}>
                       {request.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                        { (request.status === 'Đang chờ' || request.status === 'Chờ xử lý') && (
-                         <Button onClick={() => safeHandleUpdate(request.id, 'Đang xử lý')} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-8">Tiếp nhận</Button>
+                         <Button onClick={() => safeHandleUpdate(request.id, 'Đang xử lý')} size="sm" className="h-8 bg-amber-500 font-bold text-white hover:bg-amber-600">Tiếp nhận</Button>
                        )}
                        { (request.status === 'Đang xử lý' || request.status === 'Đang sửa' ) && (
-                         <Button onClick={() => safeHandleUpdate(request.id, 'Đã hoàn thành')} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8">Xong</Button>
+                         <Button onClick={() => safeHandleUpdate(request.id, 'Đã hoàn thành')} size="sm" className="h-8 bg-emerald-600 font-bold text-white hover:bg-emerald-700">Xong</Button>
                        )}
                        { request.status === 'Đã hoàn thành' && (
-                          <div className="text-emerald-500 flex items-center justify-center p-2"><CheckCircle size={20} /></div>
+                          <div className="flex items-center justify-center p-2 text-emerald-500"><CheckCircle size={20} /></div>
                        )}
                     </div>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                   <td colSpan={4} className="px-6 py-20 text-center text-gray-400 italic">Chưa có yêu cầu bảo trì nào.</td>
+                   <td colSpan={4} className="px-6 py-20 text-center italic text-gray-400">Chưa có yêu cầu bảo trì nào.</td>
                 </tr>
               )}
             </tbody>
@@ -215,9 +215,9 @@ const Maintenances: React.FC = () => {
         </div>
 
         {/* Pagination Footer */}
-        <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 bg-slate-50/30 p-4 sm:flex-row">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Hiển thị mỗi trang</span>
+            <span className="whitespace-nowrap text-xs font-medium text-slate-500">Hiển thị mỗi trang</span>
             <Select 
               value={String(pageSize)} 
               onValueChange={(val) => {
@@ -235,7 +235,7 @@ const Maintenances: React.FC = () => {
                 <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-xs text-slate-400 ml-2">
+            <span className="ml-2 text-xs text-slate-400">
               Tổng {totalItems} yêu cầu
             </span>
           </div>
@@ -249,7 +249,7 @@ const Maintenances: React.FC = () => {
                 />
               </PaginationItem>
               
-              <div className="flex items-center gap-1 mx-2">
+              <div className="mx-2 flex items-center gap-1">
                 <span className="text-xs font-bold text-slate-700">Trang {currentPage}</span>
                 <span className="text-xs text-slate-400">/ {totalPages}</span>
               </div>

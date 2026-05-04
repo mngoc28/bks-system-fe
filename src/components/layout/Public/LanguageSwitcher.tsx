@@ -77,7 +77,7 @@ const LanguageSwitcher = ({ className }: LanguageSwitcherProps) => {
             alt={renderLabel(activeLanguage.value)}
             className="h-4 w-6 rounded-sm object-cover"
           />
-          <span className="tracking-wide text-[11px]">{renderLabel(activeLanguage.value)}</span>
+          <span className="text-[11px] tracking-wide">{renderLabel(activeLanguage.value)}</span>
         </span>
         <ChevronDown className="size-3.5 text-slate-500" strokeWidth={2} />
       </button>

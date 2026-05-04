@@ -10,7 +10,7 @@ const NewsGrid = ({
   heading,
   description,
   badgeLabel = "Market pulse",
-  badgeIcon = <Newspaper className="h-3.5 w-3.5" />,
+  badgeIcon = <Newspaper className="size-3.5" />,
   ctaLabel,
   ctaHref,
   footerLabel,
@@ -82,17 +82,17 @@ const NewsGrid = ({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent" />
             </div>
-            <div className="flex flex-1 flex-col gap-3 px-4 py-4">
+            <div className="flex flex-1 flex-col gap-3 p-4">
               <div className="space-y-2">
                 <h3 className="text-[0.95rem] font-semibold text-slate-900 transition group-hover:text-primary">{article.title}</h3>
                 {article.excerpt && (
-                  <p className="text-[0.875rem] leading-relaxed text-slate-600 line-clamp-3">{article.excerpt}</p>
+                  <p className="line-clamp-3 text-[0.875rem] leading-relaxed text-slate-600">{article.excerpt}</p>
                 )}
               </div>
               {article.publishedAt && (
                 <div className="mt-auto flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
                   <span className="inline-flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-primary" />
+                    <Clock3 className="size-4 text-primary" />
                     {article.publishedAt}
                   </span>
                 </div>

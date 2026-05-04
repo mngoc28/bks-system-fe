@@ -2,7 +2,7 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { getAccessToken } from '@/utils/storage';
 
-// @ts-ignore
+// @ts-expect-error: Pusher needs to be globally available for laravel-echo
 window.Pusher = Pusher;
 
 const echo = new Echo({

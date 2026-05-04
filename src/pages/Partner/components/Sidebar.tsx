@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Building2, ShoppingBag, Wrench, Newspaper, Zap, AirVent, Wallet, FileText, Calendar, TrendingUp, MessageSquare, BarChart3, Bell } from 'lucide-react';
+import { LayoutDashboard, Building2, ShoppingBag, Wrench, Newspaper, Zap, AirVent, Wallet, FileText, Calendar, MessageSquare, BarChart3, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ROUTERS } from '@/constant';
 
@@ -33,35 +33,35 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="w-72 h-full bg-[#0f172a] text-slate-100 flex flex-col shadow-2xl z-20 border-r border-slate-800">
-      <div className="p-7 flex items-center gap-4 bg-slate-900/40 backdrop-blur-xl border-b border-white/[0.03]">
-        <div className="relative group">
-          <div className="absolute -inset-1 rounded-2xl bg-blue-500/20 blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-          <div className="relative w-11 h-11 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+    <div className="z-20 flex h-full w-72 flex-col border-r border-slate-800 bg-[#0f172a] text-slate-100 shadow-2xl">
+      <div className="flex items-center gap-4 border-b border-white/[0.03] bg-slate-900/40 p-7 backdrop-blur-xl">
+        <div className="group relative">
+          <div className="absolute -inset-1 rounded-2xl bg-blue-500/20 opacity-0 blur transition duration-500 group-hover:opacity-100"></div>
+          <div className="relative flex size-11 items-center justify-center transition-transform duration-500 group-hover:scale-105">
             <img 
               src="/app/images/front/bks-icon.svg" 
               alt="BKS" 
-              className="w-11 h-11 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" 
+              className="size-11 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" 
             />
           </div>
         </div>
         <div className="flex flex-col">
-          <h1 className="text-[11px] font-bold tracking-[0.25em] text-blue-400 mb-0.5 uppercase">
+          <h1 className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.25em] text-blue-400">
             PARTNER
           </h1>
-          <h1 className="text-sm font-black tracking-tight text-white/90 uppercase">
+          <h1 className="text-sm font-black uppercase tracking-tight text-white/90">
             PORTAL
           </h1>
-          <div className="h-0.5 w-6 bg-gradient-to-r from-blue-500 to-blue-600 mt-1 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+          <div className="mt-1 h-0.5 w-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
         </div>
       </div>
 
-      <nav className="flex-1 py-4 overflow-y-auto px-4 scrollbar-hide">
+      <nav className="scrollbar-hide flex-1 overflow-y-auto p-4">
         <ul className="space-y-1">
           {menuItems.map((item, index) => {
             if (item.isHeader) {
               return (
-                <li key={`header-${index}`} className="px-4 pt-6 pb-2 first:pt-0">
+                <li key={`header-${index}`} className="px-4 pb-2 pt-6 first:pt-0">
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 opacity-70">
                     {item.name}
                   </span>
@@ -88,7 +88,7 @@ const Sidebar: React.FC = () => {
                   />
                   <span className="text-[14px] tracking-wide">{item.name}</span>
                   
-                  <div className="absolute inset-y-0 right-0 w-1 bg-blue-500 transform translate-x-full transition-transform duration-300 group-active:translate-x-0" />
+                  <div className="absolute inset-y-0 right-0 w-1 translate-x-full bg-blue-500 transition-transform duration-300 group-active:translate-x-0" />
                 </NavLink>
               </li>
             );

@@ -52,41 +52,41 @@ const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
                     <Button
                         onClick={onCancel}
                         disabled={isLoading}
-                        className="px-3 py-1 h-[40px] rounded-md bg-gray-600 text-white hover:bg-gray-500 text-[15px]"
+                        className="h-[40px] rounded-md bg-gray-600 px-3 py-1 text-[15px] text-white hover:bg-gray-500"
                     >
                         {t("province.back")}
                     </Button>
             </div>
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-slate-200">
                 <div className="grid grid-cols-10">
-                    <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                    <div className="col-span-2 border-b border-slate-200 bg-slate-50 p-3 font-medium">
                         {t("province.id")}
                     </div>
-                    <div className="col-span-8 p-3 border-b border-slate-200">
+                    <div className="col-span-8 border-b border-slate-200 p-3">
                         {province.id}
                     </div>
-                    <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                    <div className="col-span-2 border-b border-slate-200 bg-slate-50 p-3 font-medium">
                         {t("province.name")}
                     </div>
-                    <div className="col-span-8 p-3 border-b border-slate-200">
+                    <div className="col-span-8 border-b border-slate-200 p-3">
                         {province.name}
                     </div>
-                    <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                    <div className="col-span-2 border-b border-slate-200 bg-slate-50 p-3 font-medium">
                         {t("province.name_en")}
                     </div>
-                    <div className="col-span-8 p-3 border-b border-slate-200">
+                    <div className="col-span-8 border-b border-slate-200 p-3">
                         {province.name_en || "-"}
                     </div>
-                    <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                    <div className="col-span-2 border-b border-slate-200 bg-slate-50 p-3 font-medium">
                         {t("province.ward")}
                     </div>
-                    <div className="col-span-8 p-3 border-b border-slate-200">
+                    <div className="col-span-8 border-b border-slate-200 p-3">
                         {province.ward_count || 0}
                     </div>
-                    <div className="col-span-2 p-3 bg-slate-50 border-b border-slate-200 font-medium">
+                    <div className="col-span-2 border-b border-slate-200 bg-slate-50 p-3 font-medium">
                         {t("province.room")}
                     </div>
-                    <div className="col-span-8 p-3 border-b border-slate-200">
+                    <div className="col-span-8 border-b border-slate-200 p-3">
                         {province.room_count || 0}
                     </div>
                 </div>
@@ -100,13 +100,13 @@ const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
                 </CardHeader>
                 <CardContent>
                     {province.wards && province.wards.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                             {province.wards.map((ward) => (
                                 <div
                                     key={ward.id}
-                                    className="p-3 border border-slate-200 rounded-lg  transition-colors"
+                                    className="rounded-lg border border-slate-200 p-3  transition-colors"
                                 >
-                                    <div className="flex items-center gap-2 text-slate-500 mb-1">
+                                    <div className="mb-1 flex items-center gap-2 text-slate-500">
                                         <Hash className="size-4" />
                                         <span className="text-sm font-medium">{ward.id}</span>
                                     </div>
@@ -115,9 +115,9 @@ const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-8">
-                            <MapPinned className="size-12 text-slate-300 mx-auto mb-2" />
-                            <p className="text-slate-400 text-sm">{t("province.no_wards")}</p>
+                        <div className="py-8 text-center">
+                            <MapPinned className="mx-auto mb-2 size-12 text-slate-300" />
+                            <p className="text-sm text-slate-400">{t("province.no_wards")}</p>
                         </div>
                     )}
                 </CardContent>
@@ -131,11 +131,11 @@ const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
                 </CardHeader>
                 <CardContent>
                     {province.rooms && province.rooms.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             {province.rooms.map((room) => (
                                 <Card key={room.id} className="border-slate-200">
                                     <CardContent className="pt-4">
-                                        <div className="flex items-start justify-between mb-2">
+                                        <div className="mb-2 flex items-start justify-between">
                                             <div>
                                                 <p className="text-lg font-bold">{room.room_number}</p>
                                                 <p className="text-sm text-slate-500">{room.title}</p>
@@ -146,9 +146,9 @@ const ProvinceDetailForm: React.FC<ProvinceDetailFormProps> = ({
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-8">
-                            <Home className="size-12 text-slate-300 mx-auto mb-2" />
-                            <p className="text-slate-400 text-sm">{t("province.no_rooms")}</p>
+                        <div className="py-8 text-center">
+                            <Home className="mx-auto mb-2 size-12 text-slate-300" />
+                            <p className="text-sm text-slate-400">{t("province.no_rooms")}</p>
                         </div>
                     )}
                 </CardContent>

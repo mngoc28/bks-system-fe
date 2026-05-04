@@ -117,7 +117,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Building */}
           <FormField
             control={form.control}
@@ -287,7 +287,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
                   <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.description")}</FormLabel>
                   <FormControl>
                     <textarea
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={3}
                       placeholder={t("rooms.description_placeholder")}
                       {...field}
@@ -350,7 +350,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
           <div className="space-y-4">
             <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.price_package")} <span className="text-red-500">*</span></FormLabel>
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 min-w-0">
+              <div key={field.id} className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-4">
                 <FormField
                   control={form.control}
                   name={`prices.${index}.price_package_id`}
@@ -442,7 +442,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
             {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="size-4 animate-spin mr-2" />}
+            {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
             {t("rooms.create_room")}
           </Button>
         </div>

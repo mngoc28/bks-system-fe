@@ -18,32 +18,32 @@ const ResetTokenSuccess: React.FC = () => {
     ];
 
     return (
-        <div className="bg-slate-200 flex items-center justify-center w-screen min-h-screen p-4">
-            <div className="w-full max-w-lg md:w-3/5 h-auto md:h-3/5">
+        <div className="flex min-h-screen w-screen items-center justify-center bg-slate-200 p-4">
+            <div className="h-auto w-full max-w-lg md:size-3/5">
                 <div className=" ">
-                    <div className="grid grid-rows-3 grid-cols-1 bg-white w-full h-full rounded-lg px-5">
+                    <div className="grid size-full grid-cols-1 grid-rows-3 rounded-lg bg-white px-5">
                         <div className="flex flex-col items-center justify-center">
-                            <img src="/assets/images/success.png" alt="success" className="w-[80px] h-[80px]" />
-                            <p className="text-xl font-roboto text-center text-green-500">
+                            <img src="/assets/images/success.png" alt="success" className="size-[80px]" />
+                            <p className="text-center font-roboto text-xl text-green-500">
                                 {t("verify_email.reset_token_success") || "Reset token verify email successfully"}
                             </p>
                         </div>
                         <div className="flex flex-col items-center justify-center">
                             <button
                                 onClick={() => navigate(ROUTERS.LOGIN)}
-                                className="bg-green-500 px-10 py-2 border border-green-500 rounded-sm text-white w-full">
+                                className="w-full rounded-sm border border-green-500 bg-green-500 px-10 py-2 text-white">
                                 {t("verify_email.back_to_login") || "Back to Login"}
                             </button>
                         </div>
-                        <div className="flex flex-col items-center justify-center mb-5">
-                            <p className="text-sm text-center mb-5 px-6">{t("verify_email.help")}</p>
+                        <div className="mb-5 flex flex-col items-center justify-center">
+                            <p className="mb-5 px-6 text-center text-sm">{t("verify_email.help")}</p>
                             <div className="flex flex-row gap-5">
                                 {help.map((item, index) => {
                                     return (
                                         <a
                                             key={index}
                                             href={item.link}
-                                            className="text-gray-600 hover:text-blue-500 text-2xl transition-colors grid items-center justify-center"
+                                            className="grid items-center justify-center text-2xl text-gray-600 transition-colors hover:text-blue-500"
                                         >
                                             {item.icon}
                                         </a>
@@ -53,7 +53,7 @@ const ResetTokenSuccess: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className="text-sm text-center mt-5 px-6">
+                <div className="mt-5 px-6 text-center text-sm">
                     {t("verify_email.footer")}
                 </div>
             </div>

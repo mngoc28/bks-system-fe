@@ -33,7 +33,7 @@ const ScrollToTopButton = () => {
     <button
       type="button"
       onClick={handleClick}
-      className="group inline-flex size-12 items-center justify-center rounded-full bg-white text-primary shadow-lg shadow-slate-300/70 ring-1 ring-slate-200 transition hover:-translate-y-1 hover:bg-primary hover:text-white hover:shadow-xl pointer-events-auto"
+      className="group pointer-events-auto inline-flex size-12 items-center justify-center rounded-full bg-white text-primary shadow-lg shadow-slate-300/70 ring-1 ring-slate-200 transition hover:-translate-y-1 hover:bg-primary hover:text-white hover:shadow-xl"
       aria-label={t("public.scrollToTop", { defaultValue: "Scroll to top" })}
     >
       <ChevronUp className="size-6 transition group-hover:-translate-y-0.5" />

@@ -109,19 +109,19 @@ const PublicRoomDetail = () => {
             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary-light transition hover:bg-white/20"
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="size-3.5" />
             Quay lại
           </button>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{room?.title || "Chi tiết phòng"}</h1>
           <p className="mt-3 inline-flex items-center gap-2 text-slate-200">
-            <MapPin className="h-4 w-4 text-primary-light" />
+            <MapPin className="size-4 text-primary-light" />
             {room?.building_address || "Đang cập nhật địa chỉ"}
           </p>
         </div>
       </section>
 
-      <div className="bg-slate-50 border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: "Trang chủ", href: ROUTERS.HOME },
@@ -171,21 +171,21 @@ const PublicRoomDetail = () => {
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Sức chứa</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <Users className="h-4 w-4 text-primary" />
+                        <Users className="size-4 text-primary" />
                         {room.people || 0} khách
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Diện tích</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <Ruler className="h-4 w-4 text-primary" />
+                        <Ruler className="size-4 text-primary" />
                         {room.area || "--"} m2
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Linh hoạt</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <CalendarDays className="h-4 w-4 text-primary" />
+                        <CalendarDays className="size-4 text-primary" />
                         Đặt theo ngày
                       </p>
                     </div>
@@ -218,7 +218,7 @@ const PublicRoomDetail = () => {
                         {services.map((service) => (
                           <div key={service.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
                             <span className="inline-flex items-center gap-2 text-slate-700">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              <CheckCircle2 className="size-4 text-emerald-500" />
                               {service.name}
                             </span>
                             <span className="font-semibold text-primary">{formatPrice(service.price)}</span>
@@ -247,7 +247,7 @@ const PublicRoomDetail = () => {
                 <p>Hỗ trợ xác nhận nhanh qua email và số điện thoại.</p>
               </div>
 
-              <Button asChild className="w-full rounded-xl gradient-primary hover:opacity-90 shadow-md transition-all active:scale-95">
+              <Button asChild className="gradient-primary w-full rounded-xl shadow-md transition-all hover:opacity-90 active:scale-95">
                 <Link to={`${ROUTERS.BOOKING}/${id}`}>Đặt phòng ngay</Link>
               </Button>
             </CardContent>

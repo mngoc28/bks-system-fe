@@ -1,8 +1,7 @@
 import {PasswordStrength } from "@/dataHelper/auth.dataHelper";
 import { useTranslation } from "react-i18next";
 
-function getPasswordStrength(password: string){
-  const { t } = useTranslation();
+function getPasswordStrength(password: string, t: any){
   let score = 0;
 
   if(password.length >= 8) score++;
@@ -24,8 +23,9 @@ function getPasswordStrength(password: string){
 }
 
 const PasswordStrengthBarProps: React.FC<PasswordStrength> = ({ password }) => {
+  const { t } = useTranslation();
   if(password.length < 8) return null;
-  const { label, color, width } = getPasswordStrength(password);
+  const { label, color, width } = getPasswordStrength(password, t);
 
   return (
     <div className="mt-3 space-y-2">
@@ -33,7 +33,7 @@ const PasswordStrengthBarProps: React.FC<PasswordStrength> = ({ password }) => {
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Độ mạnh mật khẩu</span>
         <span className={`text-[10px] font-bold uppercase tracking-wider ${color.replace('bg-', 'text-')}`}>{label}</span>
       </div>
-      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
         <div
           className={`${color} h-full rounded-full transition-all duration-500 ease-out`}
           style={{ width }}

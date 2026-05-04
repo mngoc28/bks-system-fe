@@ -26,7 +26,7 @@ const NewsTable: React.FC<NewsTableProps> = ({ news, onDelete, onEdit, onView, o
                                     newsItem.image_url !== null && newsItem.image_url !== "" ? (
                                         <img  
                                         src={CLOUDINARY_HEADER_IMAGE_URL + '/' + newsItem.image_url} 
-                                        alt={newsItem.title} className="h-[150px] w-[150px] rounded object-cover" 
+                                        alt={newsItem.title} className="size-[150px] rounded object-cover" 
                                         onError={(e) => {
                                           if (e.currentTarget.src !== '/assets/images/photo_error2.png') {
                                             e.currentTarget.src = '/assets/images/photo_error2.png';
@@ -34,9 +34,9 @@ const NewsTable: React.FC<NewsTableProps> = ({ news, onDelete, onEdit, onView, o
                                         }}
                                         />
                                     ) : (
-                                        <div className="flex h-[150px] w-[150px] flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
-                                            <ImageIcon className="size-10 mx-auto mb-4 text-gray-400" />
-                                            <p className="text-gray-500 text-sm">{t("news.no_image")}</p>
+                                        <div className="flex size-[150px] flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
+                                            <ImageIcon className="mx-auto mb-4 size-10 text-gray-400" />
+                                            <p className="text-sm text-gray-500">{t("news.no_image")}</p>
                                         </div>
                                     )
                                 }

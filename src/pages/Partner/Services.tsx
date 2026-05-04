@@ -115,7 +115,7 @@ const Services: React.FC = () => {
       fetchServices();
       setIsModalOpen(false);
       toastSuccess('Đã lưu dịch vụ.');
-    } catch (error) {
+    } catch (_error) {
       toastError('Lỗi khi lưu dịch vụ.');
     }
   };
@@ -125,40 +125,40 @@ const Services: React.FC = () => {
       await partnerService.deleteService(id);
       fetchServices();
       toastSuccess('Đã xóa dịch vụ.');
-    } catch (error) {
+    } catch (_error) {
       toastError('Lỗi khi xóa dịch vụ.');
     }
   };
 
-  if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+  if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div className="flex items-center gap-6">
           <BuildingSelector 
             selectedId={filterBuildingId} 
             onSelect={setFilterBuildingId} 
             className="w-64"
           />
-          <div className="h-10 w-[1px] bg-gray-100 hidden md:block"></div>
+          <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Dịch vụ & Lắp đặt</h1>
-            <p className="text-gray-500 mt-1">Quản lý các dịch vụ có phí cho tòa nhà.</p>
+            <p className="mt-1 text-gray-500">Quản lý các dịch vụ có phí cho tòa nhà.</p>
           </div>
         </div>
-        <Button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 h-10 px-4 text-white font-bold">
+        <Button onClick={() => handleOpenModal()} className="h-10 bg-blue-600 px-4 font-bold text-white hover:bg-blue-700">
           <Plus size={18} className="mr-2" /> Thêm dịch vụ
         </Button>
       </div>
 
       <div className="space-y-4">
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
           <div className="divide-y divide-gray-100">
             {services.map((service) => (
-              <div key={service.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <div key={service.id} className="flex items-center justify-between p-4 transition-colors hover:bg-slate-50">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                  <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
                     {service.unit === 'kWh' ? <Zap size={20} /> : service.unit === 'khối' ? <Droplets size={20} /> : <CircleDollarSign size={20} />}
                   </div>
                   <div>
@@ -169,11 +169,11 @@ const Services: React.FC = () => {
                 <div className="flex items-center gap-6">
                   <div className="text-right">
                     <p className="font-bold text-blue-600">{Number(service.price).toLocaleString('vi-VN')} ₫</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">mỗi {service.unit}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">mỗi {service.unit}</p>
                   </div>
                   <div className="flex gap-2">
-                     <Button onClick={() => handleOpenModal(service)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Edit size={16}/></Button>
-                     <Button onClick={() => handleDelete(service.id)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Trash2 size={16}/></Button>
+                     <Button onClick={() => handleOpenModal(service)} variant="ghost" size="icon" className="size-8 text-gray-400"><Edit size={16}/></Button>
+                     <Button onClick={() => handleDelete(service.id)} variant="ghost" size="icon" className="size-8 text-gray-400"><Trash2 size={16}/></Button>
                   </div>
                 </div>
               </div>
@@ -210,14 +210,14 @@ const Services: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-100">
-                <Label className="flex items-center gap-2 mb-3 text-blue-700 font-bold">
+            <div className="mt-4 border-t border-gray-100 pt-4">
+                <Label className="mb-3 flex items-center gap-2 font-bold text-blue-700">
                    <Building2 size={16} /> Tòa nhà áp dụng
                 </Label>
-                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2">
+                <div className="grid max-h-48 grid-cols-2 gap-3 overflow-y-auto pr-2">
                   <div 
                     onClick={() => setSelectedBuildingIds([])}
-                    className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${selectedBuildingIds.length === 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-600 hover:border-blue-100'}`}
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition-all ${selectedBuildingIds.length === 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-600 hover:border-blue-100'}`}
                   >
                     <Checkbox checked={selectedBuildingIds.length === 0} />
                     <span className="text-xs font-medium">Tất cả tòa nhà</span>
@@ -226,15 +226,15 @@ const Services: React.FC = () => {
                     <div 
                       key={building.id}
                       onClick={() => toggleBuilding(String(building.id))}
-                      className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${selectedBuildingIds.includes(String(building.id)) ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-600 hover:border-blue-100'}`}
+                      className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition-all ${selectedBuildingIds.includes(String(building.id)) ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-600 hover:border-blue-100'}`}
                     >
                       <Checkbox checked={selectedBuildingIds.includes(String(building.id))} />
-                      <span className="text-xs font-medium truncate">{building.name || building.title}</span>
+                      <span className="truncate text-xs font-medium">{building.name || building.title}</span>
                     </div>
                   ))}
                 </div>
                 {selectedBuildingIds.length > 0 && (
-                  <p className="text-[10px] text-gray-400 mt-2 italic">* Dịch vụ này sẽ chỉ xuất hiện khi lọc theo các tòa nhà đã chọn.</p>
+                  <p className="mt-2 text-[10px] italic text-gray-400">* Dịch vụ này sẽ chỉ xuất hiện khi lọc theo các tòa nhà đã chọn.</p>
                 )}
             </div>
           </div>

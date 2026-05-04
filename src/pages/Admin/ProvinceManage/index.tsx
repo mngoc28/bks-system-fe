@@ -87,10 +87,10 @@ const ProvinceManage: React.FC = () => {
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         actions={
-          <div className="relative flex-1 min-w-[280px]">
+          <div className="relative min-w-[280px] flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <input
-              className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               value={filters.name}
               onChange={(e) => setFilters((s) => ({ ...s, name: e.target.value }))}
               placeholder={t("province.search_placeholder")}
@@ -109,7 +109,7 @@ const ProvinceManage: React.FC = () => {
         <div className="flex flex-col gap-8">
            {viewMode === "grid" ? (
              <>
-               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4">
+               <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {serverRows.map((province) => (
                     <ProvinceCard
                       key={province.id}
@@ -150,7 +150,7 @@ const ProvinceManage: React.FC = () => {
                   filters={filters}
                 />
                 {totalItems > 0 && (
-                 <div className="p-4 border-t border-slate-100">
+                 <div className="border-t border-slate-100 p-4">
                    <Pagination
                      currentPage={page}
                      totalPages={totalPages}

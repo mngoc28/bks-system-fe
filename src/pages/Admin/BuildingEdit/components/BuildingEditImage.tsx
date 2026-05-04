@@ -144,7 +144,7 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                 </>}
                 {updatedImages && !isErrorData && (
                     <>
-                        <div className="flex gap-2 mb-4 justify-end">
+                        <div className="mb-4 flex justify-end gap-2">
                             <Button
                                 size="sm"
                                 variant="outline"
@@ -156,7 +156,7 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                     setSelectedImages(new Set(updatedImages.map((img) => img.id)));
                                 }}
                                 title={updatedImages.length === selectedImages.size ? t("common.deselect_all") : t("common.select_all")}
-                                className="bg-green-500 hover:bg-green-600 text-white"
+                                className="bg-green-500 text-white hover:bg-green-600"
                                 disabled={updatedImages.length === 0 || isBusy}
                             >
                                 <CheckSquare className="size-4" />
@@ -167,20 +167,20 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                 onClick={() => onDeleteSelected?.()}
                                 disabled={selectedImages.size === 0 || isBusy}
                                 title={t("common.delete")}
-                                className="bg-red-500 hover:bg-red-600 text-white"
+                                className="bg-red-500 text-white hover:bg-red-600"
                             >
                                 <Trash2 className="size-4" />
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-2 lg:gap-4 relative">
+                        <div className="relative grid grid-cols-1 gap-2 lg:gap-4">
                             <DndContext
                                 sensors={sensors}
                                 collisionDetection={closestCenter}
                                 onDragEnd={handleDragEnd}
                             >
                                 <SortableContext items={updatedImages.map((img) => img.id)}>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
+                                    <div className="relative grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                                         {updatedImages.map((image) => {
                                             const currentIndex = indexImage++;
                                             const imageTypeKey = (image.image_type || 1);
@@ -188,14 +188,14 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                             return (
                                                 <SortableImageItem key={image.id} id={image.id}>
                                                     <div className="relative">
-                                                        <div className={`relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${selectedImages.has(image.id) ? "border-4 border-red-500" : "border border-gray-200"}`}>
-                                                            <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm font-medium z-10">
-                                                                <div className="text-[14px] text-center font-semibold text-white leading-none">
+                                                        <div className={`relative overflow-hidden rounded-lg shadow-sm transition-shadow hover:shadow-md ${selectedImages.has(image.id) ? "border-4 border-red-500" : "border border-gray-200"}`}>
+                                                            <div className="absolute left-2 top-2 z-10 rounded bg-black bg-opacity-50 px-2 py-1 text-sm font-medium text-white">
+                                                                <div className="text-center text-[14px] font-semibold leading-none text-white">
                                                                     {currentIndex}
                                                                 </div>
                                                             </div>
 
-                                                            <div className="absolute top-2 right-2 z-10">
+                                                            <div className="absolute right-2 top-2 z-10">
                                                                 <Checkbox
                                                                     checked={selectedImages.has(image.id)}
                                                                     onCheckedChange={(checked) => handleCheckboxChange(image.id, checked as boolean)}
@@ -207,7 +207,7 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                                                 <img
                                                                     src={resolveImageUrl(image.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png"}
                                                                     alt={image.id_image_cloudinary}
-                                                                    className="w-full aspect-[4/3] object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                                                    className="aspect-[4/3] w-full cursor-pointer object-cover transition-opacity hover:opacity-80"
                                                                     onError={(e) => (e.currentTarget.src = "/assets/images/photo_error2.png")}
                                                                     onClick={() => {
                                                                         const filteredImages = updatedImages.filter(
@@ -221,15 +221,15 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                                                     }}
                                                                 />
                                                             ) : (
-                                                                <div className="w-full aspect-[4/3] text-center flex flex-col items-center justify-center bg-gray-200 p-4">
-                                                                    <ImageIcon className="size-10 mx-auto mb-4 text-gray-400" />
-                                                                    <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+                                                                <div className="flex aspect-[4/3] w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+                                                                    <ImageIcon className="mx-auto mb-4 size-10 text-gray-400" />
+                                                                    <p className="text-sm text-gray-500">{t("rooms.no_images_yet")}</p>
                                                                 </div>
                                                             )
                                                             }
 
-                                                            <div className="p-2 bg-white">
-                                                                <label className="text-sm font-medium block mb-2">
+                                                            <div className="bg-white p-2">
+                                                                <label className="mb-2 block text-sm font-medium">
                                                                     {t("buildings.image_type")}
                                                                 </label>
                                                                 <Select
@@ -249,7 +249,7 @@ const BuildingEditImages = React.forwardRef<BuildingImageEditFormRef, BuildingIm
                                                         </div>
 
                                                         {updatingImageIds.has(image.id) && (
-                                                            <div className="absolute inset-0 bg-black/40 rounded-md flex items-center justify-center z-10">
+                                                            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-black/40">
                                                                 <div style={{ filter: 'brightness(0.3)' }}>
                                                                     <Lottie animationData={loadingImage} loop className="size-[100px]" />
                                                                 </div>

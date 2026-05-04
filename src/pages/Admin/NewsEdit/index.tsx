@@ -147,7 +147,7 @@ const NewsEdit: React.FC = () => {
                     imageUrl = uploadResult.data?.url || "";
                     imageCloudinaryId = uploadResult.data?.public_id || "";
                     uploadedImageId = imageCloudinaryId;
-                } catch (uploadError) {
+                } catch {
                     toastError(t("validation.image.upload_failed"));
                     return;
                 }
@@ -165,13 +165,13 @@ const NewsEdit: React.FC = () => {
                     image_url: imageUrl || news!.image_url || "",
                     id_image_cloudinary: imageCloudinaryId || news!.id_image_cloudinary || ""
                 });
-            } catch (updateError) {
+            } catch {
                 if (uploadedImageId) {
                     try {
                         console.log(uploadedImageId);
                         await deleteImageMutation.mutateAsync(uploadedImageId);
-                    } catch (deleteError) {
-                        console.log(deleteError);
+                    } catch {
+                        // ignore error
                     }
                 }
                 toastError(t("news_edit.update_failed"));
@@ -179,11 +179,11 @@ const NewsEdit: React.FC = () => {
             }
             toastSuccess(t("news_edit.update_success"));
             navigate(ROUTERS.NEWS_DETAIL + "/" + news?.id);
-        } catch (error) {
+        } catch {
             if (uploadedImageId) {
                 try {
                     await deleteImageMutation.mutateAsync(uploadedImageId);
-                } catch (deleteError) {
+                } catch {
                     return;
                 }
             }
@@ -199,14 +199,14 @@ const NewsEdit: React.FC = () => {
             </div>}
             {isError && <div>{t("news_edit.update_failed")}</div>}
             {news && <>
-                <div className="flex flex-col gap-10 p-3 sm:p-6 pt-5">
+                <div className="flex flex-col gap-10 p-3 pt-5 sm:p-6">
                     <Card>
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-bold">
                                     {t("news_edit.title")}
                                 </h2>
-                                <Button onClick={handleBack} className="text-white bg-gray-600 hover:bg-gray-700">
+                                <Button onClick={handleBack} className="bg-gray-600 text-white hover:bg-gray-700">
                                     <ArrowLeftIcon className="size-4" />
                                     <span className="hidden lg:block">
                                         {t("news_edit.back")}
@@ -218,7 +218,7 @@ const NewsEdit: React.FC = () => {
                         <CardContent>
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(handleSubmit)}>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                                         <div className="col-span-2 flex flex-col gap-5">
                                             {/* news name */}
                                             <FormField
@@ -241,7 +241,7 @@ const NewsEdit: React.FC = () => {
                                             {/* slug */}
                                             <div>
                                                 <FormLabel>{t("news_edit.slug")}</FormLabel>
-                                                <p className="flex text-[14px] text-gray-500 border border-gray-300 rounded-md p-2 h-[50px] items-center justify-start">
+                                                <p className="flex h-[50px] items-center justify-start rounded-md border border-gray-300 p-2 text-[14px] text-gray-500">
                                                     {generateSlug(form.getValues("title").trim() || "")}
                                                 </p>
                                             </div>
@@ -349,13 +349,13 @@ const NewsEdit: React.FC = () => {
                                                                 <img
                                                                     src={localImagePreview || (field.value ? (field.value.startsWith('blob:') ? field.value : CLOUDINARY_HEADER_IMAGE_URL + '/' + field.value) : "/assets/images/photo_error2.png")}
                                                                     alt="image"
-                                                                    className="w-[200px] h-[200px] object-cover rounded-md border border-gray-300"
+                                                                    className="size-[200px] rounded-md border border-gray-300 object-cover"
                                                                     onError={(e) => (e.currentTarget.src = "/assets/images/photo_error2.png")}
                                                                 />
                                                                 <Button
                                                                     type="button"
                                                                     onClick={handleSelectImage}
-                                                                    className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg"
+                                                                    className="absolute right-2 top-2 rounded-full bg-blue-600 p-2 text-white shadow-lg hover:bg-blue-700"
                                                                     aria-label={t("news_edit.upload_image")}
                                                                 >
                                                                     {t("news_edit.upload_image")}
@@ -376,19 +376,19 @@ const NewsEdit: React.FC = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="flex justify-end gap-4 mt-6">
+                                    <div className="mt-6 flex justify-end gap-4">
                                         <Button
                                             type="button"
                                             variant="outline"
                                             onClick={handleBack}
-                                            className="bg-gray-600 hover:bg-gray-700 text-white"
+                                            className="bg-gray-600 text-white hover:bg-gray-700"
                                         >
                                             {t("news_edit.cancel")}
                                         </Button>
                                         <Button
                                             type="submit"
                                             disabled={updateNewsMutation.isPending || uploadImageMutation.isPending}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                                            className="bg-blue-600 text-white hover:bg-blue-700"
                                         >
                                             {updateNewsMutation.isPending || uploadImageMutation.isPending
                                                 ? t("news_edit.isSave")

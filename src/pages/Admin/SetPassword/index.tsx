@@ -57,14 +57,14 @@ const SetPassword: React.FC = () => {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg">
-                    <div className="bg-blue-600 text-white p-6 text-center rounded-t-lg">
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <div className="w-full max-w-2xl rounded-lg bg-white shadow-lg">
+                    <div className="rounded-t-lg bg-blue-600 p-6 text-center text-white">
                         <h1 className="text-2xl font-semibold">{t('setPassword.welcome')}</h1>
-                        <p className="text-sm mt-2">{t('setPassword.subtitle')}</p>
+                        <p className="mt-2 text-sm">{t('setPassword.subtitle')}</p>
                     </div>
                     <div className="p-6">
-                        <p className="text-green-600 text-center">{t('setPassword.success_message')}</p>
+                        <p className="text-center text-green-600">{t('setPassword.success_message')}</p>
                         <Button
                             onClick={() => navigate(ROUTERS.LOGIN)}
                             className="mt-4 w-full bg-blue-600 hover:bg-blue-700"
@@ -78,17 +78,17 @@ const SetPassword: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-lg w-full bg-white shadow-lg rounded-lg">
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+            <div className="w-full max-w-lg rounded-lg bg-white shadow-lg">
                 {/* Header */}
-                <div className="bg-blue-600 text-white p-6 text-center rounded-t-lg">
+                <div className="rounded-t-lg bg-blue-600 p-6 text-center text-white">
                     <h1 className="text-2xl font-semibold">{t('setPassword.welcome')}</h1>
-                    <p className="text-sm mt-2">{t('setPassword.form_title')}</p>
+                    <p className="mt-2 text-sm">{t('setPassword.form_title')}</p>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 bg-gray-50 border border-gray-200 border-t-0">
-                    {error && <p className="text-red-600 mb-4">{error}</p>}
+                <div className="border border-t-0 border-gray-200 bg-gray-50 p-6">
+                    {error && <p className="mb-4 text-red-600">{error}</p>}
 
                     <div className="mb-4">
                         <p className="text-gray-700">
@@ -118,7 +118,7 @@ const SetPassword: React.FC = () => {
                                                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                                                     onClick={() => setShowPassword(!showPassword)}
                                                 >
-                                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                                 </Button>
                                             </div>
                                         </FormControl>
@@ -146,7 +146,7 @@ const SetPassword: React.FC = () => {
                                                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                 >
-                                                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                                 </Button>
                                             </div>
                                         </FormControl>

@@ -36,7 +36,7 @@ const NewsTableHeader: React.FC<NewsTableHeaderProps> = ({ onSort, sortField, so
       <TableHeader className="sticky top-0 z-10 bg-slate-100">
         <tr className="border-b border-gray-300">
             {renderSortableHeader("id", t("news.table_id"))}
-                        <TableHead className="whitespace-nowrap px-4 py-3 text-slate-700 text-center">
+                        <TableHead className="whitespace-nowrap px-4 py-3 text-center text-slate-700">
                 <span className="inline-flex items-center gap-1">
                   {t("news.table_image")}
                 </span>

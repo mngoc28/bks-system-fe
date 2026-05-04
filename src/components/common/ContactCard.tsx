@@ -39,12 +39,12 @@ const ContactCard = ({
             <p className="text-sm leading-6 text-slate-600 md:text-base">{descriptionText}</p>
             <div className="flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:gap-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-sm">
-                <Phone className="h-4 w-4 text-primary" />
+                <Phone className="size-4 text-primary" />
                 <span className="font-semibold text-slate-900">{hotlineLabelText}:</span>
                 <span>{hotlineValue}</span>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-sm">
-                <Mail className="h-4 w-4 text-primary" />
+                <Mail className="size-4 text-primary" />
                 <span className="font-semibold text-slate-900">{emailLabelText}:</span>
                 <span>{emailValue}</span>
               </div>
@@ -53,7 +53,7 @@ const ContactCard = ({
 
           <Link
             to={ctaHref}
-            className="group inline-flex flex-shrink-0 items-center justify-center rounded-2xl bg-primary px-7 py-4 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800 hover:translate-y-[-2px] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="group inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary px-7 py-4 text-sm font-semibold text-white shadow-lg transition hover:translate-y-[-2px] hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {ctaText}
           </Link>

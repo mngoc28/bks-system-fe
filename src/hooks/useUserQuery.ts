@@ -9,12 +9,8 @@ export const useGetUserProfileQuery = () => {
   return useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      try {
-        const response = await userApi.getProfile();
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await userApi.getProfile();
+      return response;
     },
     retry: 1,
   });
@@ -25,12 +21,8 @@ export const useGetUserProfileByIdQuery = (id: number) => {
   return useQuery({
     queryKey: ["profile", id],
     queryFn: async () => {
-      try {
-        const response = await userApi.getProfileById(id);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await userApi.getProfileById(id);
+      return response;
     },
     enabled: !!id,
   });
@@ -89,12 +81,8 @@ export const useGetAllUsersQuery = (data: UserFilters) => {
   return useQuery({
     queryKey: ["users", data],
     queryFn: async () => {
-      try {
-        const response = await userApi.getAllUsers(data);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await userApi.getAllUsers(data);
+      return response;
     },
   });
 };
@@ -104,12 +92,8 @@ export const useGetUserByIdQuery = (id: number) => {
   return useQuery({
     queryKey: ["user", id],
     queryFn: async () => {
-      try {
-        const response = await userApi.getUserById(id);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await userApi.getUserById(id);
+      return response;
     },
     enabled: !!id,
   });

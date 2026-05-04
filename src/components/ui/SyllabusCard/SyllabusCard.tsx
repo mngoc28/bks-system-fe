@@ -95,9 +95,9 @@ const SyllabusCard = ({
           </button>
 
           <div className="flex flex-col gap-1.5">
-            <div className="w-32 h-2 bg-slate-200 rounded-full">
+            <div className="h-2 w-32 rounded-full bg-slate-200">
               <div
-                className="h-full bg-blue-500 rounded-full"
+                className="h-full rounded-full bg-blue-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -106,7 +106,7 @@ const SyllabusCard = ({
       </div>
 
       <button
-        className="px-6 py-3 text-base font-bold text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+        className="rounded-md bg-blue-500 px-6 py-3 text-base font-bold text-white transition-colors hover:bg-blue-600"
         onClick={handleDetailsClick}
         aria-label="Xem chi tiết"
         tabIndex={0}

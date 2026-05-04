@@ -108,8 +108,8 @@ export interface CreateBuildingRequest {
   description: string;
 }
 
-export interface UpdateBuildingRequest extends Partial<CreateBuildingRequest> {
-}
+export type UpdateBuildingRequest = Partial<CreateBuildingRequest>;
+
 export interface DeleteConfirmDialogProps {
   building: Building | null;
   isOpen: boolean;

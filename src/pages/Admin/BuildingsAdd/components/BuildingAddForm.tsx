@@ -71,16 +71,12 @@ const BuildingAddForm: React.FC = () => {
 
   // handle submit form
   const handleSubmit = async (values: CreateBuildingRequest) => {
-    try {
-      const submitData = {
-        ...values,
-        user_id: userId || values.user_id,
-      };
-      await createBuildingMutation.mutateAsync(submitData);
-      navigate(ROUTERS.BUILDINGS);
-    } catch (error) {
-      throw error;
-    }
+    const submitData = {
+      ...values,
+      user_id: userId || values.user_id,
+    };
+    await createBuildingMutation.mutateAsync(submitData);
+    navigate(ROUTERS.BUILDINGS);
   };
   
   //handle delete form 
@@ -122,18 +118,18 @@ const BuildingAddForm: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-row gap-6 justify-between items-center">
+      <div className="flex flex-row items-center justify-between gap-6">
         <h2 className="text-2xl font-bold">{t("buildings.create_building")}</h2>
-        <div className="flex flex-row gap-3 items-center justify-center">
-          <Button type="button" className="bg-red-600 text-white hover:bg-red-500 h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" onClick={handleDelete}>
+        <div className="flex flex-row items-center justify-center gap-3">
+          <Button type="button" className="h-11 w-[90%] bg-red-600 text-[14px] text-white hover:bg-red-500 md:w-full md:text-[16px]" onClick={handleDelete}>
             <TrashIcon className="size-5" />
             <span className="hidden lg:block">{t("common.delete")}</span>
           </Button>
-          <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-500 h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" onClick={() => handleSubmit(form.getValues())}>
+          <Button type="submit" className="h-11 w-[90%] bg-blue-600 text-[14px] text-white hover:bg-blue-500 md:w-full md:text-[16px]" onClick={() => handleSubmit(form.getValues())}>
             <Save className="size-5" />
             <span className="hidden lg:block">{t("common.save")}</span>
           </Button>
-          <Button type="button" className="bg-gray-600 text-white hover:bg-gray-500 h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" 
+          <Button type="button" className="h-11 w-[90%] bg-gray-600 text-[14px] text-white hover:bg-gray-500 md:w-full md:text-[16px]" 
            onClick={() => handleBack()}
           >
             <ArrowLeftIcon className="size-5" />
@@ -146,7 +142,7 @@ const BuildingAddForm: React.FC = () => {
           {/* Form */}
           <Form {...form}>
             <form className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Building Name */}
                 <FormField
                   control={form.control}
@@ -329,7 +325,7 @@ const BuildingAddForm: React.FC = () => {
                   name="ward_id"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex flex-row grid-cols-1 items-center justify-start gap-1">
+                      <div className="flex grid-cols-1 flex-row items-center justify-start gap-1">
                         <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.ward_name")}</FormLabel>
                         <Star fill="#EF4444" className="size-2 text-red-500" />
                       </div>
@@ -378,7 +374,7 @@ const BuildingAddForm: React.FC = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex flex-row grid-cols-1 items-center justify-start gap-1">
+                    <div className="flex grid-cols-1 flex-row items-center justify-start gap-1">
                       <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.description")}</FormLabel>
                       {/* <Star fill="#EF4444" className="size-2 text-red-500" /> */}
                     </div>

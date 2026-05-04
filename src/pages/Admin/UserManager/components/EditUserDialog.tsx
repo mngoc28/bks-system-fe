@@ -65,7 +65,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-primary/10 p-2">
@@ -73,7 +73,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">{t("user.edit_user")}</DialogTitle>
-              <DialogDescription className="text-sm text-gray-500 mt-1">
+              <DialogDescription className="mt-1 text-sm text-gray-500">
                 {t("user.edit_user_description")}
               </DialogDescription>
             </div>
@@ -82,7 +82,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Name */}
               <FormField
                 control={form.control}
@@ -110,7 +110,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
                       {t("common.email")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder={t("user.filter_email_placeholder")} {...field} disabled className="border-gray-300 focus:border-primary bg-gray-50" />
+                      <Input type="email" placeholder={t("user.filter_email_placeholder")} {...field} disabled className="border-gray-300 bg-gray-50 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,7 +160,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
               />
             </div>
 
-            <DialogFooter className="flex-row gap-3 sm:gap-3 pt-4">
+            <DialogFooter className="flex-row gap-3 pt-4 sm:gap-3">
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading} className="flex-1">
                 {t("common.cancel")}
               </Button>
