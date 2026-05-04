@@ -40,37 +40,37 @@ const Language = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
           value={lang}
           onValueChange={(value) => handleLanguageChange(value)}
         >
-          <div className="w-fit flex items-center justify-center">
-            <SelectTrigger className="w-full h-auto flex flex-row items-center justify-center mb-0">
+          <div className="flex w-fit items-center justify-center">
+            <SelectTrigger className="mb-0 flex h-auto w-full flex-row items-center justify-center">
               <SelectValue>
                 <div className="flex flex-row items-center justify-center px-2">
                   <img
                     src={`/app/images/front/flag-${lang}.svg`}
                     alt={lang}
-                    className="w-[2em] lg:w-[3em] shadow-md"
+                    className="w-[2em] shadow-md lg:w-[3em]"
                   />
-                  <span className="ms-2 text-nowrap font-bold hidden lg:inline">
+                  <span className="ms-2 hidden text-nowrap font-bold lg:inline">
                     {t(`lang-${lang}`)}
                   </span>
                 </div>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="border w-max h-fit relative top-[var(--header-height)]">
+            <SelectContent className="relative top-[var(--header-height)] h-fit w-max border">
               <SelectGroup className="w-full bg-white pb-2">
                 {LanguageOptions.map((lang) => (
                   <SelectItem
                     value={lang}
                     key={lang}
-                    className="cursor-pointer w-full text-center font-shingo hover:bg-dark-300"
+                    className="font-shingo w-full cursor-pointer text-center hover:bg-dark-300"
                   >
-                    <div className="flex flex-row w-full items-center py-1 px-2 mt-2">
+                    <div className="mt-2 flex w-full flex-row items-center px-2 py-1">
                       <img
                         src={`/app/images/front/flag-${lang}.svg`}
                         alt={lang}
                         className="w-[2.5em] shadow-md"
                         onClick={() => handleLanguageChange(lang)}
                       />
-                      <span className="ms-2 text-nowrap hidden lg:inline">
+                      <span className="ms-2 hidden text-nowrap lg:inline">
                         {t(`lang-${lang}`)}
                       </span>
                     </div>

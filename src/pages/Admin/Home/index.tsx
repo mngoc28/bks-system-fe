@@ -273,18 +273,18 @@ const PublicHome = () => {
       <main className="flex flex-col gap-14 pb-14 text-[15px]">
         <section
           id="hero"
-          className="relative z-[60] isolate bg-slate-950 text-white min-h-[520px] md:h-[560px] lg:h-[600px]"
+          className="relative isolate z-[60] min-h-[520px] bg-slate-950 text-white md:h-[560px] lg:h-[600px]"
         >
-          <div className="absolute inset-0 overflow-hidden -z-10">
+          <div className="absolute inset-0 -z-10 overflow-hidden">
             <img
               src="/assets/images/luxury_banner.png"
               alt={t("public.home.hero.alt")}
-              className="absolute inset-0 size-full object-cover animate-slow-zoom scale-105"
+              className="animate-slow-zoom absolute inset-0 size-full scale-105 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 md:bg-gradient-to-r md:from-slate-950/80 md:via-slate-900/30 md:to-transparent" />
           </div>
 
-          <div className="relative z-20 mx-auto flex h-full w-full max-w-6xl flex-col justify-center gap-10 px-6 py-16">
+          <div className="relative z-20 mx-auto flex size-full max-w-6xl flex-col justify-center gap-10 px-6 py-16">
             <div className="max-w-2xl space-y-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-primary-10">
                 {t("public.home.hero.badge")}
@@ -298,7 +298,7 @@ const PublicHome = () => {
             </div>
 
             <form
-              className="relative z-[200] grid gap-4 rounded-[32px] bg-white/10 p-4 shadow-2xl backdrop-blur-2xl border border-white/20 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] hover:bg-white/15 transition-all duration-500"
+              className="relative z-[200] grid gap-4 rounded-[32px] border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl transition-all duration-500 hover:bg-white/15 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
               onSubmit={handleSearchSubmit}
             >
               <SearchableSelect
@@ -310,7 +310,7 @@ const PublicHome = () => {
                 emptyMessage={t("public.home.search.provinceEmpty")}
                 disabled={isLoadingProvinces}
                 loading={isLoadingProvinces}
-                icon={<MapPin className="h-5 w-5" />}
+                icon={<MapPin className="size-5" />}
                 showSearch
                 triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50"
                 contentClassName="bg-white text-slate-900"
@@ -325,7 +325,7 @@ const PublicHome = () => {
                 emptyMessage={provinceId ? t("public.home.search.districtEmpty") : t("public.home.search.districtPrompt")}
                 disabled={!provinceId || isLoadingDistricts}
                 loading={isLoadingDistricts}
-                icon={<MapPin className="h-5 w-5" />}
+                icon={<MapPin className="size-5" />}
                 showSearch
                 triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60"
                 contentClassName="bg-white text-slate-900"
@@ -336,7 +336,7 @@ const PublicHome = () => {
                 className="flex h-14 items-center justify-center rounded-2xl bg-primary px-8 text-base font-semibold text-white shadow-xl transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={!provinceId}
               >
-              <Search className="mr-2 h-5 w-5" />
+              <Search className="mr-2 size-5" />
               {t("public.home.search.cta")}
             </button>
           </form>

@@ -31,7 +31,7 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
       <table className="w-full border-collapse">
         <thead className="bg-slate-50">
           <tr>
-            <th className="text-xs font-normal text-slate-500 text-left px-3 py-3 w-[500px]">
+            <th className="w-[500px] p-3 text-left text-xs font-normal text-slate-500">
               <div className="flex items-center">
                 <span>Bài tập/Bài kiểm tra</span>
                 <svg
@@ -59,7 +59,7 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
                 </svg>
               </div>
             </th>
-            <th className="text-xs font-normal text-slate-500 text-center px-3 py-3 w-[250px]">
+            <th className="w-[250px] p-3 text-center text-xs font-normal text-slate-500">
               <div className="flex items-center justify-center">
                 <span>Hạn nộp bài</span>
                 <svg
@@ -87,10 +87,10 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
                 </svg>
               </div>
             </th>
-            <th className="text-xs font-normal text-slate-500 text-center px-3 py-3">
+            <th className="p-3 text-center text-xs font-normal text-slate-500">
               Trạng thái
             </th>
-            <th className="text-xs font-normal text-slate-500 text-center px-3 py-3">
+            <th className="p-3 text-center text-xs font-normal text-slate-500">
               Tùy chỉnh
             </th>
           </tr>
@@ -99,9 +99,9 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
           {exercises.map((exercise) => (
             <tr
               key={exercise.id}
-              className="border-b border-blue-100 hover:bg-slate-50 transition-colors"
+              className="border-b border-blue-100 transition-colors hover:bg-slate-50"
             >
-              <td className="px-3 py-3">
+              <td className="p-3">
                 <div className="flex items-center gap-1.5">
                   <svg
                     width="20"
@@ -133,22 +133,22 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span className="text-sm font-normal text-slate-700 truncate max-w-[400px]">
+                  <span className="max-w-[400px] truncate text-sm font-normal text-slate-700">
                     {exercise.title}
                   </span>
                 </div>
               </td>
-              <td className="px-3 py-3 text-center">
+              <td className="p-3 text-center">
                 <span className="text-sm font-normal text-slate-700">
                   {exercise.dueDate}
                 </span>
               </td>
-              <td className="px-3 py-3">
+              <td className="p-3">
                 <div className="flex justify-center">
                   <StatusBadge status={exercise.status} />
                 </div>
               </td>
-              <td className="px-3 py-3">
+              <td className="p-3">
                 <div className="flex justify-center">
                   <ButtonDetail
                     onClick={() => onViewDetail(exercise.id)}
@@ -164,10 +164,10 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
         <tfoot>
           <tr>
             <td colSpan={4} className="px-3 py-2">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <button
-                    className="p-2 rounded-md hover:bg-slate-100 transition-colors"
+                    className="rounded-md p-2 transition-colors hover:bg-slate-100"
                     aria-label="Trang trước"
                   >
                     <svg
@@ -188,24 +188,24 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
                     </svg>
                   </button>
                   <div className="flex">
-                    <button className="w-10 h-10 flex items-center justify-center text-sm font-bold text-slate-700 bg-slate-100 rounded-md">
+                    <button className="flex size-10 items-center justify-center rounded-md bg-slate-100 text-sm font-bold text-slate-700">
                       1
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center text-sm font-normal text-slate-500 hover:bg-slate-50 rounded-md">
+                    <button className="flex size-10 items-center justify-center rounded-md text-sm font-normal text-slate-500 hover:bg-slate-50">
                       2
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center text-sm font-normal text-slate-500 hover:bg-slate-50 rounded-md">
+                    <button className="flex size-10 items-center justify-center rounded-md text-sm font-normal text-slate-500 hover:bg-slate-50">
                       ...
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center text-sm font-normal text-slate-500 hover:bg-slate-50 rounded-md">
+                    <button className="flex size-10 items-center justify-center rounded-md text-sm font-normal text-slate-500 hover:bg-slate-50">
                       7
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center text-sm font-normal text-slate-500 hover:bg-slate-50 rounded-md">
+                    <button className="flex size-10 items-center justify-center rounded-md text-sm font-normal text-slate-500 hover:bg-slate-50">
                       8
                     </button>
                   </div>
                   <button
-                    className="p-2 rounded-md hover:bg-slate-100 transition-colors"
+                    className="rounded-md p-2 transition-colors hover:bg-slate-100"
                     aria-label="Trang sau"
                   >
                     <svg
@@ -227,7 +227,7 @@ const ExerciseTable: React.FC<ExerciseTableProps> = ({
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="flex items-center gap-2 px-3 py-1.5 border border-transparent bg-slate-100 rounded-md">
+                  <button className="flex items-center gap-2 rounded-md border border-transparent bg-slate-100 px-3 py-1.5">
                     <span className="text-sm font-normal text-slate-700">
                       10
                     </span>

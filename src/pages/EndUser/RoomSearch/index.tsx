@@ -87,8 +87,8 @@ const RoomSearch = () => {
         </div>
       </div>
 
-      <div className="bg-slate-50 border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
@@ -106,7 +106,7 @@ const RoomSearch = () => {
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Tìm theo tên phòng, địa chỉ..."
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-4 pr-4 text-sm outline-none transition focus:border-sky-400"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-sky-400"
             />
           </div>
           <div className="relative">
@@ -132,7 +132,7 @@ const RoomSearch = () => {
           </div>
         ) : filteredRooms.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
-            <SearchX className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+            <SearchX className="mx-auto mb-3 size-8 text-slate-400" />
             <p className="text-base font-semibold text-slate-700">Không tìm thấy phòng phù hợp</p>
             <p className="mt-2 text-sm text-slate-500">Thử đổi bộ lọc hoặc tìm ở khu vực khác.</p>
           </div>
@@ -143,7 +143,7 @@ const RoomSearch = () => {
                 Tìm thấy <span className="font-semibold text-slate-900">{filteredRooms.length}</span> phòng phù hợp
               </p>
               <Badge variant="secondary" className="rounded-full bg-sky-50 px-3 py-1 text-sky-700">
-                <Filter className="mr-1 h-3.5 w-3.5" />
+                <Filter className="mr-1 size-3.5" />
                 Đã áp dụng bộ lọc
               </Badge>
             </div>
@@ -160,21 +160,21 @@ const RoomSearch = () => {
                     className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-sky-300 hover:shadow-md"
                   >
                     <div className="relative h-48 overflow-hidden">
-                      <img src={roomImage} alt={room.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <img src={roomImage} alt={room.title} className="size-full object-cover transition duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-900/10 to-transparent" />
                     </div>
                     <CardContent className="space-y-3 p-5">
                       <div>
                         <h3 className="line-clamp-1 text-lg font-semibold text-slate-900">{room.title}</h3>
                         <p className="mt-1 inline-flex items-start gap-2 text-sm text-slate-600">
-                          <MapPin className="mt-0.5 h-4 w-4 text-sky-500" />
+                          <MapPin className="mt-0.5 size-4 text-sky-500" />
                           <span className="line-clamp-2">{room.building_address}</span>
                         </p>
                       </div>
 
                       <div className="flex items-center justify-between text-sm">
                         <span className="inline-flex items-center gap-1.5 text-slate-600">
-                          <Users className="h-4 w-4 text-sky-500" />
+                          <Users className="size-4 text-sky-500" />
                           {room.people} khách
                         </span>
                         <span className="font-semibold text-sky-600">{formatPrice(room.cheapest_daily_price)}/đêm</span>

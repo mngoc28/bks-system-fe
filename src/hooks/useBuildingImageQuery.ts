@@ -10,12 +10,8 @@ export const useBuildingImageQuery = (buildingImageId: number) => {
     return useQuery<ApiResponse<buildingImage>, Error>({
         queryKey: ["building-images", buildingImageId],
         queryFn: async () => {
-            try {
-                const response = await buildingImageApi.getBuildingImagesById(buildingImageId);
-                return response;
-            } catch (error) {
-                throw error;
-            }
+            const response = await buildingImageApi.getBuildingImagesById(buildingImageId);
+            return response;
         },
     });
 }
@@ -25,12 +21,8 @@ export const useImagesByBuildingIdQuery = (buildingid: number, options?: { enabl
     return useQuery<ApiResponse<buildingImage[]>, Error>({
         queryKey: ["building-images", buildingid],
         queryFn: async () => {
-            try {
-                const response = await buildingImageApi.getImagesByBuildingId(buildingid);
-                return response;
-            } catch (error) {
-                throw error;
-            }
+            const response = await buildingImageApi.getImagesByBuildingId(buildingid);
+            return response;
         },
         enabled: options?.enabled ?? true,
         staleTime: 5 * 60 * 1000,
@@ -80,12 +72,15 @@ export const useDeleteBuildingImageMutation = () => {
     });
 }
 
-// get images by buildings idconst getImagesByBuilingsId = (buildingsId: number[]) => {
-export const getImagesByBuilingsId = (buildingsId: number[]) => {
+// get images by buildings id
+export const useImagesByBuildingsIdQuery = (buildingsId: number[]) => {
     const queries = useQueries({
         queries: buildingsId.map((buildingId) => ({
             queryKey: ["building-images", buildingId],
-            queryFn: () => useImagesByBuildingIdQuery(buildingId).data?.data ?? [],
+            queryFn: async () => {
+                const response = await buildingImageApi.getImagesByBuildingId(buildingId);
+                return response.data || [];
+            },
         })),
     });
     return queries;

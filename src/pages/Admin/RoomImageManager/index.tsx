@@ -22,9 +22,9 @@ const RoomImageManager: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="mb-6 flex items-center gap-4">
         <Button variant="outline" onClick={() => navigate(-1)}>
-          <ArrowLeft className="size-4 mr-2" />
+          <ArrowLeft className="mr-2 size-4" />
           {t("common.back")}
         </Button>
         <h1 className="text-2xl font-bold">{t("room_images.title")}</h1>

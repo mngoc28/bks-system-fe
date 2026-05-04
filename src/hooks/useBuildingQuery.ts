@@ -11,12 +11,8 @@ export const useBuildingsQuery = (params: SearchBuildingRequest) => {
   return useQuery<ApiResponse<BuildingListDataResponse>, Error>({
     queryKey: ["buildings", params],
     queryFn: async () => {
-      try {
-        const response = await buildingApi.searchBuildings(params);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await buildingApi.searchBuildings(params);
+      return response;
     },
   });
 };
@@ -81,12 +77,8 @@ export const useAllBuildingsQuery = () => {
   return useQuery<Building[], Error>({
     queryKey: ["all-buildings"],
     queryFn: async () => {
-      try {
-        const response = await buildingApi.getAllBuildings();
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      const response = await buildingApi.getAllBuildings();
+      return response.data;
     },
   });
 };

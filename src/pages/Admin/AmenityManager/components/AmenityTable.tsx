@@ -111,7 +111,7 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
 
           <TableBody>
             {filtered.map((amenity) => (
-              <TableRow key={amenity.id} className={`hover:bg-muted/50 ${highlightedId === amenity.id ? 'bg-green-100 animate-pulse' : ''}`}>
+              <TableRow key={amenity.id} className={`hover:bg-muted/50 ${highlightedId === amenity.id ? 'animate-pulse bg-green-100' : ''}`}>
                 <TableCell className="px-4 py-3 text-center align-middle">{amenity.id}</TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(amenity.name, filters.name || "")}</TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">{safeFormatDateTime(amenity.created_at)}</TableCell>

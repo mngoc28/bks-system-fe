@@ -45,17 +45,17 @@ const NewsDetail: React.FC = () => {
                 </div>
             </>}
             {newsData && !newsError &&
-                <div className="flex flex-col pl-3 pr-3 sm:pl-6 sm:pr-6 pt-5 gap-2">
-                    <div className="flex flex-row justify-between items-center">
-                        <h2 className="text-2xl font-bold text-gray-900 py-3 whitespace-nowrap">{t("news_detail.title")}</h2>
+                <div className="flex flex-col gap-2 px-3 pt-5 sm:px-6">
+                    <div className="flex flex-row items-center justify-between">
+                        <h2 className="whitespace-nowrap py-3 text-2xl font-bold text-gray-900">{t("news_detail.title")}</h2>
                         <div className="flex flex-row gap-2">
-                            <Button variant="outline" onClick={handleToEditNews} className="text-[16px] bg-blue-600 hover:bg-blue-700 h-11 rounded-md text-white">
+                            <Button variant="outline" onClick={handleToEditNews} className="h-11 rounded-md bg-blue-600 text-[16px] text-white hover:bg-blue-700">
                                 <EditIcon className="size-4" />
                                 <span className="hidden lg:block">
                                     {t("news_detail.update")}
                                 </span>
                             </Button>
-                            <Button variant="outline" onClick={() => handleBackToListNews()} className="text-[16px] bg-gray-600 hover:bg-gray-700 h-11 rounded-md text-white">
+                            <Button variant="outline" onClick={() => handleBackToListNews()} className="h-11 rounded-md bg-gray-600 text-[16px] text-white hover:bg-gray-700">
                                 <ArrowLeft className="size-4" />
                                 <span className="hidden lg:block">
                                     {t("news_detail.back")}
@@ -65,51 +65,51 @@ const NewsDetail: React.FC = () => {
 
                     </div>
                     <div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.news_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{newsData?.data?.title}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.news_name")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{newsData?.data?.title}</p>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.user_name")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{userProfile?.name}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.user_name")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{userProfile?.name}</p>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.slug")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{newsData?.data?.slug}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.slug")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{newsData?.data?.slug}</p>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.summary")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{newsData?.data?.summary}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.summary")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{newsData?.data?.summary}</p>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.content")} :</Label>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.content")} :</Label>
                             <div dangerouslySetInnerHTML={{ __html: newsData?.data?.content || "" }} />
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.status")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{t(statusNews(newsData?.data?.status ?? 0).status)}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.status")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{t(statusNews(newsData?.data?.status ?? 0).status)}</p>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.created_at")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{formatDateTimeVietnam(newsData?.data?.created_at ?? new Date())}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.created_at")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{formatDateTimeVietnam(newsData?.data?.created_at ?? new Date())}</p>
                         </div>
-                        <div className="flex flex-row gap-2 items-start justify-start border border-gray-200 rounded-md p-2">
-                            <Label className="text-[16px] text-black font-semibold whitespace-nowrap">{t("news_detail.updated_at")} :</Label>
-                            <p className="text-[14px] text-black font-normal pt-1">{formatDateTimeVietnam(newsData?.data?.updated_at ?? new Date())}</p>
+                        <div className="flex flex-row items-start justify-start gap-2 rounded-md border border-gray-200 p-2">
+                            <Label className="whitespace-nowrap text-[16px] font-semibold text-black">{t("news_detail.updated_at")} :</Label>
+                            <p className="pt-1 text-[14px] font-normal text-black">{formatDateTimeVietnam(newsData?.data?.updated_at ?? new Date())}</p>
                         </div>
                     </div>
                     {
                         newsData?.data?.image_url !== null && newsData?.data?.image_url !== "" ? (
-                            <img className="text-[14px] w-[200px] h-[200px] md:w-[400px] md:h-[400px] object-cover text-black font-normal pt-1"
+                            <img className="size-[200px] object-cover pt-1 text-[14px] font-normal text-black md:size-[400px]"
                                 src={CLOUDINARY_HEADER_IMAGE_URL + '/' + newsData?.data?.image_url}
                                 alt={newsData?.data?.title}
                                 onError={(e) => (e.currentTarget.src = "/assets/images/photo_error2.png")}
                                 onClick={() => setOpen(true)}
                             />
                         ) : (
-                            <div className="w-[200px] h-[200px] md:w-[400px] md:h-[400px] text-center flex flex-col items-center justify-center bg-gray-200 p-4">
-                                <ImageIcon className="size-10 mx-auto mb-4 text-gray-400" />
-                                <p className="text-gray-500 text-sm">{t("news.no_image")}</p>
+                            <div className="flex size-[200px] flex-col items-center justify-center bg-gray-200 p-4 text-center md:size-[400px]">
+                                <ImageIcon className="mx-auto mb-4 size-10 text-gray-400" />
+                                <p className="text-sm text-gray-500">{t("news.no_image")}</p>
                             </div>
                         )
                     }

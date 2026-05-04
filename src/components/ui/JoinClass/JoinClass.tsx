@@ -43,7 +43,7 @@ const JoinClass = ({ onJoin, className }: JoinClassProps) => {
 
       {!isInputVisible ? (
         <button
-          className="px-6 py-3 text-base font-bold text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+          className="rounded-md bg-blue-500 px-6 py-3 text-base font-bold text-white transition-colors hover:bg-blue-600"
           onClick={handleButtonClick}
           aria-label="Nhập mã lớp của bạn"
           tabIndex={0}
@@ -64,16 +64,16 @@ const JoinClass = ({ onJoin, className }: JoinClassProps) => {
               value={classCode}
               onChange={(e) => setClassCode(e.target.value)}
               placeholder="Nhập mã lớp học"
-              className="w-full px-6 py-3 text-base border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-slate-200 px-6 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
               aria-label="Mã lớp học"
               disabled={isLoading}
             />
           </div>
 
-          <div className="flex gap-3 mt-2">
+          <div className="mt-2 flex gap-3">
             <button
-              className="px-6 py-3 text-base font-bold text-blue-600 bg-white rounded-md hover:bg-slate-50 transition-colors"
+              className="rounded-md bg-white px-6 py-3 text-base font-bold text-blue-600 transition-colors hover:bg-slate-50"
               onClick={handleCancel}
               aria-label="Hủy bỏ"
               tabIndex={0}

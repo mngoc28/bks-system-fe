@@ -20,17 +20,17 @@ const EmptyPage: React.FC<EmptyPageProps> = ({
   }, []);
   
   return (
-    <div className="flex flex-col items-center justify-center py-24 px-8 text-center animate-in">
-      <div className="relative mb-10 h-72 w-72">
+    <div className="flex flex-col items-center justify-center px-8 py-24 text-center animate-in">
+      <div className="relative mb-10 size-72">
         {/* Decorative background glow */}
         <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-[80px]"></div>
         
-        <Suspense fallback={<div className="h-full w-full animate-pulse rounded-full bg-slate-100" />}>
+        <Suspense fallback={<div className="size-full animate-pulse rounded-full bg-slate-100" />}>
            {animationData && (
              <Lottie 
                animationData={animationData}
                loop={true}
-               className="relative h-full w-full"
+               className="relative size-full"
              />
            )}
         </Suspense>

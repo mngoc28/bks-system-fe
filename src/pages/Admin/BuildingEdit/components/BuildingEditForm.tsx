@@ -89,12 +89,12 @@ const BuildingEditForm: React.FC<BuildingEditFormProps> = ({ building, userId, o
         {isError && <></>}
         {isLoading && <LoadingScreen text={t("common.loading")} />}
         {building && !isError && (
-          <Card className="w-full overflow-y-auto p-6 flex flex-col gap-6">
+          <Card className="flex w-full flex-col gap-6 overflow-y-auto p-6">
             <div className="">
               {/* Form */}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Building Name */}
                     <FormField
                       control={form.control}
@@ -265,7 +265,7 @@ const BuildingEditForm: React.FC<BuildingEditFormProps> = ({ building, userId, o
                       name="ward_id"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex flex-row grid-cols-1 items-center justify-start gap-1">
+                          <div className="flex grid-cols-1 flex-row items-center justify-start gap-1">
                             <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.ward_name")}</FormLabel>
                             <Star fill="#EF4444" className="size-2 text-red-500" />
                           </div>
@@ -310,7 +310,7 @@ const BuildingEditForm: React.FC<BuildingEditFormProps> = ({ building, userId, o
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="flex flex-row grid-cols-1 items-center justify-start gap-1">
+                        <div className="flex grid-cols-1 flex-row items-center justify-start gap-1">
                           <FormLabel className="text-sm font-normal text-slate-700">{t("buildings.description")}</FormLabel>
                         </div>
                         <FormControl>

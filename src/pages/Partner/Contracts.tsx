@@ -113,7 +113,7 @@ const Contracts: React.FC = () => {
       setFormData({ title: '', content: '' });
       setSelectedBooking(null);
       fetchContracts();
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi tạo hợp đồng.');
     }
   };
@@ -121,13 +121,13 @@ const Contracts: React.FC = () => {
   const getStatusBadge = (status: number) => {
     switch(status) {
       case 1:
-        return <Badge className="bg-amber-100 text-amber-700 border-none">Chờ ký</Badge>;
+        return <Badge className="border-none bg-amber-100 text-amber-700">Chờ ký</Badge>;
       case 2:
-        return <Badge className="bg-emerald-100 text-emerald-700 border-none">Đã ký</Badge>;
+        return <Badge className="border-none bg-emerald-100 text-emerald-700">Đã ký</Badge>;
       case 3:
-        return <Badge className="bg-red-100 text-red-700 border-none">Đã hủy</Badge>;
+        return <Badge className="border-none bg-red-100 text-red-700">Đã hủy</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-700 border-none">N/A</Badge>;
+        return <Badge className="border-none bg-gray-100 text-gray-700">N/A</Badge>;
     }
   };
 
@@ -137,43 +137,43 @@ const Contracts: React.FC = () => {
   );
 
   if (loading) return (
-    <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+    <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
       <Loader2 className="animate-spin text-blue-600" size={40} />
       <p className="text-gray-500">Đang tải danh sách hợp đồng...</p>
     </div>
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý Hợp đồng</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Hợp đồng</h1>
           <p className="text-gray-500">Quản lý và tạo hợp đồng thuê phòng điện tử.</p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+        <Button onClick={() => setIsCreateOpen(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
           <Plus size={18} /> Tạo hợp đồng mới
         </Button>
       </div>
 
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex items-center gap-4">
+        <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
             placeholder="Tìm theo tiêu đề hoặc tên khách..." 
-            className="pl-10 h-11"
+            className="h-11 pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-11 flex items-center gap-2">
+        <Button variant="outline" className="flex h-11 items-center gap-2">
           <Filter size={18} /> Bộ lọc
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+            <tr className="border-b border-gray-100 bg-gray-50 text-[11px] font-bold uppercase tracking-widest text-gray-500">
               <th className="px-6 py-4">Hợp đồng</th>
               <th className="px-6 py-4">Khách hàng</th>
               <th className="px-6 py-4">Phòng</th>
@@ -184,10 +184,10 @@ const Contracts: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-gray-50">
             {filteredContracts.map((contract) => (
-              <tr key={contract.id} className="hover:bg-blue-50/20 transition-colors">
+              <tr key={contract.id} className="transition-colors hover:bg-blue-50/20">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                       <FileText size={20} />
                     </div>
                     <div>
@@ -203,7 +203,7 @@ const Contracts: React.FC = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-0.5">
-                    <p className="font-bold text-gray-900 text-sm">{contract.booking?.room?.building?.name || 'N/A'}</p>
+                    <p className="text-sm font-bold text-gray-900">{contract.booking?.room?.building?.name || 'N/A'}</p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
                       <Home size={12} className="text-gray-400" /> 
                       {contract.booking?.room?.title || contract.booking?.room?.name || 'N/A'}
@@ -221,12 +221,12 @@ const Contracts: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                      className="size-8 text-blue-600 hover:bg-blue-50"
                       onClick={() => { setSelectedContract(contract); setIsDetailOpen(true); }}
                     >
                       <Eye size={18} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400">
+                    <Button variant="ghost" size="icon" className="size-8 text-gray-400">
                       <Download size={18} />
                     </Button>
                   </div>
@@ -235,7 +235,7 @@ const Contracts: React.FC = () => {
             ))}
             {filteredContracts.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
+                <td colSpan={6} className="px-6 py-12 text-center italic text-gray-400">
                   Chưa có hợp đồng nào.
                 </td>
               </tr>
@@ -253,11 +253,11 @@ const Contracts: React.FC = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Chọn yêu cầu đặt phòng (Xác nhận)</Label>
-              <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto border rounded-md p-2">
+              <div className="grid max-h-[150px] grid-cols-1 gap-2 overflow-y-auto rounded-md border p-2">
                 {bookings.length > 0 ? bookings.map((b) => (
                   <div 
                     key={b.id} 
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors flex justify-between items-center ${selectedBooking?.id === b.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+                    className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${selectedBooking?.id === b.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
                     onClick={() => setSelectedBooking(b)}
                   >
                     <div>
@@ -267,7 +267,7 @@ const Contracts: React.FC = () => {
                     {selectedBooking?.id === b.id && <CheckCircle2 size={16} className="text-blue-600" />}
                   </div>
                 )) : (
-                  <p className="text-sm text-gray-400 italic p-2 text-center">Không có yêu cầu đặt phòng nào cần làm hợp đồng.</p>
+                  <p className="p-2 text-center text-sm italic text-gray-400">Không có yêu cầu đặt phòng nào cần làm hợp đồng.</p>
                 )}
               </div>
             </div>
@@ -307,24 +307,24 @@ const Contracts: React.FC = () => {
           {selectedContract && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Khách thuê</label>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <span className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Khách thuê</span>
                   <p className="font-bold">{selectedContract.booking?.user?.name}</p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Tài sản</label>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <span className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Tài sản</span>
                   <p className="font-bold">{selectedContract.booking?.room?.building?.name} - {selectedContract.booking?.room?.title || selectedContract.booking?.room?.name}</p>
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Nội dung điều khoản</label>
-                <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 whitespace-pre-wrap font-serif min-h-[300px] border border-gray-100">
+                <span className="mb-2 block text-[10px] font-bold uppercase text-gray-400">Nội dung điều khoản</span>
+                <div className="min-h-[300px] whitespace-pre-wrap rounded-lg border border-gray-100 bg-gray-50 p-4 font-serif text-sm text-gray-700">
                   {selectedContract.content}
                 </div>
               </div>
 
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center justify-between text-sm">
                 <div className="text-gray-500">
                   Ngày tạo: {new Date(selectedContract.created_at).toLocaleDateString('vi-VN')}
                 </div>

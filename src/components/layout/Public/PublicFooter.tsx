@@ -12,20 +12,20 @@ const PublicFooter = ({ className }: PublicFooterProps) => {
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 text-sm text-slate-600 md:grid-cols-[minmax(0,1.4fr)_repeat(2,minmax(0,1fr))]">
         <div className="space-y-4">
           <Link to={ROUTERS.HOME} className="inline-flex items-center gap-3">
-            <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-11 w-11" />
+            <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-11" />
             <div className="leading-tight">
               <p className="text-xl font-bold tracking-tight text-white">{t("public.header.brand.title")}</p>
             </div>
           </Link>
           <p className="text-sm leading-6 text-slate-500">{t("public.footer.brand.description")}</p>
           <div className="flex items-center gap-3 text-slate-500">
-            <Phone className="h-4 w-4 text-primary" />
+            <Phone className="size-4 text-primary" />
             <span>
               {t("public.footer.contact.hotlineLabel")}: {t("public.footer.contact.hotlineValue")}
             </span>
           </div>
           <div className="flex items-center gap-3 text-slate-500">
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="size-4 text-primary" />
             <span>{t("public.footer.contact.addressValue")}</span>
           </div>
         </div>
@@ -87,9 +87,9 @@ const PublicFooter = ({ className }: PublicFooterProps) => {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-xs text-slate-400 sm:flex-row">
           <span>{t("public.footer.bottom.note", { year: new Date().getFullYear() })}</span>
           <div className="flex items-center gap-4">
-            <a href="#" className="transition hover:text-sky-600">{t("public.footer.bottom.sitemap")}</a>
-            <a href="#" className="transition hover:text-sky-600">{t("public.footer.bottom.cookies")}</a>
-            <a href="#" className="transition hover:text-sky-600">{t("public.footer.bottom.investor")}</a>
+            <a href="/" className="transition hover:text-sky-600">{t("public.footer.bottom.sitemap")}</a>
+            <a href="/" className="transition hover:text-sky-600">{t("public.footer.bottom.cookies")}</a>
+            <a href="/" className="transition hover:text-sky-600">{t("public.footer.bottom.investor")}</a>
           </div>
         </div>
       </div>

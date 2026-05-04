@@ -45,7 +45,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
 
   return (
     <FilterPortal open={open} onClose={onClose}>
-    <div className="animate-in fade-in slide-in-from-top-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300">
+    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300 animate-in fade-in slide-in-from-top-4">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
         <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
         </div>
         <button
           onClick={onClose}
-          className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           <X className="size-4" />
         </button>

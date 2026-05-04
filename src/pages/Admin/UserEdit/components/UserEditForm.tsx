@@ -37,7 +37,6 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSubmit, onCancel, i
         role: user.role || "",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleSubmit = async (values: UserEditFormData) => {
@@ -50,7 +49,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSubmit, onCancel, i
   };
 
   return (
-    <Card className="h-full w-full">
+    <Card className="size-full">
       <div className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">

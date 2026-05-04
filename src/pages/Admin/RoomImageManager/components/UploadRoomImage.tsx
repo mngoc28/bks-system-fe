@@ -166,7 +166,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="size-5" />
@@ -177,7 +177,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
         <div className="space-y-4">
           {/* Upload Area */}
           <div
-            className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+            className={`relative cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
               isDragOver
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400'
@@ -191,10 +191,10 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
               multiple
               accept="image/*"
               onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
               id="file-upload"
             />
-            <ImageIcon className="size-8 mx-auto mb-2 text-gray-400" />
+            <ImageIcon className="mx-auto mb-2 size-8 text-gray-400" />
             <div className="space-y-2">
               <p className="text-sm text-gray-600">
                 {t("common.upload")} {t("rooms.image")} (PNG, JPG, JPEG, WebP)
@@ -206,9 +206,9 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
                 {t('room_images.max_size_auto_compress')}
               </p>
             </div>
-            <div className="flex items-center gap-4 mt-6">
+            <div className="mt-6 flex items-center gap-4">
               <div className="flex-1 border-t border-gray-300"></div>
-              <label htmlFor="file-upload" className="text-gray-400 text-sm font-medium whitespace-nowrap cursor-pointer">
+              <label htmlFor="file-upload" className="cursor-pointer whitespace-nowrap text-sm font-medium text-gray-400">
                 {t("room_images.select_file")}
               </label>
               <div className="flex-1 border-t border-gray-300"></div>
@@ -219,20 +219,20 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
           {files.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium">{t('room_images.selected_files', { count: files.length })}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
+              <div className="grid max-h-60 grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2 md:grid-cols-3">
                 {files.map((filePreview, index) => (
-                  <div key={index} className="relative group border rounded-md p-2 bg-white">
+                  <div key={index} className="group relative rounded-md border bg-white p-2">
                     <img
                       src={filePreview.url}
                       alt={`Preview ${index + 1}`}
-                      className={`w-full aspect-square object-cover rounded border ${
+                      className={`aspect-square w-full rounded border object-cover ${
                         filePreview.error ? 'border-red-300' : 'border-gray-200'
                       }`}
                     />
 
                     {/* Error indicator */}
                     {filePreview.error && (
-                      <div className="absolute top-1 left-1 bg-red-500 text-white p-1 rounded">
+                      <div className="absolute left-1 top-1 rounded bg-red-500 p-1 text-white">
                         <AlertCircle className="size-3" />
                       </div>
                     )}
@@ -242,19 +242,19 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
                       variant="secondary"
                       size="sm"
                       onClick={() => removeFile(index)}
-                      className="absolute top-1 right-1 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute right-1 top-1 size-6 bg-red-500 p-0 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
                     >
                       <X className="size-3" />
                     </Button>
 
                     {/* File info */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-1 text-xs truncate">
+                    <div className="absolute inset-x-0 bottom-0 truncate bg-black bg-opacity-50 p-1 text-xs text-white">
                       {filePreview.file.name}
                     </div>
 
                     {/* Error message */}
                     {filePreview.error && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-red-500 text-white p-1 text-xs">
+                      <div className="absolute inset-x-0 bottom-0 bg-red-500 p-1 text-xs text-white">
                         {filePreview.error}
                       </div>
                     )}
@@ -270,7 +270,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
                             ));
                           }}
                         >
-                          <SelectTrigger className="h-8 mt-1">
+                          <SelectTrigger className="mt-1 h-8">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -291,7 +291,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
 
           {/* Upload Status */}
           {hasErrors && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+            <div className="rounded border border-yellow-200 bg-yellow-50 p-3">
               <p className="text-sm text-yellow-800">
                 {t('room_images.some_files_invalid')}
               </p>
@@ -299,7 +299,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 justify-end">
+          <div className="flex justify-end gap-2">
             <Button
               onClick={handleUpload}
               disabled={uploadMutation.isPending || validFilesCount === 0}

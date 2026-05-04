@@ -121,7 +121,9 @@ const PartnerPrivateRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         const parsed = JSON.parse(persistedData);
         role = (parsed?.state?.userRole || '').toLowerCase();
-      } catch (e) {}
+      } catch {
+        // ignore error
+      }
     }
   }
 

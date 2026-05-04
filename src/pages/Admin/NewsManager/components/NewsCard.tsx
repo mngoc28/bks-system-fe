@@ -32,7 +32,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
 
   return (
     <Card
-      className="glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 h-full flex flex-col cursor-pointer"
+      className="glass-card hover-scale group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 animate-in"
       onClick={() => onView(news.id)}
     >
       {/* 16/9 Image Section */}
@@ -41,7 +41,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
           <img
             src={imageUrl}
             alt={news.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={(e) => {
               if (e.currentTarget.src !== fallbackImage) {
                 e.currentTarget.src = fallbackImage;
@@ -49,15 +49,15 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
             }}
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
-            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
-            <p className="text-gray-500 text-sm">{t("news.no_image")}</p>
+          <div className="flex size-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+            <ImageIcon className="mx-auto mb-3 size-10 text-gray-400" />
+            <p className="text-sm text-gray-500">{t("news.no_image")}</p>
           </div>
         )}
 
         {/* Status Badge */}
-        <div className="absolute left-4 top-4 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
-          <Badge className={`border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg w-fit ${news.status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+        <div className="absolute left-4 top-4 z-10 duration-500 animate-in fade-in slide-in-from-top-2">
+          <Badge className={`w-fit border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg ${news.status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}`}>
             {news.status === 1 ? t("news.status_published") : t("news.status_draft")}
           </Badge>
         </div>
@@ -67,7 +67,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
           <Button
             variant="secondary"
             size="icon"
-            className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white/40 hover:scale-110 transition-transform"
+            className="size-10 rounded-full bg-white/20 text-white backdrop-blur-md transition-transform hover:scale-110 hover:bg-white/40"
             onClick={(e) => { e.stopPropagation(); onEdit(news.id); }}
           >
             <Edit className="size-5" />
@@ -75,7 +75,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
           <Button
             variant="destructive"
             size="icon"
-            className="h-10 w-10 rounded-full bg-red-500/80 text-white backdrop-blur-md hover:bg-red-600 hover:scale-110 transition-transform"
+            className="size-10 rounded-full bg-red-500/80 text-white backdrop-blur-md transition-transform hover:scale-110 hover:bg-red-600"
             onClick={(e) => { e.stopPropagation(); onDelete(news.id); }}
           >
             <Trash2 className="size-5" />
@@ -84,7 +84,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
       </div>
 
       {/* Content Section */}
-      <div className="p-6 flex flex-col flex-1">
+      <div className="flex flex-1 flex-col p-6">
         <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
           <div className="flex items-center gap-1">
             <Calendar className="size-3" />
@@ -97,7 +97,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
         </div>
 
         <h3
-          className="mb-3 line-clamp-2 text-xl font-black leading-tight text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
+          className="mb-3 line-clamp-2 text-xl font-black leading-tight text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100"
           title={news.title}
         >
           {highlightText(news.title, highlightTerms?.title || "")}

@@ -33,12 +33,8 @@ export const useGetServicesMutation = (data: ServiceFilters) => {
   return useQuery({
     queryKey: ["services", data],
     queryFn: async () => {
-      try {
-        const response = await serviceApi.getAllAndSearchServices(data);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await serviceApi.getAllAndSearchServices(data);
+      return response;
     },
   });
 };

@@ -189,7 +189,9 @@ const PropertyRooms: React.FC = () => {
       ]);
       setAvailableAmenities(ams?.data || []);
       setAvailableServices(svs?.data || []);
-    } catch (e) {}
+    } catch {
+      // ignore
+    }
   };
 
   const fetchOccupancy = async () => {
@@ -204,7 +206,7 @@ const PropertyRooms: React.FC = () => {
         setOccupancyStats(null);
         toastError(res?.message || 'Không thể tải sơ đồ phòng.');
       }
-    } catch (error) {
+    } catch {
       toastError('Không thể tải sơ đồ phòng.');
     } finally {
       setLoadingOccupancy(false);
@@ -243,7 +245,7 @@ const PropertyRooms: React.FC = () => {
           setPropertyType(selectedBuilding.property_type_name || '');
         }
       }
-    } catch (error) {
+    } catch {
       toastError('Không thể tải danh sách phòng.');
     } finally {
       setLoading(false);
@@ -277,7 +279,7 @@ const PropertyRooms: React.FC = () => {
       toastSuccess(`Đã ẩn ${selectedIds.length} phòng.`);
       setSelectedIds([]);
       fetchData(currentPage);
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi cập nhật trạng thái.');
     }
   };
@@ -289,7 +291,7 @@ const PropertyRooms: React.FC = () => {
       toastSuccess(`Đã hiển thị ${selectedIds.length} phòng.`);
       setSelectedIds([]);
       fetchData(currentPage);
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi cập nhật trạng thái.');
     }
   };
@@ -302,7 +304,7 @@ const PropertyRooms: React.FC = () => {
       toastSuccess(`Đã xóa ${selectedIds.length} phòng.`);
       setSelectedIds([]);
       fetchData(1);
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi xóa hàng loạt.');
     }
   };
@@ -370,7 +372,7 @@ const PropertyRooms: React.FC = () => {
       setIsRoomPanelOpen(false);
       fetchData(currentPage);
       if (viewMode === 'occupancy') fetchOccupancy();
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi lưu dữ liệu.');
     }
   };
@@ -392,7 +394,7 @@ const PropertyRooms: React.FC = () => {
       toastSuccess('Đã đăng ký lịch bảo trì.');
       setIsMaintenanceOpen(false);
       if (viewMode === 'occupancy') fetchOccupancy();
-    } catch (e) {
+    } catch {
       toastError('Lỗi khi đăng ký bảo trì.');
     }
   };
@@ -419,42 +421,42 @@ const PropertyRooms: React.FC = () => {
   }, [occupancyData]);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
+    <div className="mx-auto max-w-[1600px] space-y-6">
       {/* Header Section */}
-      <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+      <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="absolute right-0 top-0 p-8 opacity-5 transition-opacity group-hover:opacity-10">
           <Building2 size={120} />
         </div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-3">
             <button
               onClick={() => navigate('/partner/properties')}
-              className="inline-flex items-center gap-2 text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors mb-2 group/back"
+              className="group/back mb-2 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
             >
-              <ArrowLeft size={16} className="group-hover/back:-translate-x-1 transition-transform" /> 
+              <ArrowLeft size={16} className="transition-transform group-hover/back:-translate-x-1" /> 
               Quay lại danh sách tài sản
             </button>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{propertyName}</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">{propertyName}</h1>
               {propertyType && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-100 uppercase text-[10px] font-semibold tracking-widest px-2 py-0.5 shadow-sm">
+                <Badge variant="outline" className="border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-blue-600 shadow-sm">
                   {propertyType}
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-4 text-slate-500 text-sm">
+            <div className="flex items-center gap-4 text-sm text-slate-500">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="size-2 rounded-full bg-blue-500" />
                 {totalItems} phòng tổng cộng
               </div>
               {occupancyStats && (
                 <>
                   <div className="flex items-center gap-1.5 font-semibold text-emerald-600">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="size-2 rounded-full bg-emerald-500" />
                     {occupancyStats.vacant} trống
                   </div>
-                  <div className="flex items-center gap-1.5 font-semibold text-rose-500 font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <div className="flex items-center gap-1.5 font-semibold text-rose-500">
+                    <span className="size-2 rounded-full bg-rose-500" />
                     {occupancyStats.occupied} đang ở
                   </div>
                 </>
@@ -463,12 +465,12 @@ const PropertyRooms: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="bg-slate-100 p-1 rounded-xl flex gap-1 shadow-inner border border-slate-200/50">
+            <div className="flex gap-1 rounded-xl border border-slate-200/50 bg-slate-100 p-1 shadow-inner">
               <Button 
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                 size="sm" 
                 onClick={() => setViewMode('grid')}
-                className={`rounded-lg h-9 px-4 gap-2 font-semibold transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                className={`h-9 gap-2 rounded-lg px-4 font-semibold transition-all ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
               >
                 <LayoutGrid size={16} /> Danh sách
               </Button>
@@ -476,7 +478,7 @@ const PropertyRooms: React.FC = () => {
                 variant={viewMode === 'occupancy' ? 'secondary' : 'ghost'} 
                 size="sm" 
                 onClick={() => setViewMode('occupancy')}
-                className={`rounded-lg h-9 px-4 gap-2 font-semibold transition-all ${viewMode === 'occupancy' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                className={`h-9 gap-2 rounded-lg px-4 font-semibold transition-all ${viewMode === 'occupancy' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
               >
                 <Activity size={16} /> Trạng thái & Lịch
               </Button>
@@ -488,11 +490,11 @@ const PropertyRooms: React.FC = () => {
                   setIsBulkMode(!isBulkMode);
                   if (isBulkMode) setSelectedIds([]);
                 }}
-                className={`h-11 rounded-xl px-4 gap-2 font-semibold transition-all ${isBulkMode ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'text-slate-600'}`}
+                className={`h-11 gap-2 rounded-xl px-4 font-semibold transition-all ${isBulkMode ? 'border-blue-200 bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-600'}`}
               >
                 {isBulkMode ? <X size={18} /> : <Edit size={18} />} {isBulkMode ? 'Hủy' : 'Sửa'}
               </Button>
-              <Button onClick={openCreatePanel} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 px-6 h-11 rounded-xl flex items-center gap-2 font-semibold transition-all hover:scale-[1.02] active:scale-95">
+              <Button onClick={openCreatePanel} className="flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-6 font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:scale-[1.02] hover:bg-blue-700 active:scale-95">
                 <Plus size={20} /> Thêm phòng
               </Button>
             </div>
@@ -503,8 +505,8 @@ const PropertyRooms: React.FC = () => {
       {/* Main Content */}
       {viewMode === 'grid' ? (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col lg:flex-row lg:items-center gap-3 lg:justify-between">
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative w-full sm:w-[320px]">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
@@ -515,9 +517,9 @@ const PropertyRooms: React.FC = () => {
                 />
               </div>
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={16} />
+                <Filter className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400" size={16} />
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger id="status-filter" className="pl-9 h-11 rounded-lg border-gray-200">
+                  <SelectTrigger id="status-filter" className="h-11 rounded-lg border-gray-200 pl-9">
                     <SelectValue placeholder="Tất cả trạng thái" />
                   </SelectTrigger>
                   <SelectContent>
@@ -531,71 +533,71 @@ const PropertyRooms: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="h-[220px] rounded-xl bg-slate-100 animate-pulse border border-slate-200" />
+                <div key={i} className="h-[220px] animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
               ))}
             </div>
           ) : rooms.length > 0 ? (
             <>
           {isBulkMode && (
-            <div className="flex items-center justify-between bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="flex items-center gap-2 text-sm font-semibold text-blue-700 cursor-pointer">
+            <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-3 duration-300 animate-in fade-in slide-in-from-top-2">
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-blue-700">
                 <input
                   type="checkbox"
                   checked={allCurrentPageSelected}
                   onChange={handleToggleSelectAllCurrentPage}
-                  className="w-5 h-5 rounded border-blue-300 text-blue-600 focus:ring-0"
+                  className="size-5 rounded border-blue-300 text-blue-600 focus:ring-0"
                 />
                 Chọn tất cả phòng của trang này ({rooms.length})
               </label>
 
-              <div className="text-xs text-blue-600 font-bold bg-white px-3 py-1 rounded-full border border-blue-100 shadow-sm uppercase tracking-tight">
+              <div className="rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold uppercase tracking-tight text-blue-600 shadow-sm">
                 Đã chọn: {selectedIds.length}
               </div>
             </div>
           )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {rooms.map((room) => (
                   <div 
                     key={room.id} 
-                    className={`bg-white rounded-xl border ${selectedIds.includes(Number(room.id)) ? 'border-blue-500 ring-2 ring-blue-50' : 'border-slate-200'} p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative ring-1 ring-black/5 flex flex-col`}
+                    className={`rounded-xl border bg-white ${selectedIds.includes(Number(room.id)) ? 'border-blue-500 ring-2 ring-blue-50' : 'border-slate-200'} group relative flex flex-col p-5 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
                   >
-                    <div className="flex justify-between items-start mb-4 relative">
-                      <h3 className="text-lg font-semibold text-slate-800 uppercase pl-1 pr-16 truncate max-w-[80%]" title={room.title || room.name}>
+                    <div className="relative mb-4 flex items-start justify-between">
+                      <h3 className="max-w-[80%] truncate pl-1 pr-16 text-lg font-semibold uppercase text-slate-800" title={room.title || room.name}>
                         {room.title || room.name}
                       </h3>
-                      <div className="flex items-center gap-2 absolute top-0 right-0">
-                        <Badge variant="outline" className={`text-[10px] font-semibold border shadow-sm transition-all duration-300 ${isBulkMode ? 'mr-10' : ''} ${
-                          (room.status === 'Trống' || String(room.status) === 'true' || String(room.status) === '1') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                          (room.status === 'Đang thuê') ? 'bg-blue-50 text-blue-600 border-blue-100' : 
-                          'bg-amber-50 text-amber-600 border-amber-100'
+                      <div className="absolute right-0 top-0 flex items-center gap-2">
+                        <Badge variant="outline" className={`border text-[10px] font-semibold shadow-sm transition-all duration-300 ${isBulkMode ? 'mr-10' : ''} ${
+                          (room.status === 'Trống' || String(room.status) === 'true' || String(room.status) === '1') ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 
+                          (room.status === 'Đang thuê') ? 'border-blue-100 bg-blue-50 text-blue-600' : 
+                          'border-amber-100 bg-amber-50 text-amber-600'
                         }`}>
                           {String(room.status) === 'true' || String(room.status) === '1' ? 'Công khai' : 
                            String(room.status) === 'false' || String(room.status) === '0' ? 'Đã ẩn' : 
                            room.status}
                         </Badge>
-                        <div className={`z-20 transition-all duration-300 flex items-center justify-center w-5 h-5 ${isBulkMode ? 'opacity-100 scale-110' : 'opacity-0 scale-0 pointer-events-none'}`}>
+                        <div className={`z-20 flex size-5 items-center justify-center transition-all duration-300 ${isBulkMode ? 'scale-110 opacity-100' : 'pointer-events-none scale-0 opacity-0'}`}>
                           <input 
                             type="checkbox" 
                             checked={selectedIds.includes(Number(room.id))}
                             onChange={() => toggleSelect(Number(room.id))}
-                            className="w-5 h-5 border-slate-300 text-blue-600 focus:ring-0 focus:ring-offset-0 outline-none cursor-pointer"
+                            className="size-5 cursor-pointer border-slate-300 text-blue-600 outline-none focus:ring-0 focus:ring-offset-0"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex-1 space-y-3 mb-6">
+                    <div className="mb-6 flex-1 space-y-3">
                        <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
                           <div className="flex items-center gap-1"><LayoutGrid size={14} className="text-slate-400" /> {room.area}m²</div>
                           <div className="flex items-center gap-1"><ChevronDown size={14} className="text-slate-400" /> Tầng {room.floor_number || 1}</div>
                        </div>
                        
-                       <div className="mt-4 pt-3 border-t border-slate-50">
+                       <div className="mt-4 border-t border-slate-50 pt-3">
                           <div className="flex items-center justify-between">
-                             <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Giá thuê</span>
+                             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Giá thuê</span>
                              <span className="text-sm font-bold text-blue-600">
                                 {room.prices && room.prices.length > 0 
                                   ? room.prices[0].price.toLocaleString('vi-VN') + ' ₫/th'
@@ -605,12 +607,12 @@ const PropertyRooms: React.FC = () => {
                        </div>
                     </div>
 
-                    <div className="flex gap-2 pt-3 border-t border-slate-50">
+                    <div className="flex gap-2 border-t border-slate-50 pt-3">
                        <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => navigate(`/partner/rooms/${room.id}`)}
-                          className="h-9 w-9 p-0 rounded-lg border-slate-200 hover:border-blue-600 hover:text-blue-600 transition-colors bg-blue-50/10"
+                          className="size-9 rounded-lg border-slate-200 bg-blue-50/10 p-0 transition-colors hover:border-blue-600 hover:text-blue-600"
                           title="Xem chi tiết"
                        >
                          <LayoutDashboard size={14} />
@@ -619,7 +621,7 @@ const PropertyRooms: React.FC = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={() => { setEditingRoom(room); setFormData(room); setIsRoomPanelOpen(true); }}
-                          className="flex-1 h-9 rounded-lg text-[11px] font-semibold border-slate-200 hover:border-blue-600 hover:text-blue-600 transition-colors"
+                          className="h-9 flex-1 rounded-lg border-slate-200 text-[11px] font-semibold transition-colors hover:border-blue-600 hover:text-blue-600"
                        >
                          <Edit size={14} /> Sửa
                        </Button>
@@ -627,7 +629,7 @@ const PropertyRooms: React.FC = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={() => setImageManagerTarget({ id: Number(room.id), name: room.title || room.name })}
-                          className="h-9 w-9 p-0 rounded-lg border-slate-200 hover:border-violet-600 hover:text-violet-600 transition-colors"
+                          className="size-9 rounded-lg border-slate-200 p-0 transition-colors hover:border-violet-600 hover:text-violet-600"
                        >
                          <Camera size={16} />
                        </Button>
@@ -642,7 +644,7 @@ const PropertyRooms: React.FC = () => {
                             }));
                             setIsMaintenanceOpen(true);
                           }}
-                          className="h-9 w-9 p-0 rounded-lg border-slate-200 hover:border-amber-600 hover:text-amber-600 transition-colors"
+                          className="size-9 rounded-lg border-slate-200 p-0 transition-colors hover:border-amber-600 hover:text-amber-600"
                        >
                          <Wrench size={16} />
                        </Button>
@@ -651,11 +653,11 @@ const PropertyRooms: React.FC = () => {
                 ))}
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-6">
+              <div className="flex flex-col gap-3 pt-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500 whitespace-nowrap">Hiển thị mỗi trang:</span>
+                  <span className="whitespace-nowrap text-sm text-gray-500">Hiển thị mỗi trang:</span>
                   <Select value={String(pageSize)} onValueChange={(val) => setPageSize(Number(val))}>
-                    <SelectTrigger className="w-[70px] h-9 rounded-lg">
+                    <SelectTrigger className="h-9 w-[70px] rounded-lg">
                       <SelectValue placeholder={pageSize} />
                     </SelectTrigger>
                     <SelectContent>
@@ -673,7 +675,7 @@ const PropertyRooms: React.FC = () => {
                         <PaginationItem>
                           <PaginationPrevious 
                             onClick={() => currentPage > 1 && fetchData(currentPage - 1)}
-                            className={currentPage === 1 ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                           />
                         </PaginationItem>
                         {Array.from({ length: totalPages }).map((_, i) => (
@@ -689,7 +691,7 @@ const PropertyRooms: React.FC = () => {
                         <PaginationItem>
                            <PaginationNext 
                              onClick={() => currentPage < totalPages && fetchData(currentPage + 1)}
-                             className={currentPage === totalPages ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}
+                             className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                            />
                         </PaginationItem>
                       </PaginationContent>
@@ -699,34 +701,34 @@ const PropertyRooms: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-200 p-20 shadow-sm text-center">
-               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+            <div className="rounded-xl border border-slate-200 bg-white p-20 text-center shadow-sm">
+               <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full border border-slate-100 bg-slate-50">
                   <LayoutGrid size={32} className="text-slate-300" />
                </div>
                <h3 className="text-lg font-semibold text-slate-800">Không có phòng nào</h3>
-               <p className="text-slate-500 mb-6">Bất động sản này hiện chưa có thông tin phòng.</p>
-               <Button onClick={openCreatePanel} className="bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold h-11 px-8">
+               <p className="mb-6 text-slate-500">Bất động sản này hiện chưa có thông tin phòng.</p>
+               <Button onClick={openCreatePanel} className="h-11 rounded-xl bg-blue-600 px-8 font-semibold hover:bg-blue-700">
                   <Plus size={20} className="mr-2" /> Thêm phòng ngay
                </Button>
             </div>
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
           {loadingOccupancy ? (
-            <div className="py-20 flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4 py-20">
               <Loader2 className="animate-spin text-blue-600" size={40} />
-              <p className="text-slate-400 italic">Đang tải sơ đồ lấp đầy...</p>
+              <p className="italic text-slate-400">Đang tải sơ đồ lấp đầy...</p>
             </div>
           ) : occupancyData.length > 0 ? (
             <div className="space-y-10">
                {roomsByFloor.map(([floor, floorRooms]) => (
                  <div key={floor} className="space-y-4">
                     <div className="flex items-center gap-4">
-                       <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">Tầng {floor}</h3>
+                       <h3 className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1 text-sm font-semibold uppercase tracking-widest text-slate-400">Tầng {floor}</h3>
                        <div className="h-px flex-1 bg-gradient-to-r from-slate-100 to-transparent" />
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 xl:grid-cols-12">
                        {floorRooms.map(room => (
                          <div 
                            key={room.id}
@@ -739,14 +741,14 @@ const PropertyRooms: React.FC = () => {
                                if (r) { setEditingRoom(r); setFormData(r); setIsRoomPanelOpen(true); }
                              }
                            }}
-                           className={`${getOccupancyColor(room.occupancy_status)} h-16 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-sm border border-black/5 relative group`}
+                           className={`${getOccupancyColor(room.occupancy_status)} group relative flex h-16 cursor-pointer flex-col items-center justify-center rounded-xl border border-black/5 shadow-sm transition-all hover:scale-105 active:scale-95`}
                          >
                             <span className="text-sm font-black uppercase tracking-tighter">{room.room_number || room.title}</span>
                             {room.occupancy_status === 'occupied' && <span className="text-[9px] font-semibold opacity-80">Có khách</span>}
                             {room.occupancy_status === 'maintenance' && <Wrench size={10} className="mt-1 opacity-80" />}
                             
                             {/* Hover info */}
-                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-slate-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20 shadow-xl">
+                            <div className="pointer-events-none absolute -top-12 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-3 py-1.5 text-[10px] text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
                                {room.title} • {room.occupancy_status === 'vacant' ? 'Trống' : room.occupancy_status === 'occupied' ? 'Đang thuê' : 'Bảo trì'}
                             </div>
                          </div>
@@ -756,38 +758,38 @@ const PropertyRooms: React.FC = () => {
                ))}
 
                {/* Legend */}
-               <div className="flex flex-wrap items-center gap-6 pt-8 border-t border-slate-100 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-emerald-500" /> Trống</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-rose-500" /> Đang ở</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-amber-500" /> Bảo trì</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-slate-400" /> Đã ẩn</div>
+               <div className="flex flex-wrap items-center gap-6 border-t border-slate-100 pt-8 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <div className="flex items-center gap-2"><div className="size-3 rounded bg-emerald-500" /> Trống</div>
+                  <div className="flex items-center gap-2"><div className="size-3 rounded bg-rose-500" /> Đang ở</div>
+                  <div className="flex items-center gap-2"><div className="size-3 rounded bg-amber-500" /> Bảo trì</div>
+                  <div className="flex items-center gap-2"><div className="size-3 rounded bg-slate-400" /> Đã ẩn</div>
                </div>
             </div>
           ) : (
-            <div className="py-20 text-center text-slate-400 italic">Vui lòng chọn bất động sản để xem sơ đồ.</div>
+            <div className="py-20 text-center italic text-slate-400">Vui lòng chọn bất động sản để xem sơ đồ.</div>
           )}
         </div>
       )}
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10">
-           <div className="bg-slate-900 border border-slate-800 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-6 ring-4 ring-slate-900/10 backdrop-blur-md">
-              <div className="flex items-center gap-3 pr-6 border-r border-slate-800">
-                 <div className="bg-blue-600 text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center">{selectedIds.length}</div>
+        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-10">
+           <div className="flex items-center gap-6 rounded-xl border border-slate-800 bg-slate-900 px-6 py-4 text-white shadow-2xl ring-4 ring-slate-900/10 backdrop-blur-md">
+              <div className="flex items-center gap-3 border-r border-slate-800 pr-6">
+                 <div className="flex size-6 items-center justify-center rounded-full bg-blue-600 text-[10px] font-black">{selectedIds.length}</div>
                  <span className="text-sm font-semibold tracking-tight">đã chọn</span>
               </div>
               <div className="flex items-center gap-2">
-                 <Button onClick={handleBulkShow} variant="ghost" className="text-emerald-300 hover:bg-emerald-500/10 gap-2 font-semibold h-10 px-4 rounded-xl transition-all">
+                 <Button onClick={handleBulkShow} variant="ghost" className="h-10 gap-2 rounded-xl px-4 font-semibold text-emerald-300 transition-all hover:bg-emerald-500/10">
                    <Eye size={16} /> Hiện phòng
                  </Button>
-                 <Button onClick={handleBulkHide} variant="ghost" className="text-white hover:bg-slate-800 gap-2 font-semibold h-10 px-4 rounded-xl transition-all">
+                 <Button onClick={handleBulkHide} variant="ghost" className="h-10 gap-2 rounded-xl px-4 font-semibold text-white transition-all hover:bg-slate-800">
                    <Eye size={16} /> Ẩn phòng
                  </Button>
-                 <Button onClick={handleBulkDelete} variant="ghost" className="text-rose-400 hover:bg-rose-500/10 gap-2 font-semibold h-10 px-4 rounded-xl transition-all">
+                 <Button onClick={handleBulkDelete} variant="ghost" className="h-10 gap-2 rounded-xl px-4 font-semibold text-rose-400 transition-all hover:bg-rose-500/10">
                    <Trash size={16} /> Xóa hàng loạt
                  </Button>
-                 <Button onClick={() => setSelectedIds([])} variant="ghost" className="text-slate-400 hover:text-white px-3 font-semibold">
+                 <Button onClick={() => setSelectedIds([])} variant="ghost" className="px-3 font-semibold text-slate-400 hover:text-white">
                    Hủy
                  </Button>
               </div>
@@ -803,7 +805,7 @@ const PropertyRooms: React.FC = () => {
         onClose={() => setIsRoomPanelOpen(false)}
         title={editingRoom ? 'Cập nhật phòng' : 'Thêm phòng mới'}
         footer={
-           <div className="flex items-center justify-end w-full gap-2">
+           <div className="flex w-full items-center justify-end gap-2">
               <Button variant="outline" onClick={() => setIsRoomPanelOpen(false)}>Hủy</Button>
               <Button onClick={handleSaveRoom} className="bg-blue-600 hover:bg-blue-700">Lưu thay đổi</Button>
            </div>
@@ -812,21 +814,21 @@ const PropertyRooms: React.FC = () => {
         <div className="space-y-6">
            {!editingRoom && (
              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-               <label htmlFor="bulk-mode" className="flex items-center gap-2 cursor-pointer">
+               <label htmlFor="bulk-mode" className="flex cursor-pointer items-center gap-2">
                  <input
                    type="checkbox"
                    id="bulk-mode"
                    checked={isBulkEntry}
                    onChange={e => setIsBulkEntry(e.target.checked)}
-                   className="w-4 h-4 rounded border-slate-300 text-blue-600"
+                   className="size-4 rounded border-slate-300 text-blue-600"
                  />
                  <span className="text-sm font-semibold text-slate-700">Chế độ tạo hàng loạt</span>
                </label>
              </div>
            )}
 
-           <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+           <div className="flex gap-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                  <CheckSquare size={20} />
               </div>
               <div className="space-y-1">
@@ -838,14 +840,14 @@ const PropertyRooms: React.FC = () => {
            <div className="space-y-4">
               {isBulkEntry ? (
                 <div className="grid gap-3">
-                  <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-xs text-blue-800 space-y-1">
+                  <div className="space-y-1 rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-xs text-blue-800">
                     <p className="font-semibold">Hướng dẫn tạo hàng loạt</p>
                     <p>- Dùng cấu hình số và kiểu mã để hệ thống tự sinh danh sách phòng.</p>
                     <p>- Toàn bộ thông số bên dưới (diện tích, tầng, sức chứa, tiện nghi, dịch vụ, giá) sẽ áp dụng cho tất cả phòng.</p>
                     <p>- Bạn xem trước danh sách sinh tự động trước khi bấm lưu.</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                  <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div className="grid gap-2">
                       <Label className="font-semibold">Kiểu mã phòng</Label>
                       <select
@@ -865,7 +867,7 @@ const PropertyRooms: React.FC = () => {
                           type="number"
                           value={bulkConfig.floorNumber}
                           onChange={(e) => setBulkConfig((prev) => ({ ...prev, floorNumber: Number(e.target.value) || 0 }))}
-                          className="rounded-xl h-11"
+                          className="h-11 rounded-xl"
                         />
                       </div>
                     ) : (
@@ -875,7 +877,7 @@ const PropertyRooms: React.FC = () => {
                           value={bulkConfig.prefix}
                           onChange={(e) => setBulkConfig((prev) => ({ ...prev, prefix: e.target.value }))}
                           placeholder="VD: P, A, VIP-"
-                          className="rounded-xl h-11"
+                          className="h-11 rounded-xl"
                         />
                       </div>
                     )}
@@ -886,7 +888,7 @@ const PropertyRooms: React.FC = () => {
                         type="number"
                         value={bulkConfig.startIndex}
                         onChange={(e) => setBulkConfig((prev) => ({ ...prev, startIndex: Number(e.target.value) || 0 }))}
-                        className="rounded-xl h-11"
+                        className="h-11 rounded-xl"
                       />
                     </div>
 
@@ -897,7 +899,7 @@ const PropertyRooms: React.FC = () => {
                         min={1}
                         value={bulkConfig.count}
                         onChange={(e) => setBulkConfig((prev) => ({ ...prev, count: Number(e.target.value) || 0 }))}
-                        className="rounded-xl h-11"
+                        className="h-11 rounded-xl"
                       />
                     </div>
 
@@ -908,7 +910,7 @@ const PropertyRooms: React.FC = () => {
                         min={1}
                         value={bulkConfig.step}
                         onChange={(e) => setBulkConfig((prev) => ({ ...prev, step: Number(e.target.value) || 1 }))}
-                        className="rounded-xl h-11"
+                        className="h-11 rounded-xl"
                       />
                     </div>
 
@@ -920,36 +922,36 @@ const PropertyRooms: React.FC = () => {
                         max={5}
                         value={bulkConfig.padLength}
                         onChange={(e) => setBulkConfig((prev) => ({ ...prev, padLength: Number(e.target.value) || 1 }))}
-                        className="rounded-xl h-11"
+                        className="h-11 rounded-xl"
                       />
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
+                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Xem trước phòng sẽ tạo</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Xem trước phòng sẽ tạo</p>
                       <span className="text-xs font-semibold text-blue-700">{bulkRoomNames.length} phòng</span>
                     </div>
 
                     {duplicateBulkRoomNames.length > 0 && (
-                      <div className="text-xs text-rose-600 font-semibold">
+                      <div className="text-xs font-semibold text-rose-600">
                         Trùng tên phòng: {duplicateBulkRoomNames.join(', ')}
                       </div>
                     )}
 
                     {bulkRoomNames.length > 0 ? (
-                      <div className="flex flex-wrap gap-2 max-h-28 overflow-auto pr-1">
+                      <div className="flex max-h-28 flex-wrap gap-2 overflow-auto pr-1">
                         {bulkRoomNames.map((name, index) => (
                           <span
                             key={`${name}-${index}`}
-                            className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700"
+                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
                           >
                             {name}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">Chưa có dữ liệu xem trước.</p>
+                      <p className="text-xs italic text-slate-400">Chưa có dữ liệu xem trước.</p>
                     )}
                   </div>
                 </div>
@@ -957,11 +959,11 @@ const PropertyRooms: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                    <div className="grid gap-2">
                      <Label className="font-semibold">Số phòng / Tên phòng</Label>
-                     <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: P.101" className="rounded-xl h-11" />
+                     <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: P.101" className="h-11 rounded-xl" />
                    </div>
                    <div className="grid gap-2">
                      <Label className="font-semibold">Tầng</Label>
-                     <Input type="number" value={formData.floor_number} onChange={e => setFormData({...formData, floor_number: Number(e.target.value)})} className="rounded-xl h-11" />
+                     <Input type="number" value={formData.floor_number} onChange={e => setFormData({...formData, floor_number: Number(e.target.value)})} className="h-11 rounded-xl" />
                    </div>
                 </div>
               )}
@@ -969,19 +971,19 @@ const PropertyRooms: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                  <div className="grid gap-2">
                     <Label className="font-semibold">Diện tích (m²)</Label>
-                    <Input type="number" value={formData.area} onChange={e => setFormData({...formData, area: Number(e.target.value)})} className="rounded-xl h-11" />
+                    <Input type="number" value={formData.area} onChange={e => setFormData({...formData, area: Number(e.target.value)})} className="h-11 rounded-xl" />
                  </div>
                  <div className="grid gap-2">
                     <Label className="font-semibold">Sức chứa (người)</Label>
-                    <Input type="number" value={formData.people} onChange={e => setFormData({...formData, people: Number(e.target.value)})} className="rounded-xl h-11" />
+                    <Input type="number" value={formData.people} onChange={e => setFormData({...formData, people: Number(e.target.value)})} className="h-11 rounded-xl" />
                  </div>
               </div>
 
               <div className="grid gap-2">
                 <Label className="font-semibold">Tiện nghi (Amenities)</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-3">
                    {availableAmenities.map(am => (
-                     <label key={am.id} className="flex items-center gap-2 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
+                     <label key={am.id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-transparent p-2 transition-colors hover:border-slate-200 hover:bg-white">
                         <input 
                            type="checkbox" 
                            checked={formData.amenities.includes(am.id)}
@@ -991,7 +993,7 @@ const PropertyRooms: React.FC = () => {
                                : formData.amenities.filter((id: number) => id !== am.id);
                              setFormData({...formData, amenities: next});
                            }}
-                           className="w-4 h-4 rounded border-slate-300 text-blue-600"
+                           className="size-4 rounded border-slate-300 text-blue-600"
                         />
                         <span className="text-xs font-medium text-slate-700">{am.name}</span>
                      </label>
@@ -1001,9 +1003,9 @@ const PropertyRooms: React.FC = () => {
 
               <div className="grid gap-2">
                 <Label className="font-semibold">Dịch vụ (Services)</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-3">
                    {availableServices.map((sv) => (
-                     <label key={sv.id} className="flex items-center gap-2 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
+                     <label key={sv.id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-transparent p-2 transition-colors hover:border-slate-200 hover:bg-white">
                         <input
                            type="checkbox"
                            checked={formData.services.includes(sv.id)}
@@ -1013,7 +1015,7 @@ const PropertyRooms: React.FC = () => {
                                : formData.services.filter((id: number) => id !== sv.id);
                              setFormData({ ...formData, services: next });
                            }}
-                           className="w-4 h-4 rounded border-slate-300 text-blue-600"
+                           className="size-4 rounded border-slate-300 text-blue-600"
                         />
                         <span className="text-xs font-medium text-slate-700">{sv.name}</span>
                      </label>
@@ -1022,25 +1024,25 @@ const PropertyRooms: React.FC = () => {
               </div>
 
               <div className="grid gap-2 border-t pt-4">
-                 <div className="flex justify-between items-center mb-2">
-                   <Label className="font-bold flex items-center gap-2 uppercase tracking-wider text-xs text-slate-500">
+                 <div className="mb-2 flex items-center justify-between">
+                   <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
                       <Wallet size={14} className="text-blue-500" /> Bảng giá thuê phòng
                    </Label>
-                   <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: [...formData.prices, { id: 'p' + Date.now(), packageName: 'Gói mới', price: 0, duration: 1 }]})} className="text-blue-600 font-semibold hover:bg-blue-50 text-[11px]">+ Thêm gói</Button>
+                   <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: [...formData.prices, { id: 'p' + Date.now(), packageName: 'Gói mới', price: 0, duration: 1 }]})} className="text-[11px] font-semibold text-blue-600 hover:bg-blue-50">+ Thêm gói</Button>
                  </div>
                  <div className="space-y-2">
                     {formData.prices.map((p: any, idx: number) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 items-center animate-in fade-in zoom-in-95 duration-200">
+                      <div key={idx} className="grid grid-cols-12 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 duration-200 animate-in fade-in zoom-in-95">
                          <div className="col-span-5"><Input value={p.packageName} onChange={e => {
                             const n = [...formData.prices]; n[idx].packageName = e.target.value; setFormData({...formData, prices: n});
-                         }} placeholder="Tên gói" className="h-9 text-xs font-semibold rounded-lg" /></div>
+                         }} placeholder="Tên gói" className="h-9 rounded-lg text-xs font-semibold" /></div>
                          <div className="col-span-4"><Input type="number" value={p.price} onChange={e => {
                             const n = [...formData.prices]; n[idx].price = Number(e.target.value); setFormData({...formData, prices: n});
-                         }} placeholder="Đơn giá" className="h-9 text-xs font-semibold rounded-lg" /></div>
+                         }} placeholder="Đơn giá" className="h-9 rounded-lg text-xs font-semibold" /></div>
                          <div className="col-span-2"><Input type="number" value={p.duration} onChange={e => {
                             const n = [...formData.prices]; n[idx].duration = Number(e.target.value); setFormData({...formData, prices: n});
-                         }} placeholder="T.hạn" className="h-9 text-xs font-semibold rounded-lg" /></div>
-                         <div className="col-span-1 flex justify-center"><Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: formData.prices.filter((_:any, i:number) => i !== idx)})} className="text-slate-400 hover:text-rose-500 p-0 h-8 w-8"><X size={14} /></Button></div>
+                         }} placeholder="T.hạn" className="h-9 rounded-lg text-xs font-semibold" /></div>
+                         <div className="col-span-1 flex justify-center"><Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: formData.prices.filter((_:any, i:number) => i !== idx)})} className="size-8 p-0 text-slate-400 hover:text-rose-500"><X size={14} /></Button></div>
                       </div>
                     ))}
                  </div>
@@ -1055,24 +1057,24 @@ const PropertyRooms: React.FC = () => {
         onClose={() => setIsMaintenanceOpen(false)}
         title="Đăng ký bảo trì / báo hỏng"
         footer={
-           <div className="flex gap-2 justify-end w-full">
+           <div className="flex w-full justify-end gap-2">
               <Button variant="outline" onClick={() => setIsMaintenanceOpen(false)}>Hủy</Button>
-              <Button onClick={handleRegisterMaintenance} className="bg-amber-600 hover:bg-amber-700 text-white font-semibold">Xác nhận đăng ký</Button>
+              <Button onClick={handleRegisterMaintenance} className="bg-amber-600 font-semibold text-white hover:bg-amber-700">Xác nhận đăng ký</Button>
            </div>
         }
       >
         <div className="space-y-6">
-           <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-sm italic">
+           <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm italic text-amber-800">
               Việc đăng ký bảo trì sẽ tự động cập nhật trạng thái phòng sang <strong>"Bảo trì"</strong> trên sơ đồ và tạm khóa việc đặt phòng trực tuyến.
            </div>
            <div className="grid gap-4">
               <div className="grid gap-1">
                  <Label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Tiêu đề sự cố</Label>
-                 <Input value={maintenanceForm.title} onChange={e => setMaintenanceForm({...maintenanceForm, title: e.target.value})} placeholder="VD: Hỏng vòi nước, kiểm tra điều hòa..." className="rounded-xl h-12" />
+                 <Input value={maintenanceForm.title} onChange={e => setMaintenanceForm({...maintenanceForm, title: e.target.value})} placeholder="VD: Hỏng vòi nước, kiểm tra điều hòa..." className="h-12 rounded-xl" />
               </div>
               <div className="grid gap-1">
                  <Label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Mô tả chi tiết</Label>
-                 <PlainTextarea value={maintenanceForm.description} onChange={e => setMaintenanceForm({...maintenanceForm, description: e.target.value})} placeholder="Mô tả cụ thể tình trạng hoặc yêu cầu kỹ thuật..." className="rounded-xl min-h-[100px]" />
+                 <PlainTextarea value={maintenanceForm.description} onChange={e => setMaintenanceForm({...maintenanceForm, description: e.target.value})} placeholder="Mô tả cụ thể tình trạng hoặc yêu cầu kỹ thuật..." className="min-h-[100px] rounded-xl" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                  <div className="grid gap-1">
@@ -1097,52 +1099,52 @@ const PropertyRooms: React.FC = () => {
         widthClassName="max-w-md"
       >
         {quickDetailRoom && (
-           <div className="space-y-8 animate-in fade-in slide-in-from-right-10 duration-300">
-              <div className="flex flex-col items-center text-center space-y-4">
-                 <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-200">
+           <div className="space-y-8 duration-300 animate-in fade-in slide-in-from-right-10">
+              <div className="flex flex-col items-center space-y-4 text-center">
+                 <div className="flex size-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 text-3xl font-black text-white shadow-xl shadow-blue-200">
                     {quickDetailRoom.customer_name?.split(' ').pop()?.[0] || 'U'}
                  </div>
                  <div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">{quickDetailRoom.customer_name || 'Khách thuê'}</h2>
-                    <p className="text-blue-600 font-semibold flex items-center justify-center gap-1"><Phone size={14} /> {quickDetailRoom.customer_phone || 'N/A'}</p>
+                    <h2 className="text-2xl font-black tracking-tight text-slate-900">{quickDetailRoom.customer_name || 'Khách thuê'}</h2>
+                    <p className="flex items-center justify-center gap-1 font-semibold text-blue-600"><Phone size={14} /> {quickDetailRoom.customer_phone || 'N/A'}</p>
                  </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center text-center space-y-1">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Phòng</span>
+                 <div className="flex flex-col items-center space-y-1 rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Phòng</span>
                     <span className="text-lg font-black text-slate-900">{quickDetailRoom.title}</span>
                  </div>
-                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center text-center space-y-1">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Tầng</span>
+                 <div className="flex flex-col items-center space-y-1 rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Tầng</span>
                     <span className="text-lg font-black text-slate-900">{quickDetailRoom.floor_number}</span>
                  </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                 <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400 font-semibold uppercase tracking-tight flex items-center gap-1.5"><Calendar size={14} /> Tiến độ thuê</span>
-                    <span className="text-blue-600 font-black">75% hoàn thành</span>
+              <div className="space-y-4 border-t border-slate-100 pt-4">
+                 <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1.5 font-semibold uppercase tracking-tight text-slate-400"><Calendar size={14} /> Tiến độ thuê</span>
+                    <span className="font-black text-blue-600">75% hoàn thành</span>
                  </div>
-                 <div className="h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner p-0.5">
-                    <div className="h-full bg-blue-500 rounded-full shadow-sm" style={{width: '75%'}} />
+                 <div className="h-3 overflow-hidden rounded-full border border-slate-200 bg-slate-100 p-0.5 shadow-inner">
+                    <div className="h-full rounded-full bg-blue-500 shadow-sm" style={{width: '75%'}} />
                  </div>
-                 <div className="flex justify-between text-[11px] font-semibold text-slate-500 italic">
-                    <div className="flex flex-col"><span>NHẬN PHÒNG</span><span className="text-slate-900 not-italic">{new Date(quickDetailRoom.check_in_date).toLocaleDateString('vi-VN')}</span></div>
-                    <div className="flex flex-col text-right"><span>TRẢ PHÒNG</span><span className="text-slate-900 not-italic">{new Date(quickDetailRoom.check_out_date).toLocaleDateString('vi-VN')}</span></div>
+                 <div className="flex justify-between text-[11px] font-semibold italic text-slate-500">
+                    <div className="flex flex-col"><span>NHẬN PHÒNG</span><span className="not-italic text-slate-900">{new Date(quickDetailRoom.check_in_date).toLocaleDateString('vi-VN')}</span></div>
+                    <div className="flex flex-col text-right"><span>TRẢ PHÒNG</span><span className="not-italic text-slate-900">{new Date(quickDetailRoom.check_out_date).toLocaleDateString('vi-VN')}</span></div>
                  </div>
               </div>
 
-              <div className="pt-6 flex flex-col gap-3">
+              <div className="flex flex-col gap-3 pt-6">
                  <Button 
-                    className="w-full h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-semibold gap-2 shadow-lg shadow-slate-200"
+                    className="h-11 w-full gap-2 rounded-xl bg-slate-900 font-semibold text-white shadow-lg shadow-slate-200 hover:bg-slate-800"
                     onClick={() => navigate(`/partner/rooms/${quickDetailRoom.id}`)}
                  >
                     <Eye size={16} /> Xem bản đầy đủ
                  </Button>
                  <Button 
                     variant="outline" 
-                    className="w-full h-11 rounded-xl border-2 border-slate-100 text-slate-500 hover:text-blue-600 hover:bg-blue-50/30 font-semibold gap-2"
+                    className="h-11 w-full gap-2 rounded-xl border-2 border-slate-100 font-semibold text-slate-500 hover:bg-blue-50/30 hover:text-blue-600"
                     onClick={() => {
                        const r = rooms.find(it => it.id === quickDetailRoom.id);
                        if (r) { setEditingRoom(r); setFormData(r); setIsRoomPanelOpen(true); setQuickDetailRoom(null); }

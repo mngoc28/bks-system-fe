@@ -38,7 +38,7 @@ const InlineSheet: React.FC<InlineSheetProps> = ({
 
   const sheet = (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-[1px]">
-      <section className={`h-full w-full ${widthClassName} bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-200`}>
+      <section className={`size-full ${widthClassName} flex flex-col bg-white shadow-2xl duration-200 animate-in slide-in-from-right`}>
         <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h2 className="text-lg font-bold text-slate-900">{title}</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-500 hover:text-slate-900">

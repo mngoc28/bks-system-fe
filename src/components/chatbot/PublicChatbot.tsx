@@ -23,8 +23,8 @@ const ChatBubble = ({
     <div
       className={
         variant === "bot"
-          ? "w-full max-w-full whitespace-pre-wrap rounded-3xl rounded-bl-md bg-gradient-to-br from-sky-100 via-cyan-50 to-white px-3 py-3 text-sm text-sky-900 shadow sm:max-w-[80%]"
-          : "w-full max-w-full whitespace-pre-wrap rounded-3xl rounded-br-md bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-500 px-3 py-3 text-sm text-white shadow sm:max-w-[80%]"
+          ? "w-full max-w-full whitespace-pre-wrap rounded-3xl rounded-bl-md bg-gradient-to-br from-sky-100 via-cyan-50 to-white p-3 text-sm text-sky-900 shadow sm:max-w-[80%]"
+          : "w-full max-w-full whitespace-pre-wrap rounded-3xl rounded-br-md bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-500 p-3 text-sm text-white shadow sm:max-w-[80%]"
       }
     >
       {children}
@@ -72,7 +72,7 @@ const PublicChatbot = ({ onClose }: PublicChatbotProps) => {
 
   return (
     <div className="flex h-[500px] flex-col bg-white/95">
-      <div className="flex items-center justify-between border-b border-sky-100/60 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-4 py-4 text-white">
+      <div className="flex items-center justify-between border-b border-sky-100/60 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 p-4 text-white">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-white/15 text-white shadow">
             <Bot className="size-5" />
@@ -142,7 +142,7 @@ const PublicChatbot = ({ onClose }: PublicChatbotProps) => {
         {isAnswering && <TypingIndicator label={t("publicChatbot.typing")} />}
       </div>
 
-      <div className="border-t border-sky-100/70 bg-white/92 px-4 py-3">
+      <div className="bg-white/92 border-t border-sky-100/70 px-4 py-3">
         {error && <p className="mb-2 text-xs font-medium text-rose-500">{error}</p>}
         <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-sky-400">{t("publicChatbot.answer_section")}</p>
         <div className="mt-2 grid gap-2">
@@ -155,7 +155,7 @@ const PublicChatbot = ({ onClose }: PublicChatbotProps) => {
                 onClick={() => handleAnswerSelect(answer.id, answer.content)}
                 disabled={isAnswering}
               >
-                <span className="pr-4 leading-6 whitespace-pre-wrap">{answer.content}</span>
+                <span className="whitespace-pre-wrap pr-4 leading-6">{answer.content}</span>
                 <CornerDownRight className="size-4 shrink-0 text-sky-400 transition group-hover:translate-x-1 group-hover:text-sky-500" />
               </button>
             ))

@@ -8,12 +8,8 @@ export const usePartnerStatsQuery = () => {
   return useQuery({
     queryKey: ["partner-stats"],
     queryFn: async () => {
-      try {
-        const response = await partnerDashboardApi.getStats();
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      const response = await partnerDashboardApi.getStats();
+      return response.data;
     },
   });
 };
@@ -25,12 +21,8 @@ export const usePartnerPendingBookingsQuery = () => {
   return useQuery({
     queryKey: ["partner-pending-bookings"],
     queryFn: async () => {
-      try {
-        const response = await partnerDashboardApi.getPendingBookings();
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      const response = await partnerDashboardApi.getPendingBookings();
+      return response.data;
     },
   });
 };
@@ -42,12 +34,8 @@ export const usePartnerUrgentMaintenancesQuery = () => {
   return useQuery({
     queryKey: ["partner-urgent-maintenances"],
     queryFn: async () => {
-      try {
-        const response = await partnerDashboardApi.getUrgentMaintenances();
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      const response = await partnerDashboardApi.getUrgentMaintenances();
+      return response.data;
     },
   });
 };
@@ -59,12 +47,8 @@ export const usePartnerRevenueAnalyticsQuery = () => {
   return useQuery({
     queryKey: ["partner-revenue-analytics"],
     queryFn: async () => {
-      try {
-        const response = await partnerDashboardApi.getRevenueAnalytics();
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      const response = await partnerDashboardApi.getRevenueAnalytics();
+      return response.data;
     },
   });
 };

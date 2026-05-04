@@ -69,7 +69,7 @@ const QuestionUpdatePage = () => {
   const showForm = Boolean(defaultValues) && !isError;
 
   return (
-    <div className="flex h-full flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex h-full flex-col gap-4 p-4 md:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
           <Button variant="ghost" size="sm" onClick={handleBack} className="w-fit gap-2" aria-label={t("questions.update.back")}>

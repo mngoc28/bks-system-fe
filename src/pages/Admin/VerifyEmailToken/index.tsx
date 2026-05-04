@@ -44,16 +44,16 @@ const VerifyEmailToken: React.FC = () => {
         <>
             {isLoading && <LoadingScreen text={t("common.loading")} />}
             {!isLoading && (
-                <div className="bg-slate-200 flex items-center justify-center w-screen min-h-screen p-4">
-                    <div className="w-full max-w-lg md:w-3/5 h-auto md:h-3/5">
+                <div className="flex min-h-screen w-screen items-center justify-center bg-slate-200 p-4">
+                    <div className="h-auto w-full max-w-lg md:size-3/5">
                         <div className=" ">
-                            <div className="grid grid-rows-3 grid-cols-1 bg-white w-full h-full rounded-lg px-5">
+                            <div className="grid size-full grid-cols-1 grid-rows-3 rounded-lg bg-white px-5">
                                 <div className="flex flex-col items-center justify-center">
-                                    <img src={urlImage} alt="success" className="w-[80px] h-[80px]" />
+                                    <img src={urlImage} alt="success" className="size-[80px]" />
                                     {
                                         resultResetTokenVerifyEmail?.value === "VET5" || resultResetTokenVerifyEmail?.value === "VET6" ?
                                             <></> :
-                                            <p className={`text-xl font-roboto text-center ${resultResetTokenVerifyEmail?.checkSuccess ? "text-green-500" : "text-red-500"}`}>
+                                            <p className={`text-center font-roboto text-xl ${resultResetTokenVerifyEmail?.checkSuccess ? "text-green-500" : "text-red-500"}`}>
                                                 {!resultResetTokenVerifyEmail?.checkSuccess ? t("verify_email.title_error") :
                                                     t("verify_email.title_success")} </p>
                                     }
@@ -62,7 +62,7 @@ const VerifyEmailToken: React.FC = () => {
                                     {
                                         !resultResetTokenVerifyEmail ? <></> : (
                                             <>
-                                                <p className={`text-xl text-center mb-3 text-${resultResetTokenVerifyEmail?.color}`}>{resultResetTokenVerifyEmail.text}</p>
+                                                <p className={`text- mb-3 text-center text-xl${resultResetTokenVerifyEmail?.color}`}>{resultResetTokenVerifyEmail.text}</p>
                                                 {resultResetTokenVerifyEmail.isSuccess ? <button
                                                     onClick={() => {
                                                         if (resultResetTokenVerifyEmail.value === "VET3") {
@@ -74,7 +74,7 @@ const VerifyEmailToken: React.FC = () => {
                                                         }
                                                     }}
                                                     disabled={resetTokenVerifyEmail.isPending || isClick}
-                                                    className={`bg-${resultResetTokenVerifyEmail?.color} px-10 py-2 border border-${resultResetTokenVerifyEmail?.color} rounded-sm text-white w-full disabled:opacity-50 disabled:cursor-not-allowed`}>
+                                                    className={`bg-${resultResetTokenVerifyEmail?.color} border- border px-10 py-2${resultResetTokenVerifyEmail?.color} w-full rounded-sm text-white disabled:cursor-not-allowed disabled:opacity-50`}>
                                                     {(isClick || resetTokenVerifyEmail.isPending) ? <ThreeDot variant="bounce" color="#ffffff" size="small" /> :
                                                         resultResetTokenVerifyEmail.value === "VET3" ?
                                                             t("verify_email.reset_token_verify_email") :
@@ -85,15 +85,15 @@ const VerifyEmailToken: React.FC = () => {
                                     }
 
                                 </div>
-                                <div className="flex flex-col items-center justify-center mb-5">
-                                    <p className="text-sm text-center mb-5 px-6">{t("verify_email.help")}</p>
+                                <div className="mb-5 flex flex-col items-center justify-center">
+                                    <p className="mb-5 px-6 text-center text-sm">{t("verify_email.help")}</p>
                                     <div className="flex flex-row gap-5">
                                         {help.map((item, index) => {
                                             return (
                                                 <a
                                                     key={index}
                                                     href={item.link}
-                                                    className="text-gray-600 hover:text-blue-500 text-2xl transition-colors grid items-center justify-center"
+                                                    className="grid items-center justify-center text-2xl text-gray-600 transition-colors hover:text-blue-500"
                                                 >
                                                     {item.icon}
 
@@ -105,7 +105,7 @@ const VerifyEmailToken: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="text-sm text-center mt-5 px-6">
+                        <div className="mt-5 px-6 text-center text-sm">
                             {t("verify_email.footer")}
                         </div>
                     </div>

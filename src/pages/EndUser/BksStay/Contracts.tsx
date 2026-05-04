@@ -66,25 +66,25 @@ const Contracts = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-600"></div>
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="size-12 animate-spin rounded-full border-y-2 border-sky-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 pb-20 duration-500 animate-in fade-in slide-in-from-bottom-4">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hợp đồng của tôi</h1>
-           <p className="text-slate-500 text-sm mt-1">Xem và quản lý các thỏa thuận pháp lý cho mọi kỳ nghỉ của bạn.</p>
+           <h1 className="text-3xl font-black tracking-tight text-slate-900">Hợp đồng của tôi</h1>
+           <p className="mt-1 text-sm text-slate-500">Xem và quản lý các thỏa thuận pháp lý cho mọi kỳ nghỉ của bạn.</p>
         </div>
         <div className="flex items-center gap-3">
            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input 
                 placeholder="Tìm tên hợp đồng hoặc mã số..." 
-                className="pl-10 h-12 rounded-2xl border-slate-100 bg-white shadow-sm"
+                className="h-12 rounded-2xl border-slate-100 bg-white pl-10 shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -92,17 +92,17 @@ const Contracts = () => {
         </div>
       </div>
 
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[32px] bg-white overflow-hidden">
+      <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
         <CardContent className="p-0">
           {/* Tabs */}
-          <div className="p-8 border-b border-slate-100">
-             <div className="flex p-1 bg-slate-100 rounded-2xl w-fit overflow-x-auto max-w-full">
+          <div className="border-b border-slate-100 p-8">
+             <div className="flex w-fit max-w-full overflow-x-auto rounded-2xl bg-slate-100 p-1">
                 {["all", "Chờ ký", "Hiệu lực", "Đã xong"].map((tab) => (
                    <button
                      key={tab}
                      onClick={() => setActiveTab(tab)}
                      className={`
-                       px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap
+                       whitespace-nowrap rounded-xl px-6 py-2 text-sm font-bold transition-all
                        ${activeTab === tab 
                          ? "bg-white text-slate-900 shadow-sm" 
                          : "text-slate-400 hover:text-slate-600"}
@@ -114,43 +114,43 @@ const Contracts = () => {
              </div>
           </div>
 
-                <div className="p-4 sm:p-8 space-y-4">
+                <div className="space-y-4 p-4 sm:p-8">
                    {filteredContracts.length > 0 ? (
                      filteredContracts.map((contract) => {
                         const statusInfo = getStatusInfo(contract.status);
                         return (
-                          <div key={contract.id} className="p-5 sm:p-6 rounded-[24px] sm:rounded-[28px] border border-slate-100 bg-white hover:border-sky-200 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 group">
+                          <div key={contract.id} className="group flex flex-col justify-between gap-5 rounded-[24px] border border-slate-100 bg-white p-5 transition-all hover:border-sky-200 sm:rounded-[28px] sm:p-6 lg:flex-row lg:items-center">
                              <div className="flex items-start gap-4 sm:gap-5">
-                                <div className="h-12 w-12 sm:h-14 sm:w-14 bg-slate-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-sky-50 group-hover:text-sky-600 transition-colors shrink-0">
-                                   <FileText className="h-6 w-6 sm:h-7 sm:w-7" />
+                                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-sky-50 group-hover:text-sky-600 sm:size-14 sm:rounded-2xl">
+                                   <FileText className="size-6 sm:size-7" />
                                 </div>
-                                <div className="space-y-1.5 min-w-0 flex-1">
+                                <div className="min-w-0 flex-1 space-y-1.5">
                                    <div className="flex flex-wrap items-center gap-2">
-                                      <h3 className="font-black text-slate-900 leading-tight text-sm sm:text-base truncate">{contract.title}</h3>
-                                      <Badge variant="outline" className={`text-[9px] sm:text-[10px] font-black uppercase rounded-full px-2 py-0 border-none ${statusInfo.color}`}>{statusInfo.label}</Badge>
+                                      <h3 className="truncate text-sm font-black leading-tight text-slate-900 sm:text-base">{contract.title}</h3>
+                                      <Badge variant="outline" className={`rounded-full border-none px-2 py-0 text-[9px] font-black uppercase sm:text-[10px] ${statusInfo.color}`}>{statusInfo.label}</Badge>
                                    </div>
-                                   <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 gap-x-4 text-[11px] sm:text-xs text-slate-400 font-medium overflow-hidden">
-                                      <span className="flex items-center gap-1.5 truncate"><Building className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" /> {contract.booking.room.building.name}</span>
-                                      <span className="hidden sm:inline text-slate-200">|</span>
-                                      <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" /> Ngày tạo: {new Date(contract.created_at).toLocaleDateString("vi-VN")}</span>
-                                      <span className="font-bold text-sky-600 truncate whitespace-nowrap">ID: {contract.id}</span>
+                                   <div className="flex flex-col gap-x-4 gap-y-1 overflow-hidden text-[11px] font-medium text-slate-400 sm:flex-row sm:items-center sm:text-xs">
+                                      <span className="flex items-center gap-1.5 truncate"><Building className="size-3 shrink-0 sm:size-3.5" /> {contract.booking.room.building.name}</span>
+                                      <span className="hidden text-slate-200 sm:inline">|</span>
+                                      <span className="flex items-center gap-1.5"><Calendar className="size-3 shrink-0 sm:size-3.5" /> Ngày tạo: {new Date(contract.created_at).toLocaleDateString("vi-VN")}</span>
+                                      <span className="truncate whitespace-nowrap font-bold text-sky-600">ID: {contract.id}</span>
                                    </div>
                                 </div>
                              </div>
       
-                             <div className="flex items-center justify-between lg:justify-end gap-3 pt-4 lg:pt-0 border-t border-slate-50 lg:border-none">
-                                <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl hover:bg-slate-100 text-slate-400">
-                                   <Download className="h-5 w-5" />
+                             <div className="flex items-center justify-between gap-3 border-t border-slate-50 pt-4 lg:justify-end lg:border-none lg:pt-0">
+                                <Button variant="ghost" size="icon" className="size-10 rounded-xl text-slate-400 hover:bg-slate-100 sm:size-12 sm:rounded-2xl">
+                                   <Download className="size-5" />
                                 </Button>
                                 <Button asChild className={`
-                                  rounded-xl sm:rounded-2xl h-10 sm:h-12 px-5 sm:px-6 font-bold flex items-center gap-2 transition-all flex-1 lg:flex-none
+                                  flex h-10 flex-1 items-center gap-2 rounded-xl px-5 font-bold transition-all sm:h-12 sm:rounded-2xl sm:px-6 lg:flex-none
                                   ${contract.status === 0 
-                                    ? "bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-600/20 text-white border-none" 
-                                    : "bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/10 border-none"}
+                                    ? "border-none bg-amber-600 text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500" 
+                                    : "border-none bg-slate-900 text-white shadow-lg shadow-slate-900/10 hover:bg-slate-800"}
                                 `}>
                                    <Link to={ROUTERS.BKS_STAY_CONTRACT_DETAIL.replace(":id", contract.id.toString())}>
                                       <span className="whitespace-nowrap">{contract.status === 0 ? "Ký ngay" : "Chi tiết"}</span>
-                                      <ChevronRight className="h-4 w-4 shrink-0" />
+                                      <ChevronRight className="size-4 shrink-0" />
                                    </Link>
                                 </Button>
                              </div>
@@ -159,8 +159,8 @@ const Contracts = () => {
                      })
              ) : (
                <div className="py-20 text-center">
-                  <AlertCircle className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                  <p className="text-slate-400 font-bold">Không tìm thấy hợp đồng nào phù hợp.</p>
+                  <AlertCircle className="mx-auto mb-4 size-12 text-slate-200" />
+                  <p className="font-bold text-slate-400">Không tìm thấy hợp đồng nào phù hợp.</p>
                </div>
              )}
           </div>
@@ -168,16 +168,16 @@ const Contracts = () => {
       </Card>
 
       {lastPage > 1 && (
-        <div className="flex justify-center mt-4">
-           <div className="flex gap-2 p-1 bg-white rounded-2xl shadow-sm border border-slate-100">
+        <div className="mt-4 flex justify-center">
+           <div className="flex gap-2 rounded-2xl border border-slate-100 bg-white p-1 shadow-sm">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="h-10 w-10 rounded-xl text-slate-400"
+                className="size-10 rounded-xl text-slate-400"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="size-4" />
               </Button>
 
               {Array.from({ length: lastPage }, (_, i) => i + 1).map(p => (
@@ -186,7 +186,7 @@ const Contracts = () => {
                     variant={p === currentPage ? "default" : "ghost"} 
                     size="sm" 
                     onClick={() => setCurrentPage(p)}
-                    className={`h-10 w-10 rounded-xl font-bold ${p === currentPage ? "bg-slate-900 text-white" : "text-slate-400"}`}
+                    className={`size-10 rounded-xl font-bold ${p === currentPage ? "bg-slate-900 text-white" : "text-slate-400"}`}
                  >
                     {p}
                  </Button>
@@ -197,31 +197,31 @@ const Contracts = () => {
                 size="icon" 
                 disabled={currentPage === lastPage}
                 onClick={() => setCurrentPage(prev => Math.min(lastPage, prev + 1))}
-                className="h-10 w-10 rounded-xl text-slate-400"
+                className="size-10 rounded-xl text-slate-400"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="size-4" />
               </Button>
            </div>
         </div>
       )}
 
       {/* Info Card */}
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[32px] bg-slate-900 text-white p-8 relative overflow-hidden">
+      <Card className="relative overflow-hidden rounded-[32px] border-none bg-slate-900 p-8 text-white shadow-xl shadow-slate-200/50">
          <div className="absolute right-0 top-0 p-8 opacity-5">
-            <CheckCircle2 className="h-32 w-32" />
+            <CheckCircle2 className="size-32" />
          </div>
-         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-            <div className="h-16 w-16 bg-white/10 rounded-3xl flex items-center justify-center shrink-0">
-               <Clock className="h-8 w-8 text-sky-400" />
+         <div className="relative z-10 flex flex-col items-center gap-8 md:flex-row">
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-3xl bg-white/10">
+               <Clock className="size-8 text-sky-400" />
             </div>
             <div>
-               <h3 className="text-xl font-black mb-2">Hợp đồng điện tử là gì?</h3>
-               <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">
+               <h3 className="mb-2 text-xl font-black">Hợp đồng điện tử là gì?</h3>
+               <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
                   BKS sử dụng chữ ký điện tử có giá trị pháp lý tương đương hợp đồng giấy. 
                   Việc ký kết trực tuyến giúp bạn tiết kiệm thời gian và đảm bảo mọi kỳ nghỉ được xác nhận nhanh chóng.
                </p>
             </div>
-            <Button variant="outline" className="md:ml-auto rounded-2xl border-white/10 hover:bg-white/5 text-white h-12 px-6">Tìm hiểu thêm</Button>
+            <Button variant="outline" className="h-12 rounded-2xl border-white/10 px-6 text-white hover:bg-white/5 md:ml-auto">Tìm hiểu thêm</Button>
          </div>
       </Card>
     </div>

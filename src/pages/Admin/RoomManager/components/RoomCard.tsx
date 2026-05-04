@@ -39,7 +39,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
   return (
     <Card
       id={`room-${room.id}`}
-      className={`glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 cursor-pointer ${highlighted ? 'ring-2 ring-indigo-500 shadow-indigo-200 shadow-xl scale-[1.03]' : ''}`}
+      className={`glass-card hover-scale group relative cursor-pointer overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 animate-in ${highlighted ? 'scale-[1.03] shadow-xl shadow-indigo-200 ring-2 ring-indigo-500' : ''}`}
       onClick={() => onView(room.id)}
     >
       {/* 16/9 Image Section */}
@@ -48,7 +48,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
           <img
             src={imageUrl}
             alt={room.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={(e) => {
               if (e.currentTarget.src !== fallbackImage) {
                 e.currentTarget.src = fallbackImage;
@@ -56,15 +56,15 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
             }}
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
-            <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
-            <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+          <div className="flex size-full flex-col items-center justify-center bg-gray-200 p-4 text-center">
+            <ImageIcon className="mx-auto mb-3 size-10 text-gray-400" />
+            <p className="text-sm text-gray-500">{t("rooms.no_images_yet")}</p>
           </div>
         )}
 
         {/* Status Badge */}
-        <div className="absolute left-4 top-4 z-10 animate-in fade-in slide-in-from-top-2 duration-500">
-          <Badge className={`border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg w-fit ${room.status ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+        <div className="absolute left-4 top-4 z-10 duration-500 animate-in fade-in slide-in-from-top-2">
+          <Badge className={`w-fit border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg ${room.status ? 'bg-emerald-500' : 'bg-rose-500'}`}>
             {room.status ? t("rooms.status_public") : t("rooms.status_private")}
           </Badge>
         </div>
@@ -74,7 +74,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
           <Button
             variant="secondary"
             size="icon"
-            className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white/40 hover:scale-110 transition-transform"
+            className="size-10 rounded-full bg-white/20 text-white backdrop-blur-md transition-transform hover:scale-110 hover:bg-white/40"
             onClick={(e) => { e.stopPropagation(); onEdit(room.id); }}
           >
             <Edit className="size-5" />
@@ -82,7 +82,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
           <Button
             variant="destructive"
             size="icon"
-            className="h-10 w-10 rounded-full bg-red-500/80 text-white backdrop-blur-md hover:bg-red-600 hover:scale-110 transition-transform"
+            className="size-10 rounded-full bg-red-500/80 text-white backdrop-blur-md transition-transform hover:scale-110 hover:bg-red-600"
             onClick={(e) => { e.stopPropagation(); onDelete(room); }}
             disabled={isDeleting}
           >
@@ -94,10 +94,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
       {/* Content Section */}
       <div className="p-5">
         <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="truncate text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors" title={room.title}>
+          <h3 className="truncate text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100" title={room.title}>
             {highlightText(room.title, highlightTerms?.title || "")}
           </h3>
-          <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500 whitespace-nowrap">
+          <Badge variant="outline" className="whitespace-nowrap border-slate-200 text-[10px] text-slate-500">
             #{highlightText(room.room_number || "N/A", highlightTerms?.room_number || "")}
           </Badge>
         </div>
@@ -110,20 +110,20 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
         {/* Specs Grid */}
         <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-3.5 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
               <Maximize2 className="size-4" />
             </div>
             <div>
-              <p className="text-[10px] uppercase text-slate-400 font-bold leading-none mb-1">{t("rooms.area")}</p>
+              <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400">{t("rooms.area")}</p>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{room.area} m²</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30">
               <Users className="size-4" />
             </div>
             <div>
-              <p className="text-[10px] uppercase text-slate-400 font-bold leading-none mb-1">{t("rooms.people")}</p>
+              <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400">{t("rooms.people")}</p>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{room.people}</p>
             </div>
           </div>
@@ -132,8 +132,8 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
         {/* Price & Footer */}
         <div className="mt-4 flex items-center justify-between">
           <div className="flex flex-col">
-            <p className="text-[10px] uppercase text-slate-400 font-bold leading-none mb-1">{t("rooms.price")}</p>
-            <p className="text-base font-black text-indigo-600 dark:text-indigo-400 leading-none">
+            <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400">{t("rooms.price")}</p>
+            <p className="text-base font-black leading-none text-indigo-600 dark:text-indigo-400">
               {price > 0 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price) : t("rooms.contact_price")}
             </p>
           </div>

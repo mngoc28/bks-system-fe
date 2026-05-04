@@ -51,7 +51,7 @@ const StayServiceManagement: React.FC = () => {
       await partnerService.updateStayServiceStatus(id, status);
       toastSuccess('Cập nhật trạng thái thành công.');
       fetchRequests();
-    } catch (error) {
+    } catch (_error) {
       toastError('Không thể cập nhật trạng thái.');
     }
   };
@@ -92,32 +92,32 @@ const StayServiceManagement: React.FC = () => {
 
   if (loading && requests.length === 0) {
     return (
-      <div className="h-[60vh] flex items-center justify-center">
+      <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="animate-spin text-blue-600" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+    <div className="space-y-6 duration-500 animate-in fade-in">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Yêu cầu dịch vụ lưu trú</h1>
-          <p className="text-gray-500 mt-1">Quản lý các yêu cầu từ khách đang lưu trú (Dọn phòng, đồ dùng, sự cố...).</p>
+          <p className="mt-1 text-gray-500">Quản lý các yêu cầu từ khách đang lưu trú (Dọn phòng, đồ dùng, sự cố...).</p>
         </div>
         <Button onClick={fetchRequests} variant="outline" size="sm" className="gap-2">
             Làm mới
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col gap-4 md:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm theo khách, phòng hoặc tên dịch vụ..."
-            className="pl-10 h-10 rounded-xl"
+            className="h-10 rounded-xl pl-10"
           />
         </div>
         <div className="w-full md:w-48">
@@ -138,19 +138,19 @@ const StayServiceManagement: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {filteredRequests.length > 0 ? filteredRequests.map((req) => (
-          <Card key={req.id} className="border-none shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden border border-gray-100">
+          <Card key={req.id} className="overflow-hidden rounded-2xl border border-none border-gray-100 shadow-sm transition-shadow hover:shadow-md">
             <CardContent className="p-0">
               <div className="flex flex-col sm:flex-row">
                 <div className={`w-2 sm:w-3 ${req.status === 0 ? 'bg-amber-500' : req.status === 1 ? 'bg-blue-500' : req.status === 2 ? 'bg-emerald-500' : 'bg-gray-400'}`} />
                 <div className="flex-1 p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="space-y-3 flex-1">
+                  <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                    <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                            <Zap size={20} />
                         </div>
                         <div>
-                           <h3 className="font-bold text-gray-900 text-lg">{req.service?.title || 'Dịch vụ'}</h3>
+                           <h3 className="text-lg font-bold text-gray-900">{req.service?.title || 'Dịch vụ'}</h3>
                            <div className="flex items-center gap-2 text-sm text-gray-500">
                               <span className="flex items-center gap-1"><User size={14} /> {req.booking?.user?.name || 'Khách hàng'}</span>
                               <span className="text-gray-300">|</span>
@@ -160,15 +160,15 @@ const StayServiceManagement: React.FC = () => {
                       </div>
                       
                       {req.note && (
-                        <div className="bg-slate-50 p-3 rounded-xl flex gap-2 items-start border border-slate-100">
-                           <MessageSquare size={16} className="text-slate-400 mt-0.5 shrink-0" />
-                           <p className="text-sm text-slate-600 italic">"{req.note}"</p>
+                        <div className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                           <MessageSquare size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                           <p className="text-sm italic text-slate-600">"{req.note}"</p>
                         </div>
                       )}
 
                       <div className="flex items-center gap-4 text-xs text-gray-400">
                          <span className="flex items-center gap-1"><Clock size={12} /> Gửi lúc: {new Date(req.created_at).toLocaleString('vi-VN')}</span>
-                         <Badge className={`px-2 py-0 border ${getStatusStyle(req.status)}`}>
+                         <Badge className={`border px-2 py-0 ${getStatusStyle(req.status)}`}>
                             {getStatusLabel(req.status)}
                          </Badge>
                       </div>
@@ -178,7 +178,7 @@ const StayServiceManagement: React.FC = () => {
                       {req.status === 0 && (
                         <Button 
                           onClick={() => handleUpdateStatus(req.id, 1)}
-                          className="bg-blue-600 hover:bg-blue-700 h-9 px-4 rounded-xl font-bold"
+                          className="h-9 rounded-xl bg-blue-600 px-4 font-bold hover:bg-blue-700"
                         >
                           Tiếp nhận
                         </Button>
@@ -186,7 +186,7 @@ const StayServiceManagement: React.FC = () => {
                       {req.status === 1 && (
                         <Button 
                           onClick={() => handleUpdateStatus(req.id, 2)}
-                          className="bg-emerald-600 hover:bg-emerald-700 h-9 px-4 rounded-xl font-bold"
+                          className="h-9 rounded-xl bg-emerald-600 px-4 font-bold hover:bg-emerald-700"
                         >
                           Hoàn thành
                         </Button>
@@ -195,7 +195,7 @@ const StayServiceManagement: React.FC = () => {
                         <Button 
                           onClick={() => handleUpdateStatus(req.id, 3)}
                           variant="outline" 
-                          className="text-rose-600 border-rose-100 hover:bg-rose-50 h-9 px-4 rounded-xl"
+                          className="h-9 rounded-xl border-rose-100 px-4 text-rose-600 hover:bg-rose-50"
                         >
                           Hủy
                         </Button>
@@ -207,11 +207,11 @@ const StayServiceManagement: React.FC = () => {
             </CardContent>
           </Card>
         )) : (
-          <div className="bg-white border-2 border-dashed border-gray-100 rounded-[32px] p-20 flex flex-col items-center justify-center text-center">
-             <div className="h-16 w-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mb-4">
+          <div className="flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-gray-100 bg-white p-20 text-center">
+             <div className="mb-4 flex size-16 items-center justify-center rounded-3xl bg-slate-50 text-slate-200">
                 <Filter size={32} />
              </div>
-             <p className="text-gray-400 font-medium">Không tìm thấy yêu cầu dịch vụ nào.</p>
+             <p className="font-medium text-gray-400">Không tìm thấy yêu cầu dịch vụ nào.</p>
           </div>
         )}
       </div>

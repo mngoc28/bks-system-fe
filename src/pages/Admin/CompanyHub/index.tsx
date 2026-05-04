@@ -33,7 +33,7 @@ const CompanyHub = () => {
 
       <main className="flex flex-col">
         <section className="relative isolate w-full bg-slate-950 text-white">
-          <img src="/assets/images/banner.webp" alt={t("public.company.banner.alt")} className="absolute inset-0 h-full w-full object-cover" />
+          <img src="/assets/images/banner.webp" alt={t("public.company.banner.alt")} className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-slate-950/70" />
           <div className="relative mx-auto flex h-[320px] w-full max-w-5xl flex-col items-center justify-center px-6 text-center">
             <span className="text-xs font-semibold uppercase tracking-[0.4em] text-sky-200">{t("public.company.banner.badge")}</span>

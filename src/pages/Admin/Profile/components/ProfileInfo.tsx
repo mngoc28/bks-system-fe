@@ -59,7 +59,7 @@ const ProfileInfo = ({
  
     let uploadedAvatarId: string | null = null;
     let newAvatarUrl: string | null = null;
-    let nowAvatarId: string | null | undefined = profile.id_avatar;
+    const nowAvatarId: string | null | undefined = profile.id_avatar;
 
     // Upload avatar to cloudinary
     try {
@@ -80,17 +80,17 @@ const ProfileInfo = ({
         if (onAvatarUploadSuccess) {
           onAvatarUploadSuccess();
         }
-      } catch (updateError) {
+      } catch {
         if (uploadedAvatarId) {
           try {
             await deleteAvatarMutation.mutateAsync(uploadedAvatarId);
-          } catch (error) {
+          } catch {
             toastError(t("profile.delete_failed"));
             return;
           }
         }
       }
-    } catch (error) {
+    } catch {
       toastError(t("profile.upload_failed"));
       return;
     }
@@ -98,7 +98,7 @@ const ProfileInfo = ({
     if (nowAvatarId) {
       try {
         await deleteAvatarMutation.mutateAsync(nowAvatarId);
-      } catch (error) {
+      } catch {
         toastError(t("profile.delete_failed"));
         return;
       }
@@ -108,17 +108,17 @@ const ProfileInfo = ({
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className="relative h-24 w-24">
-        <div className="relative h-24 w-24 rounded-full border-4 border-blue-900 bg-blue-100 overflow-hidden">
+      <div className="relative size-24">
+        <div className="relative size-24 overflow-hidden rounded-full border-4 border-blue-900 bg-blue-100">
           {uploadAvatarMutation.isPending ? (
-            <div className="h-full w-full flex items-center justify-center bg-blue-50">
+            <div className="flex size-full items-center justify-center bg-blue-50">
               <ThreeDot variant="bounce" color="#064F80" size="small" />
             </div>
           ) : (
             <img
               src={avatarUrl}
               alt={profile.name}
-              className="h-full w-full object-cover rounded-full"
+              className="size-full rounded-full object-cover"
               onError={(e) => {
                 e.currentTarget.src = "/assets/images/add-user.png";
               }}
@@ -129,7 +129,7 @@ const ProfileInfo = ({
           type="button"
           onClick={handleClickAvatar}
           disabled={uploadAvatarMutation.isPending}
-          className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label={t("profile.upload_avatar")}
         >
           <FaPlus className="size-4" />
@@ -148,21 +148,21 @@ const ProfileInfo = ({
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <User className="h-5 w-5 text-blue-900" />
+            <User className="size-5 text-blue-900" />
             <div className="flex-1 text-center">
               <div className="text-xs font-semibold text-gray-500">{t("profile.name_label")}</div>
               <div className="text-base font-bold text-gray-900">{profile.name}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <Mail className="h-5 w-5 text-blue-900" />
+            <Mail className="size-5 text-blue-900" />
             <div className="flex-1 text-center">
               <div className="text-xs font-semibold text-gray-500">{t("profile.email_label")}</div>
               <div className="break-all text-base text-gray-900">{profile.email}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <Phone className="h-5 w-5 text-blue-900" />
+            <Phone className="size-5 text-blue-900" />
             <div className="flex-1 text-center">
               <div className="text-xs font-semibold text-gray-500">{t("profile.phone_label")}</div>
               <div className="text-base text-gray-900">{profile.phone}</div>
@@ -171,14 +171,14 @@ const ProfileInfo = ({
         </div>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <Shield className="h-5 w-5 text-blue-900" />
+            <Shield className="size-5 text-blue-900" />
             <div className="flex-1 text-center">
               <div className="text-xs font-semibold text-gray-500">{t("profile.role_label", { defaultValue: t("profile.role") })}</div>
               <div className="text-base font-bold text-gray-900">{profile.role}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <CalendarCheck className="h-5 w-5 text-blue-900" />
+            <CalendarCheck className="size-5 text-blue-900" />
             <div className="flex-1 text-center">
               <div className="text-xs font-semibold text-gray-500">{t("profile.created_at")}</div>
               <div className="text-base text-gray-900">
@@ -188,7 +188,7 @@ const ProfileInfo = ({
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <CalendarClock className="h-5 w-5 text-blue-900" />
+            <CalendarClock className="size-5 text-blue-900" />
             <div className="flex-1 text-center">
               <div className="text-xs font-semibold text-gray-500">{t("profile.updated_at")}</div>
               <div className="text-base text-gray-900">

@@ -39,7 +39,9 @@ const UserEdit: React.FC = () => {
         data: updateData,
       });
       navigate(ROUTERS.USER_MANAGEMENT);
-    } catch (error) {}
+    } catch {
+      // ignore
+    }
   };
 
   const handleCancel = () => {

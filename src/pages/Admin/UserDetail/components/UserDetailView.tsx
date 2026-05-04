@@ -230,7 +230,7 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={onBack}>
-            <ArrowLeft className="size-4 mr-2" />
+            <ArrowLeft className="mr-2 size-4" />
             {t("common.back")}
           </Button>
           <div>
@@ -243,17 +243,17 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
           disabled={!hasChanges || updateUserMutation.isPending}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          <Save className="size-4 mr-2" />
+          <Save className="mr-2 size-4" />
           {t("common.save")}
         </Button>
       </div>
 
-      <Card className="shadow-lg border-0">
+      <Card className="border-0 shadow-lg">
         <CardContent className="p-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="flex flex-col items-center justify-center gap-4 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 lg:min-w-[280px]">
+          <div className="flex flex-col gap-8 lg:flex-row">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 lg:min-w-[280px]">
               <div
-                className="relative group flex items-center justify-center"
+                className="group relative flex items-center justify-center"
                 onClick={() => {
                   if (getAvatarUrl()) setIsImageModalOpen(true);
                 }}
@@ -262,10 +262,10 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                   <img
                     src={getAvatarUrl()!}
                     alt={user.name}
-                    className="w-56 h-56 rounded-full object-cover border-4 border-white shadow-xl ring-4 ring-blue-100 transition-transform duration-300 group-hover:scale-105"
+                    className="size-56 rounded-full border-4 border-white object-cover shadow-xl ring-4 ring-blue-100 transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-56 h-56 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border-4 border-white shadow-xl ring-4 ring-gray-100">
+                  <div className="flex size-56 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-gray-100 to-gray-200 shadow-xl ring-4 ring-gray-100">
                     <User className="size-32 text-gray-400" />
                   </div>
                 )}
@@ -273,30 +273,30 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
               <Button
                 onClick={() => setIsAvatarDialogOpen(true)}
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 w-full transition-all duration-200 shadow-md hover:shadow-lg"
+                className="w-full bg-green-600 shadow-md transition-all duration-200 hover:bg-green-700 hover:shadow-lg"
               >
-                <Upload className="size-4 mr-2" />
+                <Upload className="mr-2 size-4" />
                 {t("user.change_avatar")}
               </Button>
             </div>
 
             <div className="flex-1">
-              <div className="mb-8 pb-4 border-b-2 border-gray-100 flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="mb-8 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
+                <div className="rounded-lg bg-blue-100 p-2">
                   <FileText className="size-5 text-blue-600" />
                 </div>
                 <span className="text-xl font-bold text-gray-900">{t("user.basic_information")}</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_id")}</label>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_id")}</label>
                   <p className="text-base font-semibold text-gray-900">#{user.id}</p>
                 </div>
 
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_name")}</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_name")}</label>
                     <div className="flex items-center gap-1">
                       {isFieldDirty("name") && (
                         <Button variant="ghost" size="sm" onClick={() => rollbackField("name")}>
@@ -319,9 +319,9 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                   )}
                 </div>
 
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_email")}</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_email")}</label>
                     <div className="flex items-center gap-1">
                       {isFieldDirty("email") && (
                         <Button variant="ghost" size="sm" onClick={() => rollbackField("email")}>
@@ -341,13 +341,13 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                       onBlur={() => stopEditField("email")}
                     />
                   ) : (
-                    <p className="text-base font-semibold text-gray-900 truncate" title={formData.email}>{formData.email || "-"}</p>
+                    <p className="truncate text-base font-semibold text-gray-900" title={formData.email}>{formData.email || "-"}</p>
                   )}
                 </div>
 
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_phone")}</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_phone")}</label>
                     <div className="flex items-center gap-1">
                       {isFieldDirty("phone") && (
                         <Button variant="ghost" size="sm" onClick={() => rollbackField("phone")}>
@@ -370,9 +370,9 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                   )}
                 </div>
 
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("user.table_role")}</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_role")}</label>
                     <div className="flex items-center gap-1">
                       {isFieldDirty("role") && (
                         <Button variant="ghost" size="sm" onClick={() => rollbackField("role")}>
@@ -403,13 +403,13 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                   )}
                 </div>
 
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_status")}</label>
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_status")}</label>
                   <div className="mt-1">{getStatusBadge(user.status)}</div>
                 </div>
 
-                <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_email_verified")}</label>
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_email_verified")}</label>
                   <div className="mt-1">
                     <Badge variant={user.is_email_verified === 1 ? "default" : "secondary"} className={user.is_email_verified === 1 ? "bg-green-500" : ""}>
                       {user.is_email_verified === 1 ? t("user.verified") : t("user.unverified")}
@@ -418,22 +418,22 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                 </div>
 
                 {user.partner_id && (
-                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_partner_id")}</label>
+                  <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_partner_id")}</label>
                     <p className="text-base font-semibold text-gray-900">#{user.partner_id}</p>
                   </div>
                 )}
 
                 {user.created_at && (
-                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_created_at")}</label>
+                  <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_created_at")}</label>
                     <p className="text-base font-semibold text-gray-900">{new Date(user.created_at).toLocaleString()}</p>
                   </div>
                 )}
 
                 {user.updated_at && (
-                  <div className="flex flex-col p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t("user.table_updated_at")}</label>
+                  <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_updated_at")}</label>
                     <p className="text-base font-semibold text-gray-900">{new Date(user.updated_at).toLocaleString()}</p>
                   </div>
                 )}
@@ -459,7 +459,7 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
       </Dialog>
 
       <Dialog open={isAvatarDialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="w-[600px] h-[600px] max-w-[95vw] max-h-[95vh] overflow-y-auto">
+        <DialogContent className="size-[600px] max-h-[95vh] max-w-[95vw] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Upload className="size-5" />
@@ -468,11 +468,11 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-full h-auto aspect-square rounded-full border-4 border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center max-w-sm">
+              <div className="flex aspect-square h-auto w-full max-w-sm items-center justify-center overflow-hidden rounded-full border-4 border-gray-200 bg-gray-100">
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={previewUrl} alt="Preview" className="size-full object-cover" />
                 ) : getAvatarUrl() ? (
-                  <img src={getAvatarUrl()!} alt={user.name} className="w-full h-full object-cover" />
+                  <img src={getAvatarUrl()!} alt={user.name} className="size-full object-cover" />
                 ) : (
                   <User className="size-56 text-gray-400" />
                 )}
@@ -502,12 +502,12 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                   >
                     {uploadAvatarMutation.isPending || updateUserMutation.isPending ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        <div className="mr-2 size-4 animate-spin rounded-full border-b-2 border-white" />
                         {t("common.uploading")}
                       </>
                     ) : (
                       <>
-                        <Upload className="size-4 mr-2" />
+                        <Upload className="mr-2 size-4" />
                         {t("common.upload")}
                       </>
                     )}
@@ -526,11 +526,11 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
       </Dialog>
 
       <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-        <DialogContent className="p-0 max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-h-[90vh] max-w-4xl p-0">
           <Button
             variant="ghost"
             size="sm"
-            className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 p-0"
+            className="absolute right-2 top-2 z-10 size-8 rounded-full bg-black/50 p-0 text-white hover:bg-black/70"
             onClick={() => setIsImageModalOpen(false)}
           >
             <X className="size-4" />
@@ -539,7 +539,7 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
             <img
               src={getAvatarUrl()!}
               alt={user.name}
-              className="w-full aspect-[4/3] object-cover rounded-lg"
+              className="aspect-[4/3] w-full rounded-lg object-cover"
             />
           )}
         </DialogContent>

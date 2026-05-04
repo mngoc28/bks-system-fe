@@ -85,7 +85,7 @@ const News: React.FC = () => {
       fetchNews();
       setIsModalOpen(false);
       toastSuccess('Đã lưu bài viết.');
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi lưu bài viết.');
     }
   };
@@ -95,49 +95,49 @@ const News: React.FC = () => {
       await partnerService.deleteNews(id);
       fetchNews();
       toastSuccess('Đã xóa bài viết.');
-    } catch (error) {
+    } catch {
       toastError('Lỗi khi xóa bài viết.');
     }
   };
 
   if (loading) {
-    return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+    return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quản lý Tin tức & Ưu đãi</h1>
-          <p className="text-gray-500 mt-1">Cập nhật các chương trình khuyến mãi và thông báo cho khách hàng của bạn.</p>
+          <p className="mt-1 text-gray-500">Cập nhật các chương trình khuyến mãi và thông báo cho khách hàng của bạn.</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 font-bold">
+        <Button onClick={() => handleOpenModal()} className="h-10 bg-blue-600 px-4 font-bold text-white hover:bg-blue-700">
           <Plus size={18} className="mr-2" /> Soạn bài viết mới
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 border-b border-gray-100">
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Bài viết</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Ngày đăng</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Trạng thái</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Thao tác</th>
+              <tr className="border-b border-gray-100 bg-slate-50">
+                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Bài viết</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Ngày đăng</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Trạng thái</th>
+                <th className="px-6 py-4 text-right text-xs font-bold uppercase text-gray-500">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {newsList.map((post) => (
-                <tr key={post.id} className="hover:bg-slate-50/50 transition-colors group">
+                <tr key={post.id} className="group transition-colors hover:bg-slate-50/50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
-                         <img src={post.thumbnail} alt={post.title} className="w-full h-full object-cover" />
+                      <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-100">
+                         <img src={post.thumbnail} alt={post.title} className="size-full object-cover" />
                       </div>
                       <div className="max-w-md">
-                        <h3 className="font-bold text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors uppercase text-sm tracking-tight">{post.title}</h3>
-                        <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{post.content}</p>
+                        <h3 className="line-clamp-1 text-sm font-bold uppercase tracking-tight text-gray-800 transition-colors group-hover:text-blue-600">{post.title}</h3>
+                        <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{post.content}</p>
                       </div>
                     </div>
                   </td>
@@ -148,10 +148,10 @@ const News: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${
                       post.status === 'Đã đăng' 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                        : 'bg-amber-50 text-amber-700 border-amber-100'
+                        ? 'border-emerald-100 bg-emerald-50 text-emerald-700' 
+                        : 'border-amber-100 bg-amber-50 text-amber-700'
                     }`}>
                       {post.status === 'Đã đăng' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
                       {post.status}
@@ -159,8 +159,8 @@ const News: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <Button onClick={() => handleOpenModal(post)} variant="ghost" size="icon" className="text-gray-400 hover:text-blue-600 h-8 w-8"><Edit size={16} /></Button>
-                       <Button onClick={() => handleDelete(post.id)} variant="ghost" size="icon" className="text-gray-400 hover:text-red-600 h-8 w-8"><Trash2 size={16} /></Button>
+                       <Button onClick={() => handleOpenModal(post)} variant="ghost" size="icon" className="size-8 text-gray-400 hover:text-blue-600"><Edit size={16} /></Button>
+                       <Button onClick={() => handleDelete(post.id)} variant="ghost" size="icon" className="size-8 text-gray-400 hover:text-red-600"><Trash2 size={16} /></Button>
                     </div>
                   </td>
                 </tr>

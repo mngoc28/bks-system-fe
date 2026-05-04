@@ -65,7 +65,7 @@ const FloatingChatbot = () => {
         aria-expanded={isOpen}
         aria-label={isOpen ? "Đóng chatbot" : "Mở chatbot"}
       >
-        <BotIcon className="size-7 chatbot-icon-anim" />
+        <BotIcon className="chatbot-icon-anim size-7" />
       </button>
     </div>
   );

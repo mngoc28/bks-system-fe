@@ -49,11 +49,11 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
                 <h3 className="text-[1rem] font-semibold text-slate-900 transition group-hover:text-primary">{company.name}</h3>
               </div>
               <p className="inline-flex items-start gap-2 text-[0.875rem] leading-6 text-slate-600">
-                <MapPin className="mt-0.5 h-4 w-4 text-primary" />
+                <MapPin className="mt-0.5 size-4 text-primary" />
                 <span>{company.address}</span>
               </p>
               <div className="mt-auto inline-flex items-center gap-2 text-[0.875rem] font-semibold text-primary">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+                <span className="size-1.5 rounded-full bg-primary" aria-hidden />
                 <span className="tracking-wide">{trustText}</span>
               </div>
             </div>

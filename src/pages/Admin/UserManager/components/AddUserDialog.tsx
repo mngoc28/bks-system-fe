@@ -59,7 +59,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-primary/10 p-2">
@@ -67,14 +67,14 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">{t("user.create_user_form_title")}</DialogTitle>
-              <DialogDescription className="text-sm text-gray-500 mt-1">{t("user.create_user_form_description")}</DialogDescription>
+              <DialogDescription className="mt-1 text-sm text-gray-500">{t("user.create_user_form_description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Name */}
               <FormField
                 control={form.control}
@@ -163,7 +163,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false
                           placeholder={t("user.password_placeholder")} 
                           {...field} 
                           disabled={isLoading} 
-                          className="border-gray-300 focus:border-primary pr-10" 
+                          className="border-gray-300 pr-10 focus:border-primary" 
                         />
                         <button
                           type="button"
@@ -196,7 +196,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false
                           placeholder={t("user.password_confirmation_placeholder")} 
                           {...field} 
                           disabled={isLoading} 
-                          className="border-gray-300 focus:border-primary pr-10" 
+                          className="border-gray-300 pr-10 focus:border-primary" 
                         />
                         <button
                           type="button"
@@ -238,7 +238,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false
               )}
             />
 
-            <DialogFooter className="flex-row gap-3 sm:gap-3 pt-4">
+            <DialogFooter className="flex-row gap-3 pt-4 sm:gap-3">
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading} className="flex-1">
                 {t("common.cancel")}
               </Button>

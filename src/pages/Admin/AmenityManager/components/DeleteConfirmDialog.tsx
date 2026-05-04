@@ -57,7 +57,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ amenity, isOp
             variant="outline"
             onClick={onConfirm}
             disabled={isLoading}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 text-white hover:bg-red-700"
             >
             {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
             {t("common.delete")}

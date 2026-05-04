@@ -65,7 +65,7 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
     const isOpen = openMenus[item.id];
 
     if (item.isHeader) {
-      if (compact) return <div key={item.id} className="my-4 h-px bg-white/10 mx-2" />;
+      if (compact) return <div key={item.id} className="mx-2 my-4 h-px bg-white/10" />;
       return (
         <li
           key={item.id}
@@ -209,8 +209,8 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
     >
       <div className={cn("flex", isCollapsed ? "flex-col items-center gap-4" : "items-center justify-between gap-3")}>
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/10 shadow-lg backdrop-blur-sm">
-            <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-7 w-7 object-contain" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 shadow-lg backdrop-blur-sm">
+            <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-7 object-contain" />
           </div>
           <span
             className={cn(
@@ -245,8 +245,8 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
   const renderMobileSidebar = () => (
     <div className="flex h-full w-[72px] flex-col border-r border-white/10 bg-gradient-to-b from-primary via-[#1e3a8a] to-[#1e40af] p-4">
       <div className="flex items-center justify-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 border border-white/10 shadow-lg backdrop-blur-sm">
-          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-7 w-7 object-contain" />
+        <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/10 shadow-lg backdrop-blur-sm">
+          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-7 object-contain" />
         </div>
       </div>
       <nav className="mt-4 flex-1 overflow-y-auto">

@@ -24,45 +24,45 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
 
   return (
     <Card
-      className="glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 h-full flex flex-col cursor-pointer"
+      className="glass-card hover-scale group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 animate-in"
       onClick={() => onView(question.id)}
     >
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
           <MessageSquare className="size-5" />
         </div>
-        <Badge className="bg-indigo-50 text-indigo-600 border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+        <Badge className="border-none bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
           QA-{question.id}
         </Badge>
       </div>
 
       <h3
-        className="mb-4 line-clamp-3 text-lg font-black leading-tight text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
+        className="mb-4 line-clamp-3 text-lg font-black leading-tight text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100"
         title={question.content}
       >
         {highlightText(question.content, searchTerm || "")}
       </h3>
 
-      <div className="mb-6 space-y-3 flex-1 border-t border-slate-50 pt-4 dark:border-slate-800">
+      <div className="mb-6 flex-1 space-y-3 border-t border-slate-50 pt-4 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
             <MessageSquare className="size-3.5 text-indigo-500" />
             {t("questions.table.total_answer")}:
           </div>
-          <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 border-none font-black">{question.total_answers}</Badge>
+          <Badge variant="secondary" className="border-none bg-indigo-50 font-black text-indigo-600">{question.total_answers}</Badge>
         </div>
 
         <div className="pt-2">
           {question.is_start_node === 1 ? (
-            <Badge className="bg-slate-900 text-white border-none w-full justify-center py-1 uppercase tracking-widest text-[10px]">
+            <Badge className="w-full justify-center border-none bg-slate-900 py-1 text-[10px] uppercase tracking-widest text-white">
               {t("questions.table.start")}
             </Badge>
           ) : question.type === 1 ? (
-            <Badge className="bg-sky-100 text-sky-700 border-none w-full justify-center py-1 uppercase tracking-widest text-[10px]">
+            <Badge className="w-full justify-center border-none bg-sky-100 py-1 text-[10px] uppercase tracking-widest text-sky-700">
               {t("questions.table.type_answer")}
             </Badge>
           ) : (
-            <Badge className="bg-emerald-100 text-emerald-700 border-none w-full justify-center py-1 uppercase tracking-widest text-[10px]">
+            <Badge className="w-full justify-center border-none bg-emerald-100 py-1 text-[10px] uppercase tracking-widest text-emerald-700">
               {t("questions.table.type_question")}
             </Badge>
           )}
@@ -74,7 +74,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
         <Button
           variant="outline"
           size="sm"
-          className="h-9 rounded-lg border-slate-100 hover:bg-slate-50 hover:text-indigo-600 text-slate-500 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800"
           onClick={(e) => { e.stopPropagation(); onEdit(question.id); }}
         >
           <Edit className="size-4" />
@@ -82,7 +82,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
         <Button
           variant="outline"
           size="sm"
-          className="h-9 rounded-lg border-slate-100 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:border-red-100 hover:bg-red-50 hover:text-red-600 dark:border-slate-800"
           onClick={(e) => { e.stopPropagation(); onDelete(question.id); }}
         >
           <Trash2 className="size-4" />

@@ -6,7 +6,7 @@ import { useRoomQuery, useUpdateRoomMutation } from "@/hooks/useRoomQuery";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2 } from "lucide-react";
-import React, { useMemo } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { RoomEditForm } from "./components";
@@ -23,6 +23,16 @@ const RoomUpdate: React.FC = () => {
   const roomId = id ? parseInt(id, 10) : 0;
   const queryClient = useQueryClient();
 
+  const { data, isLoading, isError, error } = useRoomQuery(roomId);
+  const updateRoomMutation = useUpdateRoomMutation();
+  const { data: profileData } = useGetUserProfileQuery();
+  const currentUser = React.useMemo(() => profileData?.data, [profileData]);
+
+  const room = React.useMemo(() => {
+    if (!data) return undefined;
+    return data;
+  }, [data]);
+
   if (!roomId || roomId <= 0) {
     return (
       <div className="flex flex-col gap-6 p-3 sm:p-6">
@@ -33,16 +43,6 @@ const RoomUpdate: React.FC = () => {
       </div>
     );
   }
-
-  const { data, isLoading, isError, error } = useRoomQuery(roomId);
-  const updateRoomMutation = useUpdateRoomMutation();
-  const { data: profileData } = useGetUserProfileQuery();
-  const currentUser = useMemo(() => profileData?.data, [profileData]);
-
-  const room = useMemo(() => {
-    if (!data) return undefined;
-    return data;
-  }, [data]);
 
   const handleSubmit = async (formData: RoomFormData) => {
     if (!room) return;
@@ -72,8 +72,8 @@ const RoomUpdate: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['rooms'] });
       toastSuccess(t("rooms.room_updated_successfully"));
       navigate(ROUTERS.ROOMS, { state: { ...location.state, highlightedId: room.id, sortField: 'id', sortDirection: 'desc'  } });
-    } catch (error) {
-      // Error is handled by the mutation
+    } catch {
+      // ignore error
     }
   };
 
@@ -108,7 +108,7 @@ const RoomUpdate: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-3 sm:p-6 overflow-hidden">
+    <div className="flex flex-col gap-6 overflow-hidden p-3 sm:p-6">
       <div className="flex items-center gap-4">
         <Button variant="outline" className="w-fit" onClick={handleBack}>
           <ArrowLeft className="size-4" />

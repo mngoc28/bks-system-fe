@@ -92,7 +92,7 @@ const ChatPage: React.FC = () => {
       if (res?.data?.length > 0 && !activeConversation) {
         // setActiveConversation(res.data[0]); // Don't auto-select to keep it clean
       }
-    } catch (e) {
+    } catch {
       toastError('Không thể tải danh sách hội thoại.');
     }
   };
@@ -102,7 +102,7 @@ const ChatPage: React.FC = () => {
       setLoading(true);
       const res: any = await partnerService.getMessages(id);
       setMessages(res?.data || []);
-    } catch (e) {
+    } catch {
       toastError('Không thể tải tin nhắn.');
     } finally {
       setLoading(false);
@@ -118,7 +118,7 @@ const ChatPage: React.FC = () => {
       // setMessages(prev => [...prev, res.data]); // Will be handled by Echo if configured properly, but fallback here
       setInputValue('');
       scrollToBottom();
-    } catch (e) {
+    } catch {
       toastError('Không thể gửi tin nhắn.');
     } finally {
       setSending(false);
@@ -132,13 +132,13 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-blue-950/5">
+    <div className="flex h-[calc(100vh-140px)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-blue-950/5">
       {/* Sidebar */}
-      <div className="w-full md:w-[380px] border-r border-slate-100 flex flex-col bg-slate-50/50">
-        <div className="p-6 space-y-4">
+      <div className="flex w-full flex-col border-r border-slate-100 bg-slate-50/50 md:w-[380px]">
+        <div className="space-y-4 p-6">
            <div className="flex items-center justify-between">
               <h1 className="text-xl font-black text-slate-900">Tin nhắn</h1>
-              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-sm border border-slate-100">
+              <Button variant="ghost" size="icon" className="rounded-full border border-slate-100 bg-white shadow-sm">
                  <MoreVertical size={18} />
               </Button>
            </div>
@@ -146,47 +146,47 @@ const ChatPage: React.FC = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <Input 
                 placeholder="Tìm kiếm hội thoại..." 
-                className="pl-10 h-11 rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-200 focus:ring-blue-500 transition-all font-medium"
+                className="h-11 rounded-2xl border-none bg-white pl-10 font-medium shadow-sm ring-1 ring-slate-200 transition-all focus:ring-blue-500"
               />
            </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 space-y-1">
+        <div className="flex-1 space-y-1 overflow-y-auto px-3">
            {conversations.map(conv => (
               <div 
                 key={conv.id}
                 onClick={() => setActiveConversation(conv)}
-                className={`p-4 rounded-2xl cursor-pointer transition-all flex items-center gap-4 border-2 ${
+                className={`flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-4 transition-all ${
                   activeConversation?.id === conv.id 
-                    ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-200' 
-                    : 'bg-transparent border-transparent hover:bg-white hover:border-slate-100'
+                    ? 'border-blue-600 bg-blue-600 shadow-lg shadow-blue-200' 
+                    : 'border-transparent bg-transparent hover:border-slate-100 hover:bg-white'
                 }`}
               >
                  <div className="relative">
-                    <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
+                    <Avatar className="size-12 border-2 border-white shadow-sm">
                        <AvatarImage src={conv.booking?.user?.avatar} />
-                       <AvatarFallback className="bg-blue-100 text-blue-600 font-bold">
+                       <AvatarFallback className="bg-blue-100 font-bold text-blue-600">
                           {conv.booking?.user?.name?.charAt(0) || 'U'}
                        </AvatarFallback>
                     </Avatar>
-                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
+                    <div className="absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-white bg-emerald-500" />
                  </div>
                  
-                 <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-0.5">
-                       <h3 className={`font-bold truncate ${activeConversation?.id === conv.id ? 'text-white' : 'text-slate-900 text-sm'}`}>
+                 <div className="min-w-0 flex-1">
+                    <div className="mb-0.5 flex items-start justify-between">
+                       <h3 className={`truncate font-bold ${activeConversation?.id === conv.id ? 'text-white' : 'text-sm text-slate-900'}`}>
                           {conv.booking?.user?.name}
                        </h3>
                        <span className={`text-[10px] font-medium ${activeConversation?.id === conv.id ? 'text-blue-100' : 'text-slate-400'}`}>
                           {format(new Date(conv.updated_at), 'HH:mm')}
                        </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                       <p className={`text-xs truncate ${activeConversation?.id === conv.id ? 'text-blue-50 opacity-80' : 'text-slate-500'}`}>
+                    <div className="flex items-center justify-between">
+                       <p className={`truncate text-xs ${activeConversation?.id === conv.id ? 'text-blue-50 opacity-80' : 'text-slate-500'}`}>
                           {conv.last_message || 'Bắt đầu trò chuyện...'}
                        </p>
                        {conv.unread_count > 0 && activeConversation?.id !== conv.id && (
-                          <div className="min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1">
+                          <div className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white">
                              {conv.unread_count}
                           </div>
                        )}
@@ -196,8 +196,8 @@ const ChatPage: React.FC = () => {
            ))}
 
            {conversations.length === 0 && (
-              <div className="py-20 text-center space-y-3 px-10">
-                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
+              <div className="space-y-3 px-10 py-20 text-center">
+                 <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-slate-100 text-slate-300">
                     <MessageSquare size={32} />
                  </div>
                  <p className="text-sm font-bold text-slate-400">Chưa có hội thoại nào</p>
@@ -207,46 +207,46 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex flex-1 flex-col bg-white">
          {activeConversation ? (
             <>
                {/* Chat Header */}
-               <div className="p-4 md:p-6 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md z-10">
+               <div className="z-10 flex items-center justify-between border-b border-slate-50 bg-white/80 p-4 backdrop-blur-md md:p-6">
                   <div className="flex items-center gap-4">
-                     <Avatar className="w-10 h-10 md:w-12 md:h-12 border border-slate-100">
+                     <Avatar className="size-10 border border-slate-100 md:size-12">
                         <AvatarImage src={activeConversation.booking?.user?.avatar} />
-                        <AvatarFallback className="bg-slate-100 text-slate-600 font-bold uppercase">
+                        <AvatarFallback className="bg-slate-100 font-bold uppercase text-slate-600">
                            {activeConversation.booking?.user?.name?.charAt(0)}
                         </AvatarFallback>
                      </Avatar>
                      <div>
-                        <h2 className="font-black text-slate-900 text-sm md:text-base leading-tight">
+                        <h2 className="text-sm font-black leading-tight text-slate-900 md:text-base">
                            {activeConversation.booking?.user?.name}
                         </h2>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trực tuyến • {activeConversation.booking?.room?.name}</span>
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                           <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
+                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Trực tuyến • {activeConversation.booking?.room?.name}</span>
                         </div>
                      </div>
                   </div>
                   <div className="flex items-center gap-1 md:gap-3">
-                     <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all">
+                     <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 transition-all hover:bg-blue-50 hover:text-blue-600">
                         <Phone size={18} />
                      </Button>
-                     <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all">
+                     <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 transition-all hover:bg-blue-50 hover:text-blue-600">
                         <Video size={18} />
                      </Button>
-                     <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-slate-900 transition-all">
+                     <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 transition-all hover:text-slate-900">
                         <MoreVertical size={18} />
                      </Button>
                   </div>
                </div>
 
                {/* Messages List */}
-               <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/20">
+               <div className="flex-1 space-y-6 overflow-y-auto bg-slate-50/20 p-6">
                   {loading ? (
-                     <div className="h-full flex items-center justify-center">
-                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                     <div className="flex h-full items-center justify-center">
+                        <div className="size-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                      </div>
                   ) : (
                      messages.map((msg) => {
@@ -254,17 +254,17 @@ const ChatPage: React.FC = () => {
                         // Actually, logic is usually simpler: if (msg.sender_type === 'partner')
                         
                         return (
-                           <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                              <div className={`flex flex-col max-w-[80%] md:max-w-[65%] ${isMe ? 'items-end' : 'items-start'}`}>
-                                 <div className={`px-4 py-3 rounded-2xl shadow-sm text-sm font-medium leading-relaxed ${
+                           <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group duration-300 animate-in fade-in slide-in-from-bottom-2`}>
+                              <div className={`flex max-w-[80%] flex-col md:max-w-[65%] ${isMe ? 'items-end' : 'items-start'}`}>
+                                 <div className={`rounded-2xl px-4 py-3 text-sm font-medium leading-relaxed shadow-sm ${
                                     isMe 
-                                      ? 'bg-blue-600 text-white rounded-tr-none' 
-                                      : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                                      ? 'rounded-tr-none bg-blue-600 text-white' 
+                                      : 'rounded-tl-none border border-slate-100 bg-white text-slate-700'
                                  }`}>
                                     {msg.content}
                                  </div>
-                                 <div className="flex items-center gap-1.5 mt-2 px-1">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                 <div className="mt-2 flex items-center gap-1.5 px-1">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400">
                                        {format(new Date(msg.created_at), 'HH:mm')}
                                     </span>
                                     {isMe && (
@@ -282,13 +282,13 @@ const ChatPage: React.FC = () => {
                </div>
 
                {/* Chat Input */}
-               <div className="p-4 md:p-6 bg-white border-t border-slate-50">
-                  <div className="flex items-center gap-2 md:gap-4 bg-slate-50 p-2 md:p-3 rounded-2xl ring-1 ring-slate-100 focus-within:ring-blue-500 focus-within:bg-white transition-all shadow-inner">
-                     <div className="flex items-center gap-1 md:gap-2 px-2">
-                        <Button variant="ghost" size="icon" className="hidden sm:flex text-slate-400 hover:text-blue-600 rounded-full h-9 w-9">
+               <div className="border-t border-slate-50 bg-white p-4 md:p-6">
+                  <div className="flex items-center gap-2 rounded-2xl bg-slate-50 p-2 shadow-inner ring-1 ring-slate-100 transition-all focus-within:bg-white focus-within:ring-blue-500 md:gap-4 md:p-3">
+                     <div className="flex items-center gap-1 px-2 md:gap-2">
+                        <Button variant="ghost" size="icon" className="hidden size-9 rounded-full text-slate-400 hover:text-blue-600 sm:flex">
                            <Paperclip size={18} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-blue-600 rounded-full h-9 w-9">
+                        <Button variant="ghost" size="icon" className="size-9 rounded-full text-slate-400 hover:text-blue-600">
                            <Smile size={20} />
                         </Button>
                      </div>
@@ -297,16 +297,16 @@ const ChatPage: React.FC = () => {
                         onChange={e => setInputValue(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                         placeholder="Nhập tin nhắn..."
-                        className="flex-1 border-none bg-transparent shadow-none focus-visible:ring-0 text-sm font-medium placeholder:text-slate-400"
+                        className="flex-1 border-none bg-transparent text-sm font-medium shadow-none placeholder:text-slate-400 focus-visible:ring-0"
                      />
                      <div className="flex items-center gap-2 px-2">
-                        <Button variant="ghost" size="icon" className="hidden sm:flex text-slate-400 hover:text-blue-600 rounded-full h-9 w-9">
+                        <Button variant="ghost" size="icon" className="hidden size-9 rounded-full text-slate-400 hover:text-blue-600 sm:flex">
                            <ImageIcon size={18} />
                         </Button>
                         <Button 
                            onClick={handleSendMessage}
                            disabled={!inputValue.trim() || sending}
-                           className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 w-10 md:h-11 md:w-11 p-0 shadow-lg shadow-blue-200 transition-all active:scale-95"
+                           className="size-10 rounded-xl bg-blue-600 p-0 text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95 md:size-11"
                         >
                            <Send size={18} />
                         </Button>
@@ -315,15 +315,15 @@ const ChatPage: React.FC = () => {
                </div>
             </>
          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-slate-50/10">
+            <div className="flex flex-1 flex-col items-center justify-center bg-slate-50/10 p-12 text-center">
                <div className="relative mb-8">
-                  <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 animate-bounce duration-[2000ms]">
+                  <div className="duration-[2000ms] flex size-24 animate-bounce items-center justify-center rounded-full bg-blue-50 text-blue-600">
                      <MessageSquare size={40} />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-blue-600 text-sm font-black border border-blue-50">!</div>
+                  <div className="absolute -right-2 -top-2 flex size-8 items-center justify-center rounded-full border border-blue-50 bg-white text-sm font-black text-blue-600 shadow-lg">!</div>
                </div>
-               <h2 className="text-2xl font-black text-slate-900 mb-2">Chào mừng bạn quay lại!</h2>
-               <p className="text-slate-500 text-sm max-w-[320px] leading-relaxed">Hãy chọn một cuộc hội thoại từ danh sách bên trái để bắt đầu hỗ trợ khách hàng của bạn.</p>
+               <h2 className="mb-2 text-2xl font-black text-slate-900">Chào mừng bạn quay lại!</h2>
+               <p className="max-w-[320px] text-sm leading-relaxed text-slate-500">Hãy chọn một cuộc hội thoại từ danh sách bên trái để bắt đầu hỗ trợ khách hàng của bạn.</p>
             </div>
          )}
       </div>

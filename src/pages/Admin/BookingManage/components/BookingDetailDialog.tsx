@@ -39,7 +39,7 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">{t("bookings.detail.title")}</DialogTitle>
         </DialogHeader>
@@ -53,7 +53,7 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
               </div>
               <Skeleton className="h-6 w-20" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <Skeleton className="h-4 w-24" />
@@ -82,7 +82,7 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
             <div className="border-t" />
 
             {/* Details grid */}
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+            <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <div>
                 <dt className="text-slate-500">{t("bookings.detail.building_name")}</dt>
                 <dd className="mt-1 font-medium text-slate-900">{buildingName}</dd>
@@ -119,7 +119,7 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
             {/* Note */}
             <div className="space-y-2">
               <div className="text-slate-500">{t("bookings.detail.note")}</div>
-              <div className="rounded-md border bg-slate-50 p-3 min-h-[64px] whitespace-pre-wrap leading-relaxed">{note || '—'}</div>
+              <div className="min-h-[64px] whitespace-pre-wrap rounded-md border bg-slate-50 p-3 leading-relaxed">{note || '—'}</div>
             </div>
           </div>
         )}

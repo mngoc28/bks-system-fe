@@ -128,7 +128,7 @@ const NewsAdd: React.FC = () => {
 
             toastSuccess(t("news.create_success"));
             navigate(ROUTERS.NEWS);
-        } catch (error) {
+        } catch {
             toastError(t("news.create_failed"));
         }
     };
@@ -136,14 +136,14 @@ const NewsAdd: React.FC = () => {
     console.log(form.getValues());
     return (
         <>
-            <div className="flex flex-col gap-10 p-3 sm:p-6 pt-5">
+            <div className="flex flex-col gap-10 p-3 pt-5 sm:p-6">
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-bold">
                                 {t("news_edit.title")}
                             </h2>
-                            <Button onClick={handleBack} className="text-white bg-gray-600 hover:bg-gray-700">
+                            <Button onClick={handleBack} className="bg-gray-600 text-white hover:bg-gray-700">
                                 <ArrowLeftIcon className="size-4" />
                                 <span className="hidden lg:block">
                                     {t("news_edit.back")}
@@ -155,7 +155,7 @@ const NewsAdd: React.FC = () => {
                     <CardContent>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(handleSubmit)}>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     <div className="col-span-2 flex flex-col gap-5">
                                         {/* news name */}
                                         <FormField
@@ -178,7 +178,7 @@ const NewsAdd: React.FC = () => {
                                         {/* slug */}
                                         <div>
                                                 <FormLabel>{t("news_edit.slug")}</FormLabel>
-                                                <p className="flex text-[14px] text-gray-500 border border-gray-300 rounded-md p-2 h-[50px] items-center justify-start">
+                                                <p className="flex h-[50px] items-center justify-start rounded-md border border-gray-300 p-2 text-[14px] text-gray-500">
                                                     {generateSlug(form.getValues("title").trim() || "")}
                                                 </p>
                                             </div>
@@ -289,13 +289,13 @@ const NewsAdd: React.FC = () => {
                                                                 onClick={() => {
 
                                                                 }}
-                                                                className="w-[200px] h-[200px] object-cover rounded-md border border-gray-300"
+                                                                className="size-[200px] rounded-md border border-gray-300 object-cover"
                                                                 onError={(e) => (e.currentTarget.src = "/assets/images/photo_error2.png")}
                                                             />
                                                             <Button
                                                                 type="button"
                                                                 onClick={handleSelectImage}
-                                                                className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg"
+                                                                className="absolute right-2 top-2 rounded-full bg-blue-600 p-2 text-white shadow-lg hover:bg-blue-700"
                                                                 aria-label={t("news_edit.upload_image")}
                                                             >
                                                                 {t("news_edit.upload_image")}
@@ -316,19 +316,19 @@ const NewsAdd: React.FC = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="flex justify-end gap-4 mt-6">
+                                <div className="mt-6 flex justify-end gap-4">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={handleBack}
-                                        className="bg-gray-600 hover:bg-gray-700 text-white"
+                                        className="bg-gray-600 text-white hover:bg-gray-700"
                                     >
                                         {t("news_edit.cancel")}
                                     </Button>
                                     <Button
                                         type="submit"
                                         disabled={createNewsMutation.isPending || uploadImageMutation.isPending}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                        className="bg-blue-600 text-white hover:bg-blue-700"
                                     >
                                         {createNewsMutation.isPending || uploadImageMutation.isPending
                                             ? t("news.isSave")

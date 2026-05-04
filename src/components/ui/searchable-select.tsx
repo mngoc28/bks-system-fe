@@ -92,7 +92,7 @@ export default function SearchableSelect({
       >
         <div className="flex flex-1 items-center gap-2 overflow-hidden">
           {icon && <span className="text-gray-400">{icon}</span>}
-          <span className={`flex-1 truncate text-left ${selectedOption ? "text-black font-medium text-[14px]" : "text-gray-500 text-[14px] font-normal"}`}>
+          <span className={`flex-1 truncate text-left ${selectedOption ? "text-[14px] font-medium text-black" : "text-[14px] font-normal text-gray-500"}`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>
@@ -119,14 +119,14 @@ export default function SearchableSelect({
           {showSearch && (
             <div className="border-b p-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   ref={searchInputRef}
                   type="text"
                   placeholder={searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 pr-9 h-10"
+                  className="h-10 px-9"
                   onClick={(e) => e.stopPropagation()}
                 />
                 {search && (
@@ -138,7 +138,7 @@ export default function SearchableSelect({
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="size-4" />
                   </button>
                 )}
               </div>
@@ -148,7 +148,7 @@ export default function SearchableSelect({
           <div className="max-h-64 overflow-y-auto py-1">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                <Loader2 className="size-5 animate-spin text-blue-500" />
                 <span className="ml-2 text-sm text-gray-500">{t("common.loading")}</span>
               </div>
             ) : filteredOptions.length === 0 ? (

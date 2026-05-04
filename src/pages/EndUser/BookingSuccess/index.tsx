@@ -47,15 +47,15 @@ const BookingSuccess = () => {
 
       <section className="relative overflow-hidden bg-slate-950 text-white">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 text-center">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-300" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
+          <CheckCircle2 className="mx-auto size-14 text-emerald-300" />
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng thành công</h1>
           <p className="mt-3 text-slate-200">Yêu cầu của bạn đã được ghi nhận. Chúng tôi đã gửi thông tin xác nhận về email đăng ký.</p>
         </div>
       </section>
 
-      <div className="bg-slate-50 border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: "Trang chủ", href: ROUTERS.HOME },
@@ -77,12 +77,12 @@ const BookingSuccess = () => {
             <h2 className="text-xl font-semibold text-slate-900">{state.roomTitle}</h2>
 
             <p className="inline-flex items-start gap-2 text-sm text-slate-600">
-              <MapPin className="mt-0.5 h-4 w-4 text-sky-500" />
+              <MapPin className="mt-0.5 size-4 text-sky-500" />
               {state.address || "Đang cập nhật địa chỉ"}
             </p>
 
             <p className="inline-flex items-center gap-2 text-sm text-slate-600">
-              <CalendarDays className="h-4 w-4 text-sky-500" />
+              <CalendarDays className="size-4 text-sky-500" />
               {state.startDate} - {state.endDate}
             </p>
 

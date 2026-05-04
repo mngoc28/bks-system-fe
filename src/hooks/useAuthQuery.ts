@@ -80,12 +80,8 @@ export const useCheckPermissionQuery = () => {
   return useQuery<ApiResponse<CheckPermissionResponse>>({
     queryKey: ["check-permission"],
     queryFn: async () => {
-      try {
-        const response = await authApi.checkPermission();
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await authApi.checkPermission();
+      return response;
     },
   });
 };

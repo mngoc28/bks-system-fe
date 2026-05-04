@@ -146,41 +146,41 @@ const BuildingEdit: React.FC = () => {
   const building = buildingData?.data || null;
   const images = imagesData?.data || null;
   return (
-    <div className="flex flex-col gap-10 p-3 sm:p-6 pt-5">
-      <div className="flex flex-row justify-between items-center gap-3">
+    <div className="flex flex-col gap-10 p-3 pt-5 sm:p-6">
+      <div className="flex flex-row items-center justify-between gap-3">
         {actionType === "edit-building" ? (
           <div className="flex items-center gap-4">
             <Button variant="outline" className="w-fit" onClick={handleCancel}>
               <ArrowLeftIcon className="size-4" />
               {t("common.back")}
             </Button>
-            <h2 className="text-2xl font-bold text-gray-900 py-3 whitespace-nowrap">{t("buildings.edit_building")}</h2>
+            <h2 className="whitespace-nowrap py-3 text-2xl font-bold text-gray-900">{t("buildings.edit_building")}</h2>
           </div>
         ) : (
-          <h2 className="text-2xl font-bold text-gray-900 py-3 whitespace-nowrap">{t("buildings.edit_images")}</h2>
+          <h2 className="whitespace-nowrap py-3 text-2xl font-bold text-gray-900">{t("buildings.edit_images")}</h2>
         )}
-        <div className="flex flex-row gap-3 items-start justify-center">
+        <div className="flex flex-row items-start justify-center gap-3">
           {action === "edit-images" && images && <>
-            <div className="grid grid-cols-2 lg:grid-rows-1 lg:grid-cols-4 gap-3 items-start justify-center">
-              <Button variant="outline" className="bg-blue-600 text-white hover:bg-blue-500 h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" onClick={handleAddImages}>
+            <div className="grid grid-cols-2 items-start justify-center gap-3 lg:grid-cols-4 lg:grid-rows-1">
+              <Button variant="outline" className="h-11 w-[90%] bg-blue-600 text-[14px] text-white hover:bg-blue-500 md:w-full md:text-[16px]" onClick={handleAddImages}>
                 <ImageIcon className="size-5" />
                 <span className="hidden lg:block">
                   {t("common.add")}
                 </span>
               </Button>
-              <Button variant="outline" className="bg-blue-600 text-white hover:bg-blue-500 h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" onClick={handleSaveImages} >
+              <Button variant="outline" className="h-11 w-[90%] bg-blue-600 text-[14px] text-white hover:bg-blue-500 md:w-full md:text-[16px]" onClick={handleSaveImages} >
                 <Save className="mr-2 size-4" />
                 <span className="hidden lg:block">
                   {t("common.save")}
                 </span>
               </Button>
-              <Button variant="outline" className="bg-red-600 text-white hover:bg-red-500 hover:text-white h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" onClick={handleDeleteImages}>
+              <Button variant="outline" className="h-11 w-[90%] bg-red-600 text-[14px] text-white hover:bg-red-500 hover:text-white md:w-full md:text-[16px]" onClick={handleDeleteImages}>
                 <TrashIcon className="size-5" />
                 <span className="hidden lg:block">
                   {t("common.delete")}
                 </span>
               </Button>
-              <Button variant="outline" className="bg-gray-600 text-white hover:bg-gray-500 h-11 w-[90%] md:w-full text-[14px] md:text-[16px]" onClick={handleCancel}>
+              <Button variant="outline" className="h-11 w-[90%] bg-gray-600 text-[14px] text-white hover:bg-gray-500 md:w-full md:text-[16px]" onClick={handleCancel}>
                 <ArrowLeftIcon className="size-5" />
                 <span className="hidden lg:block">
                   {t("common.back")}

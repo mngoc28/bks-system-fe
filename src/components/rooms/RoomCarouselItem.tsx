@@ -17,9 +17,9 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
       <div className="relative h-56 overflow-hidden">
         <img src={room.image} alt={room.name} className="size-full object-cover transition duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />
-        <div className="absolute left-5 right-5 bottom-5 flex items-center justify-between text-sm text-white/90">
+        <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-sm text-white/90">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
-            <HomeIcon className="h-4 w-4" />
+            <HomeIcon className="size-4" />
             {t("public.home.rooms.badge", { id: room.id })}
           </span>
           <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">{t("public.home.rooms.area", { area: room.area })}</span>
@@ -29,7 +29,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
         <div>
           <h3 className="text-[0.95rem] font-semibold text-slate-900 group-hover:text-primary">{room.name}</h3>
           <p className="mt-1 inline-flex items-center gap-2 text-sm text-slate-600">
-            <MapPinHouse className="h-4 w-4 text-primary" />
+            <MapPinHouse className="size-4 text-primary" />
             {room.address}
           </p>
         </div>
@@ -37,11 +37,11 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
           <span className="text-base font-semibold text-primary">{t("public.home.rooms.price", { price: room.price })}</span>
           <div className="flex items-center gap-3 text-[0.75rem] text-slate-500">
             <span className="inline-flex items-center gap-1">
-              <BedDouble className="h-3.5 w-3.5" />
+              <BedDouble className="size-3.5" />
               {hasNumericBeds ? t("public.home.rooms.beds", { count: bedCount }) : room.beds}
             </span>
             <span className="inline-flex items-center gap-1">
-              <Ruler className="h-3.5 w-3.5" />
+              <Ruler className="size-3.5" />
               {t("public.home.rooms.area", { area: room.area })}
             </span>
           </div>

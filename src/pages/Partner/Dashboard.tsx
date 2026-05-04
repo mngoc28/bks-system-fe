@@ -15,14 +15,14 @@ const Dashboard: React.FC = () => {
   const { data: urgentMaintenances, isLoading: maintenanceLoading } = usePartnerUrgentMaintenancesQuery();
 
   const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: any) => (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-      <div className={`p-4 rounded-xl ${colorClass}`}>
+    <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className={`rounded-xl p-4 ${colorClass}`}>
         <Icon size={24} />
       </div>
       <div className="flex-1">
-        <p className="text-sm text-gray-500 font-medium mb-1">{title}</p>
+        <p className="mb-1 text-sm font-medium text-gray-500">{title}</p>
         {isLoading ? (
-          <Skeleton className="h-8 w-24 mt-1" />
+          <Skeleton className="mt-1 h-8 w-24" />
         ) : (
           <p className="text-2xl font-bold text-gray-800">{value}</p>
         )}
@@ -34,11 +34,11 @@ const Dashboard: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Tổng quan hệ thống</h1>
-        <p className="text-gray-500 mt-1">Theo dõi hoạt động kinh doanh và trạng thái tài sản của bạn.</p>
+        <p className="mt-1 text-gray-500">Theo dõi hoạt động kinh doanh và trạng thái tài sản của bạn.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         <StatCard 
           title="Tòa nhà/Khu" 
           value={stats?.totalBuildings || 0} 
@@ -76,29 +76,29 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Bookings */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-800">Booking Cần Duyệt</h2>
-            <button type="button" onClick={() => navigate('/partner/bookings')} className="text-sm text-blue-600 font-medium hover:underline">Xem tất cả</button>
+            <button type="button" onClick={() => navigate('/partner/bookings')} className="text-sm font-medium text-blue-600 hover:underline">Xem tất cả</button>
           </div>
           
           {bookingsLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="animate-spin text-blue-600" /></div>
           ) : !pendingBookings || pendingBookings.length === 0 ? (
-            <p className="text-gray-500 text-sm">Không có booking mới nào chờ duyệt.</p>
+            <p className="text-sm text-gray-500">Không có booking mới nào chờ duyệt.</p>
           ) : (
             <div className="space-y-4">
               {pendingBookings.map((bk: any) => (
-                <div key={`bk-${bk.id}`} className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={`bk-${bk.id}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-4 transition-colors hover:bg-gray-50">
                   <div>
                     <p className="font-semibold text-gray-800">{bk.user_name || "Khách hàng"}</p>
                     <p className="text-sm text-gray-500">{bk.room_number} • {bk.start_date}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">Duyệt</button>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200">Từ chối</button>
+                    <button className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700">Duyệt</button>
+                    <button className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200">Từ chối</button>
                   </div>
                 </div>
               ))}
@@ -107,26 +107,26 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Urgent Maintenances */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-800">Yêu cầu bảo trì khẩn</h2>
-            <button type="button" onClick={() => navigate('/partner/maintenances')} className="text-sm text-blue-600 font-medium hover:underline">Xem tất cả</button>
+            <button type="button" onClick={() => navigate('/partner/maintenances')} className="text-sm font-medium text-blue-600 hover:underline">Xem tất cả</button>
           </div>
           
           {maintenanceLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="animate-spin text-blue-600" /></div>
           ) : !urgentMaintenances || urgentMaintenances.length === 0 ? (
-            <p className="text-gray-500 text-sm">Tuyệt vời! Không có sự cố nào cần xử lý ngay.</p>
+            <p className="text-sm text-gray-500">Tuyệt vời! Không có sự cố nào cần xử lý ngay.</p>
           ) : (
             <div className="space-y-4">
               {urgentMaintenances.map((mt: any) => (
-                <div key={`mt-${mt.id}`} className="flex flex-col gap-2 p-4 border border-red-100 bg-red-50/30 rounded-lg">
-                  <div className="flex justify-between items-start">
+                <div key={`mt-${mt.id}`} className="flex flex-col gap-2 rounded-lg border border-red-100 bg-red-50/30 p-4">
+                  <div className="flex items-start justify-between">
                     <p className="font-semibold text-gray-800">{mt.roomName}</p>
-                    <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full font-medium">{mt.status || 'Chờ xử lý'}</span>
+                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-600">{mt.status || 'Chờ xử lý'}</span>
                   </div>
                   <p className="text-sm text-gray-600">{mt.issueDescription}</p>
-                  <p className="text-xs text-gray-400 mt-1">Báo cáo bởi: {mt.customerName}</p>
+                  <p className="mt-1 text-xs text-gray-400">Báo cáo bởi: {mt.customerName}</p>
                 </div>
               ))}
             </div>

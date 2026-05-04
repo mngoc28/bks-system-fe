@@ -170,7 +170,7 @@ export interface CreateRoomPriceRequest {
 }
 
 // Update type
-export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {}
+export type UpdateRoomRequest = Partial<CreateRoomRequest>;
 
 // Single Room Response type
 export interface RoomResponse {

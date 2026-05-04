@@ -157,7 +157,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
             return (
             <TableRow
               key={user.id}
-              className={`h-[140px] hover:cursor-pointer hover:bg-muted/50 ${highlightedId === user.id ? "bg-yellow-50 animate-pulse" : ""}`}
+              className={`h-[140px] hover:cursor-pointer hover:bg-muted/50 ${highlightedId === user.id ? "animate-pulse bg-yellow-50" : ""}`}
               onClick={() => onView(user.id)}
             >
             <TableCell className="px-4 py-3 text-center align-middle">{user.id}</TableCell>
@@ -166,7 +166,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
                 <img
                   src={avatarUrl}
                   alt={user.name}
-                  className="w-[150px] h-[150px] rounded cursor-pointer object-cover"
+                  className="size-[150px] cursor-pointer rounded object-cover"
                   onClick={(e) => {
                     e.stopPropagation();
                     onViewModal(e.currentTarget.src);
@@ -178,8 +178,8 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
                   }}
                 />
               ) : (
-                <div className="text-center bg-gray-200 rounded-lg w-[150px] h-[150px] flex flex-col items-center justify-center">
-                  <ImageIcon className="size-12 mb-4 text-gray-400" />
+                <div className="flex size-[150px] flex-col items-center justify-center rounded-lg bg-gray-200 text-center">
+                  <ImageIcon className="mb-4 size-12 text-gray-400" />
                   <p className="text-gray-500">{t("user.no_images_yet")}</p>
                 </div>
               )}
@@ -221,12 +221,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
     {/* Image Modal */}
     {selectedImage && (
       <Dialog open={!!selectedImage} onOpenChange={() => onViewModal(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+        <DialogContent className="max-h-[90vh] max-w-4xl p-0">
           <div className="relative">
             <Button
               variant="ghost"
               size="sm"
-              className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 p-0"
+              className="absolute right-2 top-2 z-10 size-8 rounded-full bg-black/50 p-0 text-white hover:bg-black/70"
               onClick={() => onViewModal(null)}
             >
               <X className="size-4" />
@@ -234,7 +234,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUserEmail, highligh
             <img
               src={selectedImage}
               alt="User avatar enlarged"
-              className="w-full aspect-[4/3] object-cover rounded-lg"
+              className="aspect-[4/3] w-full rounded-lg object-cover"
             />
           </div>
         </DialogContent>

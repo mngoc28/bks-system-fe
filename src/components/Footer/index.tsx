@@ -12,7 +12,7 @@ const Footer = () => {
       <div className="flex flex-1 flex-col gap-6">
         {/* Logo */}
         <div className="flex items-center">
-          <img src="/assets/footer_logo.svg" alt="BKS Logo" className="h-10 w-10" aria-label="BKS Logo" tabIndex={0} />
+          <img src="/assets/footer_logo.svg" alt="BKS Logo" className="size-10" aria-label="BKS Logo" tabIndex={0} />
         </div>
 
         {/* Company information */}

@@ -94,7 +94,7 @@ const SelectTrigger = React.forwardRef<
     )}
     {...props}
   >
-    <span className="flex-1 min-w-0 truncate text-left leading-5">
+    <span className="min-w-0 flex-1 truncate text-left leading-5">
       {children}
     </span>
     <SelectPrimitive.Icon asChild>

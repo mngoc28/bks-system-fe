@@ -92,8 +92,8 @@ const MyBookings = () => {
         </div>
       </section>
 
-      <div className="bg-slate-50 border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: "Trang chủ", href: ROUTERS.HOME },
@@ -122,7 +122,7 @@ const MyBookings = () => {
 
         {filteredBookings.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-14 text-center">
-            <SearchX className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+            <SearchX className="mx-auto mb-3 size-8 text-slate-400" />
             <p className="text-base font-semibold text-slate-700">Chưa có đơn đặt phòng nào ở mục này</p>
             <p className="mt-2 text-sm text-slate-500">Hãy tìm phòng phù hợp và tạo đơn đặt đầu tiên của bạn.</p>
             <Button asChild className="mt-5 rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
@@ -143,15 +143,15 @@ const MyBookings = () => {
                           <Badge className={`rounded-full border-0 ${bookingStatusBadgeClass[booking.status]}`}>{bookingStatusLabel[booking.status]}</Badge>
                         </div>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
-                          <MapPin className="h-4 w-4 text-sky-500" />
+                          <MapPin className="size-4 text-sky-500" />
                           {booking.address || "Đang cập nhật địa chỉ"}
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
-                          <CalendarDays className="h-4 w-4 text-sky-500" />
+                          <CalendarDays className="size-4 text-sky-500" />
                           {booking.startDate} - {booking.endDate}
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
-                          <Clock3 className="h-4 w-4" />
+                          <Clock3 className="size-4" />
                           Tạo lúc: {new Date(booking.createdAt).toLocaleString("vi-VN")}
                         </p>
                       </div>
@@ -170,7 +170,7 @@ const MyBookings = () => {
                               className="rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
                               onClick={() => handleCancelBooking(booking.id)}
                             >
-                              <XCircle className="mr-1 h-4 w-4" />
+                              <XCircle className="mr-1 size-4" />
                               Hủy đơn
                             </Button>
                           )}
@@ -178,7 +178,7 @@ const MyBookings = () => {
                           {booking.status === "completed" && (
                             <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
                               <Link to={`${ROUTERS.BOOKING}/${booking.roomId}`}>
-                                <CheckCircle2 className="mr-1 h-4 w-4" />
+                                <CheckCircle2 className="mr-1 size-4" />
                                 Đặt lại
                               </Link>
                             </Button>

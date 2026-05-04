@@ -120,14 +120,14 @@ const Layout = () => {
       permissionKey: "province-manage:view",
       label: t("menu.province-management"),
       path: ROUTERS.PROVINCE_MANAGE,
-      icon: <MapPinned className="w-5 h-5" />,
+      icon: <MapPinned className="size-5" />,
     },
     {
       id: "question-management",
       permissionKey: "question-management:view",
       label: t("menu.chatbot", { defaultValue: "Chatbot" }),
       path: ROUTERS.QUESTION_MANAGEMENT,
-      icon: <BotIcon className="w-5 h-5" />,
+      icon: <BotIcon className="size-5" />,
     },
     {
       id: "user-management",

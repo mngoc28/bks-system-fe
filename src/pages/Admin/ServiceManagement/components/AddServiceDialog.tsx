@@ -106,7 +106,7 @@ const AddServiceDialog: React.FC<AddServiceDialogProps> = ({ isOpen, isLoading =
                                 </FormItem>
                             )}
                         />
-                        <DialogFooter className="flex-row gap-3 sm:gap-3 pt-4">
+                        <DialogFooter className="flex-row gap-3 pt-4 sm:gap-3">
                             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
                                 {t("common.cancel")}
                             </Button>

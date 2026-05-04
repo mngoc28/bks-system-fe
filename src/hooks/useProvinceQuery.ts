@@ -45,12 +45,8 @@ export const useGetAllProvinces = (data: ProvinceFilter) => {
     return useQuery({
         queryKey: ["provinces", data],
         queryFn: async () => {
-            try {
-                const response = await provinceApi.getAllProvinces(data);
-                return response;
-            } catch (error) {
-                throw error;
-            }
+            const response = await provinceApi.getAllProvinces(data);
+            return response;
         }
     })
 }

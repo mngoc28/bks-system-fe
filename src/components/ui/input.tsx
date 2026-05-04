@@ -154,13 +154,13 @@ const ReactQuillEditor = React.memo<ReactQuillEditorProps>(
           <button
             type="button"
             onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-            className="absolute top-2 right-2 z-10 rounded p-1.5 transition-colors hover:bg-slate-100"
+            className="absolute right-2 top-2 z-10 rounded p-1.5 transition-colors hover:bg-slate-100"
             aria-label="choose emoji"
           >
             <Smile className="size-5 text-slate-500" />
           </button>
           {isEmojiPickerOpen && (
-            <div className="absolute top-12 right-0 z-50">
+            <div className="absolute right-0 top-12 z-50">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 autoFocusSearch={false}
@@ -222,13 +222,13 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       <button
         type="button"
         onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-        className="absolute top-2 right-2 z-10 rounded p-1.5 transition-colors hover:bg-slate-100"
+        className="absolute right-2 top-2 z-10 rounded p-1.5 transition-colors hover:bg-slate-100"
         aria-label="choose emoji"
       >
         <Smile className="size-5 text-slate-500" />
       </button>
       {isEmojiPickerOpen && (
-        <div className="absolute top-12 right-0 z-50">
+        <div className="absolute right-0 top-12 z-50">
           <EmojiPicker
             onEmojiClick={handleEmojiClick}
             autoFocusSearch={false}

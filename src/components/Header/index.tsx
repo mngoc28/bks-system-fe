@@ -58,7 +58,7 @@ const Header = ({ pageTitle = "" }: HeaderProps) => {
     <header className="sticky top-0 z-50 flex w-full flex-col border-b border-slate-200 bg-white shadow-sm">
       {/* Breadcrumb bar */}
       <div className="flex items-center gap-1.5 border-b border-slate-100 px-6 py-1.5 text-xs text-slate-400">
-        <Link to={ROUTERS.CONTROL} className="flex items-center gap-1 hover:text-primary transition-colors">
+        <Link to={ROUTERS.CONTROL} className="flex items-center gap-1 transition-colors hover:text-primary">
           <Home size={11} />
           <span>{t("menu.dashboard")}</span>
         </Link>
@@ -74,23 +74,23 @@ const Header = ({ pageTitle = "" }: HeaderProps) => {
       {/* Main header row */}
       <div className="flex w-full items-center justify-between px-6 py-3">
         <div className="flex flex-col">
-          <h1 className="text-2xl font-bold text-slate-800 leading-tight">{pageTitle}</h1>
+          <h1 className="text-2xl font-bold leading-tight text-slate-800">{pageTitle}</h1>
         </div>
         <div className="flex items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 border border-slate-200 bg-white px-2 py-2 hover:bg-neutral-100 focus:outline-none rounded-md">
+              <button className="flex items-center gap-1 rounded-md border border-slate-200 bg-white p-2 hover:bg-neutral-100 focus:outline-none">
                 <img src={`/app/images/front/flag-${i18n.language}.svg`} alt={i18n.language.toUpperCase()} className="size-5" />
                 <span className="text-sm font-medium">{getLanguageDisplay(i18n.language)}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleChangeLangue("vi")} className="flex items-center gap-2 cursor-pointer">
-                <img src="/app/images/front/flag-vi.svg" alt="VI" className="size-5 flex-shrink-0" />
+              <DropdownMenuItem onClick={() => handleChangeLangue("vi")} className="flex cursor-pointer items-center gap-2">
+                <img src="/app/images/front/flag-vi.svg" alt="VI" className="size-5 shrink-0" />
                 <span>Tiếng Việt</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeLangue("en")} className="flex items-center gap-2 cursor-pointer">
-                <img src="/app/images/front/flag-en.svg" alt="EN" className="size-5 flex-shrink-0" />
+              <DropdownMenuItem onClick={() => handleChangeLangue("en")} className="flex cursor-pointer items-center gap-2">
+                <img src="/app/images/front/flag-en.svg" alt="EN" className="size-5 shrink-0" />
                 <span>English</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

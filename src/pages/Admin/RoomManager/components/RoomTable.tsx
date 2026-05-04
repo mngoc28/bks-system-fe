@@ -124,8 +124,8 @@ const RoomTable: React.FC<RoomTableProps> = ({
               <TableRow
                 key={room.id}
                 id={`room-row-${room.id}`}
-                className={`hover:bg-muted/50 h-[120px]
-                ${highlightedId === room.id ? 'bg-green-100 animate-pulse' : ''}`}>
+                className={`h-[120px] hover:bg-muted/50
+                ${highlightedId === room.id ? 'animate-pulse bg-green-100' : ''}`}>
                 <TableCell className="px-4 py-3 text-center align-middle">{room.id}</TableCell>
                 <TableCell className="px-4 py-3 align-middle">
                   {(() => {
@@ -139,7 +139,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
                     <img
                       src={coverImageUrl}
                       alt="Room"
-                      className="w-[150px] h-[150px] object-cover rounded cursor-pointer"
+                      className="size-[150px] cursor-pointer rounded object-cover"
                       onClick={() => onViewModal(coverImageUrl)}
                       onError={(e) => {
                         if (e.currentTarget.src !== fallbackImage) {
@@ -148,9 +148,9 @@ const RoomTable: React.FC<RoomTableProps> = ({
                       }}
                     />
                   ) : (
-                    <div className="w-[150px] h-[150px] flex flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
-                      <ImageIcon className="size-10 mx-auto mb-3 text-gray-400" />
-                      <p className="text-gray-500 text-sm">{t("rooms.no_images_yet")}</p>
+                    <div className="flex size-[150px] flex-col items-center justify-center rounded bg-gray-200 p-4 text-center">
+                      <ImageIcon className="mx-auto mb-3 size-10 text-gray-400" />
+                      <p className="text-sm text-gray-500">{t("rooms.no_images_yet")}</p>
                     </div>
                   );
                   })()}
@@ -178,12 +178,12 @@ const RoomTable: React.FC<RoomTableProps> = ({
       {/* Image Modal */}
       {selectedImage && (
         <Dialog open={!!selectedImage} onOpenChange={() => onViewModal(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogContent className="max-h-[90vh] max-w-4xl p-0">
             <div className="relative">
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 p-0"
+                className="absolute right-2 top-2 z-10 size-8 rounded-full bg-black/50 p-0 text-white hover:bg-black/70"
                 onClick={() => onViewModal(null)}
               >
                 <X className="size-4" />
@@ -191,7 +191,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
               <img
                 src={selectedImage}
                 alt="Room image enlarged"
-                className="w-full aspect-[4/3] object-cover rounded-lg"
+                className="aspect-[4/3] w-full rounded-lg object-cover"
               />
             </div>
           </DialogContent>

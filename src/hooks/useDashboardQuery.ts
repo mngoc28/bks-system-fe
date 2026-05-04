@@ -8,12 +8,8 @@ export const useTotalUser = () => {
     {
       queryKey:['dashboard', 'total-user'],
       queryFn: async () => {
-        try{
-          const response = await dashboardApi.getTotalUser();
-          return response;
-        }catch(error) {
-          throw error;
-        }
+        const response = await dashboardApi.getTotalUser();
+        return response;
       }
     });
 };
@@ -23,12 +19,8 @@ export const useTotalPartner = () => {
     {
       queryKey:['dashboard', 'total-partner'],
       queryFn: async () => {
-        try{
-          const response = await dashboardApi.getTotalPartner();
-          return response;
-        }catch(error) {
-          throw error;
-        }
+        const response = await dashboardApi.getTotalPartner();
+        return response;
       }
     });
 };
@@ -38,12 +30,8 @@ export const useSystemBuilding = () => {
     {
       queryKey:['dashboard', 'system-building'],
       queryFn: async () => {
-        try{
-          const response = await dashboardApi.getSystemBuilding();
-          return response;
-        }catch(error){
-          throw error;
-        }
+        const response = await dashboardApi.getSystemBuilding();
+        return response;
       }
     });
 };
@@ -53,12 +41,8 @@ export const useSystemRoom = () => {
     {
       queryKey:['dashboard', 'system-room'],
       queryFn: async () => {
-        try{
-          const response = await dashboardApi.getSystemRoom();
-          return response;
-        }catch(error) {
-          throw error;
-        }
+        const response = await dashboardApi.getSystemRoom();
+        return response;
       }
     });
 };
@@ -67,12 +51,8 @@ export const useBookingsPerMonthQuery = (startDate?: string, endDate?: string, e
   return useQuery<ApiResponse<BookingsPerMonthResponse>, Error>({
     queryKey: ["dashboard", "bookings-per-month", startDate ?? null, endDate ?? null],
     queryFn: async () => {
-      try {
-        const response = await dashboardApi.getBookingsPerMonth(startDate, endDate);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await dashboardApi.getBookingsPerMonth(startDate, endDate);
+      return response;
     },
     enabled,
   });
@@ -82,12 +62,8 @@ export const useRevenueByMonthQuery = (startDate?: string, endDate?: string, ena
   return useQuery<ApiResponse<RevenueByMonthResponse>, Error>({
     queryKey: ["dashboard", "revenue-per-month", startDate, endDate],
     queryFn: async () => {
-      try {
-        const response = await dashboardApi.getRevenueByMonth(startDate, endDate);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await dashboardApi.getRevenueByMonth(startDate, endDate);
+      return response;
     },
     enabled
   });
@@ -97,12 +73,8 @@ export const useBookingsByBuildingQuery = () => {
   return useQuery<ApiResponse<BookingByBuilding[]>>({
     queryKey: ["dashboard", "bookings-by-building"],
     queryFn: async () => {
-      try {
-        const response = await dashboardApi.getBookingsByBuilding();
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await dashboardApi.getBookingsByBuilding();
+      return response;
     },
   });
 };

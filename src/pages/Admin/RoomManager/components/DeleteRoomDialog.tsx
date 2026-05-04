@@ -16,8 +16,8 @@ const DeleteRoomDialog: React.FC<DeleteRoomDialogProps> = ({ isOpen, room, onCan
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="text-red-600 bg-red-100 rounded-full p-2 flex items-center justify-center">
-              <img src="/assets/trash-2.svg" alt="Delete" className="w-5 h-5" />
+            <div className="flex items-center justify-center rounded-full bg-red-100 p-2 text-red-600">
+              <img src="/assets/trash-2.svg" alt="Delete" className="size-5" />
             </div>
             {t("rooms.delete_room_title")}
           </DialogTitle>
@@ -26,16 +26,16 @@ const DeleteRoomDialog: React.FC<DeleteRoomDialogProps> = ({ isOpen, room, onCan
           {t("rooms.delete_room_confirm")}
         </div>
         {room && (
-          <div className="mb-4 p-3 bg-gray-50 rounded">
+          <div className="mb-4 rounded bg-gray-50 p-3">
             <div><b>ID:</b> {room.id}</div>
             <div><b>{t("rooms.room_number")}:</b> {room.room_number}</div>
             <div><b>{t("rooms.building")}:</b> {room.building_name}</div>
           </div>
         )}
-        <div className="mb-2 text-red-500 text-sm">{t("rooms.delete_room_warning")}</div>
+        <div className="mb-2 text-sm text-red-500">{t("rooms.delete_room_warning")}</div>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>{t("common.cancel")}</Button>
-          <Button className="bg-red-600 hover:bg-red-700 text-white font-bold flex items-center justify-center gap-2 px-6 py-2 rounded-lg transition-colors" onClick={onConfirm} disabled={isLoading}>
+          <Button className="flex items-center justify-center gap-2 rounded-lg bg-red-600 px-6 py-2 font-bold text-white transition-colors hover:bg-red-700" onClick={onConfirm} disabled={isLoading}>
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash2-icon lucide-trash-2">
               <path d="M10 11v6"/>
               <path d="M14 11v6"/>

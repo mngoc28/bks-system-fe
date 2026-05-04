@@ -26,20 +26,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
 
   return (
     <Card
-      className="glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 h-full flex flex-col cursor-pointer"
+      className="glass-card hover-scale group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 animate-in"
       onClick={() => onView(service.id)}
     >
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
           <LayoutGrid className="size-5" />
         </div>
-        <Badge className="bg-emerald-50 text-emerald-600 border-none px-2 py-0.5 text-[10px] font-bold">
+        <Badge className="border-none bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
           {t("services.status_active")}
         </Badge>
       </div>
 
       <h3
-        className="mb-2 line-clamp-1 text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors"
+        className="mb-2 line-clamp-1 text-lg font-black text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100"
         title={service.name}
       >
         {highlightText(service.name, searchTerm || "")}
@@ -50,14 +50,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
         <span>{t("common.last_updated")}: {safeFormatDateTime(service.updated_at)}</span>
       </div>
 
-      <p className="mb-6 line-clamp-3 text-sm leading-relaxed text-slate-400 flex-1">
+      <p className="mb-6 line-clamp-3 flex-1 text-sm leading-relaxed text-slate-400">
         {service.description || t("services.no_description")}
       </p>
 
       <div className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
         <div className="flex items-center gap-2">
           <CreditCard className="size-4 text-emerald-500" />
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("services.price")}</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t("services.price")}</span>
         </div>
         <span className="text-lg font-black text-emerald-600">{formatPrice(service.price)}</span>
       </div>
@@ -67,7 +67,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
         <Button
           variant="outline"
           size="sm"
-          className="h-9 rounded-lg border-slate-100 hover:bg-slate-50 hover:text-indigo-600 text-slate-500 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800"
           onClick={(e) => { e.stopPropagation(); onEdit(service.id); }}
         >
           <Edit className="size-4" />
@@ -75,7 +75,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onView, onEdit, onDe
         <Button
           variant="outline"
           size="sm"
-          className="h-9 rounded-lg border-slate-100 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:border-red-100 hover:bg-red-50 hover:text-red-600 dark:border-slate-800"
           onClick={(e) => { e.stopPropagation(); onDelete(service.id); }}
         >
           <Trash2 className="size-4" />

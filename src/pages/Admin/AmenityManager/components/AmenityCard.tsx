@@ -24,21 +24,21 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
   const { t } = useTranslation();
 
   return (
-    <Card className={`glass-card hover-scale animate-in group relative overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 h-full flex flex-col ${isHighlighted ? 'ring-2 ring-indigo-500 shadow-xl' : ''}`}>
+    <Card className={`glass-card hover-scale group relative flex h-full flex-col overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 animate-in ${isHighlighted ? 'shadow-xl ring-2 ring-indigo-500' : ''}`}>
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
           <ShieldCheck className="size-5" />
         </div>
-        <Badge className="bg-emerald-50 text-emerald-600 border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+        <Badge className="border-none bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
            #{amenity.id}
         </Badge>
       </div>
 
-      <h3 className="mb-4 line-clamp-1 text-lg font-black text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors" title={amenity.name}>
+      <h3 className="mb-4 line-clamp-1 text-lg font-black text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100" title={amenity.name}>
         {highlightText(amenity.name, searchTerm || "")}
       </h3>
 
-      <div className="mb-6 space-y-3 flex-1 border-t border-slate-50 pt-4 dark:border-slate-800">
+      <div className="mb-6 flex-1 space-y-3 border-t border-slate-50 pt-4 dark:border-slate-800">
         <div className="flex items-center gap-3 text-xs text-slate-400">
            <User2 className="size-3.5 text-indigo-500" />
            <span className="truncate">{t("common.created_by")}: {amenity.created_by || "System"}</span>
@@ -53,19 +53,19 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
         <Button 
           variant="outline" 
           size="sm"
-          className="h-9 rounded-lg border-slate-100 hover:bg-slate-50 hover:text-indigo-600 text-slate-500 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800"
           onClick={() => onEdit(amenity.id)}
         >
-          <Edit className="size-4 mr-2" />
+          <Edit className="mr-2 size-4" />
           {t("common.edit")}
         </Button>
         <Button 
           variant="outline" 
           size="sm"
-          className="h-9 rounded-lg border-slate-100 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:border-red-100 hover:bg-red-50 hover:text-red-600 dark:border-slate-800"
           onClick={() => onDelete(amenity.id)}
         >
-          <Trash2 className="size-4 mr-2" />
+          <Trash2 className="mr-2 size-4" />
           {t("common.delete")}
         </Button>
       </div>
