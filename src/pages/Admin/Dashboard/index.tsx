@@ -481,7 +481,7 @@ const Dashboard: React.FC = () => {
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => formatCompact(Number(value))} />
                   <Tooltip
-                    formatter={(value: any, name: string) => {
+                    formatter={(value: any, name: any) => {
                       if (name === t("dashboard.moving_avg", { defaultValue: "Trung bình 3 tháng" })) {
                         return [formatCurrency(Number(value)), name];
                       }
@@ -513,11 +513,11 @@ const Dashboard: React.FC = () => {
                 <YAxis yAxisId="left" tick={{ fontSize: 12 }} tickFormatter={(value) => formatCompact(Number(value))} />
                 <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 12 }} tickFormatter={(value) => `${value}%`} />
                 <Tooltip
-                  formatter={(value: any, name: string) => {
+                  formatter={(value: any, name: string | undefined) => {
                     if (name === t("dashboard.attention_rate", { defaultValue: "Tỷ lệ cần xử lý" })) {
-                      return [`${value}%`, name];
+                      return [`${value}%`, name || ""];
                     }
-                    return [Number(value).toLocaleString(), name];
+                    return [Number(value).toLocaleString(), name || ""];
                   }}
                 />
                 <Legend />

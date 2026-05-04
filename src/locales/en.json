@@ -939,6 +939,25 @@
     "notification": "Notification",
     "setting": "Settings"
   },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all as read",
+    "mark_all_read_success": "Marked all as read",
+    "view_all": "View all notifications",
+    "empty": "You have no notifications",
+    "loading": "Loading notifications...",
+    "unread": "Unread",
+    "all": "All",
+    "mark_as_read": "Mark as read",
+    "system_notifications": "System Notifications",
+    "subtitle": "Track important updates about your properties and bookings",
+    "filter_notifications": "Filter Notifications",
+    "everything_ready": "Everything is ready!",
+    "no_pending": "You currently have no notifications to process. We will update as soon as there is new information.",
+    "back": "Go back",
+    "newest": "Newest",
+    "details": "Details"
+  },
   "menu": {
     "header_general": "GENERAL",
     "header_system": "SYSTEM MANAGEMENT",
@@ -957,7 +976,8 @@
     "news": "News",
     "users": "Users",
     "partner": "Partners",
-    "maintenances": "Maintenance"
+    "maintenances": "Maintenance",
+    "notifications": "Notifications"
   },
   "endUserPartners": {
     "hero_badge": "PARTNERS",

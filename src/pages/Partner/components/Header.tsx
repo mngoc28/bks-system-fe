@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, Search, Globe, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/useUserStore';
 import { ROUTERS } from '@/constant';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import NotificationBell from '@/components/layout/NotificationBell';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -44,10 +38,7 @@ const Header: React.FC = () => {
               <Globe size={20} />
             </button>
             
-            <button className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 relative group">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white ring-4 ring-rose-500/10 group-hover:scale-125 transition-transform"></span>
-            </button>
+            <NotificationBell portalType="partner" />
           </div>
           
           <div className="flex items-center gap-4 border-l pl-6 border-slate-200">
@@ -75,38 +66,21 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Logout Confirmation Dialog - Simplified & Professional */}
-      <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] border-none shadow-xl overflow-hidden p-0 rounded-2xl animate-in duration-75">
-          <div className="p-8 pb-0">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900 text-left">
-                Đăng xuất tài khoản?
-              </DialogTitle>
-              <DialogDescription className="text-slate-500 text-left pt-2 font-medium">
-                Bạn có chắc chắn muốn kết thúc phiên làm việc của mình trên cổng đối tác BKS?
-              </DialogDescription>
-            </DialogHeader>
+      {isLogoutDialogOpen ? createPortal(
+        <div className="fixed inset-0 z-40 flex items-start justify-end bg-slate-900/20 p-6">
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white shadow-2xl p-5 mt-20">
+            <h3 className="text-lg font-bold text-slate-900">Đăng xuất tài khoản?</h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Bạn có chắc chắn muốn kết thúc phiên làm việc của mình trên cổng đối tác BKS?
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsLogoutDialogOpen(false)}>Hủy</Button>
+              <Button variant="destructive" onClick={handleLogout}>Đăng xuất</Button>
+            </div>
           </div>
-          
-          <DialogFooter className="p-6 pt-8 flex gap-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsLogoutDialogOpen(false)}
-              className="flex-1 rounded-xl h-11 text-slate-500 font-bold hover:bg-slate-50"
-            >
-              Hủy bỏ
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleLogout}
-              className="flex-1 rounded-xl h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold border-none transition-colors"
-            >
-              Đăng xuất
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>,
+        document.body,
+      ) : null}
     </>
   );
 };

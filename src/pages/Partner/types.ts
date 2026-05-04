@@ -11,8 +11,11 @@ export interface Building {
   name: string;
   address: string;
   totalRooms: number;
+  rooms_count?: number;
   property_type_id?: number;
   rent_category?: number;
+  province_id?: number;
+  ward_id?: number;
   description?: string;
   property_type_name?: string;
   type?: string; 
@@ -45,31 +48,44 @@ export interface RoomPrice {
 export interface Room {
   id: string | number;
   buildingId: string | number;
+  buildingName?: string;
   name: string;
+  title?: string;
+  floor_number?: number;
+  people?: number;
+  room_type?: string | number;
   area: number; // m2
-  amenities: string[]; 
-  services: string[]; 
-  prices: RoomPrice[];
+  amenities: any[]; 
+  services: any[]; 
+  prices: any[];
   status: 'Trống' | 'Đang thuê' | 'Đang bảo trì';
 }
 
 export interface Booking {
   id: string | number;
-  guestName: string; // Đồng bộ với UI
+  guestName: string;
   roomName: string;
-  checkIn: string; // Đồng bộ với UI
-  checkOut: string; 
+  buildingName?: string;
+  phone?: string;
+  checkIn: string;
+  checkOut: string;
   services?: string[];
-  customerName?: string; // Support for legacy naming
-  checkInDate?: string; // Support for legacy naming
-  checkOutDate?: string; // Support for legacy naming
+  customerName?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  note?: string;
+  rawStatus?: number;
   totalAmount: number;
+  stay_status?: 'pending' | 'checked_in' | 'checked_out' | 'no_show';
+  booking_status?: number;
   status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành';
 }
 
 export interface MaintenanceRequest {
   id: string | number;
   roomName: string;
+  roomId?: string | number;
+  buildingName?: string;
   type?: string; 
   description?: string; 
   status: 'Đang chờ' | 'Đang xử lý' | 'Đã hoàn thành' | 'Chờ xử lý' | 'Đang sửa';
@@ -83,7 +99,7 @@ export interface NewsPost {
   title: string;
   content: string;
   thumbnail: string;
-  imageUrl?: string; 
+  imageUrl?: string;
   excerpt?: string;
   createdAt: string;
   status: 'Nháp' | 'Đã đăng';

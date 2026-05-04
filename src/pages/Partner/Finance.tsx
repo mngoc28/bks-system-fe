@@ -1,7 +1,17 @@
 import React from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { Wallet, TrendingUp, HandCoins, ArrowRightLeft } from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+  Tooltip, Legend, ResponsiveContainer 
+} from 'recharts';
+import { Wallet, TrendingUp, HandCoins, ArrowRightLeft, Calendar } from 'lucide-react';
 import { mockRevenueData, mockTransactions } from './mockData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Finance: React.FC = () => {
   const currentMonthRevenue = mockRevenueData[mockRevenueData.length - 1];
@@ -67,10 +77,23 @@ const Finance: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800">Biểu đồ Doanh thu (6 tháng gần nhất)</h2>
-            <select className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2">
-              <option>6 tháng qua</option>
-              <option>Năm nay</option>
-            </select>
+            <Select defaultValue="6-months">
+              <SelectTrigger className="w-40 border-gray-200 bg-gray-50/50">
+                <SelectValue placeholder="Chọn khoảng thời gian" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6-months">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={14} className="text-blue-500" /> 6 tháng qua
+                  </div>
+                </SelectItem>
+                <SelectItem value="this-year">
+                   <div className="flex items-center gap-2">
+                    <TrendingUp size={14} className="text-emerald-500" /> Năm nay
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">

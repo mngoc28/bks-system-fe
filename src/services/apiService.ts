@@ -55,6 +55,9 @@ const apiService = {
   delete: <T>(url: string, config?: AxiosRequestConfig) => {
     return axiosInstance.delete<T>(url, config);
   },
+  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => {
+    return axiosInstance.patch<T>(url, data, config);
+  },
 };
 
 export default apiService;

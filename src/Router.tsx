@@ -74,6 +74,7 @@ const BksStayContracts = React.lazy(() => import("./pages/EndUser/BksStay/Contra
 const BksStayContractDetail = React.lazy(() => import("./pages/EndUser/BksStay/ContractDetail.tsx"));
 const BksStayLogin = React.lazy(() => import("./pages/EndUser/BksStay/Login"));
 const BksStayForceChangePassword = React.lazy(() => import("./pages/EndUser/BksStay/ForceChangePassword"));
+const BksStayGuide = React.lazy(() => import("./pages/EndUser/BksStay/StayGuide"));
 
 // Partner Routes
 const PartnerLayout = React.lazy(() => import("./pages/Partner/PartnerLayout"));
@@ -84,7 +85,17 @@ const PartnerServices = React.lazy(() => import("./pages/Partner/Services.tsx"))
 const PartnerAmenities = React.lazy(() => import("./pages/Partner/Amenities.tsx"));
 const PartnerNews = React.lazy(() => import("./pages/Partner/News.tsx"));
 const PartnerMaintenances = React.lazy(() => import("./pages/Partner/Maintenances"));
+const PartnerFinance = React.lazy(() => import("./pages/Partner/Finance"));
+const PartnerPropertyRooms = React.lazy(() => import("./pages/Partner/PropertyRooms"));
+const PartnerContracts = React.lazy(() => import("./pages/Partner/Contracts"));
+const PartnerRoomDetail = React.lazy(() => import("./pages/Partner/RoomDetail"));
 const PartnerLogin = React.lazy(() => import("./pages/Partner/Login/index"));
+const PartnerStayServices = React.lazy(() => import("./pages/Partner/StayServiceManagement"));
+const PartnerCalendar = React.lazy(() => import("./pages/Partner/Calendar"));
+const PartnerPriceRules = React.lazy(() => import("./pages/Partner/PriceRules"));
+const PartnerChat = React.lazy(() => import("./pages/Partner/Chat"));
+const PartnerReports = React.lazy(() => import("./pages/Partner/Reports"));
+const PartnerNotifications = React.lazy(() => import("./pages/Partner/Notifications"));
 
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center">
@@ -221,6 +232,7 @@ export default function Router() {
           <Route path="services" element={<BksStayServices />} />
           <Route path="contracts" element={<BksStayContracts />} />
           <Route path="contracts/:id" element={<BksStayContractDetail />} />
+          <Route path="guide" element={<BksStayGuide />} />
         </Route>
 
         {/* Guest Auth Routes - Standalone */}
@@ -364,8 +376,18 @@ export default function Router() {
           <Route path="bookings" element={<PartnerBookings />} />
           <Route path="services" element={<PartnerServices />} />
           <Route path="amenities" element={<PartnerAmenities />} />
+          <Route path="finance" element={<PartnerFinance />} />
           <Route path="news" element={<PartnerNews />} />
           <Route path="maintenances" element={<PartnerMaintenances />} />
+          <Route path="contracts" element={<PartnerContracts />} />
+          <Route path="stay-services" element={<PartnerStayServices />} />
+          <Route path="calendar" element={<PartnerCalendar />} />
+          <Route path="price-rules" element={<PartnerPriceRules />} />
+          <Route path="chat" element={<PartnerChat />} />
+          <Route path="reports" element={<PartnerReports />} />
+          <Route path="notifications" element={<PartnerNotifications />} />
+          <Route path="properties/:propertyId/rooms" element={<PartnerPropertyRooms />} />
+          <Route path="rooms/:roomId" element={<PartnerRoomDetail />} />
         </Route>
 
         {/* 404 - Redirect to Login */}

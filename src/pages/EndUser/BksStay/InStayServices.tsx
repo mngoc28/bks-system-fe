@@ -14,11 +14,13 @@ import {
   Minus,
   ShoppingCart,
   Zap,
-  AlertCircle
+  AlertCircle,
+  XCircle
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import stayService from "@/services/stayService";
 
@@ -27,6 +29,7 @@ const InStayServices = () => {
   const [activeBooking, setActiveBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<any[]>([]);
+  const [orderNote, setOrderNote] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,8 +57,13 @@ const InStayServices = () => {
       return;
     }
     try {
-      await stayService.orderService(activeBooking.id, typeof serviceId === 'string' ? 1 : serviceId);
+      await stayService.orderService(activeBooking.id, typeof serviceId === 'string' ? 1 : serviceId, orderNote);
       toast.success(`Đã tiếp nhận yêu cầu: ${label}`);
+      setOrderNote(""); // Reset note
+      
+      // Refresh list
+      const dashRes: any = await stayService.getDashboard();
+      setActiveBooking(dashRes.data?.active_booking);
     } catch (error) {
       toast.error("Không thể gửi yêu cầu lúc này.");
     }
@@ -123,7 +131,7 @@ const InStayServices = () => {
                  <div className="space-y-2 mb-8">
                     <p className="text-slate-400 text-xs font-black uppercase tracking-widest">Mã khóa cửa số (Passcode)</p>
                     <div className="flex items-center gap-4">
-                       <h2 className="text-6xl font-black tracking-tighter text-white">882931</h2>
+                       <h2 className="text-6xl font-black tracking-tighter text-white">283944</h2>
                        <Button variant="ghost" size="icon" className="hover:bg-white/10 text-slate-400" onClick={() => toast.info("Đang làm mới mã khóa...")}>
                           <RefreshCw className="h-5 w-5" />
                        </Button>
@@ -163,7 +171,19 @@ const InStayServices = () => {
 
         {/* Room Service Requests */}
         <div className="space-y-6">
-           <h3 className="text-xl font-black text-slate-900 px-2">Yêu cầu nhanh</h3>
+           <div className="flex items-center justify-between px-2">
+              <h3 className="text-xl font-black text-slate-900">Yêu cầu nhanh</h3>
+           </div>
+           
+           <div className="px-2">
+              <Input 
+                value={orderNote}
+                onChange={(e) => setOrderNote(e.target.value)}
+                placeholder="Ghi chú thêm (VD: Phòng cần thêm 2 gối, dọn dẹp lúc 10h...)"
+                className="rounded-2xl border-slate-200 bg-white shadow-sm h-12 text-sm"
+              />
+           </div>
+
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {displayedServices.map((service) => (
                 <Card 
@@ -230,29 +250,61 @@ const InStayServices = () => {
       {/* Emergency & Tracking */}
       <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4 ${!activeBooking ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
         <Card className="lg:col-span-2 border-none shadow-xl shadow-slate-200/50 rounded-[32px] bg-white p-8">
-           <h3 className="text-xl font-black text-slate-900 mb-6">Tiến độ yêu cầu</h3>
-           <div className="space-y-6">
-              <div className="flex gap-4 relative">
-                 <div className="absolute left-6 top-10 bottom-0 w-[1px] bg-slate-100" />
-                 <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-100">
-                    <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-                 </div>
-                 <div className="flex-1 pt-1 pb-6">
-                    <p className="text-sm font-black text-slate-900">Dọn phòng hoàn tất</p>
-                    <p className="text-xs text-slate-400 font-medium mt-1">Yêu cầu được thực hiện lúc 09:15 AM</p>
-                 </div>
-                 <span className="text-[10px] font-bold text-slate-300 mt-2 tracking-widest">10:45 AM</span>
-              </div>
-              <div className="flex gap-4">
-                 <div className="h-12 w-12 bg-sky-50 rounded-2xl flex items-center justify-center shrink-0 border border-sky-100">
-                    <Clock className="h-6 w-6 text-sky-600 animate-pulse" />
-                 </div>
-                 <div className="flex-1 pt-1">
-                    <p className="text-sm font-black text-slate-900">Giặt là - Đang xử lý</p>
-                    <p className="text-xs text-slate-400 font-medium mt-1">Dự kiến hoàn trả trước 18:00 PM hôm nay</p>
-                 </div>
-                 <span className="text-[10px] font-bold text-slate-300 mt-2 tracking-widest">TRONG TIẾN ĐỘ</span>
-              </div>
+           <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-slate-900">Tiến độ yêu cầu</h3>
+              <Button variant="ghost" size="sm" onClick={() => {
+                // Refresh data logic
+                const fetchData = async () => {
+                  if (activeBooking) {
+                    const dashRes: any = await stayService.getDashboard();
+                    setActiveBooking(dashRes.data?.active_booking);
+                  }
+                };
+                fetchData();
+              }} className="text-sky-600 hover:text-sky-700 font-bold gap-2">
+                <RefreshCw size={14} /> Làm mới
+              </Button>
+           </div>
+           
+           <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+              {activeBooking?.booking_services && activeBooking.booking_services.length > 0 ? (
+                activeBooking.booking_services.map((req: any, idx: number) => {
+                  const isLast = idx === activeBooking.booking_services.length - 1;
+                  const statusInfo = ({
+                    0: { label: 'Chờ xử lý', color: 'text-amber-600', bgColor: 'bg-amber-50', icon: <Clock size={20} className="text-amber-600" /> },
+                    1: { label: 'Đang xử lý', color: 'text-blue-600', bgColor: 'bg-blue-50', icon: <RefreshCw size={20} className="text-blue-600 animate-spin" /> },
+                    2: { label: 'Hoàn thành', color: 'text-emerald-600', bgColor: 'bg-emerald-50', icon: <CheckCircle2 size={20} className="text-emerald-600" /> },
+                    3: { label: 'Đã hủy', color: 'text-rose-600', bgColor: 'bg-rose-50', icon: <XCircle size={20} className="text-rose-600" /> },
+                  } as any)[req.pivot?.status || 0] || { label: 'N/A', color: 'text-slate-400', bgColor: 'bg-slate-50', icon: <Clock size={20} /> };
+
+                  return (
+                    <div key={req.id} className="flex gap-4 relative">
+                      {!isLast && <div className="absolute left-6 top-10 bottom-0 w-[1px] bg-slate-100" />}
+                      <div className={`h-12 w-12 ${statusInfo.bgColor} rounded-2xl flex items-center justify-center shrink-0 border border-transparent`}>
+                        {statusInfo.icon}
+                      </div>
+                      <div className="flex-1 pt-1 pb-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-black text-slate-900">{req.title || 'Dịch vụ'}</p>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusInfo.bgColor} ${statusInfo.color}`}>
+                            {statusInfo.label.toUpperCase()}
+                          </span>
+                        </div>
+                        {req.pivot?.note && (
+                          <p className="text-[11px] text-slate-500 italic mt-1 bg-slate-50 p-2 rounded-lg">"{req.pivot.note}"</p>
+                        )}
+                        <p className="text-[10px] text-slate-400 font-medium mt-1">
+                          Yêu cầu lúc: {new Date(req.pivot?.created_at || Date.now()).toLocaleString('vi-VN')}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-10 text-center text-slate-400 italic text-sm">
+                   Chưa có yêu cầu dịch vụ nào trong kỳ nghỉ này.
+                </div>
+              )}
            </div>
         </Card>
 

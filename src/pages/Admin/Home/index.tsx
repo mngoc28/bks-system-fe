@@ -273,14 +273,16 @@ const PublicHome = () => {
       <main className="flex flex-col gap-14 pb-14 text-[15px]">
         <section
           id="hero"
-          className="relative z-[60] isolate bg-slate-950 text-white min-h-[520px] md:h-[560px] lg:h-[600px] overflow-hidden"
+          className="relative z-[60] isolate bg-slate-950 text-white min-h-[520px] md:h-[560px] lg:h-[600px]"
         >
-          <img
-            src="/assets/images/luxury_banner.png"
-            alt={t("public.home.hero.alt")}
-            className="absolute inset-0 size-full object-cover animate-slow-zoom scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 md:bg-gradient-to-r md:from-slate-950/80 md:via-slate-900/30 md:to-transparent" />
+          <div className="absolute inset-0 overflow-hidden -z-10">
+            <img
+              src="/assets/images/luxury_banner.png"
+              alt={t("public.home.hero.alt")}
+              className="absolute inset-0 size-full object-cover animate-slow-zoom scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 md:bg-gradient-to-r md:from-slate-950/80 md:via-slate-900/30 md:to-transparent" />
+          </div>
 
           <div className="relative z-20 mx-auto flex h-full w-full max-w-6xl flex-col justify-center gap-10 px-6 py-16">
             <div className="max-w-2xl space-y-4">

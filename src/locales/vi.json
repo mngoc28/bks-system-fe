@@ -955,6 +955,25 @@
     "notification": "Thông báo",
     "setting": "Cài đặt"
   },
+  "notifications": {
+    "title": "Thông báo",
+    "mark_all_read": "Đọc tất cả",
+    "mark_all_read_success": "Đã đánh dấu tất cả là đã đọc",
+    "view_all": "Xem tất cả thông báo",
+    "empty": "Bạn chưa có thông báo nào",
+    "loading": "Đang tải thông báo...",
+    "unread": "Chưa đọc",
+    "all": "Tất cả",
+    "mark_as_read": "Đánh dấu đã đọc",
+    "system_notifications": "Thông báo hệ thống",
+    "subtitle": "Theo dõi các cập nhật quan trọng về bất động sản và đặt phòng của bạn",
+    "filter_notifications": "Lọc thông báo",
+    "everything_ready": "Mọi thứ đã sẵn sàng!",
+    "no_pending": "Bạn hiện không có thông báo nào cần xử lý. Chúng tôi sẽ cập nhật ngay khi có thông tin mới.",
+    "back": "Quay lại trang trước",
+    "newest": "Mới nhất",
+    "details": "Chi tiết"
+  },
   "menu": {
     "header_general": "TỔNG QUAN",
     "header_system": "QUẢN LÝ HỆ THỐNG",
@@ -973,7 +992,8 @@
     "news": "Tin tức",
     "users": "Người dùng",
     "partner": "Đối tác",
-    "maintenances": "Bảo trì"
+    "maintenances": "Bảo trì",
+    "notifications": "Thông báo"
   },
   "endUserPartners": {
     "hero_badge": "ĐỐI TÁC",

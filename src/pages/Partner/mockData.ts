@@ -9,9 +9,9 @@ export const mockStats: SystemStats = {
 };
 
 export const mockBuildings: Building[] = [
-  { id: 'b1', name: 'Alpha Resort & Spa', address: '123 Nguyễn Văn Linh, Quận 7, TP.HCM', totalRooms: 15, type: 'Resort' },
-  { id: 'b2', name: 'Villa Sunny', address: '45 Lê Văn Sỹ, Phú Nhuận, TP.HCM', totalRooms: 5, type: 'Villa' },
-  { id: 'b3', name: 'Căn hộ Mini BKS', address: '89 Điện Biên Phủ, Bình Thạnh, TP.HCM', totalRooms: 20, type: 'Căn hộ' },
+  { id: 'b1', name: 'Khách sạn Alpha Center', address: '123 Nguyễn Văn Linh, Quận 7, TP.HCM', totalRooms: 15, type: 'Khách sạn (Hotel)' },
+  { id: 'b2', name: 'Nhà nghỉ Sunny', address: '45 Lê Văn Sỹ, Phú Nhuận, TP.HCM', totalRooms: 8, type: 'Nhà nghỉ (Motel/Guesthouse)' },
+  { id: 'b3', name: 'Căn hộ dịch vụ BKS', address: '89 Điện Biên Phủ, Bình Thạnh, TP.HCM', totalRooms: 20, type: 'Căn hộ dịch vụ' },
 ];
 
 export const mockRooms: Room[] = [
@@ -56,12 +56,12 @@ export const mockRooms: Room[] = [
 ];
 
 export const mockBookings: Booking[] = [
-  { id: 'bk1', guestName: 'Nguyễn Văn A', roomName: 'Phòng 101 - Alpha', checkIn: '2026-04-01', checkOut: '2026-10-01', services: ['Dọn dẹp', 'Internet'], totalAmount: 30000000, status: 'Chờ duyệt' },
-  { id: 'bk2', guestName: 'Trần Thị B', roomName: 'Phòng Master 01 - Sunny', checkIn: '2026-03-15', checkOut: '2027-03-15', services: ['Internet'], totalAmount: 180000000, status: 'Đang ở' },
+  { id: 'bk1', guestName: 'Nguyễn Văn A', roomName: 'Phòng 101 - Alpha Center', checkIn: '2026-04-01', checkOut: '2026-10-01', services: ['Dọn dẹp', 'Internet'], totalAmount: 30000000, status: 'Chờ duyệt' },
+  { id: 'bk2', guestName: 'Trần Thị B', roomName: 'Phòng 201 - Sunny', checkIn: '2026-03-15', checkOut: '2026-09-15', services: ['Internet'], totalAmount: 54000000, status: 'Đang ở' },
 ];
 
 export const mockMaintenances: MaintenanceRequest[] = [
-  { id: 'm1', customerName: 'Trần Thị B', roomName: 'Phòng Master 01 - Sunny', issueDescription: 'Hỏng vòi sen nhà tắm', status: 'Chờ xử lý', createdAt: '2026-03-30T10:00:00Z' },
+  { id: 'm1', customerName: 'Trần Thị B', roomName: 'Phòng 201 - Sunny', issueDescription: 'Hỏng vòi sen nhà tắm', status: 'Chờ xử lý', createdAt: '2026-03-30T10:00:00Z' },
 ];
 
 export const mockRevenueData: RevenueRecord[] = [
@@ -73,7 +73,7 @@ export const mockRevenueData: RevenueRecord[] = [
 export const mockNews: NewsPost[] = [
   {
     id: 'n1',
-    title: 'Khuyến mãi mùa hè tại Alpha Resort',
+    title: 'Khuyến mãi mùa hè tại Khách sạn Alpha Center',
     excerpt: 'Giảm giá cực sốc lên đến 30% cho khách hàng đặt phòng trên 3 tháng.',
     content: 'Chi tiết nội dung bài viết khuyến mãi...',
     thumbnail: 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',

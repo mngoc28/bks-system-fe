@@ -9,19 +9,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import stayService, { NotificationData } from "@/services/stayService";
+import partnerService from "@/services/partnerService";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { vi } from "date-fns/locale";
+import { vi, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
-const NotificationBell = () => {
+import { Link } from "react-router-dom";
+import { ROUTERS } from "@/constant";
+
+interface NotificationBellProps {
+    portalType?: 'stay' | 'partner';
+}
+
+const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
+    const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
+    const service = portalType === 'stay' ? stayService : partnerService;
+    const queryKey = ["notifications", portalType];
     
     const { data: notifications = [], isLoading } = useQuery<NotificationData[]>({
-        queryKey: ["notifications"],
+        queryKey: queryKey,
         queryFn: async () => {
-            const res = await stayService.getNotifications();
+            const res = await service.getNotifications();
             // Laravel pagination returns { data: { data: [...] } } via our apiService
-            return res.data?.data || [];
+            return (res as any).data?.data || [];
         },
         refetchInterval: 30000, // Poll every 30 seconds
     });
@@ -29,17 +41,17 @@ const NotificationBell = () => {
     const unreadCount = notifications.filter((n: NotificationData) => !n.is_read).length;
 
     const markReadMutation = useMutation({
-        mutationFn: (id: number) => stayService.markNotificationAsRead(id),
+        mutationFn: (id: number) => service.markNotificationAsRead(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            queryClient.invalidateQueries({ queryKey: queryKey });
         }
     });
 
     const markAllReadMutation = useMutation({
-        mutationFn: () => stayService.markAllAsRead(),
+        mutationFn: () => service.markAllAsRead(),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["notifications"] });
-            toast.success("Đã đánh dấu tất cả là đã đọc");
+            queryClient.invalidateQueries({ queryKey: queryKey });
+            toast.success(t("notifications.mark_all_read_success"));
         }
     });
 
@@ -65,7 +77,7 @@ const NotificationBell = () => {
             <DropdownMenuContent align="end" className="w-[380px] rounded-[24px] p-0 shadow-2xl border-slate-100 overflow-hidden">
                 <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                     <h3 className="font-black text-slate-900 flex items-center gap-2">
-                        Thông báo 
+                        {t("notifications.title")} 
                         {unreadCount > 0 && <Badge className="bg-rose-500 text-white border-none text-[10px]">{unreadCount}</Badge>}
                     </h3>
                     {unreadCount > 0 && (
@@ -75,13 +87,13 @@ const NotificationBell = () => {
                             className="text-[10px] font-black uppercase text-sky-600 hover:bg-sky-50 h-7"
                             onClick={() => markAllReadMutation.mutate()}
                         >
-                            Đọc tất cả
+                            {t("notifications.mark_all_read")}
                         </Button>
                     )}
                 </div>
                 <div className="max-h-[400px] overflow-y-auto p-2 space-y-1">
                     {isLoading ? (
-                        <div className="p-8 text-center text-slate-400 text-sm font-medium italic">Đang tải thông báo...</div>
+                        <div className="p-8 text-center text-slate-400 text-sm font-medium italic">{t("notifications.loading")}</div>
                     ) : notifications.length > 0 ? (
                         notifications.map((n: NotificationData) => (
                             <DropdownMenuItem 
@@ -99,7 +111,10 @@ const NotificationBell = () => {
                                     <p className={`text-sm font-bold leading-none ${n.is_read ? "text-slate-500" : "text-slate-900"}`}>{n.title}</p>
                                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{n.message}</p>
                                     <p className="text-[10px] text-slate-400 font-medium">
-                                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: vi })}
+                                        {formatDistanceToNow(new Date(n.created_at), { 
+                                            addSuffix: true, 
+                                            locale: i18n.language === 'vi' ? vi : enUS 
+                                        })}
                                     </p>
                                 </div>
                                 {!n.is_read && (
@@ -112,13 +127,15 @@ const NotificationBell = () => {
                             <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
                                 <Bell className="h-8 w-8 text-slate-200" />
                             </div>
-                            <p className="text-slate-400 font-bold text-sm">Bạn chưa có thông báo nào</p>
+                            <p className="text-slate-400 font-bold text-sm">{t("notifications.empty")}</p>
                         </div>
                     )}
                 </div>
                 <div className="p-3 border-t border-slate-50">
-                    <Button variant="ghost" className="w-full text-xs font-black uppercase text-slate-400 hover:text-slate-600 h-10 rounded-xl">
-                        Xem tất cả thông báo
+                    <Button variant="ghost" asChild className="w-full text-xs font-black uppercase text-slate-400 hover:text-slate-600 h-10 rounded-xl">
+                        <Link to={portalType === 'partner' ? ROUTERS.PARTNER_NOTIFICATIONS : ROUTERS.BKS_STAY_HISTORY}>
+                            {t("notifications.view_all")}
+                        </Link>
                     </Button>
                 </div>
             </DropdownMenuContent>

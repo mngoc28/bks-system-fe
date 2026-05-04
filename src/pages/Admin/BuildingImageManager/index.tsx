@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ImageIcon, Save } from "lucide-react";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -37,7 +37,6 @@ const BuildingImageManager: React.FC = () => {
   const [isAddImageOpen, setIsAddImageOpen] = useState(false);
   const [updatingImageIds, setUpdatingImageIds] = useState<Set<number>>(new Set());
   const [hasChanges, setHasChanges] = useState(false);
-  const [selectedCount, setSelectedCount] = useState(0);
 
   const checkImages = ({ updatedImages }: { updatedImages: buildingImage[] }): buildingImage[] => {
     return updatedImages.filter((updatedImage) => {
@@ -55,7 +54,7 @@ const BuildingImageManager: React.FC = () => {
     deleteBuildingImageMutation.isPending ||
     updatingImageIds.size > 0;
 
-  const canDelete = useMemo(() => selectedCount > 0 && !isBusy, [selectedCount, isBusy]);
+
   const canUpload = resolvedUserId > 0 && !isBusy;
 
   const handleSave = async () => {
@@ -140,7 +139,6 @@ const BuildingImageManager: React.FC = () => {
         isBusy={isBusy}
         onStateChange={(state) => {
           setHasChanges(state.hasChanges);
-          setSelectedCount(state.selectedCount);
         }}
       />
 

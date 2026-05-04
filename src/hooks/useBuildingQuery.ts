@@ -26,8 +26,10 @@ export const useBuildingTypesQuery = (enabled = true) => {
   return useQuery<ApiResponse<BuildingType[]>, Error>({
     queryKey: ["building-types-admin"],
     queryFn: async () => {
-      const response = await buildingApi.getBuildingTypes();
-      const normalized = (response.data ?? []).map((item: any) => ({
+      const response = await buildingApi.getBuildingTypes() as any;
+      const dataArray = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+      
+      const normalized = dataArray.map((item: any) => ({
         id: Number(item?.id ?? item?.value ?? 0),
         name: String(item?.name ?? item?.label ?? ""),
       }));
@@ -35,7 +37,7 @@ export const useBuildingTypesQuery = (enabled = true) => {
       return {
         ...response,
         data: normalized,
-      };
+      } as ApiResponse<BuildingType[]>;
     },
     enabled,
   });
@@ -46,15 +48,16 @@ export const usePartnerBuildingTypesQuery = () => {
   return useQuery<ApiResponse<BuildingType[]>, Error>({
     queryKey: ["building-types-partner"],
     queryFn: async () => {
-      const response = await partnerService.getBuildingTypes();
-      const payload = response.data as ApiResponse<any[]>;
-      const normalized = (payload.data ?? []).map((item: any) => ({
+      const response = await partnerService.getBuildingTypes() as any;
+      const dataArray = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+      
+      const normalized = dataArray.map((item: any) => ({
         id: Number(item?.id ?? item?.value ?? 0),
         name: String(item?.name ?? item?.label ?? ""),
       }));
 
       return {
-        ...payload,
+        ...response,
         data: normalized,
       } as ApiResponse<BuildingType[]>;
     },

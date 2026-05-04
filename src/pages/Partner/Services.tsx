@@ -1,17 +1,14 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Plus, Edit, Trash2, Zap, Droplets, CircleDollarSign, Settings, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Zap, Droplets, CircleDollarSign, Loader2, Building2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { partnerService } from '@/services/partnerService';
 import { Service } from './types';
+import InlineSheet from './components/InlineSheet';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import BuildingSelector from './components/BuildingSelector';
 
 const Services: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -23,18 +20,64 @@ const Services: React.FC = () => {
     price: 0,
     unit: '',
     category: 'Dịch vụ thêm',
-    status: 'Hoạt động'
+    status: 'Hoạt động',
   });
+  const [filterBuildingId, setFilterBuildingId] = useState<string | null>(null);
+  const [selectedBuildingIds, setSelectedBuildingIds] = useState<string[]>([]);
+  const [buildings, setBuildings] = useState<any[]>([]);
 
   useEffect(() => {
     fetchServices();
+    fetchBuildings();
   }, []);
+
+  const fetchBuildings = async () => {
+    try {
+      const res: any = await partnerService.getBuildings();
+      const payload = res?.data?.data || res?.data || res || [];
+      setBuildings(Array.isArray(payload) ? payload : (payload?.data || []));
+    } catch (error) {
+       console.error(error);
+    }
+  };
+
+  const extractRows = (res: any): any[] => {
+    const payload = res?.status ? res : (res?.data ?? res);
+    if (Array.isArray(payload)) return payload;
+
+    const candidates = [
+      payload?.data?.data,
+      payload?.data,
+      payload?.message?.data?.data,
+      payload?.message?.data,
+      payload?.message,
+      payload?.result?.data,
+      payload?.result,
+    ];
+
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) return candidate;
+    }
+
+    return [];
+  };
+
+  const normalizeServices = (rows: any[]): Service[] => {
+    return (rows || []).map((item: any) => ({
+      id: item.id,
+      name: item.name ?? '',
+      price: Number(item.price ?? item.service_price ?? 0),
+      unit: item.unit ?? item.unit_name ?? 'lượt',
+      category: item.category ?? 'Dịch vụ thêm',
+      status: item.status ?? 'Hoạt động',
+    }));
+  };
 
   const fetchServices = async () => {
     try {
       setLoading(true);
       const res: any = await partnerService.getAllServices();
-      setServices(res.data.data.data || res.data.data || []);
+      setServices(normalizeServices(extractRows(res)));
     } catch (error) {
       console.error('Error fetching services:', error);
     } finally {
@@ -46,11 +89,20 @@ const Services: React.FC = () => {
     if (service) {
       setEditingService(service);
       setForm(service);
+      // In a real app, we'd load linked buildings here
+      setSelectedBuildingIds([]); 
     } else {
       setEditingService(null);
       setForm({ name: '', price: 0, unit: '', category: 'Dịch vụ thêm', status: 'Hoạt động' });
+      setSelectedBuildingIds([]);
     }
     setIsModalOpen(true);
+  };
+
+  const toggleBuilding = (id: string) => {
+    setSelectedBuildingIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   };
 
   const handleSave = async () => {
@@ -62,19 +114,19 @@ const Services: React.FC = () => {
       }
       fetchServices();
       setIsModalOpen(false);
+      toastSuccess('Đã lưu dịch vụ.');
     } catch (error) {
-      alert('Lỗi khi lưu dịch vụ.');
+      toastError('Lỗi khi lưu dịch vụ.');
     }
   };
 
   const handleDelete = async (id: string | number) => {
-    if (window.confirm('Bạn có muốn xóa dịch vụ này?')) {
-      try {
-        await partnerService.deleteService(id);
-        fetchServices();
-      } catch (error) {
-        alert('Lỗi khi xóa dịch vụ.');
-      }
+    try {
+      await partnerService.deleteService(id);
+      fetchServices();
+      toastSuccess('Đã xóa dịch vụ.');
+    } catch (error) {
+      toastError('Lỗi khi xóa dịch vụ.');
     }
   };
 
@@ -82,60 +134,67 @@ const Services: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dịch vụ & Lắp đặt</h1>
-          <p className="text-gray-500 mt-1">Quản lý các dịch vụ có phí cho tòa nhà.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-6">
+          <BuildingSelector 
+            selectedId={filterBuildingId} 
+            onSelect={setFilterBuildingId} 
+            className="w-64"
+          />
+          <div className="h-10 w-[1px] bg-gray-100 hidden md:block"></div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dịch vụ & Lắp đặt</h1>
+            <p className="text-gray-500 mt-1">Quản lý các dịch vụ có phí cho tòa nhà.</p>
+          </div>
         </div>
-        <Button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 h-10 px-4 text-white">
+        <Button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 h-10 px-4 text-white font-bold">
           <Plus size={18} className="mr-2" /> Thêm dịch vụ
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="divide-y divide-gray-100">
-              {services.map((service) => (
-                <div key={service.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                      {service.unit === 'kWh' ? <Zap size={20} /> : service.unit === 'khối' ? <Droplets size={20} /> : <CircleDollarSign size={20} />}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">{service.name}</h3>
-                      <p className="text-xs text-gray-500">{service.category} • {service.status}</p>
-                    </div>
+      <div className="space-y-4">
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="divide-y divide-gray-100">
+            {services.map((service) => (
+              <div key={service.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    {service.unit === 'kWh' ? <Zap size={20} /> : service.unit === 'khối' ? <Droplets size={20} /> : <CircleDollarSign size={20} />}
                   </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <p className="font-bold text-blue-600">{Number(service.price).toLocaleString('vi-VN')} ₫</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">mỗi {service.unit}</p>
-                    </div>
-                    <div className="flex gap-2">
-                       <Button onClick={() => handleOpenModal(service)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Edit size={16}/></Button>
-                       <Button onClick={() => handleDelete(service.id)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Trash2 size={16}/></Button>
-                    </div>
+                  <div>
+                    <h3 className="font-bold text-gray-800">{service.name}</h3>
+                    <p className="text-xs text-gray-500">{service.category} • {service.status}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="font-bold text-blue-600">{Number(service.price).toLocaleString('vi-VN')} ₫</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">mỗi {service.unit}</p>
+                  </div>
+                  <div className="flex gap-2">
+                     <Button onClick={() => handleOpenModal(service)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Edit size={16}/></Button>
+                     <Button onClick={() => handleDelete(service.id)} variant="ghost" size="icon" className="text-gray-400 h-8 w-8"><Trash2 size={16}/></Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-            <h2 className="flex items-center gap-2 font-bold mb-4 text-gray-800">
-              <Settings size={18} className="text-blue-500" /> Cài đặt chung
-            </h2>
-            <p className="text-sm text-gray-500 italic">Các cài đặt thông báo hóa đơn sẽ được áp dụng cho tất cả khách thuê.</p>
         </div>
       </div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{editingService ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
+      <InlineSheet
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingService ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}
+        widthClassName="max-w-lg"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Lưu thay đổi</Button>
+          </div>
+        }
+      >
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label>Tên dịch vụ</Label>
               <Input value={form.name} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({...form, name: e.target.value})} placeholder="VD: Tiền điện..." />
@@ -150,13 +209,36 @@ const Services: React.FC = () => {
                 <Input value={form.unit} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({...form, unit: e.target.value})} placeholder="VD: kWh, khối..." />
               </div>
             </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-100">
+                <Label className="flex items-center gap-2 mb-3 text-blue-700 font-bold">
+                   <Building2 size={16} /> Tòa nhà áp dụng
+                </Label>
+                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2">
+                  <div 
+                    onClick={() => setSelectedBuildingIds([])}
+                    className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${selectedBuildingIds.length === 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-600 hover:border-blue-100'}`}
+                  >
+                    <Checkbox checked={selectedBuildingIds.length === 0} />
+                    <span className="text-xs font-medium">Tất cả tòa nhà</span>
+                  </div>
+                  {buildings.map((building) => (
+                    <div 
+                      key={building.id}
+                      onClick={() => toggleBuilding(String(building.id))}
+                      className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${selectedBuildingIds.includes(String(building.id)) ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-600 hover:border-blue-100'}`}
+                    >
+                      <Checkbox checked={selectedBuildingIds.includes(String(building.id))} />
+                      <span className="text-xs font-medium truncate">{building.name || building.title}</span>
+                    </div>
+                  ))}
+                </div>
+                {selectedBuildingIds.length > 0 && (
+                  <p className="text-[10px] text-gray-400 mt-2 italic">* Dịch vụ này sẽ chỉ xuất hiện khi lọc theo các tòa nhà đã chọn.</p>
+                )}
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Lưu thay đổi</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </InlineSheet>
     </div>
   );
 };

@@ -27,26 +27,46 @@ import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
 import { toast } from "sonner";
 
+import stayService, { BookingDetail as IBookingDetail } from "@/services/stayService";
+
 const BookingDetail = () => {
   const { id } = useParams();
   const [showWifi, setShowWifi] = useState(false);
-  const [countdown, setCountdown] = useState({ days: 2, hours: 14, mins: 45 });
+  const [booking, setBooking] = useState<IBookingDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 });
 
-  // Mock data for the specific booking
-  const bookingData = {
-    id: id || "BKS-99283",
-    roomTitle: "Phòng Luxury Ocean View",
-    guestName: "Nguyễn Văn A",
-    startDate: "20/04/2026",
-    endDate: "23/04/2026",
-    totalPrice: 4500000,
-    address: "Số 123, Đường Võ Nguyên Giáp, Quận Ngũ Hành Sơn, Đà Nẵng",
-    wifiSsid: "BKS_Premium_Guest",
-    wifiPass: "stay_at_bks_2026",
-    roomNumber: "808",
-    entryCode: "283944",
-    status: "confirmed"
-  };
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const res: any = await stayService.getBookingDetail(id);
+        if (res.status === "success") {
+          setBooking(res.data);
+          
+          // Calculate countdown
+          const start = new Date(res.data.start_date);
+          const now = new Date();
+          const diff = start.getTime() - now.getTime();
+          
+          if (diff > 0) {
+            setCountdown({
+              days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+              mins: Math.floor((diff / (1000 * 60)) % 60),
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch booking detail", error);
+        toast.error("Không thể tải thông tin đặt phòng.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetail();
+  }, [id]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,13 +80,33 @@ const BookingDetail = () => {
     return () => clearInterval(timer);
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-600"></div>
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+        <AlertCircle className="h-12 w-12 text-slate-200 mb-4" />
+        <h2 className="text-xl font-bold text-slate-900">Không tìm thấy đơn đặt phòng</h2>
+        <Button asChild variant="link" className="text-sky-600 mt-2">
+          <Link to={ROUTERS.BKS_STAY_HISTORY}>Quay lại danh sách</Link>
+        </Button>
+      </div>
+    );
+  }
+
   const handleShare = () => {
-    navigator.clipboard.writeText(`Thông tin đặt phòng BKS Stay: ${bookingData.roomTitle} tại ${bookingData.address}. Mã đơn: ${bookingData.id}`);
+    navigator.clipboard.writeText(`Thông tin đặt phòng BKS Stay: ${booking.room?.title || "Phòng"} tại ${booking.room?.building?.address || "địa chỉ hệ thống"}. Mã đơn: ${booking.id}`);
     toast.success("Đã sao chép thông tin để chia sẻ!");
   };
 
   const openInMaps = () => {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingData.address)}`, "_blank");
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.room?.building?.address || "")}`, "_blank");
   };
 
   return (
@@ -101,9 +141,7 @@ const BookingDetail = () => {
             <Zap className="h-3 w-3" />
             Chi tiết kỳ nghỉ của bạn
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white mb-4">
-            {bookingData.roomTitle}
-          </h1>
+            {booking.room?.title || "Kỳ nghỉ của bạn"}
           
           <div className="flex flex-wrap gap-6 items-center">
              <div className="flex items-center gap-3">
@@ -135,9 +173,11 @@ const BookingDetail = () => {
             <CardContent className="p-8">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900">
-                   Mã đơn hàng <span className="text-sky-600">#{bookingData.id}</span>
+                   Mã đơn hàng <span className="text-sky-600">#{booking.id}</span>
                 </h2>
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-4 py-1.5 rounded-full font-bold">ĐÃ XÁC NHẬN</Badge>
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-4 py-1.5 rounded-full font-bold">
+                   {booking.status === 1 ? "ĐÃ XÁC NHẬN" : booking.status === 2 ? "HOÀN THÀNH" : "CHỜ XÁC NHẬN"}
+                </Badge>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">
@@ -146,14 +186,16 @@ const BookingDetail = () => {
                     <div className="p-3 bg-slate-50 rounded-2xl text-sky-600 border border-slate-100"><CalendarDays className="h-6 w-6" /></div>
                     <div>
                       <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Thời gian lưu trú</p>
-                      <p className="font-bold text-slate-900">{bookingData.startDate} — {bookingData.endDate}</p>
+                      <p className="font-bold text-slate-900">
+                         {new Date(booking.start_date).toLocaleDateString("vi-VN")} — {new Date(booking.end_date).toLocaleDateString("vi-VN")}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-slate-50 rounded-2xl text-sky-600 border border-slate-100"><MapPin className="h-6 w-6" /></div>
                     <div className="flex-1">
                       <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Địa chỉ phòng</p>
-                      <p className="font-bold text-slate-900 leading-snug">{bookingData.address}</p>
+                      <p className="font-bold text-slate-900 leading-snug">{booking.room?.building?.address || "Địa chỉ chưa cập nhật"}</p>
                       <button onClick={openInMaps} className="text-sky-600 text-[10px] font-black uppercase mt-1 flex items-center gap-1 hover:underline">
                          Mở trong bản đồ <ExternalLink className="h-2 w-2" />
                       </button>
@@ -164,7 +206,7 @@ const BookingDetail = () => {
                    <div className="absolute top-0 right-0 p-4 opacity-5"><Copy className="h-20 w-20" /></div>
                    <div className="relative z-10">
                       <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5">Tổng thanh toán</p>
-                      <p className="text-2xl font-black text-white">{formatPrice(bookingData.totalPrice)}</p>
+                      <p className="text-2xl font-black text-white">{formatPrice(booking.price?.price || 0)}</p>
                    </div>
                    <div className="mt-4 flex items-center justify-between relative z-10">
                       <p className="text-xs text-slate-400 font-medium">Bao gồm VAT & Phí dịch vụ</p>
@@ -194,16 +236,16 @@ const BookingDetail = () => {
                 <div className="space-y-3">
                    <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
                       <span className="text-sky-400 font-medium">SSID</span>
-                      <span className="font-mono font-bold tracking-tight">{bookingData.wifiSsid}</span>
+                      <span className="font-mono font-bold tracking-tight">BKS_Premium_Guest</span>
                    </div>
                    <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-sky-400 font-medium">Password</span>
                       <div className="flex items-center gap-2">
                          <span className="font-mono font-bold text-lg tracking-wider">
-                           {showWifi ? bookingData.wifiPass : "••••••••••••"}
+                           {showWifi ? "stay_at_bks_2026" : "••••••••••••"}
                          </span>
                          {showWifi && (
-                           <button onClick={() => { navigator.clipboard.writeText(bookingData.wifiPass); toast.success("Đã copy mật khẩu!"); }} className="p-1 hover:bg-white/10 rounded">
+                           <button onClick={() => { navigator.clipboard.writeText("stay_at_bks_2026"); toast.success("Đã copy mật khẩu!"); }} className="p-1 hover:bg-white/10 rounded">
                               <Copy className="h-3 w-3 text-sky-400" />
                            </button>
                          )}
@@ -225,12 +267,12 @@ const BookingDetail = () => {
                 <div className="grid grid-cols-2 gap-4">
                    <div>
                       <p className="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-1">Số phòng</p>
-                      <p className="text-2xl font-black text-slate-900">P.{bookingData.roomNumber}</p>
+                      <p className="text-2xl font-black text-slate-900">P.808</p>
                    </div>
                    <div>
                       <p className="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-1">Mã cửa</p>
                       <p className="text-2xl font-black bg-gradient-to-br from-amber-600 to-rose-600 bg-clip-text text-transparent tracking-widest">
-                        {bookingData.entryCode}
+                        283944
                       </p>
                    </div>
                 </div>
