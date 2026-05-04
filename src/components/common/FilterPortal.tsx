@@ -6,7 +6,7 @@ type FilterPortalProps = {
   children: React.ReactNode;
 };
 
-const FilterPortal: React.FC<FilterPortalProps> = ({ open, onClose, children }) => {
+const FilterPortal: React.FC<FilterPortalProps> = ({ open, children }) => {
   if (!open) return null;
 
   return <>{children}</>;

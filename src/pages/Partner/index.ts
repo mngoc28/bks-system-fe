@@ -8,3 +8,8 @@ export { default as Finance } from './Finance';
 export { default as Services } from './Services.tsx';
 export { default as News } from './News.tsx';
 export { default as Amenities } from './Amenities.tsx';
+export { default as RoomDetail } from './RoomDetail';
+export { default as Calendar } from './Calendar';
+export { default as PriceRules } from './PriceRules';
+export { default as Chat } from './Chat';
+export { default as Reports } from './Reports';

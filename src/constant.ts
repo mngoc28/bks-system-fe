@@ -54,6 +54,12 @@ export const enum ROUTERS {
   PARTNER_AMENITIES = "/partner/amenities",
   PARTNER_NEWS = "/partner/news",
   PARTNER_MAINTENANCE = "/partner/maintenances",
+  PARTNER_ROOM_DETAIL = "/partner/rooms/:roomId",
+  PARTNER_CALENDAR = "/partner/calendar",
+  PARTNER_PRICE_RULES = "/partner/price-rules",
+  PARTNER_CHAT = "/partner/chat",
+  PARTNER_REPORTS = "/partner/reports",
+  PARTNER_NOTIFICATIONS = "/partner/notifications",
 
   // End User Routes
   PARTNERS = "/:provinceNameEn/partners",
@@ -83,6 +89,7 @@ export const enum ROUTERS {
   BKS_STAY_CONTRACT_DETAIL = "/bks-stay/contracts/:id",
   BKS_STAY_LOGIN = "/bks-stay/login",
   BKS_STAY_FORCE_CHANGE_PASSWORD = "/bks-stay/force-change-password",
+  BKS_STAY_GUIDE = "/bks-stay/guide",
 }
 
 export const STORAGE_VAR = {

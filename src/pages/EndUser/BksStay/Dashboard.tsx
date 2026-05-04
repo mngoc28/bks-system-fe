@@ -8,11 +8,11 @@ import {
   TrendingUp, 
   Wallet,
   Zap,
-  Wifi,
   Wrench,
   Calendar,
   Clock,
-  FileText
+  FileText,
+  BookOpen
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,9 +55,23 @@ const Dashboard = () => {
     fetchDashboard();
   }, []);
 
-  const handleExtendSubmit = () => {
-    toast.success(`Yêu cầu gia hạn đến ngày ${newEndDate} đã được gửi! Chúng tôi sẽ phản hồi trong 15 phút.`);
-    setIsExtendDialogOpen(false);
+  const handleExtendSubmit = async () => {
+    if (!data?.active_booking) return;
+    if (!newEndDate) {
+      toast.error("Vui lòng nhập ngày muốn trả phòng mới.");
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await stayService.extendBooking(data.active_booking.id, newEndDate);
+      toast.success(`Yêu cầu gia hạn đến ngày ${newEndDate} đã được gửi! Chúng tôi sẽ phản hồi sớm.`);
+      setIsExtendDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Không thể gửi yêu cầu gia hạn.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -149,7 +163,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
            {[
              { label: "Đặt dịch vụ", icon: <Zap className="h-6 w-6" />, color: "bg-slate-900 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
-             { label: "Xem Wifi", icon: <Wifi className="h-6 w-6" />, color: "bg-slate-800 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
+             { label: "Hướng dẫn lưu trú", icon: <BookOpen className="h-6 w-6" />, color: "bg-slate-800 shadow-slate-900/10", path: ROUTERS.BKS_STAY_GUIDE, type: "link" },
              { label: "Gia hạn ở", icon: <CalendarDays className="h-6 w-6" />, color: "bg-slate-700 shadow-slate-900/10", onClick: () => setIsExtendDialogOpen(true), type: "button" },
              { label: "Báo cáo sự cố", icon: <Wrench className="h-6 w-6" />, color: "bg-slate-600 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
            ].map((action, i) => (
@@ -194,10 +208,10 @@ const Dashboard = () => {
                       <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-none mb-3 px-3 py-1 font-bold rounded-full">
                         {activeBooking.status === 2 ? "ĐANG Ở" : "ĐÃ XÁC NHẬN"}
                       </Badge>
-                      <h4 className="text-2xl font-black text-slate-900 mb-2">{activeBooking.room?.title}</h4>
+                      <h4 className="text-2xl font-black text-slate-900 mb-2">{activeBooking.room?.title || "Phòng nghỉ"}</h4>
                       <div className="flex items-center gap-4 text-slate-500 text-sm mb-6">
                          <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {new Date(activeBooking.start_date).toLocaleDateString("vi-VN")}</span>
-                         <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {activeBooking.room?.building?.name}</span>
+                         <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {activeBooking.room?.building?.name || "BKS Stay"}</span>
                       </div>
                     </div>
                     <Button asChild className="w-fit rounded-2xl h-12 px-8 bg-slate-900 hover:bg-slate-800 transition-all font-bold group shadow-lg shadow-slate-900/10">
@@ -236,7 +250,9 @@ const Dashboard = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <p className="text-lg font-black text-slate-900">{formatPrice(item.amount)}</p>
-                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-sky-600 transition-colors">Chi tiết</Button>
+                    <Button asChild variant="ghost" size="sm" className="text-slate-400 hover:text-sky-600 transition-colors">
+                      <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", item.id.toString())}>Chi tiết</Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -265,7 +281,7 @@ const Dashboard = () => {
                <div className="space-y-6 mb-8">
                   <div className="p-4 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100">
                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Ngày checkout cũ</span>
-                     <span className="font-bold text-slate-600">{activeBooking?.end_date}</span>
+                     <span className="font-bold text-slate-600">{activeBooking ? new Date(activeBooking.end_date).toLocaleDateString("vi-VN") : "---"}</span>
                   </div>
                   
                   <div className="space-y-2">

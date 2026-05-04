@@ -79,6 +79,9 @@ export interface BookingDetail {
     };
     images: Array<{ image_url: string }>;
   };
+  price: {
+    price: number;
+  };
 }
 
 export interface NotificationData {
@@ -107,20 +110,26 @@ const stayService = {
   getBookings: (page: number = 1) => {
     return apiService.get<PaginatedResponse<BookingDetail>>(`/api/v1/stay/bookings?page=${page}`);
   },
+  getBookingDetail: (id: number | string) => {
+    return apiService.get<BookingDetail>(`/api/v1/stay/bookings/${id}`);
+  },
   getContracts: (page: number = 1) => {
     return apiService.get<PaginatedResponse<Contract>>(`/api/v1/stay/contracts?page=${page}`);
   },
   getContractDetail: (id: number | string) => {
     return apiService.get<Contract>(`/api/v1/stay/contracts/${id}`);
   },
-  getInStayServices: (bookingId: number | string) => {
-    return apiService.get<any[]>(`/api/v1/stay/services/${bookingId}`);
+  getInStayServices: (bookingId: string | number) => {
+    return apiService.get(`/api/v1/stay/services/${bookingId}`);
   },
-  orderService: (bookingId: number | string, serviceId: number, note?: string) => {
+  orderService: (bookingId: string | number, serviceId: number | string, note: string = "") => {
     return apiService.post(`/api/v1/stay/services/${bookingId}`, { service_id: serviceId, note });
   },
   getNotifications: (page: number = 1) => {
     return apiService.get<PaginatedResponse<NotificationData>>(`/api/v1/stay/notifications?page=${page}`);
+  },
+  extendBooking: (bookingId: string | number, newEndDate: string) => {
+    return apiService.post(`/api/v1/stay/bookings/${bookingId}/extend`, { new_end_date: newEndDate });
   },
   markNotificationAsRead: (id: number) => {
     return apiService.put(`/api/v1/stay/notifications/${id}/read`);

@@ -209,7 +209,7 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
   setTimeout(() => {
     setPendingChanges(prev => {
       const newPending = { ...prev };
-      displayImages.forEach(img => {
+      displayImages.forEach((img: RoomImage) => {
         if (newPending[img.id] === img.image_type) {
           delete newPending[img.id];
         }
@@ -231,7 +231,7 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
   };
 
   const handleSelectAll = () => {
-    setSelectedImages(new Set(displayImages.map(img => img.id)));
+    setSelectedImages(new Set(displayImages.map((img: RoomImage) => img.id)));
   };
 
   const handleDeselectAll = () => {
@@ -287,7 +287,7 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
               <Trash2 className="size-4" />
             </Button>
           </div>
-          <SortableContext items={displayImages.map(img => img.id)} strategy={rectSortingStrategy}>
+          <SortableContext items={displayImages.map((img: RoomImage) => img.id)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {displayImages.map((image: RoomImage) => (
                 <SortableItem

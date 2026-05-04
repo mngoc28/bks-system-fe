@@ -141,53 +141,53 @@ const History = () => {
           </div>
 
           {/* List Section */}
-                  <div className="p-8 divide-y divide-slate-50">
-                     {filteredBookings.length > 0 ? (
-                        filteredBookings.map((booking) => {
-                           const statusInfo = getStatusInfo(booking.status);
-                           return (
-                             <div key={booking.id} className="py-6 group flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all">
-                                <div className="flex items-start gap-4 sm:gap-6">
-                                   <div className={`h-14 w-14 sm:h-16 sm:w-16 rounded-[20px] sm:rounded-[24px] ${statusInfo.color} flex items-center justify-center shrink-0 shadow-inner`}>
-                                      <CalendarDays className="h-6 w-6 sm:h-7 sm:w-7" />
-                                   </div>
-                                   <div className="min-w-0 flex-1">
-                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                         <h3 className="font-black text-base sm:text-lg text-slate-900 group-hover:text-sky-600 transition-colors uppercase truncate">{booking.room.title}</h3>
-                                         <Badge className={`rounded-full border-none px-2 py-0.5 font-black text-[9px] sm:text-[10px] uppercase ${statusInfo.color}`}>{statusInfo.label}</Badge>
-                                      </div>
-                                      <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 gap-x-4 text-[12px] sm:text-sm text-slate-400 font-medium overflow-hidden">
-                                         <span className="flex items-center gap-1.5 truncate"><MapPin className="h-3.5 w-3.5 text-sky-500 shrink-0" /> {booking.room.building.name}</span>
-                                         <span className="hidden sm:inline text-slate-200">|</span>
-                                         <span className="font-bold text-slate-600 whitespace-nowrap">{new Date(booking.start_date).toLocaleDateString("vi-VN")} - {new Date(booking.end_date).toLocaleDateString("vi-VN")}</span>
-                                      </div>
-                                   </div>
-                                </div>
-        
-                                <div className="flex items-center justify-between lg:justify-end gap-6 pt-4 lg:pt-0 border-t border-slate-50 lg:border-none">
-                                   <div className="text-left lg:text-right">
-                                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Giá trị đơn</p>
-                                      <p className="text-lg sm:text-xl font-black text-slate-900">{formatPrice(0)}</p>
-                                   </div>
-                                   <div className="flex items-center gap-2">
-                                      {statusInfo.label === "Completed" && (
-                                         <Button variant="outline" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-slate-100 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50" onClick={() => handleDownloadInvoice(booking.id.toString())}>
-                                            <FileText className="h-5 w-5" />
-                                         </Button>
-                                      )}
-                                      <Button asChild variant="ghost" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl hover:bg-sky-50 hover:text-sky-600 shrink-0">
-                                         <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", booking.id.toString())}>
-                                            <ArrowUpRight className="h-5 w-5" />
-                                          </Link>
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl hover:bg-slate-100 shrink-0">
-                                         <MoreVertical className="h-5 w-5 text-slate-300" />
-                                      </Button>
-                                   </div>
-                                </div>
-                             </div>
-                           );
-                        })
+          <div className="p-8 divide-y divide-slate-50">
+             {filteredBookings.length > 0 ? (
+                filteredBookings.map((booking) => {
+                   const statusInfo = getStatusInfo(booking.status);
+                   return (
+                     <div key={booking.id} className="py-6 group flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all">
+                        <div className="flex items-start gap-4 sm:gap-6">
+                           <div className={`h-14 w-14 sm:h-16 sm:w-16 rounded-[20px] sm:rounded-[24px] ${statusInfo.color} flex items-center justify-center shrink-0 shadow-inner`}>
+                              <CalendarDays className="h-6 w-6 sm:h-7 sm:w-7" />
+                           </div>
+                           <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                 <h3 className="font-black text-base sm:text-lg text-slate-900 group-hover:text-sky-600 transition-colors uppercase truncate">{booking.room?.title || "Phòng không tên"}</h3>
+                                 <Badge className={`rounded-full border-none px-2 py-0.5 font-black text-[9px] sm:text-[10px] uppercase ${statusInfo.color}`}>{statusInfo.label}</Badge>
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 gap-x-4 text-[12px] sm:text-sm text-slate-400 font-medium overflow-hidden">
+                                 <span className="flex items-center gap-1.5 truncate"><MapPin className="h-3.5 w-3.5 text-sky-500 shrink-0" /> {booking.room?.building?.name || "Nơi ở bí ẩn"}</span>
+                                 <span className="hidden sm:inline text-slate-200">|</span>
+                                 <span className="font-bold text-slate-600 whitespace-nowrap">{new Date(booking.start_date).toLocaleDateString("vi-VN")} - {new Date(booking.end_date).toLocaleDateString("vi-VN")}</span>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="flex items-center justify-between lg:justify-end gap-6 pt-4 lg:pt-0 border-t border-slate-50 lg:border-none">
+                           <div className="text-left lg:text-right">
+                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Giá trị đơn</p>
+                              <p className="text-lg sm:text-xl font-black text-slate-900">{formatPrice(booking.price?.price || 0)}</p>
+                           </div>
+                           <div className="flex items-center gap-2">
+                              {statusInfo.label === "Completed" && (
+                                 <Button variant="outline" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-slate-100 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50" onClick={() => handleDownloadInvoice(booking.id.toString())}>
+                                    <FileText className="h-5 w-5" />
+                                 </Button>
+                              )}
+                              <Button asChild variant="ghost" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl hover:bg-sky-50 hover:text-sky-600 shrink-0">
+                                 <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", booking.id.toString())}>
+                                    <ArrowUpRight className="h-5 w-5" />
+                                  </Link>
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl hover:bg-slate-100 shrink-0">
+                                 <MoreVertical className="h-5 w-5 text-slate-300" />
+                              </Button>
+                           </div>
+                        </div>
+                     </div>
+                   );
+                })
              ) : (
                 <div className="py-20 text-center">
                    <AlertCircle className="h-12 w-12 text-slate-200 mx-auto mb-4" />

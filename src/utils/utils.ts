@@ -131,28 +131,44 @@ export const formatDateTimeLocal = (date: Date): string => {
 };
 
 /**
- * Format currency input value with thousand separators.
- * @param val string value from input field
+ * Format currency input value with thousand separators (dots).
+ * Example: "1000000" -> "1.000.000"
+ * @param val string value from input field (raw digits)
  * @returns formatted string with thousand separators
  */
-export function formatCurrencyInput(val: string): string {
-  if (!val || val === '') return '';
-  const num = parseFloat(val);
-  return isNaN(num) ? val : num.toLocaleString('en-US');
+export function formatCurrencyInput(val: string | number | undefined | null): string {
+  if (val === undefined || val === null || val === '') return '';
+  const stringValue = val.toString().replace(/\D/g, '');
+  if (!stringValue) return '';
+  return stringValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 /**
- * Validate and clean currency input value.
- * @param value string value from input change event
- * @returns cleaned string or empty string if invalid
+ * Validate and clean currency input value by removing separators.
+ * @param value string value from input change event (may contain dots)
+ * @returns cleaned string (digits only) or null if invalid
  */
 export function validateCurrencyInput(value: string): string | null {
-  const cleaned = value.replace(/,/g, '');
-  if (cleaned === '' || /^\d*\.?\d*$/.test(cleaned)) {
+  // Remove all dots (separators)
+  const cleaned = value.replace(/\./g, '');
+  // Check if it's numeric
+  if (cleaned === '' || /^\d*$/.test(cleaned)) {
     return cleaned;
   }
   return null;
 };
+
+/**
+ * Parse formatted currency string (with dots) to raw number.
+ * Example: "1.000.000" -> 1000000
+ * @param formattedValue string with separators
+ * @returns number
+ */
+export function parseCurrencyValue(formattedValue: string | undefined | null): number {
+  if (!formattedValue) return 0;
+  const cleaned = formattedValue.toString().replace(/\D/g, '');
+  return cleaned ? parseInt(cleaned, 10) : 0;
+}
 
 /**
  * Highlight search text within a given string.

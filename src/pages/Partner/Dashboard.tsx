@@ -1,5 +1,6 @@
 import React from 'react';
 import { Building, DoorOpen, DollarSign, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { 
   usePartnerStatsQuery, 
   usePartnerPendingBookingsQuery, 
@@ -8,6 +9,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = usePartnerStatsQuery();
   const { data: pendingBookings, isLoading: bookingsLoading } = usePartnerPendingBookingsQuery();
   const { data: urgentMaintenances, isLoading: maintenanceLoading } = usePartnerUrgentMaintenancesQuery();
@@ -79,7 +81,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800">Booking Cần Duyệt</h2>
-            <button className="text-sm text-blue-600 font-medium hover:underline">Xem tất cả</button>
+            <button type="button" onClick={() => navigate('/partner/bookings')} className="text-sm text-blue-600 font-medium hover:underline">Xem tất cả</button>
           </div>
           
           {bookingsLoading ? (
@@ -89,7 +91,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {pendingBookings.map((bk: any) => (
-                <div key={bk.id} className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={`bk-${bk.id}`} className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                   <div>
                     <p className="font-semibold text-gray-800">{bk.user_name || "Khách hàng"}</p>
                     <p className="text-sm text-gray-500">{bk.room_number} • {bk.start_date}</p>
@@ -108,7 +110,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800">Yêu cầu bảo trì khẩn</h2>
-            <button className="text-sm text-blue-600 font-medium hover:underline">Xem tất cả</button>
+            <button type="button" onClick={() => navigate('/partner/maintenances')} className="text-sm text-blue-600 font-medium hover:underline">Xem tất cả</button>
           </div>
           
           {maintenanceLoading ? (
@@ -118,7 +120,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {urgentMaintenances.map((mt: any) => (
-                <div key={mt.id} className="flex flex-col gap-2 p-4 border border-red-100 bg-red-50/30 rounded-lg">
+                <div key={`mt-${mt.id}`} className="flex flex-col gap-2 p-4 border border-red-100 bg-red-50/30 rounded-lg">
                   <div className="flex justify-between items-start">
                     <p className="font-semibold text-gray-800">{mt.roomName}</p>
                     <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full font-medium">{mt.status || 'Chờ xử lý'}</span>

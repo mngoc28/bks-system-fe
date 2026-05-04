@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Building2, ShoppingBag, Wrench, Newspaper, Zap, AirVent } from 'lucide-react';
+import { LayoutDashboard, Building2, ShoppingBag, Wrench, Newspaper, Zap, AirVent, Wallet, FileText, Calendar, TrendingUp, MessageSquare, BarChart3, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ROUTERS } from '@/constant';
 
 const Sidebar: React.FC = () => {
   const { t } = useTranslation();
@@ -9,15 +10,25 @@ const Sidebar: React.FC = () => {
   const menuItems = [
     { name: t('menu.header_general'), isHeader: true },
     { name: t('menu.dashboard'), path: '/partner/dashboard', icon: LayoutDashboard },
+    { name: t('menu.notifications'), path: ROUTERS.PARTNER_NOTIFICATIONS, icon: Bell },
+    { name: t('menu.news'), path: '/partner/news', icon: Newspaper },
     
     { name: t('menu.header_property'), isHeader: true },
     { name: t('menu.properties'), path: '/partner/properties', icon: Building2 },
+    { name: 'Lịch khả dụng', path: '/partner/calendar', icon: Calendar },
     { name: t('menu.bookings'), path: '/partner/bookings', icon: ShoppingBag },
+    { name: 'Yêu cầu dịch vụ', path: '/partner/stay-services', icon: Zap },
+    { name: 'Tin nhắn', path: '/partner/chat', icon: MessageSquare },
+    { name: 'Hợp đồng', path: '/partner/contracts', icon: FileText },
     
     { name: t('menu.header_services'), isHeader: true },
     { name: t('menu.service'), path: '/partner/services', icon: Zap },
     { name: t('menu.amenities'), path: '/partner/amenities', icon: AirVent },
-    { name: t('menu.news'), path: '/partner/news', icon: Newspaper },
+
+    
+    { name: t('menu.header_system'), isHeader: true },
+    { name: 'Tài chính', path: '/partner/finance', icon: Wallet },
+    { name: 'Báo cáo & Phân tích', path: '/partner/reports', icon: BarChart3 },
     { name: t('menu.maintenances'), path: '/partner/maintenances', icon: Wrench },
   ];
 
@@ -26,11 +37,11 @@ const Sidebar: React.FC = () => {
       <div className="p-7 flex items-center gap-4 bg-slate-900/40 backdrop-blur-xl border-b border-white/[0.03]">
         <div className="relative group">
           <div className="absolute -inset-1 rounded-2xl bg-blue-500/20 blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-          <div className="relative w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md transition-transform duration-500 group-hover:scale-105">
+          <div className="relative w-11 h-11 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
             <img 
               src="/app/images/front/bks-icon.svg" 
               alt="BKS" 
-              className="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" 
+              className="w-11 h-11 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" 
             />
           </div>
         </div>

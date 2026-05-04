@@ -1,18 +1,20 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Plus, Edit, Trash2, Calendar, CheckCircle2, Clock, Loader2 } from 'lucide-react';
-import { NewsPost } from './types';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Calendar, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlainTextarea } from "@/components/ui/textarea";
 import { partnerService } from '@/services/partnerService';
+import { NewsPost } from './types';
+import InlineSheet from './components/InlineSheet';
+import { PlainTextarea } from '@/components/ui/textarea';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const News: React.FC = () => {
   const [newsList, setNewsList] = useState<NewsPost[]>([]);
@@ -30,11 +32,31 @@ const News: React.FC = () => {
     fetchNews();
   }, []);
 
+  const formatDate = (value: unknown): string => {
+    if (!value) return 'N/A';
+    const parsed = new Date(String(value));
+    return Number.isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString('vi-VN');
+  };
+
+  const normalizeNews = (rows: any[]): NewsPost[] => {
+    return (rows || []).map((post: any) => ({
+      ...post,
+      createdAt: post.createdAt ?? post.created_at ?? post.published_at ?? null,
+      title: post.title ?? '',
+      content: post.content ?? post.excerpt ?? '',
+      thumbnail: post.thumbnail ?? 'https://via.placeholder.com/150',
+      status: post.status === 'Đã đăng' || post.status === 'Nháp'
+        ? post.status
+        : (Number(post.status) === 1 ? 'Đã đăng' : 'Nháp'),
+    })) as NewsPost[];
+  };
+
   const fetchNews = async () => {
     try {
       setLoading(true);
       const res: any = await partnerService.getNews();
-      setNewsList(res.data.data.data || res.data.data || []);
+      const payload = res?.data?.data?.data || res?.data?.data || [];
+      setNewsList(normalizeNews(payload));
     } catch (error) {
       console.error('Error fetching news:', error);
     } finally {
@@ -62,19 +84,19 @@ const News: React.FC = () => {
       }
       fetchNews();
       setIsModalOpen(false);
+      toastSuccess('Đã lưu bài viết.');
     } catch (error) {
-      alert('Lỗi khi lưu bài viết.');
+      toastError('Lỗi khi lưu bài viết.');
     }
   };
 
   const handleDelete = async (id: string | number) => {
-    if (window.confirm('Bạn có muốn xóa bài viết này?')) {
-      try {
-        await partnerService.deleteNews(id);
-        fetchNews();
-      } catch (error) {
-        alert('Lỗi khi xóa bài viết.');
-      }
+    try {
+      await partnerService.deleteNews(id);
+      fetchNews();
+      toastSuccess('Đã xóa bài viết.');
+    } catch (error) {
+      toastError('Lỗi khi xóa bài viết.');
     }
   };
 
@@ -122,7 +144,7 @@ const News: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar size={14} className="text-gray-400" />
-                      {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+                      {formatDate(post.createdAt)}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -148,34 +170,49 @@ const News: React.FC = () => {
         </div>
       </div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingPost ? 'Chỉnh sửa bài viết' : 'Soạn bài viết mới'}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
+      <InlineSheet
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingPost ? 'Chỉnh sửa bài viết' : 'Soạn bài viết mới'}
+        widthClassName="max-w-3xl"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Lưu bài viết</Button>
+          </div>
+        }
+      >
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label>Tiêu đề bài viết</Label>
               <Input value={form.title} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({...form, title: e.target.value})} placeholder="VD: Chương trình khuyến mãi hè 2024..." />
             </div>
             <div className="grid gap-2">
                <Label>Nội dung</Label>
-               <PlainTextarea className="min-h-[200px]" value={form.content} onChange={e => setForm({...form, content: e.target.value})} />
+                <PlainTextarea className="min-h-[200px]" value={form.content} onChange={(e: any) => setForm({...form, content: e.target.value})} />
             </div>
             <div className="grid gap-2">
               <Label>Trạng thái</Label>
-              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.status} onChange={e => setForm({...form, status: e.target.value as any})}>
-                <option value="Nháp">Nháp</option>
-                <option value="Đã đăng">Đã đăng</option>
-              </select>
+              <Select value={form.status} onValueChange={(val) => setForm({...form, status: val as any})}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Nháp">
+                    <div className="flex items-center gap-2 text-amber-600">
+                      <Clock size={14} /> Nháp (Bản thảo)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Đã đăng">
+                    <div className="flex items-center gap-2 text-emerald-600">
+                      <CheckCircle2 size={14} /> Đã đăng (Công khai)
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Lưu bài viết</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </InlineSheet>
     </div>
   );
 };

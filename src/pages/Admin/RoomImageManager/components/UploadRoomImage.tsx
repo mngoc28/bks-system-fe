@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toastError } from "@/components/ui/toast";
 import { IMAGE_COMPRESS_QUALITY, IMAGE_FOLDER, IMAGE_MAX_FILES, IMAGE_MAX_WIDTH, ROOM_IMAGE_TYPE } from "@/constant";
@@ -93,7 +91,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
     }
 
     setFiles(prev => [...prev, ...newPreviews]);
-  }, [compressImage, files, imageSchema, images, t]);
+  }, [compressImage, imageSchema, images, t]);
 
   // File input change handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,7 +261,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
 
                     {!filePreview.error && (
                       <div className="mt-2">
-                        <Label className="text-xs text-gray-600">{t('room_images.image_type')}</Label>
+                        <label className="text-xs text-gray-600">{t('room_images.image_type')}</label>
                         <Select
                           value={String(filePreview.imageType ?? ROOM_IMAGE_TYPE.MAIN_ROOM)}
                           onValueChange={(value) => {

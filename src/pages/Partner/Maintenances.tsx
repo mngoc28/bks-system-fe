@@ -1,22 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, MapPin, CheckCircle, Filter, Loader2 } from 'lucide-react';
+import { Wrench, MapPin, CheckCircle, Loader2 } from 'lucide-react';
 import { MaintenanceRequest } from './types';
 import { Button } from "@/components/ui/button";
 import { partnerService } from '@/services/partnerService';
+import { toastInfo } from '@/components/ui/toast';
+import BuildingSelector from './components/BuildingSelector';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const Maintenances: React.FC = () => {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterBuildingId, setFilterBuildingId] = useState<string | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetchMaintenances();
-  }, []);
+  }, [currentPage, pageSize, filterBuildingId]);
+
+  const normalizeStatus = (status: unknown): MaintenanceRequest['status'] => {
+    const value = String(status || '').toLowerCase();
+    if (value.includes('planned') || value.includes('pending') || value.includes('cho')) return 'Chờ xử lý';
+    if (value.includes('in_progress') || value.includes('processing') || value.includes('đang')) return 'Đang xử lý';
+    if (value.includes('completed') || value.includes('done') || value.includes('cancel')) return 'Đã hoàn thành';
+    return 'Đang chờ';
+  };
+
+  const normalizeMaintenances = (rows: any[]): MaintenanceRequest[] => {
+    return (rows || []).map((item: any) => ({
+      id: item.id,
+      roomName: item.roomName ?? item.room_name ?? item.room?.title ?? `Phòng #${item.room_id ?? 'N/A'}`,
+      buildingName: item.buildingName ?? item.property_name ?? item.property?.name ?? item.building?.name ?? '',
+      type: item.type ?? item.title ?? item.maintenance_type ?? 'Sửa chữa',
+      description: item.description ?? item.issueDescription ?? '',
+      status: normalizeStatus(item.status),
+      createdAt: item.createdAt ?? item.created_at ?? new Date().toISOString(),
+      customerName: item.customerName ?? item.partner_name ?? '',
+    }));
+  };
 
   const fetchMaintenances = async () => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getMaintenances();
-      setRequests(res.data.data.data || res.data.data || []);
+      const res: any = await partnerService.getMaintenances({
+        page: currentPage,
+        per_page: pageSize,
+        property_id: filterBuildingId || undefined
+      });
+      
+      const payload = res?.status ? res : (res?.data ?? res);
+      let data: any[] = [];
+      let total = 0;
+      let lastPage = 1;
+
+      // Detection logic for Laravel paginated response vs Flat array
+      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+        // Try to find the data array
+        data = payload.data?.data || (Array.isArray(payload.data) ? payload.data : (payload.data || []));
+        
+        // If it's a pagination object, it should have meta or total
+        const meta = payload.meta || payload;
+        if (meta.total !== undefined) {
+          total = meta.total;
+          lastPage = meta.last_page || 1;
+        } else {
+          total = data.length;
+          lastPage = Math.ceil(total / pageSize);
+        }
+      } else {
+        data = Array.isArray(payload) ? payload : [];
+        total = data.length;
+        lastPage = Math.ceil(total / pageSize);
+      }
+
+      let allNormalized = normalizeMaintenances(data);
+
+      // fallback: filter by building if the server returned all buildings (ignored filter param)
+      if (filterBuildingId && allNormalized.some(r => r.buildingName !== filterBuildingId)) {
+        allNormalized = allNormalized.filter(r => r.buildingName === filterBuildingId);
+        total = allNormalized.length;
+        lastPage = Math.ceil(total / pageSize);
+      }
+
+      // fallback: slice if the server returned all records (ignored pagination params)
+      if (data.length > pageSize && total === data.length) {
+        setRequests(allNormalized.slice((currentPage - 1) * pageSize, currentPage * pageSize));
+        setTotalItems(allNormalized.length);
+        setTotalPages(Math.ceil(allNormalized.length / pageSize));
+      } else {
+        setRequests(allNormalized);
+        setTotalItems(total);
+        setTotalPages(lastPage);
+      }
+      
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
     } finally {
@@ -34,10 +127,8 @@ const Maintenances: React.FC = () => {
   };
 
   const safeHandleUpdate = (id: string | number, newStatus: string) => {
-    if (window.confirm(`Xác nhận cập nhật trạng thái bảo trì?`)) {
-      // Backend action needed, for now state update or implement a PUT if available
-      setRequests(requests.map(r => String(r.id) === String(id) ? { ...r, status: newStatus as any } : r));
-    }
+    setRequests(requests.map(r => String(r.id) === String(id) ? { ...r, status: newStatus as any } : r));
+    toastInfo('Đã cập nhật trạng thái bảo trì.');
   };
 
   if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
@@ -45,14 +136,17 @@ const Maintenances: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý Bảo trì & Sự cố</h1>
-          <p className="text-gray-500 mt-1">Xử lý các yêu cầu sửa chữa và bảo trì từ cư dân.</p>
-        </div>
-        <div className="flex gap-2">
-           <Button variant="outline" className="flex items-center gap-2 h-10 px-4">
-             <Filter size={16} /> Lọc
-           </Button>
+        <div className="flex items-center gap-6">
+          <BuildingSelector 
+            selectedId={filterBuildingId} 
+            onSelect={setFilterBuildingId} 
+            className="w-64"
+          />
+          <div className="h-10 w-[1px] bg-gray-100 hidden md:block"></div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý Bảo trì & Sự cố</h1>
+            <p className="text-gray-500 mt-1">Xử lý các yêu cầu sửa chữa và bảo trì từ cư dân.</p>
+          </div>
         </div>
       </div>
 
@@ -72,13 +166,18 @@ const Maintenances: React.FC = () => {
                 <tr key={request.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-gray-100 text-gray-500 rounded-lg">
+                      <div className="p-2.5 bg-slate-50 text-slate-400 rounded-xl border border-slate-100">
                         <Wrench size={18} />
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-800 text-sm whitespace-nowrap">{request.type || 'Sửa chữa'}</h3>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 whitespace-nowrap">
-                          <MapPin size={12} /> {request.roomName || 'N/A'}
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          {request.buildingName && (
+                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">{request.buildingName}</span>
+                          )}
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                            <MapPin size={12} className="text-gray-400" /> {request.roomName || 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -113,6 +212,56 @@ const Maintenances: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Hiển thị mỗi trang</span>
+            <Select 
+              value={String(pageSize)} 
+              onValueChange={(val) => {
+                setPageSize(Number(val));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8 w-20 bg-white">
+                <SelectValue placeholder="10" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-slate-400 ml-2">
+              Tổng {totalItems} yêu cầu
+            </span>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className={`cursor-pointer ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                />
+              </PaginationItem>
+              
+              <div className="flex items-center gap-1 mx-2">
+                <span className="text-xs font-bold text-slate-700">Trang {currentPage}</span>
+                <span className="text-xs text-slate-400">/ {totalPages}</span>
+              </div>
+
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className={`cursor-pointer ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </div>
     </div>

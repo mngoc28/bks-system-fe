@@ -29,7 +29,7 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
         {partners.map((company) => (
           <Link
             key={company.id}
-            to={`${ROUTERS.PARTNER_DETAIL}/${company.id}`}
+            to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", company.id.toString())}
             aria-label={t("public.home.partners.cardLabel", { name: company.name })}
             className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
