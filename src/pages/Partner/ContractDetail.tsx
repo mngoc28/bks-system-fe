@@ -128,7 +128,6 @@ const ContractDetail: React.FC = () => {
   useEffect(() => {
     if (!contractId) return;
     void fetchContract();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contractId]);
 
   const fetchContract = async () => {

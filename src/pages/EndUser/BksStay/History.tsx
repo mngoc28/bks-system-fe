@@ -78,7 +78,7 @@ const History = () => {
   };
 
   const processedBookings = useMemo(() => {
-    let filtered = bookings.filter(b => {
+    const filtered = bookings.filter(b => {
       const statusLabel = getStatusInfo(b.status).label;
       const matchesTab = activeTab === "all" || statusLabel.toLowerCase() === activeTab.toLowerCase();
       const matchesSearch = 

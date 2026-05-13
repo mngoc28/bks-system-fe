@@ -530,14 +530,14 @@ const CalendarPage: React.FC = () => {
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-12 md:gap-4">
             <div className="space-y-1.5 md:col-span-5">
-              <label className="block text-xs font-semibold text-slate-600">Cơ sở</label>
+              <label htmlFor="building-select" className="block text-xs font-semibold text-slate-600">Cơ sở</label>
               <div className="relative">
                 <Home
                   className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400"
                   size={18}
                 />
                 <Select value={selectedBuildingId} onValueChange={setSelectedBuildingId}>
-                  <SelectTrigger className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white">
+                  <SelectTrigger id="building-select" className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white">
                     <SelectValue placeholder="Chọn cơ sở" />
                   </SelectTrigger>
                   <SelectContent className="rounded-lg border-slate-200">
@@ -553,7 +553,7 @@ const CalendarPage: React.FC = () => {
             </div>
 
             <div className="space-y-1.5 md:col-span-5">
-              <label className="block text-xs font-semibold text-slate-600">Phòng</label>
+              <label htmlFor="room-select" className="block text-xs font-semibold text-slate-600">Phòng</label>
               <div className="relative">
                 <MapPin
                   className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400"
@@ -564,7 +564,7 @@ const CalendarPage: React.FC = () => {
                   onValueChange={setSelectedRoomId}
                   disabled={roomsLoading}
                 >
-                  <SelectTrigger className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white disabled:opacity-60">
+                  <SelectTrigger id="room-select" className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white disabled:opacity-60">
                     <SelectValue placeholder={roomsLoading ? 'Đang tải…' : 'Tất cả phòng'} />
                   </SelectTrigger>
                   <SelectContent className="max-h-72 rounded-lg border-slate-200">

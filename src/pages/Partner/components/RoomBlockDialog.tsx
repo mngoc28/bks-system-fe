@@ -138,9 +138,9 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Phòng</label>
+            <label htmlFor="block-room" className="text-xs font-bold text-slate-600 uppercase tracking-wider">Phòng</label>
             <Select value={roomId} onValueChange={setRoomId}>
-              <SelectTrigger className="h-11 rounded-lg border-slate-200">
+              <SelectTrigger id="block-room" className="h-11 rounded-lg border-slate-200">
                 <SelectValue placeholder="Chọn phòng" />
               </SelectTrigger>
               <SelectContent>
@@ -170,9 +170,9 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Loại block</label>
+            <label htmlFor="block-type" className="text-xs font-bold text-slate-600 uppercase tracking-wider">Loại block</label>
             <Select value={blockType} onValueChange={(v) => setBlockType(v as any)}>
-              <SelectTrigger className="h-11 rounded-lg border-slate-200">
+              <SelectTrigger id="block-type" className="h-11 rounded-lg border-slate-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -186,8 +186,9 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Lý do</label>
+            <label htmlFor="block-reason" className="text-xs font-bold text-slate-600 uppercase tracking-wider">Lý do</label>
             <Input
+              id="block-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="VD: Bảo trì máy lạnh phòng 201"
@@ -196,8 +197,9 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ghi chú nội bộ</label>
+            <label htmlFor="block-note" className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ghi chú nội bộ</label>
             <PlainTextarea
+              id="block-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Tùy chọn — chi tiết bổ sung dành cho team."
