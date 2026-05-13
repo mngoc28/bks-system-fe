@@ -42,7 +42,18 @@ export interface RoomPrice {
   id: string | number;
   packageName: string;
   price: number;
-  duration: number; // in months
+  duration: number; 
+  unit: 'day' | 'month';
+  deposit_amount?: number;
+  minimum_stay?: number;
+}
+
+export interface UtilityFee {
+  id?: number;
+  type: 'electricity' | 'water' | 'service';
+  method: 'per_unit' | 'per_person' | 'fixed';
+  price: number;
+  included: boolean;
 }
 
 export interface Room {
@@ -58,6 +69,10 @@ export interface Room {
   amenities: any[]; 
   services: any[]; 
   prices: any[];
+  utility_fees?: UtilityFee[];
+  cheapest_daily_price?: number;
+  cheapest_monthly_price?: number;
+  all_prices?: string;
   status: 'Trống' | 'Đang thuê' | 'Đang bảo trì';
 }
 

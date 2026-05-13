@@ -89,7 +89,12 @@ const PropertyRooms: React.FC = () => {
     amenities: [],
     services: [],
     buildingId: propertyId || '',
-    prices: [{ id: 'p' + Date.now(), packageName: 'Gói tháng', price: 0, duration: 1 }],
+    prices: [{ id: 'p' + Date.now(), packageName: 'Gói tháng', price: 0, duration: 1, unit: 'month', deposit_amount: 0, minimum_stay: 1 }],
+    utility_fees: [
+      { type: 'electricity', method: 'per_unit', price: 3500, included: false },
+      { type: 'water', method: 'per_person', price: 100000, included: false },
+      { type: 'service', method: 'fixed', price: 50000, included: false },
+    ],
   });
 
   const [availableAmenities, setAvailableAmenities] = useState<any[]>([]);
@@ -331,13 +336,32 @@ const PropertyRooms: React.FC = () => {
       buildingId: propertyId || '',
       amenities: [],
       services: [],
-      prices: [{ id: 'p' + Date.now(), packageName: 'Gói tháng', price: 0, duration: 1 }],
+      prices: [{ id: 'p' + Date.now(), packageName: 'Gói tháng', price: 0, duration: 1, unit: 'month', deposit_amount: 0, minimum_stay: 1 }],
+      utility_fees: [
+        { type: 'electricity', method: 'per_unit', price: 3500, included: false },
+        { type: 'water', method: 'per_person', price: 100000, included: false },
+        { type: 'service', method: 'fixed', price: 50000, included: false },
+      ],
     });
     setIsRoomPanelOpen(true);
   };
 
   const handleSaveRoom = async () => {
     try {
+      // Prepare payload with formatted numbers and types
+      const payload = {
+        ...formData,
+        status: formData.status ? 1 : 0,
+        prices: (formData.prices || []).map((p: any) => ({
+          packageName: p.packageName,
+          unit: p.unit || 'month',
+          unit_price: Number(p.price || 0),
+          deposit_amount: Number(p.deposit_amount || 0),
+          minimum_stay: Number(p.minimum_stay || 1),
+        })),
+        utility_fees: formData.utility_fees
+      };
+
       if (isBulkEntry) {
         const roomNames = bulkRoomNames;
         if (roomNames.length === 0) return toastError('Vui lòng nhập danh sách tên phòng.');
@@ -350,22 +374,19 @@ const PropertyRooms: React.FC = () => {
           floor_number: formData.floor_number,
           people: formData.people,
           room_type: formData.room_type,
-          status: formData.status ? 1 : 0,
+          status: payload.status,
           amenities: formData.amenities,
           services: formData.services,
-          prices: (formData.prices || []).map((p: any) => ({
-            packageName: p.packageName,
-            unit: 'month',
-            unit_price: Number(p.price || 0),
-          })),
+          prices: payload.prices,
+          utility_fees: payload.utility_fees,
         });
         toastSuccess(`Đã tạo ${roomNames.length} phòng thành công.`);
       } else {
         if (editingRoom) {
-          await partnerService.updateRoom(String(editingRoom.id), formData);
+          await partnerService.updateRoom(String(editingRoom.id), payload);
           toastSuccess('Đã cập nhật phòng.');
         } else {
-          await partnerService.createRoom(formData);
+          await partnerService.createRoom(payload);
           toastSuccess('Đã thêm phòng mới.');
         }
       }
@@ -1023,30 +1044,127 @@ const PropertyRooms: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid gap-2 border-t pt-4">
-                 <div className="mb-2 flex items-center justify-between">
-                   <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                      <Wallet size={14} className="text-blue-500" /> Bảng giá thuê phòng
-                   </Label>
-                   <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: [...formData.prices, { id: 'p' + Date.now(), packageName: 'Gói mới', price: 0, duration: 1 }]})} className="text-[11px] font-semibold text-blue-600 hover:bg-blue-50">+ Thêm gói</Button>
-                 </div>
-                 <div className="space-y-2">
-                    {formData.prices.map((p: any, idx: number) => (
-                      <div key={idx} className="grid grid-cols-12 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 duration-200 animate-in fade-in zoom-in-95">
-                         <div className="col-span-5"><Input value={p.packageName} onChange={e => {
-                            const n = [...formData.prices]; n[idx].packageName = e.target.value; setFormData({...formData, prices: n});
-                         }} placeholder="Tên gói" className="h-9 rounded-lg text-xs font-semibold" /></div>
-                         <div className="col-span-4"><Input type="number" value={p.price} onChange={e => {
-                            const n = [...formData.prices]; n[idx].price = Number(e.target.value); setFormData({...formData, prices: n});
-                         }} placeholder="Đơn giá" className="h-9 rounded-lg text-xs font-semibold" /></div>
-                         <div className="col-span-2"><Input type="number" value={p.duration} onChange={e => {
-                            const n = [...formData.prices]; n[idx].duration = Number(e.target.value); setFormData({...formData, prices: n});
-                         }} placeholder="T.hạn" className="h-9 rounded-lg text-xs font-semibold" /></div>
-                         <div className="col-span-1 flex justify-center"><Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: formData.prices.filter((_:any, i:number) => i !== idx)})} className="size-8 p-0 text-slate-400 hover:text-rose-500"><X size={14} /></Button></div>
+               <div className="grid gap-2 border-t pt-4">
+                 <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    <Activity size={14} className="text-amber-500" /> Phụ phí điện, nước & dịch vụ
+                 </Label>
+                 <div className="grid gap-3">
+                    {formData.utility_fees?.map((fee: any, idx: number) => (
+                      <div key={idx} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-slate-700 capitalize">
+                             {fee.type === 'electricity' ? 'Điện' : fee.type === 'water' ? 'Nước' : 'Dịch vụ'}
+                          </span>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={fee.included} 
+                              onChange={e => {
+                                const n = [...formData.utility_fees]; n[idx].included = e.target.checked; setFormData({...formData, utility_fees: n});
+                              }}
+                              className="size-4 rounded border-slate-300 text-blue-600"
+                            />
+                            <span className="text-xs font-medium text-slate-600">Đã bao gồm trong giá phòng</span>
+                          </label>
+                        </div>
+                        
+                        {!fee.included && (
+                          <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] uppercase font-bold text-slate-400">Cách tính</Label>
+                              <Select 
+                                value={fee.method} 
+                                onValueChange={v => {
+                                  const n = [...formData.utility_fees]; n[idx].method = v; setFormData({...formData, utility_fees: n});
+                                }}
+                              >
+                                <SelectTrigger className="h-9 text-xs rounded-lg">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="per_unit">Theo số (kWh/m3)</SelectItem>
+                                  <SelectItem value="per_person">Theo người</SelectItem>
+                                  <SelectItem value="fixed">Cố định tháng</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] uppercase font-bold text-slate-400">Đơn giá (VNĐ)</Label>
+                              <Input 
+                                type="number" 
+                                value={fee.price} 
+                                onChange={e => {
+                                  const n = [...formData.utility_fees]; n[idx].price = Number(e.target.value); setFormData({...formData, utility_fees: n});
+                                }}
+                                className="h-9 text-xs rounded-lg"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                  </div>
-              </div>
+               </div>
+
+               <div className="grid gap-2 border-t pt-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                       <Wallet size={14} className="text-blue-500" /> Bảng giá thuê phòng
+                    </Label>
+                    <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: [...formData.prices, { id: 'p' + Date.now(), packageName: 'Gói mới', price: 0, duration: 1, unit: 'month', deposit_amount: 0, minimum_stay: 1 }]})} className="text-[11px] font-semibold text-blue-600 hover:bg-blue-50">+ Thêm gói</Button>
+                  </div>
+                  <div className="space-y-4">
+                     {formData.prices.map((p: any, idx: number) => (
+                       <div key={idx} className="relative space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-blue-200 transition-colors">
+                          <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: formData.prices.filter((_:any, i:number) => i !== idx)})} className="absolute top-2 right-2 size-7 p-0 text-slate-400 hover:text-rose-500"><X size={14} /></Button>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-slate-400">Tên gói / Loại hình</Label>
+                                <Input value={p.packageName} onChange={e => {
+                                   const n = [...formData.prices]; n[idx].packageName = e.target.value; setFormData({...formData, prices: n});
+                                }} placeholder="VD: Thuê tháng" className="h-10 rounded-xl text-sm font-semibold" />
+                             </div>
+                             <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-slate-400">Đơn vị tính</Label>
+                                <Select value={p.unit} onValueChange={v => {
+                                   const n = [...formData.prices]; n[idx].unit = v; setFormData({...formData, prices: n});
+                                }}>
+                                   <SelectTrigger className="h-10 rounded-xl text-sm font-semibold">
+                                      <SelectValue />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                      <SelectItem value="day">Theo đêm</SelectItem>
+                                      <SelectItem value="month">Theo tháng</SelectItem>
+                                   </SelectContent>
+                                </Select>
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                             <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-slate-400">Giá thuê (VNĐ)</Label>
+                                <Input type="number" value={p.price} onChange={e => {
+                                   const n = [...formData.prices]; n[idx].price = Number(e.target.value); setFormData({...formData, prices: n});
+                                }} className="h-10 rounded-xl text-sm font-bold text-blue-600" />
+                             </div>
+                             <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-slate-400">Tiền cọc (VNĐ)</Label>
+                                <Input type="number" value={p.deposit_amount} onChange={e => {
+                                   const n = [...formData.prices]; n[idx].deposit_amount = Number(e.target.value); setFormData({...formData, prices: n});
+                                }} placeholder="VD: 5000000" className="h-10 rounded-xl text-sm" />
+                             </div>
+                             <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-slate-400">Tối thiểu ({p.unit === 'month' ? 'tháng' : 'đêm'})</Label>
+                                <Input type="number" value={p.minimum_stay} onChange={e => {
+                                   const n = [...formData.prices]; n[idx].minimum_stay = Number(e.target.value); setFormData({...formData, prices: n});
+                                }} className="h-10 rounded-xl text-sm" />
+                             </div>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
            </div>
         </div>
       </InlineSheet>

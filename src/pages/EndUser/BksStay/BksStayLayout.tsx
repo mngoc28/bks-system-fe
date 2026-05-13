@@ -43,7 +43,7 @@ const BksStayLayout = () => {
     { id: "history", label: "Lịch sử đặt phòng", path: ROUTERS.BKS_STAY_HISTORY, icon: <History className="size-5" /> },
     { id: "account", label: "Tài khoản của tôi", path: ROUTERS.BKS_STAY_ACCOUNT, icon: <User className="size-5" /> },
     { id: "services", label: "Dịch vụ phòng", path: ROUTERS.BKS_STAY_SERVICES, icon: <ConciergeBell className="size-5" /> },
-    { id: "contracts", label: "Hợp đồng", path: ROUTERS.BKS_STAY_CONTRACTS, icon: <FileText className="size-5" /> },
+    { id: "contracts", label: "Hồ sơ lưu trú & Hợp đồng", path: ROUTERS.BKS_STAY_CONTRACTS, icon: <FileText className="size-5" /> },
     { id: "guide", label: "Hướng dẫn lưu trú", path: ROUTERS.BKS_STAY_GUIDE, icon: <BookOpen className="size-5" /> },
     { id: "support", label: "Hỗ trợ", path: ROUTERS.BKS_STAY_SUPPORT, icon: <HelpCircle className="size-5" /> },
   ];

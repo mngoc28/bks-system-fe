@@ -10,7 +10,6 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { formatCurrencyInput } from "@/utils/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Users, Clock, AlertCircle, MapPin, Maximize } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -22,6 +21,39 @@ import { bookingUserFormSchema } from "@/shared/shema";
 import type { z } from "zod";
 import { ROUTERS } from "@/constant";
 import { useMemo, useState } from "react";
+import { 
+    Wifi, Tv, Refrigerator, WashingMachine, Utensils, Mountain, Shield, 
+    AirVent, Coffee, Sparkles, Eraser, Zap, Stethoscope, Printer, 
+    ParkingCircle, Waves, Plane, CheckCircle2, Info, ArrowRight,
+    LucideIcon, Users, Clock, AlertCircle, MapPin, Maximize, Check
+} from "lucide-react";
+
+const getAmenityIcon = (name: string): LucideIcon => {
+    const n = name.toLowerCase();
+    if (n.includes("wifi")) return Wifi;
+    if (n.includes("ti vi") || n.includes("tv")) return Tv;
+    if (n.includes("tủ lạnh") || n.includes("fridge")) return Refrigerator;
+    if (n.includes("máy giặt") || n.includes("washing")) return WashingMachine;
+    if (n.includes("bếp") || n.includes("kitchen")) return Utensils;
+    if (n.includes("ban công") || n.includes("balcony")) return Mountain;
+    if (n.includes("bảo vệ") || n.includes("security")) return Shield;
+    if (n.includes("điều hòa") || n.includes("máy lạnh") || n.includes("air")) return AirVent;
+    return Check;
+};
+
+const getServiceIcon = (name: string): LucideIcon => {
+    const n = name.toLowerCase();
+    if (n.includes("bữa sáng") || n.includes("breakfast")) return Coffee;
+    if (n.includes("massage")) return Sparkles;
+    if (n.includes("dọn phòng") || n.includes("cleaning")) return Eraser;
+    if (n.includes("điện nước") || n.includes("electricity")) return Zap;
+    if (n.includes("y tế") || n.includes("medical")) return Stethoscope;
+    if (n.includes("in ấn") || n.includes("print")) return Printer;
+    if (n.includes("bãi đỗ") || n.includes("parking")) return ParkingCircle;
+    if (n.includes("giặt ủi") || n.includes("laundry")) return Waves;
+    if (n.includes("đưa đón") || n.includes("airport") || n.includes("shuttle")) return Plane;
+    return CheckCircle2;
+};
 
 const BookingPage = () => {
     const { t } = useTranslation();
@@ -40,6 +72,7 @@ const BookingPage = () => {
     const schema = bookingUserFormSchema(t);
     type BookingFormData = z.infer<typeof schema>;
 
+    const today = new Date().toISOString().split('T')[0];
     const {
         register,
         handleSubmit,
@@ -119,11 +152,14 @@ const BookingPage = () => {
             }
 
             toastSuccess(t("booking.success"));
-            navigate(ROUTERS.MY_BOOKINGS);
+            // Redirect to BKS Stay history after short delay if needed, 
+            // but for now we let them see the success page.
+            // navigate(ROUTERS.BKS_STAY_HISTORY);
         },
-        onError: (error) => {
+        onError: (error: any) => {
             console.error(error);
-            toastError(t("booking.error"));
+            const serverMessage = error?.response?.data?.message;
+            toastError(serverMessage || t("booking.error"));
         },
     });
 
@@ -136,16 +172,6 @@ const BookingPage = () => {
         setPreviewData(data);
         setCurrentStep(2);
     });
-
-    // handle service selection
-    const handleServiceChange = (serviceId: number, checked: boolean) => {
-        const currentServices = serviceIds;
-        if (checked) {
-            setValue("service_ids", [...currentServices, serviceId]);
-        } else {
-            setValue("service_ids", currentServices.filter(id => id !== serviceId));
-        }
-    };
 
     const services: ServiceItem[] = useMemo(() => {
         if (!room?.services) return [];
@@ -162,6 +188,26 @@ const BookingPage = () => {
             return [];
         }
     }, [room?.services]);
+
+    // handle service selection
+    const handleServiceChange = (serviceId: number, checked: boolean) => {
+        const currentServices = serviceIds;
+        if (checked) {
+            setValue("service_ids", [...currentServices, serviceId]);
+        } else {
+            setValue("service_ids", currentServices.filter(id => id !== serviceId));
+        }
+    };
+
+    const handleSelectAllServices = (checked: boolean) => {
+        if (checked) {
+            setValue("service_ids", services.map(s => s.id));
+        } else {
+            setValue("service_ids", []);
+        }
+    };
+
+    const isAllSelected = services.length > 0 && serviceIds.length === services.length;
 
     const selectedServices = useMemo(() => {
         return services.filter((service) => serviceIds.includes(service.id));
@@ -256,14 +302,37 @@ const BookingPage = () => {
                     {/* Left Column - Room Info */}
                     <div className="flex flex-col space-y-6">
                         <Card className="overflow-hidden border-slate-200/80 shadow-sm">
-                            <div className="flex flex-col p-4 md:flex-row">
-                                <div className="relative h-64 w-full md:h-auto md:w-2/5">
-                                    <img
-                                        src={roomImage}
-                                        alt={room.title}
-                                        className="size-full rounded-lg object-cover"
-                                    />
-                                </div>
+                                <div className="flex flex-col gap-4 p-4 md:flex-row">
+                                    <div className="flex w-full flex-col gap-3 md:w-2/5">
+                                        <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-md md:aspect-square">
+                                            <img
+                                                src={roomImage}
+                                                alt={room.title}
+                                                className="size-full object-cover transition-transform duration-500 hover:scale-110"
+                                            />
+                                            <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
+                                                Ảnh phòng
+                                            </div>
+                                        </div>
+                                        {room.images && room.images.length > 1 && (
+                                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                                                {room.images.slice(0, 4).map((img: any, idx: number) => (
+                                                    <div key={idx} className="size-16 shrink-0 overflow-hidden rounded-lg border-2 border-transparent transition-all hover:border-sky-500">
+                                                        <img
+                                                            src={`${CLOUDINARY_HEADER_IMAGE_URL}${img.image_url}`}
+                                                            className="size-full object-cover"
+                                                            alt={`Room view ${idx + 1}`}
+                                                        />
+                                                    </div>
+                                                ))}
+                                                {room.images.length > 4 && (
+                                                    <div className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-500 border border-slate-200">
+                                                        +{room.images.length - 4} ảnh
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 <div className="flex w-full flex-col justify-between p-4 pl-6 md:w-3/5">
                                     <CardHeader className="mb-2 p-0">
                                         <CardTitle className="text-2xl text-slate-900">{room.title}</CardTitle>
@@ -287,17 +356,24 @@ const BookingPage = () => {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <h4 className="text-base font-medium text-slate-900">{t("booking.amenities")}</h4>
+                                        <div className="space-y-3">
+                                            <h4 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                                                <Info className="size-4 text-sky-500" />
+                                                {t("booking.amenities")}
+                                            </h4>
                                             <div className="flex flex-wrap gap-2">
                                                 {(Array.isArray(room.amenities)
                                                     ? room.amenities.map((a: any) => a.name || a.toString())
                                                     : (room.amenities?.toString().split(',') || [])
-                                                ).map((amenity: string, idx: number) => (
-                                                    <span key={idx} className="rounded-md border border-sky-100 bg-sky-50 px-2 py-1 text-xs text-sky-700">
-                                                        {amenity.trim()}
-                                                    </span>
-                                                ))}
+                                                ).map((amenity: string, idx: number) => {
+                                                    const Icon = getAmenityIcon(amenity);
+                                                    return (
+                                                        <span key={idx} className="flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50/50 px-3 py-1.5 text-xs font-medium text-sky-700 transition-all hover:bg-sky-100 hover:shadow-sm">
+                                                            <Icon className="size-3.5" />
+                                                            {amenity.trim()}
+                                                        </span>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -306,37 +382,76 @@ const BookingPage = () => {
                         </Card>
 
                         <Card className="flex-1 border-slate-200/80 shadow-sm">
-                            <CardHeader>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                                 <CardTitle className="text-xl">{t("booking.services")}</CardTitle>
+                                {services.length > 0 && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100">
+                                        <Checkbox
+                                            id="select-all-services"
+                                            checked={isAllSelected}
+                                            onCheckedChange={(checked) => handleSelectAllServices(checked === true)}
+                                            className="size-4"
+                                        />
+                                        <Label htmlFor="select-all-services" className="text-xs font-semibold cursor-pointer text-slate-600">
+                                            {isAllSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                                        </Label>
+                                    </div>
+                                )}
                             </CardHeader>
                             <CardContent className="h-full space-y-4">
-                                <p className="mb-4 text-sm italic text-slate-600">
+                                <p className="text-sm italic text-slate-500">
                                     {t("booking.servicesDescription")}
                                 </p>
                                 {services && services.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {services.map((service: ServiceItem) => (
-                                            <div key={service.id} className="flex items-center space-x-3 rounded-xl border border-slate-200 p-3 transition-colors hover:bg-slate-50">
-                                                <Checkbox
-                                                    id={`service-${service.id}`}
-                                                    checked={serviceIds.includes(service.id)}
-                                                    onCheckedChange={(checked) => handleServiceChange(service.id, checked === true)}
-                                                    className="size-5"
-                                                />
-                                                <Label
-                                                    htmlFor={`service-${service.id}`}
-                                                    className="flex flex-1 cursor-pointer justify-between text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                                        {services.map((service: ServiceItem) => {
+                                            const Icon = getServiceIcon(service.name);
+                                            const isSelected = serviceIds.includes(service.id);
+                                            return (
+                                                <div 
+                                                    key={service.id} 
+                                                    className={`group flex items-center space-x-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${
+                                                        isSelected ? "border-sky-500 bg-sky-50/50 shadow-sm" : "border-slate-200 bg-white hover:border-sky-200"
+                                                    }`}
                                                 >
-                                                    <span className="text-slate-900">{service.name}</span>
-                                                    <span className="font-semibold text-slate-600">
-                                                        {parseFloat(service.price) > 0 ? `${formatCurrencyInput(service.price)} VNĐ` : 'Free'}
-                                                    </span>
-                                                </Label>
-                                            </div>
-                                        ))}
+                                                    <div className="relative flex items-center justify-center">
+                                                        <Checkbox
+                                                            id={`service-${service.id}`}
+                                                            checked={isSelected}
+                                                            onCheckedChange={(checked) => handleServiceChange(service.id, checked === true)}
+                                                            className="size-5 border-slate-300 data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600"
+                                                        />
+                                                    </div>
+                                                    <Label
+                                                        htmlFor={`service-${service.id}`}
+                                                        className="flex flex-1 cursor-pointer items-center justify-between gap-2"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`flex size-10 items-center justify-center rounded-lg transition-colors ${
+                                                                isSelected ? "bg-sky-100 text-sky-600" : "bg-slate-100 text-slate-500 group-hover:bg-sky-50 group-hover:text-sky-500"
+                                                            }`}>
+                                                                <Icon className="size-5" />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-slate-900">{service.name}</span>
+                                                                <span className="text-xs text-slate-500">Dịch vụ bổ sung</span>
+                                                            </div>
+                                                        </div>
+                                                        <span className={`text-sm font-bold ${isSelected ? "text-sky-700" : "text-slate-600"}`}>
+                                                            {parseFloat(service.price) > 0 ? `${formatCurrencyInput(service.price)}đ` : 'Free'}
+                                                        </span>
+                                                    </Label>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ) : (
-                                    <p className="text-sm italic text-slate-500">{t("booking.noExtraServices")}</p>
+                                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 p-8 text-center">
+                                        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-slate-50">
+                                            <Info className="size-6 text-slate-300" />
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-500">{t("booking.noExtraServices")}</p>
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
@@ -347,11 +462,11 @@ const BookingPage = () => {
                             </CardHeader>
                             <CardContent className="h-full space-y-4">
                                 <div className="flex items-start text-sm text-slate-700">
-                                    <Clock className="mr-3 mt-0.5 size-5 text-sky-500" />
-                                    <span>{t("booking.policySection.time")}</span>
+                                    <Clock className="mr-3 mt-0.5 size-5 text-sky-500 shrink-0" />
+                                    <span className="font-medium">{t("booking.policySection.time")}</span>
                                 </div>
-                                <div className="flex items-start text-sm text-rose-600">
-                                    <AlertCircle className="mr-3 mt-0.5 size-5" />
+                                <div className="flex items-start text-sm text-emerald-600 font-bold">
+                                    <CheckCircle2 className="mr-3 mt-0.5 size-5 shrink-0" />
                                     <span>{t("booking.policySection.cancellation")}</span>
                                 </div>
                                 <div className="mt-3 border-t pt-4">
@@ -376,14 +491,69 @@ const BookingPage = () => {
                     <div className="flex">
                         <Card className="flex-1 border-slate-200/80 shadow-sm">
                             <CardHeader className="pb-4">
-                                <CardTitle className="mb-2 text-xl">
-                                    {currentStep === 1 ? t("booking.customerInfo") : "Xác nhận đặt phòng"}
+                                <CardTitle className="mb-2 text-xl flex items-center gap-2">
+                                    {currentStep === 1 ? (
+                                        <>
+                                            <Users className="size-5 text-sky-500" />
+                                            {t("booking.customerInfo")}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 className="size-5 text-sky-500" />
+                                            Xác nhận đặt phòng
+                                        </>
+                                    )}
                                 </CardTitle>
                                 <p className="text-sm font-normal italic text-slate-500">
                                     {currentStep === 1 ? t("booking.helperText") : "Kiểm tra lại thông tin trước khi gửi yêu cầu đặt phòng."}
                                 </p>
                             </CardHeader>
-                            <CardContent className="flex flex-1 flex-col p-6">
+                            <CardContent className="flex flex-1 flex-col p-6 pt-0">
+                                {/* Real-time Order Summary in Step 1 */}
+                                {currentStep === 1 && (
+                                    <div className="mb-8 overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/50 shadow-sm transition-all hover:shadow-md">
+                                        <div className="bg-sky-600 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white flex items-center justify-between">
+                                            <span>Tóm tắt đơn hàng</span>
+                                            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px]">{numberOfNights} đêm</span>
+                                        </div>
+                                        <div className="p-5 space-y-4">
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between text-slate-600">
+                                                    <span>Tiền phòng</span>
+                                                    <span className="font-semibold text-slate-900">{formatCurrencyInput(roomTotal.toString())} {t("booking.money_unit")}</span>
+                                                </div>
+                                                <div className="flex justify-between text-slate-600">
+                                                    <span>Dịch vụ ({selectedServices.length})</span>
+                                                    <span className="font-semibold text-slate-900">+{formatCurrencyInput(serviceTotal.toString())} {t("booking.money_unit")}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="border-t border-sky-100 pt-4 flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">Tổng cộng tạm tính</span>
+                                                    <span className="text-2xl font-black text-sky-600">
+                                                        {formatCurrencyInput(estimatedTotal.toString())}
+                                                        <span className="ml-1 text-sm font-bold uppercase">{t("booking.money_unit")}</span>
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-col items-end text-[10px] text-slate-400 italic">
+                                                    <span>* Đã bao gồm thuế & phí</span>
+                                                    <span>* Thanh toán khi nhận phòng</span>
+                                                </div>
+                                            </div>
+
+                                            {selectedServices.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                                    {selectedServices.map(s => (
+                                                        <span key={s.id} className="text-[10px] bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full font-medium">
+                                                            {s.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                                 {currentStep === 1 ? (
                                     <form className="flex flex-1 flex-col space-y-8" onSubmit={(event) => event.preventDefault()}>
                                         {/* Personal Info */}
@@ -439,6 +609,7 @@ const BookingPage = () => {
                                                         id="start_date"
                                                         type="date"
                                                         required
+                                                        min={today}
                                                         {...register("start_date")}
                                                         className={`h-11 text-sm ${errors.start_date ? "border-red-500" : ""}`}
                                                     />
@@ -452,6 +623,7 @@ const BookingPage = () => {
                                                         id="end_date"
                                                         type="date"
                                                         required
+                                                        min={startDate || today}
                                                         {...register("end_date")}
                                                         className={`h-11 text-sm ${errors.end_date ? "border-red-500" : ""}`}
                                                     />
@@ -471,30 +643,14 @@ const BookingPage = () => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="space-y-3 rounded-xl border border-sky-100 bg-sky-50 p-6 text-sm text-sky-800">
-                                            <h4 className="flex items-center text-base font-semibold">
-                                                <Check className="mr-3 size-5" />
-                                                {t("booking.notes.title")}
-                                            </h4>
-                                            <ul className="list-inside list-disc space-y-2 pl-6">
-                                                <li className="text-sm">{t("booking.notes.step1")}</li>
-                                                <li className="text-sm">{t("booking.notes.step2")}</li>
-                                                <li className="text-sm">{t("booking.notes.step3")}</li>
-                                            </ul>
-                                            <p className="mt-3 border-t border-sky-200 pt-3 text-xs font-medium">
-                                                {t("booking.notes.terms")}
-                                            </p>
-                                            <p className="mt-2 text-xs italic text-sky-600">
-                                                {t("booking.notes.help")}
-                                            </p>
-                                        </div>
-                                        <div className="mt-auto">
+                                        <div className="mt-auto pt-6">
                                             <Button
                                                 type="button"
-                                                className="w-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 py-6 text-base hover:opacity-90"
+                                                className="group w-full bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 py-7 text-lg font-bold shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl active:scale-[0.99]"
                                                 onClick={handleContinueToConfirm}
                                             >
                                                 Tiếp tục xác nhận
+                                                <ArrowRight className="ml-2 size-5 transition-transform group-hover:translate-x-1" />
                                             </Button>
                                         </div>
                                     </form>
@@ -543,6 +699,20 @@ const BookingPage = () => {
                                                 </ul>
                                             </div>
                                         ) : null}
+                                        
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                                            <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+                                                <AlertCircle className="size-4" />
+                                                Quy trình pháp lý
+                                            </h3>
+                                            <p className="mt-2 text-xs leading-relaxed text-amber-700">
+                                                {room.property_type_id === 2 || room.property_type_id === 3 ? ( // Giả định 2=Căn hộ, 3=Văn phòng/dài hạn
+                                                    "Đây là loại hình lưu trú dài hạn. Sau khi đối tác xác nhận, bạn sẽ nhận được thông báo yêu cầu ký Hợp đồng thuê nhà điện tử tại mục 'Hồ sơ lưu trú' để hoàn tất thủ tục."
+                                                ) : (
+                                                    "Bằng việc xác nhận, bạn đồng ý với các Điều khoản & Điều kiện lưu trú ngắn hạn của hệ thống và đối tác."
+                                                )}
+                                            </p>
+                                        </div>
 
                                         <div className="flex gap-3 pt-2">
                                             <Button

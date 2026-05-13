@@ -36,3 +36,29 @@ export const useUpdatePartnerQuery = () => {
       },
     });
 }
+
+// Get logged-in partner profile
+export const usePartnerProfileQuery = () => {
+    return useQuery<PartnerDetailResponse, Error>({
+        queryKey: ["partner-profile"],
+        queryFn: () => partnerApi.getPartnerProfile(),
+        staleTime: 60_000,
+        gcTime: 5 * 60_000,
+    });
+}
+
+// Update logged-in partner profile
+export const useUpdatePartnerProfileMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+      mutationFn: (data: PartnerUpdate | FormData) => partnerApi.updatePartnerProfile(data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["partner-profile"]});
+        toastSuccess(t('partner.update_partner_success'))
+      },
+      onError: () => {
+        toastError(t('partner.update_partner_fail'))
+      },
+    });
+}

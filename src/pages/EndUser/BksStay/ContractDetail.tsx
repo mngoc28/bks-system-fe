@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
-import { toast } from "sonner";
+import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import SignaturePad from "@/components/shared/SignaturePad";
 import stayService, { Contract } from "@/services/stayService";
 
@@ -53,11 +53,12 @@ const ContractDetail = () => {
           setContract(data);
           if (data.status === 1 || data.status === 2) {
             setHasSigned(true);
+            if (data.signature) setSignatureData(data.signature);
           }
         }
       } catch (error) {
         console.error("Failed to fetch contract details", error);
-        toast.error("Không tìm thấy hợp đồng");
+        toastError("Không tìm thấy hợp đồng");
       } finally {
         setLoading(false);
       }
@@ -65,19 +66,31 @@ const ContractDetail = () => {
     fetchContract();
   }, [id]);
 
-  const handleSign = () => {
+  const handleSign = async () => {
     if (!signatureData) {
-      toast.error("Vui lòng cung cấp chữ ký trước khi xác nhận!");
+      toastError("Vui lòng cung cấp chữ ký trước khi xác nhận!");
       return;
     }
 
+    if (!id) return;
+
     setIsSigning(true);
-    setTimeout(() => {
+    try {
+      await stayService.signContract(id, signatureData);
       setHasSigned(true);
-      setIsSigning(false);
       setIsSignModalOpen(false);
-      toast.success("Hợp đồng đã được ký kết thành công!");
-    }, 2000);
+      toastSuccess("Hợp đồng đã được ký kết thành công!");
+
+      // Tự động chuyển hướng về trang chi tiết đặt phòng để kích hoạt hiệu ứng chúc mừng
+      setTimeout(() => {
+        navigate(`${ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId))}?confirmed=true`);
+      }, 2000);
+    } catch (error) {
+      console.error(error);
+      toastError("Lỗi khi ký hợp đồng. Vui lòng thử lại sau.");
+    } finally {
+      setIsSigning(false);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +103,7 @@ const ContractDetail = () => {
         };
         reader.readAsDataURL(file);
       } else {
-        toast.error("Vui lòng chọn một file ảnh hợp lệ.");
+        toastError("Vui lòng chọn một file ảnh hợp lệ.");
       }
     }
   };
@@ -145,7 +158,7 @@ const ContractDetail = () => {
            <div className="h-4 w-px bg-slate-200" />
            <span className="text-xs font-black uppercase leading-none tracking-widest text-slate-400">ID: {contract.id}</span>
         </div>
-        <Button variant="outline" className="h-12 gap-2 rounded-2xl border-slate-200 bg-white font-bold" onClick={() => toast.info("Đang tạo file PDF...")}>
+        <Button variant="outline" className="h-12 gap-2 rounded-2xl border-slate-200 bg-white font-bold" onClick={() => toastInfo("Đang tạo file PDF...")}>
            <Download className="size-4" /> Tải bản PDF
         </Button>
       </div>
@@ -275,7 +288,7 @@ const ContractDetail = () => {
                              <p className="text-[10px] leading-relaxed opacity-70">Hợp đồng này được bảo vệ bởi chứng chỉ số SHA-256 của BKS Systems.</p>
                           </div>
                        </div>
-                       <Button className="h-14 w-full rounded-2xl border-none bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId)))}>
+                       <Button className="h-14 w-full rounded-2xl border-none bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(`${ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId))}?confirmed=true`)}>
                           Xem kỳ nghỉ liên quan
                        </Button>
                        {hasSigned && contract.status === 0 && (
@@ -289,11 +302,11 @@ const ContractDetail = () => {
            <Card className="rounded-[32px] border-none bg-white p-8 shadow-xl shadow-slate-200/50">
               <h3 className="mb-6 text-xl font-bold">Hành động</h3>
               <div className="space-y-3 text-sm font-bold">
-                 <button onClick={() => toast.info("Đang mở bản dịch...")} className="flex w-full items-center justify-between rounded-2xl p-4 transition-colors hover:bg-slate-50">
+                 <button onClick={() => toastInfo("Đang mở bản dịch...")} className="flex w-full items-center justify-between rounded-2xl p-4 transition-colors hover:bg-slate-50">
                     <span className="flex items-center gap-3"><ExternalLink className="size-4 text-slate-400" /> Ngôn ngữ: Tiếng Việt</span>
                     <ChevronRight className="size-4 text-slate-300" />
                  </button>
-                 <button onClick={() => toast.info("Đang xác thực...")} className="flex w-full items-center justify-between rounded-2xl p-4 transition-colors hover:bg-slate-50">
+                 <button onClick={() => toastInfo("Đang xác thực...")} className="flex w-full items-center justify-between rounded-2xl p-4 transition-colors hover:bg-slate-50">
                     <span className="flex items-center gap-3"><ShieldCheck className="size-4 text-slate-400" /> Xác thực tính pháp lý</span>
                     <ChevronRight className="size-4 text-slate-300" />
                  </button>

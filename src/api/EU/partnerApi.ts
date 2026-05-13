@@ -9,4 +9,8 @@ export const partnerApi = {
     // Fetch partner details along with their rooms
     getPartnerInfo: (partner_id: number): Promise<{ data: PartnerDetail }> =>
         axiosClient.get(`partners/detail/${partner_id}`),
+
+    // Fetch random partners for homepage
+    getRandomPartners: (): Promise<{ data: Partner[] }> =>
+        axiosClient.get("home/partners/random"),
 }

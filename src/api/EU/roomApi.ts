@@ -17,4 +17,8 @@ export const roomApi = {
     getRoomDetail: (id: number): Promise<AxiosResponse<any>> => {
         return axiosClient.get(`rooms/${id}`);
     },
+
+    getLatestRooms: (): Promise<AxiosResponse<any>> => {
+        return axiosClient.get("home/rooms/getLatest");
+    },
 }

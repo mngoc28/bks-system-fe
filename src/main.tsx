@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "sonner";
+import { Toaster } from "./components/ui/sonner";
 import ScrollToTop from "./components/common/ScrollToTop";
 import Router from "./Router";
 import "./assets/fonts.css";

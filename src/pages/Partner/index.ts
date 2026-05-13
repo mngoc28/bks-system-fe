@@ -13,3 +13,4 @@ export { default as Calendar } from './Calendar';
 export { default as PriceRules } from './PriceRules';
 export { default as Chat } from './Chat';
 export { default as Reports } from './Reports';
+export { default as Profile } from './Profile';

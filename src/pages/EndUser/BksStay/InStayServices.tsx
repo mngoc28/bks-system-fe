@@ -21,7 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import stayService from "@/services/stayService";
 
 const InStayServices = () => {
@@ -53,25 +53,25 @@ const InStayServices = () => {
 
   const handleOrderService = async (serviceId: number | string, label: string) => {
     if (!activeBooking) {
-      toast.error("Bạn không có kỳ nghỉ nào đang diễn ra.");
+      toastError("Bạn không có kỳ nghỉ nào đang diễn ra.");
       return;
     }
     try {
       await stayService.orderService(activeBooking.id, typeof serviceId === 'string' ? 1 : serviceId, orderNote);
-      toast.success(`Đã tiếp nhận yêu cầu: ${label}`);
+      toastSuccess(`Đã tiếp nhận yêu cầu: ${label}`);
       setOrderNote(""); // Reset note
       
       // Refresh list
       const dashRes: any = await stayService.getDashboard();
       setActiveBooking(dashRes.data?.active_booking);
     } catch {
-      toast.error("Không thể gửi yêu cầu lúc này.");
+      toastError("Không thể gửi yêu cầu lúc này.");
     }
   };
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`Đã sao chép ${label}!`);
+    toastSuccess(`Đã sao chép ${label}!`);
   };
 
   const fallbackServices = [
@@ -132,7 +132,7 @@ const InStayServices = () => {
                     <p className="text-xs font-black uppercase tracking-widest text-slate-400">Mã khóa cửa số (Passcode)</p>
                     <div className="flex items-center gap-4">
                        <h2 className="text-6xl font-black tracking-tighter text-white">283944</h2>
-                       <Button variant="ghost" size="icon" className="text-slate-400 hover:bg-white/10" onClick={() => toast.info("Đang làm mới mã khóa...")}>
+                       <Button variant="ghost" size="icon" className="text-slate-400 hover:bg-white/10" onClick={() => toastInfo("Đang làm mới mã khóa...")}>
                           <RefreshCw className="size-5" />
                        </Button>
                     </div>

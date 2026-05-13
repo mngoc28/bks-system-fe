@@ -88,6 +88,7 @@ const PartnerMaintenances = React.lazy(() => import("./pages/Partner/Maintenance
 const PartnerFinance = React.lazy(() => import("./pages/Partner/Finance"));
 const PartnerPropertyRooms = React.lazy(() => import("./pages/Partner/PropertyRooms"));
 const PartnerContracts = React.lazy(() => import("./pages/Partner/Contracts"));
+const PartnerContractDetail = React.lazy(() => import("./pages/Partner/ContractDetail"));
 const PartnerRoomDetail = React.lazy(() => import("./pages/Partner/RoomDetail"));
 const PartnerLogin = React.lazy(() => import("./pages/Partner/Login/index"));
 const PartnerStayServices = React.lazy(() => import("./pages/Partner/StayServiceManagement"));
@@ -96,6 +97,7 @@ const PartnerPriceRules = React.lazy(() => import("./pages/Partner/PriceRules"))
 const PartnerChat = React.lazy(() => import("./pages/Partner/Chat"));
 const PartnerReports = React.lazy(() => import("./pages/Partner/Reports"));
 const PartnerNotifications = React.lazy(() => import("./pages/Partner/Notifications"));
+const PartnerProfile = React.lazy(() => import("./pages/Partner/Profile"));
 
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center">
@@ -134,9 +136,26 @@ const PartnerPrivateRoute = ({ children }: { children: React.ReactNode }) => {
 
 const StayPrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = getAccessToken();
-  const isAuthenticated = !!token && !isTokenExpired(token);
+  const userEmail = useUserStore((state) => state.userEmail);
+  const location = useLocation();
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/bks-stay/login" replace />;
+  // Fallback to localStorage to prevent redirection during hydration
+  let email = userEmail;
+  if (!email) {
+    const persistedData = localStorage.getItem('user');
+    if (persistedData) {
+      try {
+        const parsed = JSON.parse(persistedData);
+        email = parsed?.state?.userEmail || '';
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const isAuthenticated = !!token && !!email && !isTokenExpired(token);
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/bks-stay/login" state={{ from: location }} replace />;
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -382,12 +401,14 @@ export default function Router() {
           <Route path="news" element={<PartnerNews />} />
           <Route path="maintenances" element={<PartnerMaintenances />} />
           <Route path="contracts" element={<PartnerContracts />} />
+          <Route path="contracts/:id" element={<PartnerContractDetail />} />
           <Route path="stay-services" element={<PartnerStayServices />} />
           <Route path="calendar" element={<PartnerCalendar />} />
           <Route path="price-rules" element={<PartnerPriceRules />} />
           <Route path="chat" element={<PartnerChat />} />
           <Route path="reports" element={<PartnerReports />} />
           <Route path="notifications" element={<PartnerNotifications />} />
+          <Route path="profile" element={<PartnerProfile />} />
           <Route path="properties/:propertyId/rooms" element={<PartnerPropertyRooms />} />
           <Route path="rooms/:roomId" element={<PartnerRoomDetail />} />
         </Route>

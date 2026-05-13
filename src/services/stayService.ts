@@ -43,6 +43,9 @@ export interface Contract {
   content: string;
   status: number;
   type: string;
+  contract_type?: string;
+  signature?: string;
+  signature_date?: string;
   booking: {
     id: number;
     start_date: string;
@@ -78,10 +81,22 @@ export interface BookingDetail {
       address: string;
     };
     images: Array<{ image_url: string }>;
+    amenities?: string[];
   };
+  services?: Array<{
+    id: number;
+    name: string;
+    price: number;
+  }>;
   price: {
     price: number;
   };
+  created_at: string;
+  contracts?: Array<{
+    id: number;
+    status: number;
+    title?: string;
+  }>;
 }
 
 export interface NotificationData {
@@ -118,6 +133,9 @@ const stayService = {
   },
   getContractDetail: (id: number | string) => {
     return apiService.get<Contract>(`/api/v1/stay/contracts/${id}`);
+  },
+  signContract: (id: number | string, signature: string) => {
+    return apiService.put(`/api/v1/stay/contracts/${id}/sign`, { signature });
   },
   getInStayServices: (bookingId: string | number) => {
     return apiService.get(`/api/v1/stay/services/${bookingId}`);

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ROUTERS } from "@/constant";
+import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { PartnerGridProps } from "@/dataHelper/partner.dataHelper";
 
 const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaHref = ROUTERS.COMPANY_HUB }: PartnerGridProps) => {
@@ -35,9 +35,14 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
           >
             <div className="relative h-40 w-full overflow-hidden">
               <img
-                src={company.image}
+                src={company.image || DEFAULT_ROOM_IMAGE}
                 alt={company.name}
                 className="size-full object-cover transition duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = DEFAULT_ROOM_IMAGE;
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/5 to-transparent" />
               <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-slate-700 shadow">

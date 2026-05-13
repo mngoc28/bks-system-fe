@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
-import { toast } from "sonner";
+import { toastSuccess, toastError } from "@/components/ui/toast";
 
 import stayService, { StayDashboardData } from "@/services/stayService";
 
@@ -58,17 +58,17 @@ const Dashboard = () => {
   const handleExtendSubmit = async () => {
     if (!data?.active_booking) return;
     if (!newEndDate) {
-      toast.error("Vui lòng nhập ngày muốn trả phòng mới.");
+      toastError("Vui lòng nhập ngày muốn trả phòng mới.");
       return;
     }
     
     try {
       setLoading(true);
       await stayService.extendBooking(data.active_booking.id, newEndDate);
-      toast.success(`Yêu cầu gia hạn đến ngày ${newEndDate} đã được gửi! Chúng tôi sẽ phản hồi sớm.`);
+      toastSuccess(`Yêu cầu gia hạn đến ngày ${newEndDate} đã được gửi! Chúng tôi sẽ phản hồi sớm.`);
       setIsExtendDialogOpen(false);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Không thể gửi yêu cầu gia hạn.");
+      toastError(error.response?.data?.message || "Không thể gửi yêu cầu gia hạn.");
     } finally {
       setLoading(false);
     }

@@ -30,7 +30,7 @@ const BookingSuccess = () => {
         <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
           <p className="text-slate-600">Không tìm thấy thông tin đặt phòng.</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Button onClick={() => navigate(ROUTERS.MY_BOOKINGS)}>Đến đơn của tôi</Button>
+            <Button onClick={() => navigate(ROUTERS.BKS_STAY_HISTORY)}>Đến đơn của tôi</Button>
             <Button variant="secondary" className="border border-slate-300 bg-white text-slate-700" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
               Tìm phòng khác
             </Button>
@@ -50,7 +50,18 @@ const BookingSuccess = () => {
         <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
           <CheckCircle2 className="mx-auto size-14 text-emerald-300" />
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng thành công</h1>
-          <p className="mt-3 text-slate-200">Yêu cầu của bạn đã được ghi nhận. Chúng tôi đã gửi thông tin xác nhận về email đăng ký.</p>
+          <div className="mt-6 inline-flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-slate-100 leading-relaxed">
+              Yêu cầu của bạn đã được ghi nhận. Chúng tôi đã gửi thông tin xác nhận chi tiết về email đăng ký.
+            </p>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <p className="text-sm sm:text-base text-slate-300">
+              <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-400 mr-2">
+                Quan trọng
+              </span>
+              Vui lòng kiểm tra kỹ hộp thư đến và cả thư mục <span className="font-semibold text-sky-400 italic">Spam (Thư rác)</span> nếu không thấy email.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -93,7 +104,7 @@ const BookingSuccess = () => {
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-                <Link to={ROUTERS.MY_BOOKINGS}>Xem đơn của tôi</Link>
+                <Link to={ROUTERS.BKS_STAY_HISTORY}>Xem đơn của tôi</Link>
               </Button>
               <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
                 <Link to={ROUTERS.SEARCH_ROOMS}>Tiếp tục tìm phòng</Link>

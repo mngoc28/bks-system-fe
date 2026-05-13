@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { getAccessToken, removeAccessToken, setAccessToken, clearAllDashboardDateRanges } from "../utils/storage";
+import { disconnectEcho } from "@/lib/echoClient";
 
 interface UserStore {
   userEmail: string;
@@ -34,6 +35,7 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
       logout() {
         removeAccessToken();
         clearAllDashboardDateRanges();
+        disconnectEcho();
         set(() => ({
           userEmail: "",
           userRole: "",

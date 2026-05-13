@@ -43,3 +43,13 @@ export const usePartnerDetailQuery = (partner_id: number) => {
         enabled: !!partner_id,
     });
 };
+
+export const useRandomPartnersQuery = () => {
+    return useQuery({
+        queryKey: ["home-random-partners"],
+        queryFn: async (): Promise<Partner[]> => {
+            const response = await partnerApi.getRandomPartners();
+            return response.data;
+        },
+    });
+};

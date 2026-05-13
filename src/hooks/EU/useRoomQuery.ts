@@ -20,3 +20,13 @@ export const useRoomsQuery = (params: PublicRoomListParams = {}, options?: { ena
     enabled: options?.enabled !== false,
   });
 };
+
+export const useLatestRoomsQuery = () => {
+  return useQuery({
+    queryKey: ["home-latest-rooms"],
+    queryFn: async () => {
+      const response = await roomApi.getLatestRooms();
+      return response.data;
+    },
+  });
+};

@@ -16,6 +16,7 @@ export const setAccessToken = (token: string, remember: boolean = true) => {
 
 export const removeAccessToken = () => {
   localStorage.removeItem(STORAGE_VAR.ACCESS_TOKEN);
+  sessionStorage.removeItem(STORAGE_VAR.ACCESS_TOKEN);
 };
 
 export const getUserEmail = () => {

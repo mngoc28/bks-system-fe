@@ -21,7 +21,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { toastSuccess } from "@/components/ui/toast";
 
 const Support = () => {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
@@ -142,7 +142,7 @@ const Support = () => {
                     <h3 className="text-lg font-black text-sky-900">Không tìm thấy câu trả lời?</h3>
                     <p className="text-sm text-sky-700/70">Gửi tin nhắn trực tiếp cho trợ lý ảo của chúng tôi để được giải đáp tức thì.</p>
                  </div>
-                 <Button onClick={() => toast.success("AI Assistant đang kết nối...")} className="h-12 rounded-2xl bg-sky-600 px-8 font-bold shadow-lg shadow-sky-600/20 hover:bg-sky-500 md:ml-auto">Chat với AI</Button>
+                 <Button onClick={() => toastSuccess("AI Assistant đang kết nối...")} className="h-12 rounded-2xl bg-sky-600 px-8 font-bold shadow-lg shadow-sky-600/20 hover:bg-sky-500 md:ml-auto">Chat với AI</Button>
               </div>
            </Card>
         </div>
