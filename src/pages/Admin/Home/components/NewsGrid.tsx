@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Clock3, Newspaper } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ROUTERS } from "@/constant";
+import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { NewsGridProps } from "@/dataHelper/news.dataHelper";
 
 const NewsGrid = ({
@@ -76,9 +76,14 @@ const NewsGrid = ({
             >
             <div className="relative h-44 w-full overflow-hidden">
               <img
-                src={article.image}
+                src={article.image || DEFAULT_ROOM_IMAGE}
                 alt={article.title}
                 className="size-full object-cover transition duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = DEFAULT_ROOM_IMAGE;
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent" />
             </div>

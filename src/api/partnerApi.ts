@@ -8,4 +8,10 @@ export const partnerApi = {
         axiosClient.get(`admin/partner/${id}`),
     updatePartner: (data: PartnerUpdate | FormData, id: number): Promise<PartnerUpdateResponse> =>
         axiosClient.post(`admin/partner/${id}`, data),
+
+    // Partner-scoped profile endpoints
+    getPartnerProfile: (): Promise<PartnerDetailResponse> =>
+        axiosClient.get("partner/profile"),
+    updatePartnerProfile: (data: PartnerUpdate | FormData): Promise<PartnerUpdateResponse> =>
+        axiosClient.put("partner/profile", data),
 }

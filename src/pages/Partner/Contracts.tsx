@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Search, Plus, Filter, 
   Download, Eye, User, 
@@ -44,6 +45,7 @@ interface Contract {
 }
 
 const Contracts: React.FC = () => {
+  const navigate = useNavigate();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,10 +58,6 @@ const Contracts: React.FC = () => {
     title: '',
     content: '',
   });
-
-  // Detail Modal State
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
     fetchContracts();
@@ -222,7 +220,8 @@ const Contracts: React.FC = () => {
                       variant="ghost" 
                       size="icon" 
                       className="size-8 text-blue-600 hover:bg-blue-50"
-                      onClick={() => { setSelectedContract(contract); setIsDetailOpen(true); }}
+                      onClick={() => navigate(`/partner/contracts/${contract.id}`)}
+                      title="Mở trang chi tiết"
                     >
                       <Eye size={18} />
                     </Button>
@@ -298,50 +297,6 @@ const Contracts: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Modal */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-[700px]">
-          <DialogHeader>
-            <DialogTitle>Chi tiết Hợp đồng</DialogTitle>
-          </DialogHeader>
-          {selectedContract && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <span className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Khách thuê</span>
-                  <p className="font-bold">{selectedContract.booking?.user?.name}</p>
-                </div>
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <span className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Tài sản</span>
-                  <p className="font-bold">{selectedContract.booking?.room?.building?.name} - {selectedContract.booking?.room?.title || selectedContract.booking?.room?.name}</p>
-                </div>
-              </div>
-
-              <div>
-                <span className="mb-2 block text-[10px] font-bold uppercase text-gray-400">Nội dung điều khoản</span>
-                <div className="min-h-[300px] whitespace-pre-wrap rounded-lg border border-gray-100 bg-gray-50 p-4 font-serif text-sm text-gray-700">
-                  {selectedContract.content}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <div className="text-gray-500">
-                  Ngày tạo: {new Date(selectedContract.created_at).toLocaleDateString('vi-VN')}
-                </div>
-                <div>
-                  Trạng thái: {getStatusBadge(selectedContract.status)}
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Download size={18} /> Tải bản PDF
-            </Button>
-            <Button onClick={() => setIsDetailOpen(false)}>Đóng</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

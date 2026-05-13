@@ -1,5 +1,5 @@
 import React, { useState } from "react"; // test edit
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   Key, 
   Mail, 
@@ -14,10 +14,10 @@ import { Input } from "@/components/ui/input";
 import { ROUTERS } from "@/constant";
 import { useLoginMutation } from "@/hooks/useAuthQuery";
 import { useUserStore } from "@/store/useUserStore";
-import { toast } from "sonner";
+import { toastSuccess, toastError } from "@/components/ui/toast";
 
 const GuestLogin = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,7 +30,7 @@ const GuestLogin = () => {
     const password = formData.get("password") as string;
 
     if (!email || !password) {
-      toast.error("Vui lòng nhập đầy đủ email và mật khẩu");
+      toastError("Vui lòng nhập đầy đủ email và mật khẩu");
       return;
     }
 
@@ -40,13 +40,13 @@ const GuestLogin = () => {
       onSuccess: (response: any) => {
         const { token, role, name, email } = response.data;
         useUserStore.getState().login(token, email, role, name);
-        toast.success(`Chào mừng trở lại, ${name}!`);
-        navigate(ROUTERS.BKS_STAY_DASHBOARD);
+        toastSuccess(`Chào mừng trở lại, ${name}!`);
+        const from = (location.state as any)?.from?.pathname || ROUTERS.BKS_STAY_DASHBOARD; navigate(from, { replace: true });
         setIsLoading(false);
       },
       onError: (error: any) => {
         console.error("Login failed", error);
-        toast.error(error?.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+        toastError(error?.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
         setIsLoading(false);
       }
     });

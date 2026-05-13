@@ -77,13 +77,56 @@ export const partnerService = {
   // --- BOOKINGS ---
   getBookings: (params?: any) => apiService.get(`${BASE_URL}/bookings`, { params }),
   confirmBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/confirm`),
-  cancelBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/cancel`),
+  // Partner Portal 360 Phase 2: quickConfirm là alias rõ nghĩa của confirmBooking,
+  // dùng cho quick action trong list/dashboard. Server-side cùng endpoint.
+  quickConfirm: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/confirm`),
+  cancelBooking: (id: number | string, reason?: string) =>
+    apiService.put(`${BASE_URL}/bookings/${id}/cancel`, reason ? { reason } : undefined),
+  noShowBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/no-show`),
   checkInBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/check-in`),
   checkOutBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/check-out`),
+  bulkConfirmBookings: (ids: Array<number | string>) =>
+    apiService.post(`${BASE_URL}/bookings/bulk-confirm`, { ids }),
+  bulkCancelBookings: (ids: Array<number | string>, reason: string) =>
+    apiService.post(`${BASE_URL}/bookings/bulk-cancel`, { ids, reason }),
 
   checkIn: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/check-in`),
   checkOut: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/check-out`),
   getPartnerCalendar: (params?: any) => apiService.get(`${BASE_URL}/bookings`, { params: { ...params, per_page: 100 } }),
+
+  // Partner Portal 360 Phase 3 — Calendar/Room Block
+  // Trả {bookings, blocks, property_id, room_id, from, to, cached_at}.
+  // `property_id`/`room_id` optional; bỏ trống = "tất cả tài sản".
+  getCalendar: (params: {
+    property_id?: number | string | null;
+    room_id?: number | string | null;
+    from: string;
+    to: string;
+  }) => apiService.get(`${BASE_URL}/calendar`, { params }),
+
+  getRoomBlocks: (params: {
+    property_id?: number | string | null;
+    room_id?: number | string | null;
+    from: string;
+    to: string;
+  }) => apiService.get(`${BASE_URL}/room-blocks`, { params }),
+  createRoomBlock: (data: {
+    room_id: number | string;
+    start_date: string;
+    end_date: string;
+    block_type: 'maintenance' | 'owner_use' | 'off_market';
+    reason: string;
+    note?: string;
+  }) => apiService.post(`${BASE_URL}/room-blocks`, data),
+  deleteRoomBlock: (id: number | string) =>
+    apiService.delete(`${BASE_URL}/room-blocks/${id}`),
+
+  // Drag-drop: cập nhật khoảng/phòng. Server trả 409 + payload chi tiết khi
+  // conflict — caller phải revert UI.
+  moveBooking: (
+    id: number | string,
+    payload: { start_date?: string; end_date?: string; room_id?: number | string },
+  ) => apiService.put(`${BASE_URL}/bookings/${id}/move`, payload),
 
   // --- CHAT ---
   getConversations: () => apiService.get(`${BASE_URL}/chat`),
@@ -116,6 +159,12 @@ export const partnerService = {
   getContracts: () => apiService.get(`${BASE_URL}/contracts`),
   getContractDetail: (id: number | string) => apiService.get(`${BASE_URL}/contracts/${id}`),
   createContract: (data: any) => apiService.post(`${BASE_URL}/contracts`, data),
+  // Partner Portal 360 Phase 5: renewal reminder + termination + alert listing.
+  getExpiringContracts: () => apiService.get(`${BASE_URL}/contracts/expiring-soon`),
+  setContractRenewalReminder: (id: number | string, remindAt?: string) =>
+    apiService.put(`${BASE_URL}/contracts/${id}/renewal-reminder`, remindAt ? { remind_at: remindAt } : {}),
+  terminateContract: (id: number | string, reason: string) =>
+    apiService.post(`${BASE_URL}/contracts/${id}/terminate`, { reason }),
   // --- NOTIFICATIONS ---
   getNotifications: (page: number = 1) => 
     apiService.get<PaginatedResponse<NotificationData>>(`${BASE_URL}/notifications?page=${page}`),

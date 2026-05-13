@@ -1,13 +1,16 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MapPin, Search } from "lucide-react";
-import { ROUTERS, CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { ROUTERS, CLOUDINARY_HEADER_IMAGE_URL, DEFAULT_ROOM_IMAGE } from "@/constant";
 import SearchableSelect from "@/components/ui/searchable-select";
 import FeaturedRoomCarousel from "@/components/rooms/FeaturedRoomCarousel";
 import ContactCard from "@/components/common/ContactCard";
 import { toastError } from "@/components/ui/toast";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
+import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
+import { useLatestRoomsQuery } from "@/hooks/EU/useRoomQuery";
+import { useRandomPartnersQuery } from "@/hooks/EU/usePartnerQuery";
 import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
 import type { Ward } from "@/dataHelper/ward.dataHelper";
 import type { RoomCard } from "@/dataHelper/home.dataHelper";
@@ -38,107 +41,39 @@ const PublicHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [provinceId, setProvinceId] = useState<number | null>(null);
-  const [districtId, setDistrictId] = useState<number | null>(null);
+  const [wardId, setWardId] = useState<number | null>(null);
+  const [propertyTypeId, setPropertyTypeId] = useState<number | null>(null);
 
   const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
-  const { data: districtsData, isLoading: isLoadingDistricts } = useGetHomeWardsByProvinceId(provinceId ?? 0);
+  const { data: wardsData, isLoading: isLoadingWards } = useGetHomeWardsByProvinceId(provinceId ?? 0);
+  const { data: propertyTypesData, isLoading: isLoadingPropertyTypes } = useBuildingTypesQuery();
   const { data: latestNewsData, isLoading: isLoadingNews, isError: isErrorNews } = useLatestNewsQuery(6);
 
-  const featuredRooms: RoomCard[] = useMemo(
-    () => [
-      {
-        id: 1,
-        name: "Skyline Premier Apartment",
-        address: "120 Nguyen Trai, District 1",
-        price: "18,000,000₫ / month",
-        image: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
-        area: "85 m²",
-        beds: 2,
-      },
-      {
-        id: 2,
-        name: "Riverside Garden Loft",
-        address: "75 Tran Hung Dao, District 5",
-        price: "14,500,000₫ / month",
-        image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
-        area: "68 m²",
-        beds: 1,
-      },
-      {
-        id: 3,
-        name: "Sunset View Condo",
-        address: "18 Pham Van Dong, Thu Duc",
-        price: "16,200,000₫ / month",
-        image: "https://images.unsplash.com/photo-1512914890250-353c87e0e961?auto=format&fit=crop&w=1200&q=80",
-        area: "92 m²",
-        beds: 3,
-      },
-      {
-        id: 4,
-        name: "Urban Nest Studio",
-        address: "88 Le Loi, District 3",
-        price: "9,800,000₫ / month",
-        image: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
-        area: "48 m²",
-        beds: 1,
-      },
-      {
-        id: 5,
-        name: "Pearl Residences",
-        address: "210 Dien Bien Phu, Binh Thanh",
-        price: "21,500,000₫ / month",
-        image: "https://images.unsplash.com/photo-1519985176271-adb1088fa94c?auto=format&fit=crop&w=1200&q=80",
-        area: "105 m²",
-        beds: 3,
-      },
-      {
-        id: 6,
-        name: "Emerald Suites",
-        address: "60 Hoang Dieu, District 4",
-        price: "12,700,000₫ / month",
-        image: "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
-        area: "62 m²",
-        beds: 1,
-      },
-      {
-        id: 7,
-        name: "Lakeside Harmony",
-        address: "45 Nguyen Van Cu, District 5",
-        price: "13,400,000₫ / month",
-        image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80",
-        area: "74 m²",
-        beds: 2,
-      },
-      {
-        id: 8,
-        name: "Panorama Heights",
-        address: "11 Nguyen Huu Canh, Binh Thanh",
-        price: "19,900,000₫ / month",
-        image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80",
-        area: "98 m²",
-        beds: 3,
-      },
-      {
-        id: 9,
-        name: "Crescent Bay Loft",
-        address: "9 Nguyen Van Linh, District 7",
-        price: "15,300,000₫ / month",
-        image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80",
-        area: "80 m²",
-        beds: 2,
-      },
-      {
-        id: 10,
-        name: "Gardenia Residences",
-        address: "33 To Hien Thanh, District 10",
-        price: "11,200,000₫ / month",
-        image: "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
-        area: "58 m²",
-        beds: 1,
-      },
-    ],
-    [],
-  );
+  const { data: latestRoomsData } = useLatestRoomsQuery();
+  const { data: randomPartnersData } = useRandomPartnersQuery();
+
+  const featuredRooms: RoomCard[] = useMemo(() => {
+    const rooms = (latestRoomsData as any)?.data ?? latestRoomsData ?? [];
+    return (rooms as any[]).slice(0, 6).map((room: any) => {
+      const monthlyPrice = room.cheapest_monthly_price;
+      const dailyPrice = room.cheapest_daily_price;
+      const priceLabel = monthlyPrice
+        ? `${Number(monthlyPrice).toLocaleString('vi-VN')}₫ / tháng`
+        : dailyPrice
+          ? `${Number(dailyPrice).toLocaleString('vi-VN')}₫ / ngày`
+          : "Liên hệ";
+
+      return {
+        id: room.id,
+        name: room.title,
+        address: room.building_address || "Đang cập nhật",
+        price: priceLabel,
+        image: room.room_image ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.room_image}` : DEFAULT_ROOM_IMAGE,
+        area: `${room.area} m²`,
+        beds: room.people ?? 0,
+      };
+    });
+  }, [latestRoomsData]);
 
   const featuredProvinces = useMemo(() => {
     const provinces = provincesData?.data ?? [];
@@ -149,48 +84,15 @@ const PublicHome = () => {
     }));
   }, [provincesData]);
 
-
-  const partnerCompanies = useMemo(
-    () => [
-      {
-        id: 1,
-        name: "Lumiere Property Group",
-        address: "Floor 8, 21 Le Duan, District 1",
-        image: "https://images.unsplash.com/photo-1529429617124-aee71981ce52?auto=format&fit=crop&w=1000&q=80",
-      },
-      {
-        id: 2,
-        name: "Metropolitan Realty",
-        address: "123 Pasteur, Ben Nghe Ward, District 1",
-        image: "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?auto=format&fit=crop&w=1000&q=80",
-      },
-      {
-        id: 3,
-        name: "Crescent City Holdings",
-        address: "26 Nguyen Van Linh, Tan Phu Ward, District 7",
-        image: "https://images.unsplash.com/photo-1487956382158-bb926046304a?auto=format&fit=crop&w=1000&q=80",
-      },
-      {
-        id: 4,
-        name: "Lotus Property Partners",
-        address: "55 Dien Bien Phu, Da Kao Ward, District 1",
-        image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1000&q=80",
-      },
-      {
-        id: 5,
-        name: "Harborfront Estates",
-        address: "200 Nguyen Huu Canh, Ward 22, Binh Thanh",
-        image: "https://images.unsplash.com/photo-1488722796624-0aa6f1bb6399?auto=format&fit=crop&w=1000&q=80",
-      },
-      {
-        id: 6,
-        name: "Aurora Development",
-        address: "88 Tran Hung Dao, Ward 6, District 5",
-        image: "https://images.unsplash.com/photo-1496309981847-94b1d1b355ae?auto=format&fit=crop&w=1000&q=80",
-      },
-    ],
-    [],
-  );
+  const partnerCompanies = useMemo(() => {
+    const partners = (randomPartnersData as any)?.data ?? randomPartnersData ?? [];
+    return (partners as any[]).slice(0, 6).map((partner: any) => ({
+      id: partner.id,
+      name: [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || "Đối tác BKS",
+      address: partner.address || "Đang cập nhật",
+      image: partner.image_1 ? `${CLOUDINARY_HEADER_IMAGE_URL}${partner.image_1}` : DEFAULT_ROOM_IMAGE,
+    }));
+  }, [randomPartnersData]);
 
   const latestNews = useMemo(() => {
     const newsItems = latestNewsData?.data ?? [];
@@ -219,51 +121,67 @@ const PublicHome = () => {
     );
   }, [provincesData]);
 
-  const districtOptions = useMemo(() => {
+  const wardOptions = useMemo(() => {
     return (
-      districtsData?.data?.map((district: Ward) => ({
-        value: district.id.toString(),
-        label: district.name,
+      wardsData?.data?.map((ward: Ward) => ({
+        value: ward.id.toString(),
+        label: ward.name,
       })) ?? []
     );
-  }, [districtsData]);
+  }, [wardsData]);
 
-  const resetDistrict = (nextProvince: number | null) => {
+  const selectedProvinceName = useMemo(() => {
+    return provincesData?.data?.find((p: ProvinceTypes) => p.id === provinceId)?.name;
+  }, [provincesData, provinceId]);
+
+  const propertyTypeOptions = useMemo(() => {
+    return (
+      propertyTypesData?.data?.map((type: any) => ({
+        value: type.id.toString(),
+        label: type.name,
+      })) ?? []
+    );
+  }, [propertyTypesData]);
+
+  const resetWard = (nextProvince: number | null) => {
     setProvinceId(nextProvince);
-    setDistrictId(null);
+    setWardId(null);
   };
 
-  const performSearch = (selectedProvinceId: number | null, selectedDistrictId: number | null) => {
+  const performSearch = (selectedProvinceId: number | null, selectedWardId: number | null, selectedPropertyTypeId: number | null) => {
     if (!selectedProvinceId) {
       toastError(t("public.home.search.provinceRequired"));
       return;
     }
 
     const params = new URLSearchParams({ provinceId: selectedProvinceId.toString() });
-    if (selectedDistrictId) {
-      params.set("districtId", selectedDistrictId.toString());
+    if (selectedWardId) {
+      params.set("wardId", selectedWardId.toString());
+    }
+    if (selectedPropertyTypeId) {
+      params.set("propertyTypeId", selectedPropertyTypeId.toString());
     }
     navigate(`${ROUTERS.SEARCH_ROOMS}?${params.toString()}`);
   };
 
   const handleProvinceChange = (value: string) => {
     const nextProvince = value ? Number(value) : null;
-    resetDistrict(nextProvince);
+    resetWard(nextProvince);
   };
 
-  const handleDistrictChange = (value: string) => {
+  const handleWardChange = (value: string) => {
     if (!provinceId) {
-      toastError(t("public.home.search.districtRequiresProvince"));
+      toastError("Vui lòng chọn Tỉnh/Thành trước khi chọn Phường/Xã");
       return;
     }
 
-    const nextDistrict = value ? Number(value) : null;
-    setDistrictId(nextDistrict);
+    const nextWard = value ? Number(value) : null;
+    setWardId(nextWard);
   };
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    performSearch(provinceId, districtId);
+    performSearch(provinceId, wardId, propertyTypeId);
   };
 
   return (
@@ -298,7 +216,7 @@ const PublicHome = () => {
             </div>
 
             <form
-              className="relative z-[200] grid gap-4 rounded-[32px] border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl transition-all duration-500 hover:bg-white/15 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+              className="relative z-[200] grid gap-4 rounded-[32px] border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl transition-all duration-500 hover:bg-white/15 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
               onSubmit={handleSearchSubmit}
             >
               <SearchableSelect
@@ -317,17 +235,32 @@ const PublicHome = () => {
               />
 
               <SearchableSelect
-                value={districtId ? districtId.toString() : ""}
-                onValueChange={handleDistrictChange}
-                options={districtOptions}
-                placeholder={provinceId ? t("public.home.search.districtPlaceholder") : t("public.home.search.provinceFirstPlaceholder")}
-                searchPlaceholder={t("public.home.search.districtSearch")}
-                emptyMessage={provinceId ? t("public.home.search.districtEmpty") : t("public.home.search.districtPrompt")}
-                disabled={!provinceId || isLoadingDistricts}
-                loading={isLoadingDistricts}
+                value={wardId ? wardId.toString() : ""}
+                onValueChange={handleWardChange}
+                options={wardOptions}
+                placeholder={provinceId ? `Chọn Phường/Xã tại ${selectedProvinceName}` : "Chọn tỉnh/thành trước"}
+                searchPlaceholder="Tìm kiếm Phường/Xã..."
+                emptyMessage={provinceId ? "Không tìm thấy Phường/Xã" : "Vui lòng chọn Tỉnh/Thành trước"}
+                disabled={!provinceId || isLoadingWards}
+                loading={isLoadingWards}
                 icon={<MapPin className="size-5" />}
                 showSearch
                 triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60"
+                contentClassName="bg-white text-slate-900"
+              />
+
+              <SearchableSelect
+                value={propertyTypeId ? propertyTypeId.toString() : ""}
+                onValueChange={(val) => setPropertyTypeId(val ? Number(val) : null)}
+                options={propertyTypeOptions}
+                placeholder="Loại hình"
+                searchPlaceholder="Tìm loại hình..."
+                emptyMessage="Không tìm thấy loại hình"
+                disabled={isLoadingPropertyTypes}
+                loading={isLoadingPropertyTypes}
+                icon={<Search className="size-5" />}
+                showSearch
+                triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50"
                 contentClassName="bg-white text-slate-900"
               />
 

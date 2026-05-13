@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
 import { Plus, MapPin, Maximize, AirVent, Zap, Wallet, Edit, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Building, Room } from './types';
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(id);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 const Properties: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -51,6 +60,14 @@ const Properties: React.FC = () => {
   const [searchName, setSearchName] = useState('');
   const [selectedType, setSelectedType] = useState<number | string>(0);
   const [perPage] = useState(5);
+  const debouncedSearchName = useDebouncedValue(searchName, 500);
+  const [refetchToken, setRefetchToken] = useState(0);
+  const prevFiltersRef = useRef<{ debounced: string; type: number }>({
+    debounced: debouncedSearchName,
+    type: Number(selectedType),
+  });
+
+  const reloadPropertyList = () => setRefetchToken((n) => n + 1);
 
   // Modal States
   const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
@@ -60,33 +77,6 @@ const Properties: React.FC = () => {
   const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [targetBuildingId, setTargetBuildingId] = useState<string | null>(null);
-
-  // --- Filtering & Pagination Logic ---
-  // 1. Debounced search effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentPage !== 1) {
-        setCurrentPage(1);
-      } else {
-        fetchData(1, searchName, selectedType as number);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchName]);
-
-  // 2. Immediate type filter effect
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchData(1, searchName, selectedType as number);
-    }
-  }, [selectedType]);
-
-  // 3. Page change effect
-  useEffect(() => {
-    fetchData(currentPage, searchName, selectedType as number);
-  }, [currentPage]);
 
   const normalizeRoomStatus = (status: unknown): Room['status'] => {
     if (typeof status === 'string') {
@@ -159,41 +149,89 @@ const Properties: React.FC = () => {
     }));
   };
 
-  const fetchData = async (page: number = 1, forceSearchName?: string, forceType?: number) => {
-    try {
-      setLoading(true);
-      
-      const buildingsParams: any = {
-        page: page,
-        per_page: perPage,
-      };
-      
-      const currentSearch = forceSearchName !== undefined ? forceSearchName : searchName;
-      if (currentSearch) buildingsParams.name = currentSearch;
-      
-      const currentType = forceType !== undefined ? forceType : (selectedType as number);
-      if (currentType && currentType !== 0) buildingsParams.property_type_id = currentType;
+  useEffect(() => {
+    let cancelled = false;
 
-      const buildingsRes: any = await partnerService.getBuildings(buildingsParams);
-      const roomsRes: any = await partnerService.getRooms();
+    const run = async () => {
+      const typeNum = Number(selectedType);
+      const filtersChanged =
+        prevFiltersRef.current.debounced !== debouncedSearchName ||
+        prevFiltersRef.current.type !== typeNum;
 
-      const buildingData = buildingsRes?.data || {};
-      const rawBuildings = Array.isArray(buildingData) ? buildingData : (buildingData.data || []);
-      const rawRooms = roomsRes?.data?.data || roomsRes?.data || [];
+      if (filtersChanged && currentPage !== 1) {
+        setCurrentPage(1);
+        return;
+      }
 
-      const normalizedRooms = normalizeRooms(rawRooms);
-      const normalizedBuildings = normalizeBuildings(rawBuildings, normalizedRooms);
+      const pageForBuildings = filtersChanged ? 1 : currentPage;
 
-      setBuildings(normalizedBuildings);
-      setRooms(normalizedRooms);
-      
-      setTotalPages(buildingData.last_page || 1);
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        setLoading(true);
+
+        const buildingsParams: Record<string, unknown> = {
+          page: pageForBuildings,
+          per_page: perPage,
+        };
+        if (debouncedSearchName) buildingsParams.name = debouncedSearchName;
+        if (typeNum && typeNum !== 0) buildingsParams.property_type_id = typeNum;
+
+        const buildingsRes: any = await partnerService.getBuildings(buildingsParams);
+        if (cancelled) {
+          return;
+        }
+
+        const buildingData = buildingsRes?.data || {};
+        const rawBuildings = Array.isArray(buildingData) ? buildingData : (buildingData.data || []);
+        const buildingIds = (rawBuildings as { id?: string | number }[])
+          .map((b) => b.id)
+          .filter((id) => id !== undefined && id !== null && String(id) !== '');
+
+        let rawRooms: any[] = [];
+        if (buildingIds.length > 0) {
+          const roomsRes: any = await partnerService.getRooms({
+            building_ids: buildingIds,
+            per_page: 1000,
+            page: 1,
+          });
+          if (cancelled) {
+            return;
+          }
+          const roomPayload = roomsRes?.data;
+          if (Array.isArray(roomPayload)) {
+            rawRooms = roomPayload;
+          } else if (roomPayload?.data && Array.isArray(roomPayload.data)) {
+            rawRooms = roomPayload.data;
+          }
+        }
+
+        const normalizedRooms = normalizeRooms(rawRooms);
+        const normalizedBuildings = normalizeBuildings(rawBuildings, normalizedRooms);
+
+        if (cancelled) {
+          return;
+        }
+
+        setBuildings(normalizedBuildings);
+        setRooms(normalizedRooms);
+        setTotalPages((buildingData as { last_page?: number }).last_page || 1);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error fetching properties:', error);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          prevFiltersRef.current = { debounced: debouncedSearchName, type: typeNum };
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, selectedType, debouncedSearchName, perPage, refetchToken]);
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -218,7 +256,7 @@ const Properties: React.FC = () => {
     try {
       await partnerService.deleteBuilding(String(id));
       toastSuccess('Đã xóa bất động sản.');
-      fetchData();
+      reloadPropertyList();
     } catch {
       toastError('Không thể xóa bất động sản này.');
     }
@@ -240,7 +278,7 @@ const Properties: React.FC = () => {
     try {
       await partnerService.deleteRoom(String(id));
       toastSuccess('Đã xóa phòng.');
-      fetchData();
+      reloadPropertyList();
     } catch {
       toastError('Không thể xóa phòng này.');
     }
@@ -598,7 +636,7 @@ const Properties: React.FC = () => {
               };
               await partnerService.createBuilding(submitData);
             }
-            fetchData();
+            reloadPropertyList();
             setIsBuildingModalOpen(false);
           } catch (error) {
             console.error('Save error:', error);
@@ -620,7 +658,7 @@ const Properties: React.FC = () => {
             } else {
               await partnerService.createRoom(data);
             }
-            fetchData();
+            reloadPropertyList();
             setIsRoomModalOpen(false);
           } catch {
             toastError('Lỗi khi lưu thông tin phòng.');

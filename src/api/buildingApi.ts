@@ -8,7 +8,7 @@ export const buildingApi = {
   // Get all buildings no pagination
   getAllBuildings: (): Promise<{ data: Building[] }> => axiosClient.get("admin/buildings/all"),
   // Get building types
-  getBuildingTypes: (): Promise<ApiResponse<BuildingType[]>> => axiosClient.get("admin/buildings/types"),
+  getBuildingTypes: (): Promise<ApiResponse<BuildingType[]>> => axiosClient.get("home/building-types"),
   // Create building (protected - admin only)
   createBuilding: (data: CreateBuildingRequest): Promise<ApiResponse<string>> => axiosClient.post("admin/buildings", data),
   // Get building by id (protected - admin only)

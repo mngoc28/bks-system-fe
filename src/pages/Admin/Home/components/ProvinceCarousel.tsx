@@ -1,7 +1,7 @@
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ROUTERS } from "@/constant";
+import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { ProvinceCarouselProps } from "@/dataHelper/province.dataHelper";
 
 const sliderOptions = {
@@ -47,12 +47,12 @@ const ProvinceCarousel = ({ provinces, className, heading, description }: Provin
             >
               <div className="relative h-32 w-full overflow-hidden">
                 <img
-                  src={province.image}
+                  src={province.image || DEFAULT_ROOM_IMAGE}
                   alt={province.name}
                   className="size-full object-cover transition duration-500 group-hover:scale-105"
                   onError={(event) => {
                     event.currentTarget.onerror = null;
-                    event.currentTarget.src = FALLBACK_IMAGE;
+                    event.currentTarget.src = DEFAULT_ROOM_IMAGE;
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/20 to-transparent" />
@@ -69,4 +69,3 @@ const ProvinceCarousel = ({ provinces, className, heading, description }: Provin
 };
 
 export default ProvinceCarousel;
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?auto=format&fit=crop&w=1200&q=80";

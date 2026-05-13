@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 
 import { useEffect, useState } from "react";
 import stayService from "@/services/stayService";
@@ -61,12 +61,12 @@ const Account = () => {
   const handleSaveProfile = () => {
     updateProfileMutate.mutate(formData, {
       onSuccess: () => {
-        toast.success("Đã cập nhật thông tin cá nhân!");
+        toastSuccess("Đã cập nhật thông tin cá nhân!");
         // Update user store
         useUserStore.setState({ userName: formData.name });
       },
       onError: (error: any) => {
-        toast.error(error?.response?.data?.message || "Cập nhật hồ sơ thất bại.");
+        toastError(error?.response?.data?.message || "Cập nhật hồ sơ thất bại.");
       }
     });
   };
@@ -191,7 +191,7 @@ const Account = () => {
                           Việc xác thực giúp bạn sử dụng được tính năng Digital Key và nhận phòng không cần lễ tân. 
                        </p>
                     </div>
-                    <Button onClick={() => toast.info("Tính năng upload tài liệu đang được kích hoạt...")} className="h-12 whitespace-nowrap rounded-2xl bg-sky-600 px-6 font-bold hover:bg-sky-500">Tải lên ngay</Button>
+                    <Button onClick={() => toastInfo("Tính năng upload tài liệu đang được kích hoạt...")} className="h-12 whitespace-nowrap rounded-2xl bg-sky-600 px-6 font-bold hover:bg-sky-500">Tải lên ngay</Button>
                  </div>
               </CardContent>
            </Card>
@@ -210,7 +210,7 @@ const Account = () => {
                           <p className="text-xs text-slate-400">Đã cập nhật lần cuối: 2 tuần trước.</p>
                        </div>
                     </div>
-                    <Button variant="outline" className="h-11 rounded-xl border-slate-200 px-6 font-bold transition-all hover:bg-slate-900 hover:text-white" onClick={() => toast.info("Đang chuyển hướng đến trang đổi mật khẩu...")}>Thay đổi</Button>
+                    <Button variant="outline" className="h-11 rounded-xl border-slate-200 px-6 font-bold transition-all hover:bg-slate-900 hover:text-white" onClick={() => toastInfo("Đang chuyển hướng đến trang đổi mật khẩu...")}>Thay đổi</Button>
                  </div>
               </CardContent>
            </Card>

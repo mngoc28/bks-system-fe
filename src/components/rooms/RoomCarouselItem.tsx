@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { HomeIcon, MapPinHouse, BedDouble, Ruler } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ROUTERS } from "@/constant";
+import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { RoomCarouselItemProps } from "../type";
 
 const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
@@ -15,7 +15,16 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
       className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
     >
       <div className="relative h-56 overflow-hidden">
-        <img src={room.image} alt={room.name} className="size-full object-cover transition duration-500 group-hover:scale-105" />
+        <img
+          src={room.image || DEFAULT_ROOM_IMAGE}
+          alt={room.name}
+          className="size-full object-cover transition duration-500 group-hover:scale-105"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = DEFAULT_ROOM_IMAGE;
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />
         <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-sm text-white/90">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users } from "lucide-react";
+import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
@@ -8,11 +8,19 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, DEFAULT_ROOM_IMAGE, ROUTERS } from "@/constant";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
 import { useRoomsQuery } from "@/hooks/EU/useRoomQuery";
+import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
 import { formatPrice } from "@/utils/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const normalize = (text: string) => text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
@@ -21,12 +29,16 @@ const RoomSearch = () => {
   const [searchParams] = useSearchParams();
   const [keyword, setKeyword] = useState("");
   const [sortBy, setSortBy] = useState("price_asc");
+  const [selectedPropertyTypeId, setSelectedPropertyTypeId] = useState<number | null>(
+    searchParams.get("propertyTypeId") ? Number(searchParams.get("propertyTypeId")) : null,
+  );
 
   const provinceId = Number(searchParams.get("provinceId") || 0);
-  const districtId = Number(searchParams.get("districtId") || 0);
+  const wardId = Number(searchParams.get("wardId") || 0);
 
   const { data: provincesData } = useGetAllProvincesTypes();
-  const { data: districtsData } = useGetHomeWardsByProvinceId(provinceId);
+  const { data: wardsData } = useGetHomeWardsByProvinceId(provinceId);
+  const { data: propertyTypesData } = useBuildingTypesQuery();
   const { data: rooms = [], isLoading, isError } = useRoomsQuery({}, { enabled: true });
 
   const selectedProvince = useMemo(
@@ -34,14 +46,14 @@ const RoomSearch = () => {
     [provinceId, provincesData],
   );
 
-  const selectedDistrict = useMemo(
-    () => districtsData?.data?.find((district) => district.id === districtId),
-    [districtId, districtsData],
+  const selectedWard = useMemo(
+    () => wardsData?.data?.find((ward) => ward.id === wardId),
+    [wardId, wardsData],
   );
 
   const filteredRooms = useMemo(() => {
     const provinceName = selectedProvince?.name ? normalize(selectedProvince.name) : "";
-    const districtName = selectedDistrict?.name ? normalize(selectedDistrict.name) : "";
+    const wardName = selectedWard?.name ? normalize(selectedWard.name) : "";
     const keywordText = normalize(keyword);
 
     const matched = rooms.filter((room) => {
@@ -51,11 +63,12 @@ const RoomSearch = () => {
       const roomDescription = normalize(room.description || "");
 
       const matchesProvince = !provinceName || roomProvince.includes(provinceName);
-      const matchesDistrict = !districtName || roomAddress.includes(districtName);
+      const matchesWard = !wardName || roomAddress.includes(wardName);
       const matchesKeyword =
         !keywordText || roomTitle.includes(keywordText) || roomAddress.includes(keywordText) || roomDescription.includes(keywordText);
+      const matchesPropertyType = !selectedPropertyTypeId || Number(room.property_type_id) === Number(selectedPropertyTypeId);
 
-      return matchesProvince && matchesDistrict && matchesKeyword;
+      return matchesProvince && matchesWard && matchesKeyword && matchesPropertyType;
     });
 
     return matched.sort((a, b) => {
@@ -67,7 +80,7 @@ const RoomSearch = () => {
       }
       return a.cheapest_daily_price - b.cheapest_daily_price;
     });
-  }, [rooms, selectedProvince, selectedDistrict, keyword, sortBy]);
+  }, [rooms, selectedProvince, selectedWard, keyword, sortBy, selectedPropertyTypeId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
@@ -82,7 +95,7 @@ const RoomSearch = () => {
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Tìm phòng lưu trú phù hợp</h1>
           <p className="mt-3 text-slate-200">
             {selectedProvince?.name ? `Khu vực: ${selectedProvince.name}` : "Tất cả tỉnh/thành"}
-            {selectedDistrict?.name ? ` - ${selectedDistrict.name}` : ""}
+            {selectedWard?.name ? ` - ${selectedWard.name}` : ""}
           </p>
         </div>
       </div>
@@ -94,12 +107,40 @@ const RoomSearch = () => {
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
               { label: "Tìm phòng" },
             ]}
-            className="text-sm"
           />
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <section className="mb-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800">
+              <Filter className="h-5 w-5 text-sky-600" />
+              Lọc theo loại hình
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={selectedPropertyTypeId === null ? "default" : "outline"}
+              className="rounded-full px-6 transition-all"
+              onClick={() => setSelectedPropertyTypeId(null)}
+            >
+              Tất cả
+            </Button>
+            {propertyTypesData?.data?.map((type) => (
+              <Button
+                key={type.id}
+                variant={selectedPropertyTypeId === type.id ? "default" : "outline"}
+                className={`rounded-full px-6 transition-all ${
+                  selectedPropertyTypeId === type.id ? "bg-sky-600 hover:bg-sky-700" : "hover:border-sky-300 hover:text-sky-600"
+                }`}
+                onClick={() => setSelectedPropertyTypeId(type.id)}
+              >
+                {type.name}
+              </Button>
+            ))}
+          </div>
+        </section>
         <section className="mb-6 grid gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1fr)_220px]">
           <div className="relative">
             <input
@@ -110,15 +151,19 @@ const RoomSearch = () => {
             />
           </div>
           <div className="relative">
-            <select
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-sky-400"
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value)}
-            >
-              <option value="price_asc">Giá thấp đến cao</option>
-              <option value="price_desc">Giá cao đến thấp</option>
-              <option value="capacity_desc">Sức chứa cao nhất</option>
-            </select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-white font-medium text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10">
+                <div className="flex items-center gap-2">
+                  <ArrowDownWideNarrow className="h-4 w-4 text-sky-500" />
+                  <SelectValue placeholder="Sắp xếp theo" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                <SelectItem value="price_asc" className="rounded-xl">Giá thấp đến cao</SelectItem>
+                <SelectItem value="price_desc" className="rounded-xl">Giá cao đến thấp</SelectItem>
+                <SelectItem value="capacity_desc" className="rounded-xl">Sức chứa cao nhất</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </section>
 
@@ -131,79 +176,98 @@ const RoomSearch = () => {
             {t("common.loading_error")}
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
-            <SearchX className="mx-auto mb-3 size-8 text-slate-400" />
-            <p className="text-base font-semibold text-slate-700">Không tìm thấy phòng phù hợp</p>
-            <p className="mt-2 text-sm text-slate-500">Thử đổi bộ lọc hoặc tìm ở khu vực khác.</p>
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
+            <SearchX className="mb-4 h-12 w-12 text-slate-300" />
+            <h3 className="text-lg font-medium text-slate-900">Không tìm thấy phòng nào</h3>
+            <p className="mt-1 text-slate-500">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn</p>
+            <Button
+              variant="outline"
+              className="mt-6 rounded-xl"
+              onClick={() => {
+                setKeyword("");
+                setSelectedPropertyTypeId(null);
+              }}
+            >
+              Xóa bộ lọc
+            </Button>
           </div>
         ) : (
-          <>
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-slate-600">
-                Tìm thấy <span className="font-semibold text-slate-900">{filteredRooms.length}</span> phòng phù hợp
-              </p>
-              <Badge variant="secondary" className="rounded-full bg-sky-50 px-3 py-1 text-sky-700">
-                <Filter className="mr-1 size-3.5" />
-                Đã áp dụng bộ lọc
-              </Badge>
-            </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredRooms.map((room) => {
+              const prices = JSON.parse(room.all_prices || "[]");
+              const hasMonthlyPrice = prices.some((p: any) => p.unit === "month");
+              const isHotel = room.property_type_name?.toLowerCase().includes("khách sạn") || room.property_type_name?.toLowerCase().includes("hotel");
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {filteredRooms.map((room) => {
-                const roomImage = room.room_image
-                  ? `${CLOUDINARY_HEADER_IMAGE_URL}/${room.room_image}`
-                  : "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80";
-
-                return (
-                  <Card
-                    key={room.id}
-                    className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-sky-300 hover:shadow-md"
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      <img src={roomImage} alt={room.title} className="size-full object-cover transition duration-500 group-hover:scale-105" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-900/10 to-transparent" />
+              return (
+                <Link key={room.id} to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())} className="group h-full">
+                  <Card className="h-full overflow-hidden border-slate-200 transition-all duration-300 hover:translate-y-[-4px] hover:border-sky-200 hover:shadow-xl hover:shadow-sky-500/10">
+                    <div className="relative aspect-[4/3] overflow-hidden">
+                      <img
+                        src={room.room_image ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.room_image}` : DEFAULT_ROOM_IMAGE}
+                        alt={room.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null; // Prevent infinite loop
+                          target.src = DEFAULT_ROOM_IMAGE;
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      <div className="absolute right-3 top-3 flex flex-col gap-2">
+                        {hasMonthlyPrice && (
+                          <Badge className={isHotel ? "bg-amber-500 hover:bg-amber-600" : "bg-sky-600 hover:bg-sky-700"}>
+                            {isHotel ? "Ưu đãi ở dài hạn" : "Thuê dài hạn"}
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="bg-white/95 text-slate-900 shadow-sm backdrop-blur-sm">
+                          {room.property_type_name}
+                        </Badge>
+                      </div>
                     </div>
-                    <CardContent className="space-y-3 p-5">
-                      <div>
-                        <h3 className="line-clamp-1 text-lg font-semibold text-slate-900">{room.title}</h3>
-                        <p className="mt-1 inline-flex items-start gap-2 text-sm text-slate-600">
-                          <MapPin className="mt-0.5 size-4 text-sky-500" />
-                          <span className="line-clamp-2">{room.building_address}</span>
-                        </p>
+                    <CardContent className="flex flex-col p-4">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <h3 className="line-clamp-1 flex-1 font-bold text-slate-800 transition-colors group-hover:text-sky-600">
+                          {room.title}
+                        </h3>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="inline-flex items-center gap-1.5 text-slate-600">
-                          <Users className="size-4 text-sky-500" />
-                          {room.people} khách
-                        </span>
-                        <span className="font-semibold text-sky-600">{formatPrice(room.cheapest_daily_price)}/đêm</span>
-                      </div>
-
-                      {room.amenities && (
-                        <div className="flex flex-wrap gap-2">
-                          {room.amenities
-                            .split(",")
-                            .slice(0, 3)
-                            .map((amenity) => (
-                              <Badge key={`${room.id}-${amenity}`} variant="secondary" className="rounded-full bg-slate-100 text-slate-700">
-                                {amenity.trim()}
-                              </Badge>
-                            ))}
+                      <div className="mb-4 space-y-2">
+                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                          <MapPin className="h-4 w-4 shrink-0 text-sky-500" />
+                          <span className="line-clamp-1">
+                            {room.province_name} - {room.building_address}
+                          </span>
                         </div>
-                      )}
+                        <div className="flex items-center gap-4 text-sm text-slate-500">
+                          <div className="flex items-center gap-1">
+                            <Filter className="h-4 w-4 text-sky-500" />
+                            {room.area}m²
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4 text-sky-500" />
+                            {room.people} người
+                          </div>
+                        </div>
+                      </div>
 
-                      <div className="pt-1">
-                        <Button asChild className="w-full rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-                          <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>Xem chi tiết</Link>
+                      <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Giá từ</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-sky-600">{formatPrice(room.cheapest_daily_price)}</span>
+                            <span className="text-xs font-medium text-slate-400">/đêm</span>
+                          </div>
+                        </div>
+                        <Button className="rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition-all hover:bg-sky-600">
+                          Chi tiết
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
-          </>
+                </Link>
+              );
+            })}
+          </div>
         )}
       </main>
 

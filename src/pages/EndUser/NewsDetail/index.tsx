@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { useNewsDetailPublicQuery, useLatestNewsQuery } from "@/hooks/useNewsQuery";
-import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -87,9 +87,14 @@ const NewsDetail = () => {
                 {/* News Image */}
                 <div className="relative aspect-video overflow-hidden">
                   <img
-                    src={news?.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${news.image_url}` : "https://images.unsplash.com/photo-1585829365234-781fcd50c40b?q=80&w=2070&auto=format&fit=crop"}
+                    src={news?.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${news.image_url}` : DEFAULT_ROOM_IMAGE}
                     alt={news?.title}
                     className="size-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = DEFAULT_ROOM_IMAGE;
+                    }}
                   />
                   <div className="absolute left-4 top-4">
                     <Badge className="rounded-full border-none bg-sky-500 px-3 py-1 text-sm hover:bg-sky-600">
@@ -204,9 +209,14 @@ const NewsDetail = () => {
                     >
                       <div className="size-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 shadow-sm">
                         <img 
-                          src={`${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}`} 
+                          src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : DEFAULT_ROOM_IMAGE} 
                           alt={item.title} 
                           className="size-full object-cover transition duration-300 group-hover:scale-110"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = DEFAULT_ROOM_IMAGE;
+                          }}
                         />
                       </div>
                       <div className="flex flex-col justify-center gap-1">

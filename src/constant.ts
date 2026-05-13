@@ -60,6 +60,7 @@ export const enum ROUTERS {
   PARTNER_CHAT = "/partner/chat",
   PARTNER_REPORTS = "/partner/reports",
   PARTNER_NOTIFICATIONS = "/partner/notifications",
+  PARTNER_PROFILE = "/partner/profile",
 
   // End User Routes
   PARTNERS = "/:provinceNameEn/partners",
@@ -215,7 +216,8 @@ export const BUILDING_IMAGE_TYPE = {
 };
 
 export const HEADER_BUILDING_CLOUDINARY = "buildings/"
-export const CLOUDINARY_HEADER_IMAGE_URL = "https://res.cloudinary.com/dyragzjcd/image/upload"
+export const CLOUDINARY_HEADER_IMAGE_URL = import.meta.env.VITE_CLOUDINARY_URL || "https://res.cloudinary.com/dyragzjcd/image/upload"
+export const DEFAULT_ROOM_IMAGE = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop"
 
 // Lightbox configuration
 export const LIGHTBOX_MAX_ZOOM_PIXEL_RATIO = 5;

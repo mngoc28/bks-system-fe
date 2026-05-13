@@ -46,7 +46,7 @@
         "cta": "Khám phá ngay",
         "badge": "Nền tảng đặt phòng lưu trú",
         "title": "Đặt phòng lưu trú đáng tin cậy cho mọi chuyến đi trên khắp Việt Nam.",
-        "description": "Tìm kiếm theo tỉnh/thành và quận/huyện để khám phá chỗ ở nổi bật, ưu đãi mới và đối tác lưu trú uy tín.",
+        "description": "Tìm kiếm theo địa điểm để khám phá chỗ ở nổi bật, ưu đãi mới và đối tác lưu trú uy tín.",
         "alt": "Không gian lưu trú hiện đại tại Việt Nam"
       },
       "news": {
@@ -64,14 +64,14 @@
         "provincePlaceholder": "Chọn tỉnh/thành",
         "provinceSearch": "Tìm tỉnh/thành",
         "provinceEmpty": "Không tìm thấy tỉnh/thành",
-        "districtPlaceholder": "Chọn quận/huyện",
+        "districtPlaceholder": "Chọn phường/xã",
         "provinceFirstPlaceholder": "Chọn tỉnh/thành trước",
-        "districtSearch": "Tìm quận/huyện",
-        "districtEmpty": "Không có quận/huyện nào",
-        "districtPrompt": "Chọn tỉnh/thành để xem quận/huyện",
+        "districtSearch": "Tìm phường/xã",
+        "districtEmpty": "Không có phường/xã nào",
+        "districtPrompt": "Chọn tỉnh/thành để xem phường/xã",
         "cta": "TÌM KIẾM",
         "provinceRequired": "Vui lòng chọn tỉnh/thành trước khi tìm kiếm.",
-        "districtRequiresProvince": "Vui lòng chọn tỉnh/thành phố trước khi chọn quận/huyện."
+        "districtRequiresProvince": "Vui lòng chọn tỉnh/thành phố trước khi chọn phường/xã."
       },
       "provinceCarousel": {
         "heading": "Khám phá các tỉnh/thành",
@@ -1879,8 +1879,8 @@
     "search_user_name_placeholder": "Nhập tên...",
     "search_province_name": "Tìm kiếm theo tỉnh/thành phố",
     "search_province_placeholder": "Nhập tên tỉnh/thành phố...",
-    "search_ward_name": "Tìm kiếm theo quận/huyện/xã",
-    "search_ward_name_placeholder": "Nhập tên quận/huyện/xã...",
+    "search_ward_name": "Tìm kiếm theo phường/xã",
+    "search_ward_name_placeholder": "Nhập tên phường/xã...",
     "search_phone": "Tìm kiếm theo số điện thoại",
     "search_phone_placeholder": "Nhập số điện thoại...",
     "search_address": "Tìm kiếm theo địa chỉ",
@@ -1889,7 +1889,7 @@
     "no_images_yet": "Chưa có ảnh",
     "user_name": "Người đại diện",
     "province_name": "Tỉnh/Thành phố",
-    "ward_name": "Quận/Huyện/Xã",
+    "ward_name": "Phường/Xã",
     "address": "Địa chỉ",
     "phone": "Số điện thoại",
     "website": "Website",

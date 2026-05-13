@@ -57,6 +57,8 @@ export const usePartnerBuildingTypesQuery = () => {
         data: normalized,
       } as ApiResponse<BuildingType[]>;
     },
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 };
 

@@ -7,7 +7,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { useListNewsPublicQuery, useLatestNewsQuery } from "@/hooks/useNewsQuery";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
-import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -147,9 +147,14 @@ const NewsList = () => {
                 >
                   <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-100 shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl">
                     <img 
-                      src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : "https://images.unsplash.com/photo-1585829365234-781fcd50c40b?q=80&w=2070&auto=format&fit=crop"} 
+                      src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : DEFAULT_ROOM_IMAGE} 
                       alt={item.title} 
                       className="size-full object-cover transition duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = DEFAULT_ROOM_IMAGE;
+                      }}
                     />
                     <div className="absolute left-4 top-4 z-10">
                       <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
@@ -216,9 +221,14 @@ const NewsList = () => {
                 >
                   <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-100 shadow-sm transition group-hover:shadow-md">
                     <img 
-                      src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : "https://images.unsplash.com/photo-1585829365234-781fcd50c40b?q=80&w=2070&auto=format&fit=crop"} 
+                      src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : DEFAULT_ROOM_IMAGE} 
                       alt={item.title} 
                       className="size-full object-cover transition duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = DEFAULT_ROOM_IMAGE;
+                      }}
                     />
                     <div className="absolute left-3 top-3 z-10">
                       <Badge className="gradient-indigo border-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-lg">

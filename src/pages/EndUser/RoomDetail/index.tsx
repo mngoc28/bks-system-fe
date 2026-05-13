@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft } from "lucide-react";
+import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info } from "lucide-react";
 
 import { roomApi } from "@/api/EU/roomApi";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -80,6 +80,20 @@ const PublicRoomDetail = () => {
     } catch {
       return [];
     }
+  }, [room]);
+
+  const allPrices = useMemo(() => {
+    if (!room?.all_prices) return [] as any[];
+    try {
+      return JSON.parse(room.all_prices);
+    } catch { return []; }
+  }, [room]);
+
+  const utilityFees = useMemo(() => {
+    if (!room?.utility_fees) return [] as any[];
+    try {
+      return JSON.parse(room.utility_fees);
+    } catch { return []; }
   }, [room]);
 
   if (!id) {
@@ -163,7 +177,18 @@ const PublicRoomDetail = () => {
               <Card className="rounded-3xl border-slate-200 shadow-sm">
                 <CardContent className="space-y-5 p-6">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="rounded-full bg-primary-light text-primary">Phòng sẵn sàng</Badge>
+                    {room.property_type_name && (
+                      <Badge variant="outline" className="rounded-full border-primary/30 bg-primary/5 px-3 text-primary font-bold">
+                        {room.property_type_name}
+                      </Badge>
+                    )}
+                    {(room.property_type_name?.includes("Căn hộ dịch vụ") || room.property_type_name?.includes("Homestay")) && (
+                      <Badge className="rounded-full bg-indigo-500 text-white border-none px-3 font-bold flex gap-1.5 items-center">
+                        <FileText className="size-3" />
+                        Hỗ trợ Hợp đồng điện tử
+                      </Badge>
+                    )}
+                    <Badge variant="secondary" className="rounded-full bg-emerald-100 text-emerald-700 font-bold">Phòng sẵn sàng</Badge>
                     <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700">{room.province_name || "Việt Nam"}</Badge>
                   </div>
 
@@ -211,13 +236,67 @@ const PublicRoomDetail = () => {
                     </div>
                   )}
 
+                  {utilityFees.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                        Phụ phí & Tiền cọc
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-amber-600 border-amber-200 bg-amber-50">Bắt buộc</Badge>
+                      </h2>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {utilityFees.map((fee: any, index: number) => (
+                          <div key={index} className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-4 bg-white hover:border-sky-200 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                {fee.type === 'electricity' && <Zap className="size-4 text-yellow-500" />}
+                                {fee.type === 'water' && <Droplets className="size-4 text-sky-500" />}
+                                {fee.type === 'service' && <Info className="size-4 text-indigo-500" />}
+                                {fee.type === 'electricity' ? 'Tiền điện' : fee.type === 'water' ? 'Tiền nước' : 'Phí dịch vụ'}
+                              </span>
+                              {fee.included ? (
+                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[10px]">Đã bao gồm</Badge>
+                              ) : (
+                                <span className="text-sm font-bold text-sky-600">
+                                  {formatPrice(fee.price)}
+                                  <span className="text-[10px] text-slate-400 font-normal ml-1">
+                                    /{fee.method === 'per_unit' ? 'số' : fee.method === 'per_person' ? 'người' : 'tháng'}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500 italic">
+                              {fee.method === 'per_unit' ? 'Tính theo chỉ số đồng hồ thực tế' : fee.method === 'per_person' ? 'Chia đều theo số người lưu trú' : 'Cố định hàng tháng'}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {allPrices.some((p: any) => p.deposit_amount > 0) && (
+                    <div className="rounded-2xl bg-sky-50 border border-sky-100 p-4 flex items-start gap-4">
+                      <div className="p-2 bg-white rounded-xl shadow-sm">
+                        <CreditCard className="size-5 text-sky-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-sky-900">Chính sách tiền cọc</h4>
+                        <p className="text-xs text-sky-700 mt-1 leading-relaxed">
+                          Đối với hợp đồng thuê dài hạn, quý khách cần đặt cọc từ {' '}
+                          <span className="font-bold underline">
+                            {allPrices.find((p: any) => p.unit === 'month')?.deposit_amount / allPrices.find((p: any) => p.unit === 'month')?.price || 1} tháng
+                          </span> {' '}
+                          tiền phòng. Tiền cọc sẽ được hoàn trả sau khi kết thúc hợp đồng.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {services.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Dịch vụ bổ sung</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">Dịch vụ bổ sung (Tùy chọn)</h2>
                       <div className="mt-3 grid gap-2">
                         {services.map((service) => (
-                          <div key={service.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                            <span className="inline-flex items-center gap-2 text-slate-700">
+                          <div key={service.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50/50">
+                            <span className="inline-flex items-center gap-2 text-slate-700 font-medium">
                               <CheckCircle2 className="size-4 text-emerald-500" />
                               {service.name}
                             </span>
@@ -235,19 +314,50 @@ const PublicRoomDetail = () => {
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardContent className="space-y-5 p-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
-                <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
-                <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
+            <CardContent className="space-y-6 p-6">
+              <div className="space-y-4">
+                {allPrices.map((price: any, index: number) => (
+                  <div key={index} className={`p-4 rounded-2xl border ${price.unit === 'month' ? 'border-sky-200 bg-sky-50/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
+                      {price.unit === 'month' ? 'Thuê theo tháng' : 'Thuê theo đêm'}
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-primary">{formatPrice(price.price)}</span>
+                      <span className="text-sm text-slate-500">/{price.unit === 'month' ? 'tháng' : 'đêm'}</span>
+                    </div>
+                    {price.minimum_stay > 0 && (
+                      <p className="text-[10px] text-amber-600 mt-2 font-medium flex items-center gap-1">
+                        <Info className="size-3" />
+                        Yêu cầu thuê tối thiểu {price.minimum_stay} {price.unit === 'month' ? 'tháng' : 'đêm'}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                {!allPrices.length && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
+                    <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
+                    <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                <p>Có thể hủy linh hoạt theo chính sách của đối tác.</p>
-                <p>Hỗ trợ xác nhận nhanh qua email và số điện thoại.</p>
+              <div className="space-y-3 rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] text-slate-600">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                  <p>Cam kết giá tốt nhất khi đặt trực tiếp.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                  <p>Hỗ trợ pháp lý & hợp đồng điện tử 24/7.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                  <p>Hệ thống an ninh & quản lý chuyên nghiệp.</p>
+                </div>
               </div>
 
-              <Button asChild className="gradient-primary w-full rounded-xl shadow-md transition-all hover:opacity-90 active:scale-95">
+              <Button asChild className="w-full h-12 rounded-xl bg-gradient-to-r from-primary via-sky-600 to-sky-700 text-white font-bold shadow-lg shadow-sky-200 transition-all hover:shadow-sky-300 active:scale-[0.98]">
                 <Link to={`${ROUTERS.BOOKING}/${id}`}>Đặt phòng ngay</Link>
               </Button>
             </CardContent>

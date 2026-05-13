@@ -14,6 +14,38 @@ export const usePartnerStatsQuery = () => {
   });
 };
 
+export const usePartnerHeadlineKpisQuery = () => {
+  return useQuery({
+    queryKey: ["partner", "dashboard", "kpis"],
+    queryFn: async () => {
+      const response = await partnerDashboardApi.getHeadlineKpis();
+      return response.data;
+    },
+  });
+};
+
+export const usePartnerOccupancyChartQuery = () => {
+  return useQuery({
+    queryKey: ["partner", "dashboard", "charts", "occupancy"],
+    queryFn: async () => {
+      const response = await partnerDashboardApi.getOccupancyChart();
+      return response.data;
+    },
+    staleTime: 60_000,
+  });
+};
+
+export const usePartnerGmvChartQuery = () => {
+  return useQuery({
+    queryKey: ["partner", "dashboard", "charts", "gmv"],
+    queryFn: async () => {
+      const response = await partnerDashboardApi.getGmvChart();
+      return response.data;
+    },
+    staleTime: 60_000,
+  });
+};
+
 /**
  * Hook to fetch bookings awaiting approval
  */

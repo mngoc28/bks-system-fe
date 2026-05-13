@@ -36,6 +36,7 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
             return (res as any).data?.data || [];
         },
         refetchInterval: 30000, // Poll every 30 seconds
+        staleTime: 20_000,
     });
 
     const unreadCount = notifications.filter((n: NotificationData) => !n.is_read).length;
