@@ -1,4 +1,4 @@
-import apiService from './apiService';
+﻿import apiService from './apiService';
 import { NotificationData, PaginatedResponse } from './stayService';
 
 const BASE_URL = '/api/v1/partner';
@@ -10,34 +10,36 @@ export const partnerService = {
   getWardsByProvince: (provinceId: number | string) =>
     apiService.get(`${BASE_URL}/wards/${provinceId}`),
 
-  // --- BUILDINGS ---
-  getBuildings: (params?: any) => apiService.get(`${BASE_URL}/buildings/searchAll`, { params }),
-  getBuildingTypes: () => apiService.get(`${BASE_URL}/buildings/types`),
-  createBuilding: (data: any) => apiService.post(`${BASE_URL}/buildings`, data),
-  updateBuilding: (id: number | string, data: any) => apiService.put(`${BASE_URL}/buildings/${id}`, data),
-  deleteBuilding: (id: number | string) => apiService.delete(`${BASE_URL}/buildings/${id}`),
+  // --- PROPERTIES (partner) ---
+  getProperties: (params?: any) => apiService.get(`${BASE_URL}/properties/searchAll`, { params }),
+  getPropertyTypes: () => apiService.get(`${BASE_URL}/properties/types`),
+  createProperty: (data: any) => apiService.post(`${BASE_URL}/properties`, data),
+  updateProperty: (id: number | string, data: any) => apiService.put(`${BASE_URL}/properties/${id}`, data),
+  deleteProperty: (id: number | string) => apiService.delete(`${BASE_URL}/properties/${id}`),
 
   // --- ROOMS ---
   getRooms: (params?: any) => apiService.get(`${BASE_URL}/rooms/search`, { params }),
   getRoomDetail: (id: number | string) => apiService.get(`${BASE_URL}/rooms/${id}`),
   getPricePackages: () => apiService.get(`${BASE_URL}/rooms/price-packages`),
   getRoomsOccupancy: (params?: any) => apiService.get(`${BASE_URL}/rooms/occupancy`, { params }),
-  getRoomNamesByBuildingId: (buildingId: number | string) =>
-    apiService.get(`${BASE_URL}/rooms/building/${buildingId}`),
+  getRoomNamesByPropertyId: (propertyId: number | string) =>
+    apiService.get(`${BASE_URL}/rooms/property/${propertyId}`),
   createRoom: (data: any) => {
-    const { buildingId, name, ...rest } = data;
+    const { name, ...rest } = data;
+    const pid = data.propertyId ?? data.property_id ?? data.propertyId ?? data.property_id;
     return apiService.post(`${BASE_URL}/rooms`, {
       ...rest,
-      building_id: buildingId ?? data.building_id,
+      property_id: pid,
       name: name ?? data.title,
     });
   },
   bulkCreateRoom: (data: any) => apiService.post(`${BASE_URL}/rooms/bulk-store`, data),
   updateRoom: (id: number | string, data: any) => {
-    const { buildingId, name, ...rest } = data;
+    const { name, ...rest } = data;
+    const pid = data.propertyId ?? data.property_id ?? data.propertyId ?? data.property_id;
     return apiService.put(`${BASE_URL}/rooms/${id}`, {
       ...rest,
-      building_id: buildingId ?? data.building_id,
+      property_id: pid,
       name: name ?? data.title,
     });
   },
@@ -47,10 +49,10 @@ export const partnerService = {
   bulkDeleteRooms: (ids: (number | string)[]) =>
     apiService.post(`${BASE_URL}/rooms/bulk-delete`, { ids }),
 
-  // --- IMAGES ---
-  getBuildingImages: (buildingId: number | string) => apiService.get(`${BASE_URL}/building-images/building/${buildingId}`),
-  addBuildingImage: (buildingId: number | string, data: any) => apiService.post(`${BASE_URL}/building-images/${buildingId}`, data),
-  deleteBuildingImage: (buildingId: number | string, imageId: number | string) => apiService.delete(`${BASE_URL}/building-images/${buildingId}/${imageId}`),
+  // --- PROPERTY IMAGES ---
+  getPropertyImages: (propertyId: number | string) => apiService.get(`${BASE_URL}/property-images/property/${propertyId}`),
+  addPropertyImage: (propertyId: number | string, data: any) => apiService.post(`${BASE_URL}/property-images/${propertyId}`, data),
+  deletePropertyImage: (propertyId: number | string, imageId: number | string) => apiService.delete(`${BASE_URL}/property-images/${propertyId}/${imageId}`),
 
   getRoomImages: (roomId: number | string) => apiService.get(`${BASE_URL}/room-images/room/${roomId}`),
   addRoomImage: (roomId: number | string, data: any) => apiService.post(`${BASE_URL}/room-images/${roomId}`, data),
@@ -175,3 +177,4 @@ export const partnerService = {
 };
 
 export default partnerService;
+

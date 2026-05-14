@@ -7,7 +7,16 @@ import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ROUTERS } from "@/constant";
+import { toastSuccess, toastError } from "@/components/ui/toast";
 import { formatPrice } from "@/utils/utils";
 
 type BookingStatus = "upcoming" | "completed" | "cancelled";
@@ -57,11 +66,44 @@ const bookingStatusBadgeClass: Record<BookingStatus, string> = {
   cancelled: "bg-rose-100 text-rose-700",
 };
 
+/** Số giờ tối thiểu trước 14:00 ngày nhận phòng để được phép hủy (chính sách demo, có thể chỉnh). */
+const CANCEL_MIN_HOURS_BEFORE_CHECKIN = 24;
+
+type CancelEligibility =
+  | { allowed: true }
+  | { allowed: false; reason: string };
+
+function parseLocalDateOnly(ymd: string): Date {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1, 14, 0, 0, 0);
+}
+
+function getCancelEligibility(booking: UserBooking): CancelEligibility {
+  if (booking.status !== "upcoming") {
+    return { allowed: false, reason: "Chỉ có thể hủy đơn đang ở trạng thái Sắp tới." };
+  }
+  const checkInAt = parseLocalDateOnly(booking.startDate);
+  const deadline = new Date(checkInAt.getTime() - CANCEL_MIN_HOURS_BEFORE_CHECKIN * 60 * 60 * 1000);
+  if (Date.now() > deadline.getTime()) {
+    return {
+      allowed: false,
+      reason: `Đã quá thời hạn hủy online (cần hủy trước ${CANCEL_MIN_HOURS_BEFORE_CHECKIN} giờ so với 14:00 ngày nhận phòng). Vui lòng liên hệ hotline để được hỗ trợ.`,
+    };
+  }
+  return { allowed: true };
+}
+
 const MyBookings = () => {
   const [tab, setTab] = useState<BookingStatus>("upcoming");
   const [bookings, setBookings] = useState<UserBooking[]>(() => safeParseBookings());
+  const [bookingToCancel, setBookingToCancel] = useState<UserBooking | null>(null);
 
   const filteredBookings = useMemo(() => bookings.filter((booking) => booking.status === tab), [bookings, tab]);
+
+  const cancelEligibility = useMemo(
+    () => (bookingToCancel ? getCancelEligibility(bookingToCancel) : null),
+    [bookingToCancel],
+  );
 
   const persistBookings = (nextBookings: UserBooking[]) => {
     setBookings(nextBookings);
@@ -70,11 +112,19 @@ const MyBookings = () => {
     }
   };
 
-  const handleCancelBooking = (bookingId: string) => {
+  const confirmCancelBooking = () => {
+    if (!bookingToCancel) return;
+    const eligibility = getCancelEligibility(bookingToCancel);
+    if (!eligibility.allowed) {
+      toastError(eligibility.reason);
+      return;
+    }
     const nextBookings = bookings.map((booking) =>
-      booking.id === bookingId ? { ...booking, status: "cancelled" as const } : booking,
+      booking.id === bookingToCancel.id ? { ...booking, status: "cancelled" as const } : booking,
     );
     persistBookings(nextBookings);
+    toastSuccess("Đã hủy đơn trên thiết bị này. Nếu cần hủy chính thức với khách sạn, vui lòng liên hệ BKS.");
+    setBookingToCancel(null);
   };
 
   return (
@@ -88,7 +138,19 @@ const MyBookings = () => {
             Quản lý đặt phòng
           </p>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng của tôi</h1>
-          <p className="mt-3 text-slate-200">Theo dõi trạng thái đơn và quản lý lịch lưu trú ngay trên BKS Stay.</p>
+          <p className="mt-3 max-w-2xl text-slate-200">
+            Theo dõi đơn đặt qua website công khai — dữ liệu được lưu trên trình duyệt thiết bị này.
+          </p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-300">
+            Để xem lịch sử và quản lý lưu trú đầy đủ trên cổng BKS Stay (sau khi có tài khoản / hệ thống đồng bộ), hãy{" "}
+            <Link
+              to={ROUTERS.BKS_STAY_LOGIN}
+              className="font-semibold text-sky-300 underline-offset-2 hover:underline"
+            >
+              đăng nhập BKS Stay
+            </Link>
+            .
+          </p>
         </div>
       </section>
 
@@ -168,7 +230,8 @@ const MyBookings = () => {
                             <Button
                               variant="secondary"
                               className="rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
-                              onClick={() => handleCancelBooking(booking.id)}
+                              type="button"
+                              onClick={() => setBookingToCancel(booking)}
                             >
                               <XCircle className="mr-1 size-4" />
                               Hủy đơn
@@ -192,6 +255,50 @@ const MyBookings = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
+        <DialogContent className="max-w-md rounded-2xl sm:rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Hủy đặt phòng?</DialogTitle>
+            {bookingToCancel && (
+              <DialogDescription>
+                Xác nhận hủy đơn {bookingToCancel.roomTitle} ({bookingToCancel.startDate} — {bookingToCancel.endDate}).
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          {bookingToCancel && (
+            <div className="space-y-3 text-sm text-slate-600">
+              <p>
+                <span className="font-semibold text-slate-800">{bookingToCancel.roomTitle}</span>
+                <span className="text-slate-500"> — </span>
+                {bookingToCancel.startDate} → {bookingToCancel.endDate}
+              </p>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                Đơn đang xem chỉ lưu trên trình duyệt (đặt qua website công khai). Thao tác &quot;Hủy&quot; tại đây{" "}
+                <strong>không tự động gửi yêu cầu hủy tới khách sạn</strong> — khi hệ thống đồng bộ server, luồng hủy
+                sẽ gọi API chính thức.
+              </div>
+              {cancelEligibility && !cancelEligibility.allowed && (
+                <p className="text-sm text-rose-600">{cancelEligibility.reason}</p>
+              )}
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="secondary" className="rounded-xl" onClick={() => setBookingToCancel(null)}>
+              Quay lại
+            </Button>
+            {cancelEligibility?.allowed === true && (
+              <Button
+                type="button"
+                className="rounded-xl bg-rose-600 text-white hover:bg-rose-700"
+                onClick={confirmCancelBooking}
+              >
+                Xác nhận hủy đơn
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <PublicFooter />
     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Building, 
+  Building2, 
   DoorOpen, 
   DollarSign, 
   TrendingUp, 
@@ -159,9 +159,9 @@ const Dashboard: React.FC = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
         <StatItem 
-          title="Tòa nhà" 
-          value={stats?.totalBuildings || 0} 
-          icon={Building} 
+          title="Cơ sở lưu trú" 
+          value={stats?.totalProperties || 0} 
+          icon={Building2} 
           colorClass="bg-blue-100 text-blue-700" 
           isLoading={statsLoading}
         />
@@ -417,3 +417,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+

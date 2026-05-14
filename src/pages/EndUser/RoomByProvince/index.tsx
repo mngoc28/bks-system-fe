@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+﻿import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Filter, MapPin, SearchX, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -266,7 +266,7 @@ const RoomByProvince = () => {
                           
                           <p className="inline-flex items-start gap-2 text-sm text-slate-600">
                             <MapPin className="mt-0.5 size-4 shrink-0 text-sky-500" />
-                            <span className="line-clamp-2">{room.building_address || t("public.roomByProvince.fallbackAddress")}</span>
+                            <span className="line-clamp-2">{room.property_address || t("public.roomByProvince.fallbackAddress")}</span>
                           </p>
                         </div>
 
@@ -322,3 +322,4 @@ const RoomByProvince = () => {
 };
 
 export default RoomByProvince;
+

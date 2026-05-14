@@ -12,8 +12,8 @@ export interface TotalPartner{
   partnerBlock: number
 }
 
-export interface SystemBuilding{
-  totalBuildings: number
+export interface SystemPropertySummary {
+  totalProperties: number;
 }
 
 export interface SystemRoom{
@@ -32,9 +32,9 @@ export interface BookingByStatus {
   total: number;
 }
 
-export interface BookingByBuilding {
-  building_id: number;
-  building_name: string;
+export interface BookingByProperty {
+  property_id: number;
+  property_name: string;
   total: number;
 }
 

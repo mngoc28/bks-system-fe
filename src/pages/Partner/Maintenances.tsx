@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Wrench, MapPin, CheckCircle, Loader2 } from 'lucide-react';
 import { MaintenanceRequest } from './types';
 import { Button } from "@/components/ui/button";
 import { partnerService } from '@/services/partnerService';
 import { toastInfo } from '@/components/ui/toast';
-import BuildingSelector from './components/BuildingSelector';
+import PropertySelector from './components/PropertySelector';
 import {
   Pagination,
   PaginationContent,
@@ -23,7 +23,7 @@ import {
 const Maintenances: React.FC = () => {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterBuildingId, setFilterBuildingId] = useState<string | null>(null);
+  const [filterPropertyId, setFilterPropertyId] = useState<string | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,7 +33,7 @@ const Maintenances: React.FC = () => {
 
   useEffect(() => {
     fetchMaintenances();
-  }, [currentPage, pageSize, filterBuildingId]);
+  }, [currentPage, pageSize, filterPropertyId]);
 
   const normalizeStatus = (status: unknown): MaintenanceRequest['status'] => {
     const value = String(status || '').toLowerCase();
@@ -47,7 +47,7 @@ const Maintenances: React.FC = () => {
     return (rows || []).map((item: any) => ({
       id: item.id,
       roomName: item.roomName ?? item.room_name ?? item.room?.title ?? `Phòng #${item.room_id ?? 'N/A'}`,
-      buildingName: item.buildingName ?? item.property_name ?? item.property?.name ?? item.building?.name ?? '',
+      propertyName: item.propertyName ?? item.property_name ?? item.property?.name ?? item.property?.name ?? '',
       type: item.type ?? item.title ?? item.maintenance_type ?? 'Sửa chữa',
       description: item.description ?? item.issueDescription ?? '',
       status: normalizeStatus(item.status),
@@ -62,7 +62,7 @@ const Maintenances: React.FC = () => {
       const res: any = await partnerService.getMaintenances({
         page: currentPage,
         per_page: pageSize,
-        property_id: filterBuildingId || undefined
+        property_id: filterPropertyId || undefined
       });
       
       const payload = res?.status ? res : (res?.data ?? res);
@@ -92,9 +92,9 @@ const Maintenances: React.FC = () => {
 
       let allNormalized = normalizeMaintenances(data);
 
-      // fallback: filter by building if the server returned all buildings (ignored filter param)
-      if (filterBuildingId && allNormalized.some(r => r.buildingName !== filterBuildingId)) {
-        allNormalized = allNormalized.filter(r => r.buildingName === filterBuildingId);
+      // fallback: filter by property if the server returned all properties (ignored filter param)
+      if (filterPropertyId && allNormalized.some(r => r.propertyName !== filterPropertyId)) {
+        allNormalized = allNormalized.filter(r => r.propertyName === filterPropertyId);
         total = allNormalized.length;
         lastPage = Math.ceil(total / pageSize);
       }
@@ -137,9 +137,9 @@ const Maintenances: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div className="flex items-center gap-6">
-          <BuildingSelector 
-            selectedId={filterBuildingId} 
-            onSelect={setFilterBuildingId} 
+          <PropertySelector 
+            selectedId={filterPropertyId} 
+            onSelect={setFilterPropertyId} 
             className="w-64"
           />
           <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
@@ -172,8 +172,8 @@ const Maintenances: React.FC = () => {
                       <div>
                         <h3 className="whitespace-nowrap text-sm font-bold text-gray-800">{request.type || 'Sửa chữa'}</h3>
                         <div className="mt-1 flex flex-col gap-0.5">
-                          {request.buildingName && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">{request.buildingName}</span>
+                          {request.propertyName && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">{request.propertyName}</span>
                           )}
                           <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
                             <MapPin size={12} className="text-gray-400" /> {request.roomName || 'N/A'}
@@ -269,3 +269,4 @@ const Maintenances: React.FC = () => {
 };
 
 export default Maintenances;
+

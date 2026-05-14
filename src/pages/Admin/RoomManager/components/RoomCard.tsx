@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,7 +104,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
 
         <div className="mb-4 flex items-center gap-1.5 text-xs text-slate-500">
           <MapPin className="size-3.5 text-indigo-500" />
-          <span className="truncate">{room.building_name || "-"}</span>
+          <span className="truncate">{room.property_name || room.property_name || "-"}</span>
         </div>
 
         {/* Specs Grid */}
@@ -144,3 +144,4 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
 };
 
 export default RoomCard;
+

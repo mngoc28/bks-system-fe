@@ -1,4 +1,4 @@
-import { bookingApi, type CreateBookingUserRequest } from "@/api/EU/bookingApi";
+﻿import { bookingApi, type CreateBookingUserRequest } from "@/api/EU/bookingApi";
 import { roomApi } from "@/api/EU/roomApi";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,13 +10,14 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { formatCurrencyInput } from "@/utils/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import type { ServiceItem } from "@/dataHelper/EU/booking.dataHelper";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { bookingUserFormSchema } from "@/shared/shema";
 import type { z } from "zod";
 import { ROUTERS } from "@/constant";
@@ -75,6 +76,7 @@ const BookingPage = () => {
     const today = new Date().toISOString().split('T')[0];
     const {
         register,
+        control,
         handleSubmit,
         formState: { errors },
         setValue,
@@ -122,7 +124,7 @@ const BookingPage = () => {
                     roomId: room.id,
                     roomTitle: room.title,
                     provinceName: room.province_name,
-                    address: room.building_address,
+                    address: room.property_address,
                     startDate: variables.start_date,
                     endDate: variables.end_date,
                     totalPrice,
@@ -257,7 +259,7 @@ const BookingPage = () => {
                         <div className="flex items-center gap-2">
                             <MapPin className="size-5 text-sky-300" />
                             <p className="text-base text-slate-100 sm:text-lg">
-                                {room?.building_address || "Loading..."}
+                                {room?.property_address || "Loading..."}
                             </p>
                         </div>
                     </div>
@@ -604,28 +606,56 @@ const BookingPage = () => {
 
                                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                                 <div className="space-y-3">
-                                                    <Label htmlFor="start_date" className="text-sm font-semibold">{t("booking.fields.startDate")} <span className="text-red-500">*</span></Label>
-                                                    <Input
-                                                        id="start_date"
-                                                        type="date"
-                                                        required
-                                                        min={today}
-                                                        {...register("start_date")}
-                                                        className={`h-11 text-sm ${errors.start_date ? "border-red-500" : ""}`}
+                                                    <Controller
+                                                        name="start_date"
+                                                        control={control}
+                                                        render={({ field }) => (
+                                                            <DatePickerField
+                                                                id="start_date"
+                                                                label={
+                                                                    <>
+                                                                        {t("booking.fields.startDate")}{" "}
+                                                                        <span className="text-red-500">*</span>
+                                                                    </>
+                                                                }
+                                                                labelClassName="text-sm font-semibold text-slate-900"
+                                                                value={field.value}
+                                                                onChange={(ymd) => {
+                                                                    field.onChange(ymd);
+                                                                    const prevEnd = getValues("end_date");
+                                                                    if (prevEnd && prevEnd <= ymd) {
+                                                                        setValue("end_date", "", { shouldValidate: true });
+                                                                    }
+                                                                }}
+                                                                minDate={today}
+                                                                invalid={!!errors.start_date}
+                                                            />
+                                                        )}
                                                     />
                                                     {errors.start_date && (
                                                         <p className="text-sm text-red-500">{errors.start_date.message}</p>
                                                     )}
                                                 </div>
                                                 <div className="space-y-3">
-                                                    <Label htmlFor="end_date" className="text-sm font-semibold">{t("booking.fields.endDate")} <span className="text-red-500">*</span></Label>
-                                                    <Input
-                                                        id="end_date"
-                                                        type="date"
-                                                        required
-                                                        min={startDate || today}
-                                                        {...register("end_date")}
-                                                        className={`h-11 text-sm ${errors.end_date ? "border-red-500" : ""}`}
+                                                    <Controller
+                                                        name="end_date"
+                                                        control={control}
+                                                        render={({ field }) => (
+                                                            <DatePickerField
+                                                                id="end_date"
+                                                                label={
+                                                                    <>
+                                                                        {t("booking.fields.endDate")}{" "}
+                                                                        <span className="text-red-500">*</span>
+                                                                    </>
+                                                                }
+                                                                labelClassName="text-sm font-semibold text-slate-900"
+                                                                value={field.value}
+                                                                onChange={field.onChange}
+                                                                minDate={startDate || today}
+                                                                invalid={!!errors.end_date}
+                                                            />
+                                                        )}
                                                     />
                                                     {errors.end_date && (
                                                         <p className="text-sm text-red-500">{errors.end_date.message}</p>
@@ -754,3 +784,4 @@ const BookingPage = () => {
 }
 
 export default BookingPage;
+

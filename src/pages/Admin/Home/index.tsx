@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+﻿import { FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MapPin, Search } from "lucide-react";
 import { ROUTERS, CLOUDINARY_HEADER_IMAGE_URL, DEFAULT_ROOM_IMAGE } from "@/constant";
@@ -8,7 +8,7 @@ import ContactCard from "@/components/common/ContactCard";
 import { toastError } from "@/components/ui/toast";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
-import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
+import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { useLatestRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { useRandomPartnersQuery } from "@/hooks/EU/usePartnerQuery";
 import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
@@ -46,7 +46,7 @@ const PublicHome = () => {
 
   const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
   const { data: wardsData, isLoading: isLoadingWards } = useGetHomeWardsByProvinceId(provinceId ?? 0);
-  const { data: propertyTypesData, isLoading: isLoadingPropertyTypes } = useBuildingTypesQuery();
+  const { data: propertyTypesData, isLoading: isLoadingPropertyTypes } = usePropertyTypesQuery();
   const { data: latestNewsData, isLoading: isLoadingNews, isError: isErrorNews } = useLatestNewsQuery(6);
 
   const { data: latestRoomsData } = useLatestRoomsQuery();
@@ -66,7 +66,7 @@ const PublicHome = () => {
       return {
         id: room.id,
         name: room.title,
-        address: room.building_address || "Đang cập nhật",
+        address: room.property_address || "Đang cập nhật",
         price: priceLabel,
         image: room.room_image ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.room_image}` : DEFAULT_ROOM_IMAGE,
         area: `${room.area} m²`,
@@ -330,3 +330,4 @@ const PublicHome = () => {
 
 
 export default PublicHome;
+

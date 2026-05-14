@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+﻿import React, { useState, useEffect, ChangeEvent } from 'react';
 import { 
   Plus, Tv, Wifi, Wind, Coffee, Waves, Car,
   UtensilsCrossed, Bath, Edit, Trash2, Laptop, ShieldCheck, Dumbbell, Loader2,
@@ -11,7 +11,7 @@ import { partnerService } from '@/services/partnerService';
 import { Amenity } from './types';
 import InlineSheet from './components/InlineSheet';
 import { toastError, toastSuccess, toastInfo } from '@/components/ui/toast';
-import BuildingSelector from './components/BuildingSelector';
+import PropertySelector from './components/PropertySelector';
 import {
   Select,
   SelectContent,
@@ -102,8 +102,8 @@ const Amenities: React.FC = () => {
   const [editingAmenity, setEditingAmenity] = useState<Amenity | null>(null);
   const [form, setForm] = useState<Partial<Amenity>>({ name: '', category: 'Tiện nghi phòng' });
   const [selectedIconName, setSelectedIconName] = useState('Wifi');
-  const [filterBuildingId, setFilterBuildingId] = useState<string | null>(null);
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
+  const [filterPropertyId, setFilterPropertyId] = useState<string | null>(null);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
@@ -196,15 +196,15 @@ const Amenities: React.FC = () => {
   };
 
   const handleBulkAssign = async () => {
-    if (!selectedBuildingId || !editingAmenity) {
+    if (!selectedPropertyId || !editingAmenity) {
       toastError('Vui lòng chọn tòa nhà.');
       return;
     }
 
     try {
       setIsAssigning(true);
-      // Fetch room IDs for this building
-      const res: any = await partnerService.getRoomNamesByBuildingId(selectedBuildingId);
+      // Fetch room IDs for this property
+      const res: any = await partnerService.getRoomNamesByPropertyId(selectedPropertyId);
       const rooms = res?.data || [];
       const roomIds = rooms.map((r: any) => r.id);
 
@@ -236,9 +236,9 @@ const Amenities: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div className="flex items-center gap-6">
-          <BuildingSelector 
-            selectedId={filterBuildingId} 
-            onSelect={setFilterBuildingId} 
+          <PropertySelector 
+            selectedId={filterPropertyId} 
+            onSelect={setFilterPropertyId} 
             className="w-64"
           />
           <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
@@ -289,7 +289,7 @@ const Amenities: React.FC = () => {
                 <Button 
                   onClick={handleBulkAssign} 
                   variant="outline" 
-                  disabled={!selectedBuildingId || isAssigning}
+                  disabled={!selectedPropertyId || isAssigning}
                   className="border-blue-200 text-blue-600 hover:bg-blue-50"
                   size="sm"
                 >
@@ -341,9 +341,9 @@ const Amenities: React.FC = () => {
                   <Building2 size={16} /> Liên kết Tòa nhà
                 </Label>
                 <p className="mb-1 text-[10px] italic text-blue-600/70">Chọn tòa nhà để gán nhanh tiện ích này cho tất cả các phòng.</p>
-                <BuildingSelector 
-                  selectedId={selectedBuildingId} 
-                  onSelect={setSelectedBuildingId} 
+                <PropertySelector 
+                  selectedId={selectedPropertyId} 
+                  onSelect={setSelectedPropertyId} 
                   allowAll={false}
                   placeholder="Chọn tòa nhà để gán..."
                 />
@@ -377,3 +377,4 @@ const Amenities: React.FC = () => {
 };
 
 export default Amenities;
+

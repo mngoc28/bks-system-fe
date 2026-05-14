@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info } from "lucide-react";
@@ -129,7 +129,7 @@ const PublicRoomDetail = () => {
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{room?.title || "Chi tiết phòng"}</h1>
           <p className="mt-3 inline-flex items-center gap-2 text-slate-200">
             <MapPin className="size-4 text-primary-light" />
-            {room?.building_address || "Đang cập nhật địa chỉ"}
+            {room?.property_address || "Đang cập nhật địa chỉ"}
           </p>
         </div>
       </section>
@@ -371,3 +371,4 @@ const PublicRoomDetail = () => {
 };
 
 export default PublicRoomDetail;
+

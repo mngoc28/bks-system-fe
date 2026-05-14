@@ -1,12 +1,12 @@
-export interface SystemStats {
-  totalBuildings: number;
+﻿export interface SystemStats {
+  totalProperties: number;
   totalRooms: number;
   vacantRooms: number;
   occupancyRate: number;
   estimatedRevenue: number;
 }
 
-export interface Building {
+export interface Property {
   id: string | number;
   name: string;
   address: string;
@@ -58,8 +58,8 @@ export interface UtilityFee {
 
 export interface Room {
   id: string | number;
-  buildingId: string | number;
-  buildingName?: string;
+  propertyId: string | number;
+  propertyName?: string;
   name: string;
   title?: string;
   floor_number?: number;
@@ -80,7 +80,7 @@ export interface Booking {
   id: string | number;
   guestName: string;
   roomName: string;
-  buildingName?: string;
+  propertyName?: string;
   phone?: string;
   checkIn: string;
   checkOut: string;
@@ -100,7 +100,7 @@ export interface MaintenanceRequest {
   id: string | number;
   roomName: string;
   roomId?: string | number;
-  buildingName?: string;
+  propertyName?: string;
   type?: string; 
   description?: string; 
   status: 'Đang chờ' | 'Đang xử lý' | 'Đã hoàn thành' | 'Chờ xử lý' | 'Đang sửa';
@@ -126,3 +126,4 @@ export interface RevenueRecord {
   commission: number;
   netIncome: number;
 }
+

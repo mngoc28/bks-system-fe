@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { DeleteConfirmDialogProps } from "@/dataHelper/booking.dataHelper";
 import { Loader2, Trash2 } from "lucide-react";
@@ -42,7 +42,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ booking, isOp
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-500">{t("bookings.delete.room_title")}</span>
-                  <span className="text-sm">{booking.room.room_number} — {booking.room.building.name}</span>
+                  <span className="text-sm">{booking.room.room_number} — {booking.room.property.name}</span>
                 </div>
               </div>
             )}
@@ -77,3 +77,4 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ booking, isOp
 };
 
 export default DeleteConfirmDialog;
+

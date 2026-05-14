@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeleteRoomDialogProps } from "@/dataHelper/room.dataHelper";
 import { useTranslation } from "react-i18next";
@@ -29,7 +29,7 @@ const DeleteRoomDialog: React.FC<DeleteRoomDialogProps> = ({ isOpen, room, onCan
           <div className="mb-4 rounded bg-gray-50 p-3">
             <div><b>ID:</b> {room.id}</div>
             <div><b>{t("rooms.room_number")}:</b> {room.room_number}</div>
-            <div><b>{t("rooms.building")}:</b> {room.building_name}</div>
+            <div><b>{t("rooms.property")}:</b> {room.property_name}</div>
           </div>
         )}
         <div className="mb-2 text-sm text-red-500">{t("rooms.delete_room_warning")}</div>

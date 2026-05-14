@@ -30,7 +30,7 @@ const BookingSuccess = () => {
         <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
           <p className="text-slate-600">Không tìm thấy thông tin đặt phòng.</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Button onClick={() => navigate(ROUTERS.BKS_STAY_HISTORY)}>Đến đơn của tôi</Button>
+            <Button onClick={() => navigate(ROUTERS.MY_BOOKINGS)}>Đến đơn của tôi</Button>
             <Button variant="secondary" className="border border-slate-300 bg-white text-slate-700" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
               Tìm phòng khác
             </Button>
@@ -102,13 +102,22 @@ const BookingSuccess = () => {
               <p className="mt-1 text-2xl font-bold text-sky-600">{formatPrice(state.totalPrice)}</p>
             </div>
 
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-                <Link to={ROUTERS.BKS_STAY_HISTORY}>Xem đơn của tôi</Link>
-              </Button>
-              <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-                <Link to={ROUTERS.SEARCH_ROOMS}>Tiếp tục tìm phòng</Link>
-              </Button>
+            <div className="flex flex-col gap-3 pt-2">
+              <p className="text-xs text-slate-500">
+                Đơn vừa đặt được lưu trên trình duyệt của bạn. Để xem trên cổng BKS Stay (tài khoản), hãy{" "}
+                <Link to={ROUTERS.BKS_STAY_LOGIN} className="font-semibold text-sky-600 underline-offset-2 hover:underline">
+                  đăng nhập BKS Stay
+                </Link>
+                .
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
+                  <Link to={ROUTERS.MY_BOOKINGS}>Xem đơn của tôi</Link>
+                </Button>
+                <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                  <Link to={ROUTERS.SEARCH_ROOMS}>Tiếp tục tìm phòng</Link>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

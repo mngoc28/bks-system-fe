@@ -50,7 +50,7 @@ const RoomUpdate: React.FC = () => {
       await updateRoomMutation.mutateAsync({
         id: room.id,
         data: {
-          building_id: formData.building_id,
+          property_id: formData.property_id,
           title: formData.title,
           room_number: formData.room_number || undefined,
           deposit: formData.deposit ? parseFloat(formData.deposit) : undefined,

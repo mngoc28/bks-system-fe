@@ -1,4 +1,4 @@
-import { cloudinaryApi } from "@/api/cloudinaryApi";
+﻿import { cloudinaryApi } from "@/api/cloudinaryApi";
 import { ApiResponse } from "@/api/types";
 import { CloudinaryImage } from "@/dataHelper/cloudinary.dataHelper";
 import { useMutation, UseMutationResult, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ export const useUploadImageMutation = (): UseMutationResult<ApiResponse<Cloudina
     return useMutation({
         mutationFn: (data: { image: File; folder: string }) => cloudinaryApi.uploadImage(data.image, data.folder),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["building-images"] });
+            queryClient.invalidateQueries({ queryKey: ["property-images"] });
             return data;
         },
         onError: (error) => {
@@ -24,7 +24,7 @@ export const useUploadImagesMutation = () => {
     return useMutation({
         mutationFn: (data: { files: File[]; folder: string }) => cloudinaryApi.uploadImages(data.files, data.folder),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["building-images"] });
+            queryClient.invalidateQueries({ queryKey: ["property-images"] });
         },
         onError: (error) => {
             throw error;
@@ -38,7 +38,7 @@ export const useDeleteImageMutation = () => {
     return useMutation({
         mutationFn: (publicId: string) => cloudinaryApi.deleteImage(publicId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["building-images"] });
+            queryClient.invalidateQueries({ queryKey: ["property-images"] });
         },
         onError: (error) => {
             throw error;

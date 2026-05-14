@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Loader2, Image as ImageIcon, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import { toastSuccess, toastError } from '@/components/ui/toast';
 interface PartnerImageManagerProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'building' | 'room';
+  type: 'property' | 'room';
   targetId: string;
   targetName: string;
   userId?: string | number;
@@ -63,8 +63,8 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
   const fetchImages = async () => {
     setLoading(true);
     try {
-      const res = type === 'building' 
-        ? await partnerService.getBuildingImages(targetId)
+      const res = type === 'property' 
+        ? await partnerService.getPropertyImages(targetId)
         : await partnerService.getRoomImages(targetId);
       
       const data = res.data;
@@ -150,8 +150,8 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
           image_type: 1,
         };
 
-        if (type === 'building') {
-          await partnerService.addBuildingImage(targetId, dbData);
+        if (type === 'property') {
+          await partnerService.addPropertyImage(targetId, dbData);
         } else {
           await partnerService.addRoomImage(targetId, dbData);
         }
@@ -176,8 +176,8 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
     if (!window.confirm('Bạn có chắc chắn muốn xóa ảnh này?')) return;
 
     try {
-      if (type === 'building') {
-        await partnerService.deleteBuildingImage(targetId, imageId);
+      if (type === 'property') {
+        await partnerService.deletePropertyImage(targetId, imageId);
       } else {
         await partnerService.deleteRoomImage(targetId, imageId);
       }
@@ -287,7 +287,7 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
               ))
             ) : !saving && pendingImages.length === 0 && (
               <div className="col-span-full py-10 text-center">
-                <p className="italic text-gray-400">Chưa có hình ảnh nào cho {type === 'building' ? 'bất động sản' : 'phòng'} này.</p>
+                <p className="italic text-gray-400">Chưa có hình ảnh nào cho {type === 'property' ? 'bất động sản' : 'phòng'} này.</p>
               </div>
             )}
           </div>
@@ -308,3 +308,4 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
 };
 
 export default PartnerImageManager;
+

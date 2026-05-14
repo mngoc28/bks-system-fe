@@ -36,7 +36,7 @@ const PropertyRooms: React.FC = () => {
   const navigate = useNavigate();
   const { propertyId } = useParams();
   const [rooms, setRooms] = useState<Room[]>([]);
-  // buildings state removed as it is not used in this component
+  // properties state removed as it is not used in this component
   const [loading, setLoading] = useState(true);
   const [propertyName, setPropertyName] = useState('Bất động sản');
   const [propertyType, setPropertyType] = useState('');
@@ -88,7 +88,7 @@ const PropertyRooms: React.FC = () => {
     status: true,
     amenities: [],
     services: [],
-    buildingId: propertyId || '',
+    propertyId: propertyId || '',
     prices: [{ id: 'p' + Date.now(), packageName: 'Gói tháng', price: 0, duration: 1, unit: 'month', deposit_amount: 0, minimum_stay: 1 }],
     utility_fees: [
       { type: 'electricity', method: 'per_unit', price: 3500, included: false },
@@ -202,7 +202,7 @@ const PropertyRooms: React.FC = () => {
   const fetchOccupancy = async () => {
     try {
       setLoadingOccupancy(true);
-      const res: any = await partnerService.getRoomsOccupancy({ building_id: propertyId });
+      const res: any = await partnerService.getRoomsOccupancy({ property_id: propertyId });
       if (res?.status === 'success' && res?.data) {
         setOccupancyData(res.data.rooms || []);
         setOccupancyStats(res.data.stats || null);
@@ -227,7 +227,7 @@ const PropertyRooms: React.FC = () => {
       const mappedStatus = visibility === 'all' ? undefined : visibility === 'visible' ? 1 : 0;
 
       const roomsRes: any = await partnerService.getRooms({
-        building_id: propertyId,
+        property_id: propertyId,
         page: page,
         per_page: size,
         room_number: normalizedKeyword || undefined,
@@ -243,11 +243,11 @@ const PropertyRooms: React.FC = () => {
       setSelectedIds(prev => prev.filter(id => rawRooms.some((r: any) => Number(r.id) === id)));
 
       if (propertyName === 'Bất động sản') {
-        const buildingsRes: any = await partnerService.getBuildings({ id: propertyId });
-        const selectedBuilding = (buildingsRes?.data?.data || buildingsRes?.data || []).find((b: any) => String(b.id) === String(propertyId));
-        if (selectedBuilding) {
-          setPropertyName(selectedBuilding.name);
-          setPropertyType(selectedBuilding.property_type_name || '');
+        const propertiesRes: any = await partnerService.getProperties({ id: propertyId });
+        const selectedProperty = (propertiesRes?.data?.data || propertiesRes?.data || []).find((b: any) => String(b.id) === String(propertyId));
+        if (selectedProperty) {
+          setPropertyName(selectedProperty.name);
+          setPropertyType(selectedProperty.property_type_name || '');
         }
       }
     } catch {
@@ -333,7 +333,7 @@ const PropertyRooms: React.FC = () => {
       people: 2,
       room_type: 1,
       status: true,
-      buildingId: propertyId || '',
+      propertyId: propertyId || '',
       amenities: [],
       services: [],
       prices: [{ id: 'p' + Date.now(), packageName: 'Gói tháng', price: 0, duration: 1, unit: 'month', deposit_amount: 0, minimum_stay: 1 }],
@@ -368,7 +368,7 @@ const PropertyRooms: React.FC = () => {
         if (new Set(roomNames).size !== roomNames.length) return toastError('Danh sách phòng có mã bị trùng, vui lòng kiểm tra lại.');
         
         await partnerService.bulkCreateRoom({
-          building_id: propertyId,
+          property_id: propertyId,
           rooms: roomNames.map((name: string) => ({ name, area: formData.area })),
           area: formData.area,
           floor_number: formData.floor_number,
@@ -1290,3 +1290,4 @@ const PropertyRooms: React.FC = () => {
 };
 
 export default PropertyRooms;
+

@@ -1,14 +1,14 @@
-import { SystemStats, Building, Room, Booking, MaintenanceRequest, RevenueRecord, NewsPost } from './types';
+﻿import { SystemStats, Property, Room, Booking, MaintenanceRequest, RevenueRecord, NewsPost } from './types';
 
 export const mockStats: SystemStats = {
-  totalBuildings: 3,
+  totalProperties: 3,
   totalRooms: 45,
   vacantRooms: 8,
   occupancyRate: 82.2,
   estimatedRevenue: 125000000,
 };
 
-export const mockBuildings: Building[] = [
+export const mockProperties: Property[] = [
   { id: 'b1', name: 'Khách sạn Alpha Center', address: '123 Nguyễn Văn Linh, Quận 7, TP.HCM', totalRooms: 15, type: 'Khách sạn (Hotel)' },
   { id: 'b2', name: 'Nhà nghỉ Sunny', address: '45 Lê Văn Sỹ, Phú Nhuận, TP.HCM', totalRooms: 8, type: 'Nhà nghỉ (Motel/Guesthouse)' },
   { id: 'b3', name: 'Căn hộ dịch vụ BKS', address: '89 Điện Biên Phủ, Bình Thạnh, TP.HCM', totalRooms: 20, type: 'Căn hộ dịch vụ' },
@@ -17,7 +17,7 @@ export const mockBuildings: Building[] = [
 export const mockRooms: Room[] = [
   { 
     id: 'r1', 
-    buildingId: 'b1', 
+    propertyId: 'b1', 
     name: 'Phòng Deluxe 101', 
     area: 35, 
     amenities: ['Máy lạnh', 'Máy giặt', 'Giường King', 'Tủ lạnh', 'Ban công'], 
@@ -30,7 +30,7 @@ export const mockRooms: Room[] = [
   },
   { 
     id: 'r2', 
-    buildingId: 'b1', 
+    propertyId: 'b1', 
     name: 'Phòng Suite 102', 
     area: 50, 
     amenities: ['Máy lạnh', 'Bồn tắm', 'Giường King', 'View biển'], 
@@ -43,7 +43,7 @@ export const mockRooms: Room[] = [
   },
   { 
     id: 'r3', 
-    buildingId: 'b2', 
+    propertyId: 'b2', 
     name: 'Phòng Master 01', 
     area: 40, 
     amenities: ['Bếp riêng', 'Tủ quần áo', 'Giường Queen'], 
@@ -96,3 +96,4 @@ export const mockTransactions = [
   { id: 'tx2', type: 'Phí dịch vụ', amount: -500000, date: '2026-04-04', description: 'Phí dọn dẹp tháng 3' },
   { id: 'tx3', type: 'Thu nhập', amount: 22000000, date: '2026-04-02', description: 'Tiền thuê phòng Master 01 - Sunny' },
 ];
+

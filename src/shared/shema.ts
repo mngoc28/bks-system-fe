@@ -1,4 +1,4 @@
-import { IMAGE_ALLOWED_TYPES, IMAGE_MAX_FILES, IMAGE_MAX_SIZE, MAX_LENGTH_INPUT as MAX_LENGTH, NODE_OPTION_MARGIN as MIN_LENGTH, regexEmail, regexPassword } from "@/constant";
+﻿import { IMAGE_ALLOWED_TYPES, IMAGE_MAX_FILES, IMAGE_MAX_SIZE, MAX_LENGTH_INPUT as MAX_LENGTH, NODE_OPTION_MARGIN as MIN_LENGTH, regexEmail, regexPassword } from "@/constant";
 import { z } from "zod";
 
 // Schema validation cho form
@@ -151,29 +151,29 @@ export const resetPasswordSchema = (t: (key: string) => string) =>
       path: ["password_confirmation"],
     });
 
-export const buildingFormSchema = (t: (key: string) => string) =>
+export const propertyFormSchema = (t: (key: string) => string) =>
   z.object({
-    name: z.string().min(1, { message: t("buildings.building_name") + " " + t("common.is_required") }),
+    name: z.string().min(1, { message: t("properties.property_name") + " " + t("common.is_required") }),
     user_id: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.address") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.address") + " " + t("common.is_required") })
     ),
     province_id: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.table_province") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.table_province") + " " + t("common.is_required") })
     ),
     ward_id: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.table_ward") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.table_ward") + " " + t("common.is_required") })
     ),
-    address_detail: z.string().min(1, { message: t("buildings.address") + " " + t("common.is_required") }),
+    address_detail: z.string().min(1, { message: t("properties.address") + " " + t("common.is_required") }),
     number_of_floors: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.table_number_of_floors") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.table_number_of_floors") + " " + t("common.is_required") })
     ),
     number_of_units: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.table_number_of_units") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.table_number_of_units") + " " + t("common.is_required") })
     ),
     year_built: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? null : Number(v)),
@@ -181,15 +181,15 @@ export const buildingFormSchema = (t: (key: string) => string) =>
     ),
     property_type_id: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.building_type_name") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.property_type_name") + " " + t("common.is_required") })
     ),
     rent_category: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.rent_category_name") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.rent_category_name") + " " + t("common.is_required") })
     ),
     area: z.preprocess(
       (v) => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? 0 : Number(v)),
-      z.number().min(1, { message: t("buildings.area") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("properties.area") + " " + t("common.is_required") })
     ),
     description: z.string(),
   });
@@ -204,9 +204,9 @@ export const userFormSchema = (t: (key: string) => string) =>
 
 export const roomFormSchema = (t: (key: string) => string) =>
   z.object({
-    building_id: z.preprocess(
+    property_id: z.preprocess(
       v => (v === null || v === undefined ? 0 : v),
-      z.number().min(1, { message: t("rooms.building") + " " + t("common.is_required") })
+      z.number().min(1, { message: t("rooms.property") + " " + t("common.is_required") })
     ),
     title: z.string().min(1, { message: t("rooms.room_title") + " " + t("common.is_required") }),
     room_number: z.string().optional(),
@@ -328,11 +328,11 @@ export const addAmenitySchema = (t: (key: string) => string, existingAmenities: 
         { message: t("amenities.name_exists") }
       ),
   });
-export const buildingImageFormSchema = (t: (key: string) => string) => {
+export const propertyImageFormSchema = (t: (key: string) => string) => {
   return z.object({
-    image_url: z.string().min(1, { message: t("building-images.image_url_required") }),
-    image_type: z.number().min(1, { message: t("building-images.image_type_required") }),
-    id_image_cloudinary: z.string().min(1, { message: t("building-images.id_image_cloudinary_required") }),
+    image_url: z.string().min(1, { message: t("property-images.image_url_required") }),
+    image_type: z.number().min(1, { message: t("property-images.image_type_required") }),
+    id_image_cloudinary: z.string().min(1, { message: t("property-images.id_image_cloudinary_required") }),
   });
 }
 
@@ -414,7 +414,7 @@ export const avatarSchema = (t: (key: string) => string) =>
 
 export const bookingCreateSchema = (t: (key: string) => string) =>
   z.object({
-    selectedBuilding: z.string().min(1, { message: t("bookings.add.building_required") }),
+    selectedProperty: z.string().min(1, { message: t("bookings.add.property_required") }),
     selectedRoom: z.string().min(1, { message: t("bookings.add.room_required") }),
     selectedPricePackage: z.string().min(1, { message: t("bookings.add.price_required") }),
     startDate: z.string().min(1, { message: t("bookings.add.start_date_required") }),
@@ -502,3 +502,4 @@ export const bookingUserFormSchema = (t: (key: string) => string) =>
     message: t("booking.validation.endDate.afterStart"),
     path: ["end_date"],
   });
+

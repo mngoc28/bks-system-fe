@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BookingDetailDialogProps } from "@/dataHelper/booking.dataHelper";
@@ -26,7 +26,7 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
 
   // Normalize fields - BE returns flat structure with joined data
   const userName = bookingRaw?.user_name ?? fallback?.user_name ?? "-";
-  const buildingName = bookingRaw?.building_name ?? fallback?.building_name ?? "-";
+  const propertyName = bookingRaw?.property_name ?? fallback?.property_name ?? "-";
   const roomName = bookingRaw?.room_name ?? fallback?.room_name ?? "-";
   const startDate = bookingRaw?.start_date ?? null;
   const endDate = bookingRaw?.end_date ?? null;
@@ -84,8 +84,8 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
             {/* Details grid */}
             <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <div>
-                <dt className="text-slate-500">{t("bookings.detail.building_name")}</dt>
-                <dd className="mt-1 font-medium text-slate-900">{buildingName}</dd>
+                <dt className="text-slate-500">{t("bookings.detail.property_name")}</dt>
+                <dd className="mt-1 font-medium text-slate-900">{propertyName}</dd>
               </div>
               <div>
                 <dt className="text-slate-500">{t("bookings.detail.room_number")}</dt>
@@ -129,3 +129,4 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({ id, open, onC
 };
 
 export default BookingDetailDialog;
+

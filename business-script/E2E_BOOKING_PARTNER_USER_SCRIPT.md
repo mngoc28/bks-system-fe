@@ -79,6 +79,29 @@ Tài liệu này mô tả 1 luồng kiểm thử End-to-End (E2E) cho nghiệp v
 * Trạng thái booking chuyển sang đã xác nhận.
 * Booking không còn nằm trong danh sách chờ duyệt.
 
+### Bước 3b: Kiểm tra hợp đồng gắn booking (sau khi xác nhận)
+
+**Bối cảnh:** Sau khi Partner xác nhận, hệ thống có thể tự sinh bản ghi hợp đồng liên kết `booking_id`. Booking **ngắn hạn** (ví dụ 2 đêm như mục 1.4) thường tương ứng loại `TERMS_AND_CONDITIONS`; booking **dài hạn** (ví dụ ≥ 30 ngày hoặc theo rule giá tháng / loại phòng trong tài liệu pricing của dự án) có thể là `LEASE_AGREEMENT`. Nếu môi trường chưa bật sinh hợp đồng tự động, bước này ghi nhận là **không áp dụng** và ghi chú vào báo cáo UAT.
+
+**Phía Partner**
+
+* Đăng nhập Partner → mục **Hợp đồng** (đường dẫn `/partner/contracts`).
+* Trong danh sách, tìm hợp đồng gắn booking vừa xác nhận (đối chiếu khách `user@gmail.com`, phòng/tòa như mục 1.4).
+* Mở chi tiết (`/partner/contracts/{id}`): kiểm tra trường loại hợp đồng (`contract_type`), ngày ký (`signature_date` nếu có), nội dung/hồ sơ tối thiểu hiển thị; đối chiếu ngày nhận/trả phòng và khách với booking.
+
+**Phía User (End User)**
+
+* Vào **chi tiết booking** đã xác nhận (từ lịch sử đặt phòng / đơn của tôi).
+* Nếu có đường dẫn tới hợp đồng (ví dụ mở `/bks-stay/contracts/{id}` từ màn booking chi tiết): mở và đối chiếu cùng một booking với Partner.
+
+**Kết quả kỳ vọng:**
+
+* Tồn tại đúng một hợp đồng gắn booking test (hoặc đúng số lượng theo rule nghiệp vụ đã chốt).
+* Loại hợp đồng khớp kỳ vọng ngắn hạn/dài hạn theo khoảng ngày và loại phòng đã chọn.
+* Thông tin khách, phòng, khoảng ngày lưu trú nhất quán giữa booking và hợp đồng.
+
+**Kịch bản mở rộng (tùy chọn — dài hạn):** Lặp lại từ Bước 1 với khoảng ngày đủ dài theo rule dự án (ví dụ ≥ 30 ngày), sau đó lặp Bước 2–3 và Bước 3b; kỳ vọng `LEASE_AGREEMENT` và các trường/UI đặc thù dài hạn (nhắc gia hạn, chấm dứt) **chỉ kiểm tra nếu đã triển khai** trên môi trường test.
+
 ### Bước 4: User kiểm tra booking sau xác nhận
 * User đăng nhập lại vào hệ thống.
 * Truy cập trang lịch sử booking hoặc danh sách đơn của mình.
@@ -110,6 +133,7 @@ Tài liệu này mô tả 1 luồng kiểm thử End-to-End (E2E) cho nghiệp v
 * Partner có thể thấy và duyệt booking bằng tài khoản `partner@gmail.com`.
 * Luồng xác nhận, check-in và check-out hoạt động xuyên suốt.
 * Trạng thái phòng được cập nhật đúng trước và sau booking.
+* (Nếu nghiệp vụ đã bật sinh hợp đồng khi confirm) Sau xác nhận, Partner và User đều tra cứu được hợp đồng gắn booking với loại và dữ liệu khớp kỳ vọng (xem Bước 3b).
 
 ## 4. Ghi chú kiểm thử
 

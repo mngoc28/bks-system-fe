@@ -61,9 +61,9 @@ type BookingStatusFilter = 'all' | 0 | 1 | 2 | 3 | 'in_stay';
 interface BookingRow extends Booking {
   phone?: string;
   note?: string;
-  buildingName?: string;
+  propertyName?: string;
   roomId?: number;
-  buildingId?: number;
+  propertyId?: number;
   rawStatus?: number;
   createdAt?: string;
 }
@@ -105,9 +105,9 @@ const Bookings: React.FC = () => {
         rawStatus,
         phone: item.phone ?? item.user_phone ?? '',
         note: item.note ?? '',
-        buildingName: item.buildingName ?? item.building_name ?? '',
+        propertyName: item.propertyName ?? item.property_name ?? item.property_name ?? '',
         roomId: item.room_id ? Number(item.room_id) : undefined,
-        buildingId: item.building_id ? Number(item.building_id) : undefined,
+        propertyId: item.property_id != null ? Number(item.property_id) : item.property_id != null ? Number(item.property_id) : undefined,
         createdAt: item.createdAt ?? item.created_at ?? '',
         stay_status: item.stay_status || 'pending',
       };
@@ -283,7 +283,7 @@ const Bookings: React.FC = () => {
       const haystack = [
         booking.guestName,
         booking.roomName,
-        booking.buildingName,
+        booking.propertyName,
         booking.phone,
       ]
         .filter(Boolean)
@@ -319,7 +319,7 @@ const Bookings: React.FC = () => {
       'guestName',
       'phone',
       'roomName',
-      'buildingName',
+      'propertyName',
       'checkIn',
       'checkOut',
       'status',
@@ -332,7 +332,7 @@ const Bookings: React.FC = () => {
       b.guestName,
       b.phone ?? '',
       b.roomName,
-      b.buildingName ?? '',
+      b.propertyName ?? '',
       b.checkIn,
       b.checkOut,
       getPartnerRowDisplayStatus(b.rawStatus ?? 1, b.stay_status),
@@ -546,7 +546,7 @@ const Bookings: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-slate-600">
                     <div className="flex items-center gap-1.5">
                       <Building2 size={14} className="text-slate-400" />
-                      {booking.buildingName || 'N/A'}
+                      {booking.propertyName || 'N/A'}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
@@ -664,7 +664,7 @@ const Bookings: React.FC = () => {
                 <div className="rounded-xl border border-slate-200 p-3">
                   <p className="text-xs font-bold uppercase text-slate-500">Phòng / Tòa nhà</p>
                   <p className="mt-1 font-semibold">{selectedBooking.roomName || 'N/A'}</p>
-                  <p className="mt-1 text-slate-500">{selectedBooking.buildingName || 'N/A'}</p>
+                  <p className="mt-1 text-slate-500">{selectedBooking.propertyName || 'N/A'}</p>
                 </div>
               </div>
 
@@ -764,3 +764,4 @@ const Bookings: React.FC = () => {
 };
 
 export default Bookings;
+

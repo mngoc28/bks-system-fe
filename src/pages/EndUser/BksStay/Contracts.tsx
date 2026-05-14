@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   FileText, 
@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Download,
   Calendar,
-  Building
+  Building2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,7 +138,7 @@ const Contracts = () => {
                                       )}
                                    </div>
                                    <div className="flex flex-col gap-x-4 gap-y-1 overflow-hidden text-[11px] font-medium text-slate-400 sm:flex-row sm:items-center sm:text-xs">
-                                      <span className="flex items-center gap-1.5 truncate"><Building className="size-3 shrink-0 sm:size-3.5" /> {contract.booking.room.building.name}</span>
+                                      <span className="flex items-center gap-1.5 truncate"><Building2 className="size-3 shrink-0 sm:size-3.5" /> {contract.booking.room.property.name}</span>
                                       <span className="hidden text-slate-200 sm:inline">|</span>
                                       <span className="flex items-center gap-1.5"><Calendar className="size-3 shrink-0 sm:size-3.5" /> Ngày tạo: {new Date(contract.created_at).toLocaleDateString("vi-VN")}</span>
                                       <span className="truncate whitespace-nowrap font-bold text-sky-600">ID: {contract.id}</span>
@@ -237,3 +237,4 @@ const Contracts = () => {
 };
 
 export default Contracts;
+

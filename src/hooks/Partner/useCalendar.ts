@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+﻿import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { partnerService } from '@/services/partnerService';
 
 export interface PartnerCalendarBooking {
@@ -9,8 +9,8 @@ export interface PartnerCalendarBooking {
   status: number;
   stay_status: string | null;
   confirmed_at: string | null;
-  building_id?: number | null;
-  building_name?: string | null;
+  property_id?: number | null;
+  property_name?: string | null;
   room_label?: string | null;
   room_title?: string | null;
   guest_name?: string | null;
@@ -100,3 +100,4 @@ export const useInvalidatePartnerCalendar = () => {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: ['partner', 'calendar'] });
 };
+

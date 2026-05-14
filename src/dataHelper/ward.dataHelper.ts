@@ -1,4 +1,4 @@
-import { PaginationLink } from "./building.dataHelper";
+﻿import { PaginationLink } from "./property.dataHelper";
 
 export interface Ward {
   id: number;
@@ -25,3 +25,4 @@ export interface WardListDataResponse {
   to: number;
   total: number;
 }
+

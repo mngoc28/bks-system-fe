@@ -1,4 +1,4 @@
-import { roomApi } from "@/api/roomApi";
+﻿import { roomApi } from "@/api/roomApi";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { SearchRoomRequest, UpdateRoomRequest } from "@/dataHelper/room.dataHelper";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -90,20 +90,21 @@ export const useUpdateRoomMutation = () => {
   });
 };
 
-// Fetch rooms by building ID
-export const useRoomsByBuildingQuery = (buildingId: number, options?: { enabled?: boolean }) => {
+// Fetch rooms by property ID
+export const useRoomsByPropertyQuery = (propertyId: number, options?: { enabled?: boolean }) => {
   const { t } = useTranslation();
   return useQuery({
-    queryKey: ["rooms-by-building", buildingId],
+    queryKey: ["rooms-by-property", propertyId],
     queryFn: async () => {
       try {
-        const response = await roomApi.getRoomsByBuilding(buildingId);
+        const response = await roomApi.getRoomsByProperty(propertyId);
         return response.data;
       } catch (error) {
-        toastError(t("rooms.error_getting_rooms_by_building"));
+        toastError(t("rooms.error_getting_rooms_by_property"));
         throw error;
       }
     },
-    enabled: options?.enabled !== false && !!buildingId,
+    enabled: options?.enabled !== false && !!propertyId,
   });
 }
+

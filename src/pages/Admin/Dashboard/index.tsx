@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import {
-  useBookingsByBuildingQuery,
+  useBookingsByPropertyQuery,
   useBookingsPerMonthQuery,
   useRevenueByMonthQuery,
   useSystemRoom,
@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
   const { data: usersData } = useTotalUser();
   const { data: partnersData } = useTotalPartner();
   const { data: roomsData } = useSystemRoom();
-  const { data: bookingsByBuildingData, isLoading: isBookingsByBuildingLoading } = useBookingsByBuildingQuery();
+  const { data: bookingsByPropertyData, isLoading: isBookingsByPropertyLoading } = useBookingsByPropertyQuery();
   const { data: bookingsPerMonthData, isLoading: isBookingsPerMonthLoading } = useBookingsPerMonthQuery(startDate, endDate);
   const { data: revenueByMonthData, isLoading: isRevenueByMonthLoading } = useRevenueByMonthQuery(startDate, endDate);
   const { data: pendingBookingsData } = useBookingsQuery({ page: 1, per_page: 1, status: 0 });
@@ -152,19 +152,22 @@ const Dashboard: React.FC = () => {
     [revenueTrend],
   );
 
-  const buildingTrend = React.useMemo(
+  const propertyTrend = React.useMemo(
     () =>
-      (bookingsByBuildingData?.data ?? [])
+      (bookingsByPropertyData?.data ?? [])
         .slice()
         .sort((a, b) => b.total - a.total)
         .slice(0, 8)
-        .map((item) => ({
-          building_id: item.building_id,
-          building_name: item.building_name,
-          name: item.building_name.length > 24 ? `${item.building_name.slice(0, 24)}...` : item.building_name,
-          total: item.total,
-        })),
-    [bookingsByBuildingData],
+        .map((item) => {
+          const label = item.property_name ?? "";
+          return {
+            property_id: item.property_id,
+            property_name: label,
+            name: label.length > 24 ? `${label.slice(0, 24)}...` : label,
+            total: item.total,
+          };
+        }),
+    [bookingsByPropertyData],
   );
 
   const overviewHealthData = React.useMemo(() => {
@@ -533,7 +536,7 @@ const Dashboard: React.FC = () => {
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-600">
-            {t("dashboard.bookings_by_building", { defaultValue: "Booking theo tòa nhà" })}
+            {t("dashboard.bookings_by_property", { defaultValue: "Đặt phòng theo cơ sở" })}
           </h2>
           <Button
             variant="ghost"
@@ -549,14 +552,14 @@ const Dashboard: React.FC = () => {
             {t("common.view_more", { defaultValue: "Xem danh sách" })}
           </Button>
         </div>
-        {isBookingsByBuildingLoading ? (
+        {isBookingsByPropertyLoading ? (
           <div className="flex h-72 items-center justify-center">
             <Spinner size="md" showText text={t("common.loading_data")} />
           </div>
         ) : (
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={buildingTrend} layout="vertical" margin={{ top: 10, right: 10, left: 50, bottom: 0 }}>
+              <BarChart data={propertyTrend} layout="vertical" margin={{ top: 10, right: 10, left: 50, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 12 }} />
@@ -595,3 +598,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+

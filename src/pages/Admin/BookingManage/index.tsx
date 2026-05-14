@@ -1,4 +1,4 @@
-import Pagination from "@/components/Pagination";
+﻿import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE } from "@/constant";
 import type { Booking, BookingFilters, SearchBookingRequest } from "@/dataHelper/booking.dataHelper";
@@ -90,7 +90,7 @@ export default function BookingManagePage() {
     return list.map((item: any, idx: number) => ({
       id: String(item.id ?? idx + 1),
       user: { name: item.user_name ?? "" },
-      room: { room_number: item.room_name ?? "", building: { name: item.building_name ?? "" } },
+      room: { room_number: item.room_name ?? "", property: { name: item.property_name ?? "" } },
       start_date: item.start_date ?? "",
       end_date: item.end_date ?? "",
       price: (() => {
@@ -191,7 +191,7 @@ export default function BookingManagePage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedFallback, setSelectedFallback] = useState<{
     user_name?: string | null;
-    building_name?: string | null;
+    property_name?: string | null;
     room_name?: string | null;
     room_price?: number | string | null;
     partner_name?: string | null;
@@ -270,7 +270,7 @@ export default function BookingManagePage() {
                       const row = data.find((x) => x.id === id);
                       setSelectedFallback({
                         user_name: row?.user.name ?? "-",
-                        building_name: row?.room.building.name ?? "-",
+                        property_name: row?.room.property.name ?? "-",
                         room_name: row?.room.room_number ?? "-",
                         room_price: row?.price ?? null,
                         partner_name: row?.assignee ?? "-",
@@ -311,7 +311,7 @@ export default function BookingManagePage() {
                         const row = data.find((x) => x.id === id);
                         setSelectedFallback({
                             user_name: row?.user.name ?? "-",
-                            building_name: row?.room.building.name ?? "-",
+                            property_name: row?.room.property.name ?? "-",
                             room_name: row?.room.room_number ?? "-",
                             room_price: row?.price ?? null,
                             partner_name: row?.assignee ?? "-",
@@ -370,3 +370,4 @@ export default function BookingManagePage() {
     </div>
   );
 }
+

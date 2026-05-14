@@ -2,6 +2,7 @@ import * as React from 'react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import type { Matcher } from 'react-day-picker';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,30 +20,57 @@ function parseYmdToLocalDate(value: string): Date | undefined {
 
 export interface DatePickerFieldProps {
   id?: string;
-  label: string;
+  label: React.ReactNode;
+  /** Override default label class name */
+  labelClassName?: string;
   value: string;
   onChange: (ymd: string) => void;
   disabled?: boolean;
   className?: string;
+  /** Disable dates before this date (yyyy-MM-dd) */
+  minDate?: string;
+  /** Disable dates after this date (yyyy-MM-dd) */
+  maxDate?: string;
+  invalid?: boolean;
 }
 
 /**
- * Chọn một ngày (chuỗi yyyy-MM-dd) — hiển thị theo locale vi, popover + lịch.
+ * Select a date (string yyyy-MM-dd) - display in vi locale, popover + calendar.
  */
 export function DatePickerField({
   id,
   label,
+  labelClassName,
   value,
   onChange,
   disabled,
   className,
+  minDate,
+  maxDate,
+  invalid,
 }: DatePickerFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const selected = parseYmdToLocalDate(value);
+  const minD = minDate ? parseYmdToLocalDate(minDate) : undefined;
+  const maxD = maxDate ? parseYmdToLocalDate(maxDate) : undefined;
+
+  const disabledMatchers = React.useMemo((): Matcher | Matcher[] | undefined => {
+    const matchers: Matcher[] = [];
+    if (minD) {
+      matchers.push({ before: minD });
+    }
+    if (maxD) {
+      matchers.push({ after: maxD });
+    }
+    return matchers.length === 0 ? undefined : matchers.length === 1 ? matchers[0]! : matchers;
+  }, [minD, maxD]);
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label htmlFor={id} className="text-xs font-semibold text-slate-600">
+      <label
+        htmlFor={id}
+        className={cn('text-xs font-semibold text-slate-600', labelClassName)}
+      >
         {label}
       </label>
       <Popover open={open} onOpenChange={setOpen}>
@@ -55,6 +83,7 @@ export function DatePickerField({
             className={cn(
               'h-11 w-full justify-start rounded-lg border-slate-200 bg-white px-3 text-left font-normal text-slate-900 shadow-sm hover:bg-slate-50',
               !value && 'text-slate-400',
+              invalid && 'border-red-500',
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-slate-500" />
@@ -70,7 +99,8 @@ export function DatePickerField({
             mode="single"
             locale={vi}
             selected={selected}
-            defaultMonth={selected}
+            defaultMonth={selected ?? minD}
+            disabled={disabledMatchers}
             onSelect={(date) => {
               if (date) {
                 onChange(format(date, 'yyyy-MM-dd'));

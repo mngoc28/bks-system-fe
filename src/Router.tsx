@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import AuthImageOutlet from "./components/layout/AuthImageOutlet";
-import { ROUTERS } from "./constant";
+import { PERMISSIONS, ROUTERS } from "./constant";
 import { useCheckTokenStore } from "./store/useCheckTokenStore";
 import { useUserStore } from "./store/useUserStore";
 import { getAccessToken } from "./utils/storage";
@@ -24,17 +24,17 @@ const Login = React.lazy(() => import("./pages/Admin/Login"));
 const Register = React.lazy(() => import("./pages/Admin/Register"));
 const CompanyHub = React.lazy(() => import("./pages/Admin/CompanyHub"));
 const Dashboard = React.lazy(() => import("./pages/Admin/Dashboard"));
-const Buildings = React.lazy(() => import("./pages/Admin/BuildingManager"));
+const Properties = React.lazy(() => import("./pages/Admin/PropertyManager"));
 const BookingManage = React.lazy(() => import("./pages/Admin/BookingManage"));
-const BuildingsAdd = React.lazy(() => import("./pages/Admin/BuildingsAdd"));
-const BuildingEdit = React.lazy(() => import("./pages/Admin/BuildingEdit"));
-const BuildingDetail = React.lazy(() => import("./pages/Admin/BuildingDetail"));
-const BuildingEditImages = React.lazy(() => import("./pages/Admin/BuildingEdit"));
+const PropertiesAdd = React.lazy(() => import("./pages/Admin/PropertiesAdd"));
+const PropertyEdit = React.lazy(() => import("./pages/Admin/PropertyEdit"));
+const PropertyDetail = React.lazy(() => import("./pages/Admin/PropertyDetail"));
+const PropertyEditImages = React.lazy(() => import("./pages/Admin/PropertyEdit"));
 const Rooms = React.lazy(() => import("./pages/Admin/RoomManager"));
 const RoomAdd = React.lazy(() => import("./pages/Admin/RoomAdd"));
 const RoomDetail = React.lazy(() => import("./pages/Admin/RoomDetail"));
 const RoomImageManager = React.lazy(() => import("./pages/Admin/RoomImageManager"));
-const BuildingImageManager = React.lazy(() => import("./pages/Admin/BuildingImageManager"));
+const PropertyImageManager = React.lazy(() => import("./pages/Admin/PropertyImageManager"));
 const RoomUpdate = React.lazy(() => import("./pages/Admin/RoomUpdate"));
 const ResetPassword = React.lazy(() => import("./pages/Admin/ResetPassword"));
 const ForgotPassword = React.lazy(() => import("./pages/Admin/ForgotPassword"));
@@ -105,11 +105,43 @@ const LoadingFallback = () => (
   </div>
 );
 
+/** Role from zustand or persisted `user` (hydration-safe). */
+function getEffectiveRole(userRole: string): string {
+  let role = (userRole || "").toLowerCase();
+  if (!role) {
+    const persistedData = localStorage.getItem("user");
+    if (persistedData) {
+      try {
+        const parsed = JSON.parse(persistedData) as { state?: { userRole?: string } };
+        role = (parsed?.state?.userRole || "").toLowerCase();
+      } catch {
+        // ignore
+      }
+    }
+  }
+  return role;
+}
+
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useCheckTokenStore();
+  const userRole = useUserStore((state) => state.userRole);
   const isAuthenticated = !!token && !isTokenExpired(token);
 
-  return isAuthenticated ? <>{children}</> : <Navigate to={ROUTERS.LOGIN} replace />;
+  if (!isAuthenticated) {
+    return <Navigate to={ROUTERS.LOGIN} replace />;
+  }
+
+  const role = getEffectiveRole(userRole);
+  if (role === PERMISSIONS.ADMIN) {
+    return <>{children}</>;
+  }
+  if (role === PERMISSIONS.PARTNER) {
+    return <Navigate to="/partner/dashboard" replace />;
+  }
+  if (role === PERMISSIONS.USER) {
+    return <Navigate to={ROUTERS.BKS_STAY_DASHBOARD} replace />;
+  }
+  return <Navigate to={ROUTERS.LOGIN} replace />;
 };
 
 const PartnerPrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -179,28 +211,27 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = !!token && !isTokenExpired(token);
 
   if (isAuthenticated) {
-    // Get role from store or fallback to localStorage to prevent hydration race condition
-    let role = (userRole || '').toLowerCase();
-    
-    if (!role) {
-      const persistedData = localStorage.getItem('user');
-      if (persistedData) {
-        try {
-          const parsed = JSON.parse(persistedData);
-          role = (parsed?.state?.userRole || '').toLowerCase();
-        } catch (e) {
-          console.error("Error parsing user state", e);
-        }
-      }
-    }
+    const role = getEffectiveRole(userRole);
 
-    // if is partner and try to access /partner/login -> redirect to /partner/dashboard
-    if (role === 'partner' && location.pathname === ROUTERS.PARTNER_LOGIN) {
+    if (
+      role === PERMISSIONS.PARTNER &&
+      (location.pathname === ROUTERS.PARTNER_LOGIN ||
+        location.pathname === ROUTERS.LOGIN ||
+        location.pathname === ROUTERS.REGISTER)
+    ) {
       return <Navigate to="/partner/dashboard" replace />;
     }
-    // if is admin (or other role)  and try to login admin page -> redirect to /admin/dashboard
-    if (role !== 'partner' && location.pathname === ROUTERS.LOGIN) {
+    if (
+      role === PERMISSIONS.ADMIN &&
+      (location.pathname === ROUTERS.LOGIN || location.pathname === ROUTERS.REGISTER)
+    ) {
       return <Navigate to={ROUTERS.CONTROL} replace />;
+    }
+    if (
+      role === PERMISSIONS.USER &&
+      (location.pathname === ROUTERS.LOGIN || location.pathname === ROUTERS.REGISTER)
+    ) {
+      return <Navigate to={ROUTERS.BKS_STAY_DASHBOARD} replace />;
     }
   }
 
@@ -338,11 +369,11 @@ export default function Router() {
         >
           <Route path={ROUTERS.CONTROL} element={<Dashboard />} />
           <Route path={ROUTERS.BOOKING_MANAGE} element={<BookingManage />} />
-          <Route path={ROUTERS.BUILDINGS} element={<Buildings />} />
-          <Route path={ROUTERS.BUILDINGS_ADD} element={<BuildingsAdd />} />
-          <Route path={`${ROUTERS.BUILDINGS_EDIT}/:action/:building_id`} element={<BuildingEdit />} />
-          <Route path={`${ROUTERS.BUILDINGS_EDIT_IMAGES}/:action/:building_id`} element={<BuildingEditImages />} />
-          <Route path={`${ROUTERS.BUILDINGS_DETAIL}/:buildingId/images`} element={<BuildingImageManager />} />
+          <Route path={ROUTERS.PROPERTIES} element={<Properties />} />
+          <Route path={ROUTERS.PROPERTIES_ADD} element={<PropertiesAdd />} />
+          <Route path={`${ROUTERS.PROPERTIES_EDIT}/:action/:property_id`} element={<PropertyEdit />} />
+          <Route path={`${ROUTERS.PROPERTIES_EDIT_IMAGES}/:action/:property_id`} element={<PropertyEditImages />} />
+          <Route path={`${ROUTERS.PROPERTIES_DETAIL}/:propertyId/images`} element={<PropertyImageManager />} />
           <Route path={ROUTERS.ROOMS} element={<Rooms />} />
           <Route path={ROUTERS.ROOMS_ADD} element={<RoomAdd />} />
           <Route path={`${ROUTERS.ROOMS_DETAIL}/:id`} element={<RoomDetail />} />
@@ -359,7 +390,7 @@ export default function Router() {
           <Route path={ROUTERS.QUESTION_UPDATE} element={<QuestionUpdate />} />
           <Route path={ROUTERS.QUESTION_DETAIL} element={<QuestionDetail />} />
           <Route path={ROUTERS.QUESTION_FLOW} element={<QuestionFlow />} />
-          <Route path={`${ROUTERS.BUILDINGS_DETAIL}/:building_id`} element={<BuildingDetail />} />
+          <Route path={`${ROUTERS.PROPERTIES_DETAIL}/:property_id`} element={<PropertyDetail />} />
           <Route path={ROUTERS.SERVICE_MANAGEMENT} element={<ServiceManagement />} />
           <Route path={ROUTERS.NEWS} element={<News />} />
           <Route path={`${ROUTERS.NEWS_DETAIL}/:id`} element={<NewsDetail />} />
@@ -420,3 +451,4 @@ export default function Router() {
     </Suspense>
   );
 }
+

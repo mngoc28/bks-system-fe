@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -62,8 +62,8 @@ import {
 interface CalendarEventExt {
   kind: 'booking' | 'block';
   roomId: number;
-  buildingId: number | null;
-  buildingName?: string;
+  propertyId: number | null;
+  propertyName?: string;
   roomName: string;
   guestName: string;
   status: string;
@@ -121,14 +121,14 @@ function parsePartnerRoomsSearchResponse(res: any): any[] {
     room_number: r.room_number,
     title: r.title,
     name: r.name,
-    building_id: r.building_id != null ? Number(r.building_id) : undefined,
-    building_name: r.building_name,
+    property_id: (r.property_id ?? r.property_id) != null ? Number(r.property_id ?? r.property_id) : undefined,
+    property_name: r.property_name ?? r.property_name,
   }));
 }
 
 const CalendarPage: React.FC = () => {
-  const [buildings, setBuildings] = useState<any[]>([]);
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string>(ALL_PROPERTIES);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>(ALL_PROPERTIES);
   const [rooms, setRooms] = useState<any[]>([]);
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string>('all');
@@ -143,7 +143,7 @@ const CalendarPage: React.FC = () => {
   // Phase 2 realtime — listener đã invalidate query 'partner.calendar'.
   useBookingsRealtime();
 
-  const propertyParam = selectedBuildingId === ALL_PROPERTIES ? null : selectedBuildingId;
+  const propertyParam = selectedPropertyId === ALL_PROPERTIES ? null : selectedPropertyId;
   const roomParam = selectedRoomId === 'all' ? null : selectedRoomId;
 
   const calendarQuery = useCalendar({
@@ -155,19 +155,19 @@ const CalendarPage: React.FC = () => {
   const invalidateCalendar = useInvalidatePartnerCalendar();
 
   useEffect(() => {
-    fetchBuildings();
+    fetchProperties();
   }, []);
 
   useEffect(() => {
     void fetchRoomsForFilter();
-  }, [selectedBuildingId]);
+  }, [selectedPropertyId]);
 
   const fetchRoomsForFilter = async () => {
     setRoomsLoading(true);
     try {
       const params: Record<string, string | number> = { page: 1, per_page: 300 };
-      if (selectedBuildingId !== ALL_PROPERTIES) {
-        params.building_id = Number(selectedBuildingId);
+      if (selectedPropertyId !== ALL_PROPERTIES) {
+        params.property_id = Number(selectedPropertyId);
       }
       const res: any = await partnerService.getRooms(params);
       const list = parsePartnerRoomsSearchResponse(res);
@@ -181,11 +181,11 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const fetchBuildings = async () => {
+  const fetchProperties = async () => {
     try {
-      const res: any = await partnerService.getBuildings();
+      const res: any = await partnerService.getProperties();
       const list = res?.data?.data || res?.data || [];
-      setBuildings(list);
+      setProperties(list);
     } catch {
       toastError('Không thể tải danh sách bất động sản.');
     }
@@ -199,11 +199,11 @@ const CalendarPage: React.FC = () => {
       const color = getPartnerBookingCalendarHex(b.status, b.stay_status ?? '');
       const label = b.room_label || b.room_title || `Phòng ${b.room_id}`;
       const guest = b.guest_name || 'Khách';
-      const buildingName = b.building_name ?? '';
+      const propertyName = b.property_name ?? b.property_name ?? '';
       const statusLabel = getPartnerRowDisplayStatus(b.status, b.stay_status ?? '');
       const title =
-        selectedBuildingId === ALL_PROPERTIES && buildingName
-          ? `${buildingName} · ${label} · ${guest}`
+        selectedPropertyId === ALL_PROPERTIES && propertyName
+          ? `${propertyName} · ${label} · ${guest}`
           : `${label} · ${guest}`;
 
       const nights = countPartnerBookingNightsExclusive(b.start_date, b.end_date) ?? 0;
@@ -219,8 +219,8 @@ const CalendarPage: React.FC = () => {
         extendedProps: {
           kind: 'booking',
           roomId: b.room_id,
-          buildingId: b.building_id ?? null,
-          buildingName: buildingName || undefined,
+          propertyId: b.property_id ?? b.property_id ?? null,
+          propertyName: propertyName || undefined,
           roomName: label,
           guestName: guest,
           status: statusLabel,
@@ -254,7 +254,7 @@ const CalendarPage: React.FC = () => {
         extendedProps: {
           kind: 'block',
           roomId: bl.room_id,
-          buildingId: room?.building_id ?? null,
+          propertyId: room?.property_id ?? room?.property_id ?? null,
           roomName: label,
           guestName: '',
           status: typeLabel,
@@ -273,17 +273,17 @@ const CalendarPage: React.FC = () => {
     });
 
     return [...bookingEvents, ...blockEvents];
-  }, [calendarQuery.data, rooms, selectedBuildingId]);
+  }, [calendarQuery.data, rooms, selectedPropertyId]);
 
   const filteredEvents = useMemo(() => {
     let list = events;
     if (selectedRoomId !== 'all') {
       list = list.filter((e) => String(e.extendedProps.roomId) === selectedRoomId);
-    } else if (selectedBuildingId !== ALL_PROPERTIES) {
-      list = list.filter((e) => String(e.extendedProps.buildingId) === selectedBuildingId);
+    } else if (selectedPropertyId !== ALL_PROPERTIES) {
+      list = list.filter((e) => String(e.extendedProps.propertyId) === selectedPropertyId);
     }
     return list;
-  }, [events, selectedBuildingId, selectedRoomId]);
+  }, [events, selectedPropertyId, selectedRoomId]);
 
   // Overbooking detection: hai event cùng room có khoảng giao nhau (end exclusive).
   const overbookingCount = useMemo(() => {
@@ -313,8 +313,8 @@ const CalendarPage: React.FC = () => {
   const renderEventContent = (eventInfo: any) => {
     const props = eventInfo.event.extendedProps as CalendarEventExt;
     const isBlock = props.kind === 'block';
-    const showBuilding =
-      selectedBuildingId === ALL_PROPERTIES && Boolean(props.buildingName);
+    const showProperty =
+      selectedPropertyId === ALL_PROPERTIES && Boolean(props.propertyName);
 
     const getIcon = () => {
       if (isBlock) return <Lock size={11} className="text-white/80" />;
@@ -339,9 +339,9 @@ const CalendarPage: React.FC = () => {
             : undefined
         }
       >
-        {showBuilding && (
+        {showProperty && (
           <div className="truncate text-[10px] font-semibold leading-tight text-white/80">
-            {props.buildingName}
+            {props.propertyName}
           </div>
         )}
         <div className="flex items-center justify-between gap-1">
@@ -499,7 +499,7 @@ const CalendarPage: React.FC = () => {
     return rooms.map((r: any) => ({
       id: r.id,
       label: `${r.room_number || r.title || r.name || `Phòng ${r.id}`}${
-        r.building_name ? ` — ${r.building_name}` : ''
+        r.property_name || r.property_name ? ` — ${r.property_name || r.property_name}` : ''
       }`,
     }));
   }, [rooms]);
@@ -530,19 +530,19 @@ const CalendarPage: React.FC = () => {
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-12 md:gap-4">
             <div className="space-y-1.5 md:col-span-5">
-              <label htmlFor="building-select" className="block text-xs font-semibold text-slate-600">Cơ sở</label>
+              <label htmlFor="property-select" className="block text-xs font-semibold text-slate-600">Cơ sở</label>
               <div className="relative">
                 <Home
                   className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400"
                   size={18}
                 />
-                <Select value={selectedBuildingId} onValueChange={setSelectedBuildingId}>
-                  <SelectTrigger id="building-select" className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white">
+                <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                  <SelectTrigger id="property-select" className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white">
                     <SelectValue placeholder="Chọn cơ sở" />
                   </SelectTrigger>
                   <SelectContent className="rounded-lg border-slate-200">
                     <SelectItem value={ALL_PROPERTIES}>Tất cả cơ sở</SelectItem>
-                    {buildings.map((b) => (
+                    {properties.map((b) => (
                       <SelectItem key={b.id} value={String(b.id)}>
                         {b.name}
                       </SelectItem>
@@ -572,7 +572,7 @@ const CalendarPage: React.FC = () => {
                     {rooms.map((r: any) => (
                       <SelectItem key={r.id} value={String(r.id)}>
                         {r.room_number || r.title || r.name || `Phòng ${r.id}`}
-                        {r.building_name ? ` — ${r.building_name}` : ''}
+                        {r.property_name || r.property_name ? ` — ${r.property_name || r.property_name}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -816,8 +816,8 @@ const CalendarPage: React.FC = () => {
                       <div>
                         <p className="font-bold text-slate-900">{selectedEvent.extendedProps.roomName}</p>
                         {selectedEvent.extendedProps.kind === 'booking' &&
-                          selectedEvent.extendedProps.buildingName && (
-                            <p className="text-xs font-medium text-slate-500">{selectedEvent.extendedProps.buildingName}</p>
+                          selectedEvent.extendedProps.propertyName && (
+                            <p className="text-xs font-medium text-slate-500">{selectedEvent.extendedProps.propertyName}</p>
                           )}
                       </div>
                     </div>
@@ -985,3 +985,4 @@ const CalendarPage: React.FC = () => {
 };
 
 export default CalendarPage;
+
