@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,9 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { BOOKING_STATUS_ORDER } from "@/constant";
 import { BookingCreateDialogProps } from "@/dataHelper/booking.dataHelper";
 import { useCreateBookingMutation } from "@/hooks/useBookingQuery";
-import { useAllBuildingsQuery } from "@/hooks/useBuildingQuery";
+import { useAllPropertiesQuery } from "@/hooks/usePropertyQuery";
 import { usePricePackagesByRoomQuery } from "@/hooks/usePricePackageQuery";
-import { useRoomsByBuildingQuery } from "@/hooks/useRoomQuery";
+import { useRoomsByPropertyQuery } from "@/hooks/useRoomQuery";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import { bookingCreateSchema } from "@/shared/shema";
 import { getStatusClass, mapBookingStatus, mapStatusToNumber } from "@/utils/utils";
@@ -21,7 +21,7 @@ import { z } from "zod";
 
 /**
  * Booking Create Dialog
- * Handles the creation of new bookings by selecting a building, room, price package, and duration.
+ * Handles the creation of new bookings by selecting a property, room, price package, and duration.
  */
 const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose, onSuccess }) => {
   const { t } = useTranslation();
@@ -32,7 +32,7 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: {
-      selectedBuilding: "",
+      selectedProperty: "",
       selectedRoom: "",
       selectedPricePackage: "",
       startDate: "",
@@ -42,13 +42,13 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
     },
   });
 
-  const selectedBuilding = form.watch("selectedBuilding");
+  const selectedProperty = form.watch("selectedProperty");
   const selectedRoom = form.watch("selectedRoom");
 
-  const { data: buildings, isLoading } = useAllBuildingsQuery();
-  const { data: rooms, isLoading: roomsLoading } = useRoomsByBuildingQuery(
-    selectedBuilding ? parseInt(selectedBuilding) : 0,
-    { enabled: !!selectedBuilding }
+  const { data: properties, isLoading } = useAllPropertiesQuery();
+  const { data: rooms, isLoading: roomsLoading } = useRoomsByPropertyQuery(
+    selectedProperty ? parseInt(selectedProperty) : 0,
+    { enabled: !!selectedProperty }
   );
   const { data: pricePackages, isLoading: pricePackagesLoading } = usePricePackagesByRoomQuery(
     selectedRoom ? parseInt(selectedRoom) : undefined,
@@ -81,13 +81,13 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
       toastError(errorMessage);
     }
   };
-  // Reset selected room when building changes
+  // Reset selected room when property changes
   useEffect(() => {
-    if (selectedBuilding) {
+    if (selectedProperty) {
       form.setValue("selectedRoom", "");
       form.setValue("selectedPricePackage", "");
     }
-  }, [selectedBuilding, form]);
+  }, [selectedProperty, form]);
 
   // Reset selected price package when room changes
   useEffect(() => {
@@ -114,10 +114,10 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="selectedBuilding"
+                  name="selectedProperty"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("bookings.add.building")} <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>{t("bookings.add.property")} <span className="text-red-500">*</span></FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -125,13 +125,13 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t("bookings.add.building_placeholder")} />
+                            <SelectValue placeholder={t("bookings.add.property_placeholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-60 overflow-y-auto">
-                          {buildings?.map((building) => (
-                            <SelectItem key={building.id} value={building.id.toString()}>
-                              {building.name}
+                          {properties?.map((property) => (
+                            <SelectItem key={property.id} value={property.id.toString()}>
+                              {property.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -149,7 +149,7 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={roomsLoading || !selectedBuilding}
+                        disabled={roomsLoading || !selectedProperty}
                       >
                         <FormControl>
                           <SelectTrigger>

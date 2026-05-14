@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient";
 import { ApiResponse } from "./types";
-import {BookingByBuilding, BookingsPerMonthResponse, RevenueByMonthResponse,SystemBuilding,SystemRoom,TotalPartner,TotalUser } from "@/dataHelper/dashboard.dataHelper";
+import { BookingByProperty, BookingsPerMonthResponse, RevenueByMonthResponse, SystemPropertySummary, SystemRoom, TotalPartner, TotalUser } from "@/dataHelper/dashboard.dataHelper";
 
 export const dashboardApi = {
 
@@ -8,7 +8,7 @@ export const dashboardApi = {
 
   getTotalPartner: async (): Promise<ApiResponse<TotalPartner>> => axiosClient.get("/admin/dashboard/total-partner"),
 
-  getSystemBuilding: async (): Promise<ApiResponse<SystemBuilding>> => axiosClient.get("/admin/dashboard/system-building"),
+  getSystemProperty: async (): Promise<ApiResponse<SystemPropertySummary>> => axiosClient.get("/admin/dashboard/system-property"),
 
   getSystemRoom: async (): Promise<ApiResponse<SystemRoom>> => axiosClient.get("/admin/dashboard/system-room"),
 
@@ -28,5 +28,5 @@ export const dashboardApi = {
     return axiosClient.get(`/admin/dashboard/revenue-per-month${queryString ? `?${queryString}` : ""}`);
   },
 
-  getBookingsByBuilding: async (): Promise<ApiResponse<BookingByBuilding[]>> => axiosClient.get("/admin/dashboard/buildings-bookings-count"),
+  getBookingsByProperty: async (): Promise<ApiResponse<BookingByProperty[]>> => axiosClient.get("/admin/dashboard/properties-bookings-count"),
 };

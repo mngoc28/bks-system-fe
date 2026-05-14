@@ -1,4 +1,4 @@
-export const DEFAULT_PAGE = 1;
+﻿export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGINATION = 10;
 export const DEFAULT_LIMIT = 10;
 export const DEFAULT_CARD_LIMIT = 12;
@@ -12,11 +12,11 @@ export const enum ROUTERS {
   RESET_PASSWORD = "/admin/reset-password",
   PROFILE = "/admin/profile",
   UPDATE_PROFILE = "/admin/profile/update",
-  BUILDINGS = "/admin/buildings",
-  BUILDINGS_ADD = "/admin/buildings/add",
-  BUILDINGS_EDIT = "/admin/buildings/edit",
-  BUILDINGS_DETAIL = "/admin/buildings/detail",
-  BUILDINGS_EDIT_IMAGES = "/admin/buildings/edit-images",
+  PROPERTIES = "/admin/properties",
+  PROPERTIES_ADD = "/admin/properties/add",
+  PROPERTIES_EDIT = "/admin/properties/edit",
+  PROPERTIES_DETAIL = "/admin/properties/detail",
+  PROPERTIES_EDIT_IMAGES = "/admin/properties/edit-images",
   ROOMS = "/admin/rooms",
   ROOMS_ADD = "/admin/rooms/add",
   ROOMS_EDIT = "/admin/rooms/edit",
@@ -176,16 +176,16 @@ export const ROOM_STATUS = [
   { value: 1, label: "Public" },
   { value: 0, label: "Private" },
 ];
-export const BUILDING_TYPE = {
-  1: "buildings.building_type.1",
-  2: "buildings.building_type.2",
-  3: "buildings.building_type.3",
-  4: "buildings.building_type.4",
-  5: "buildings.building_type.5",
-  6: "buildings.building_type.6",
-  7: "buildings.building_type.7",
-  8: "buildings.building_type.8",
-  9: "buildings.building_type.9",
+export const PROPERTY_TYPE = {
+  1: "properties.property_type.1",
+  2: "properties.property_type.2",
+  3: "properties.property_type.3",
+  4: "properties.property_type.4",
+  5: "properties.property_type.5",
+  6: "properties.property_type.6",
+  7: "properties.property_type.7",
+  8: "properties.property_type.8",
+  9: "properties.property_type.9",
 };
 
 export const RENT_CATEGORY = {
@@ -194,28 +194,28 @@ export const RENT_CATEGORY = {
   3: "RENT_CATEGORY.3",
 };
 
-export const BUILDING_IMAGE_TYPE = {
-  1: "buildings.building_image_type.1",
-  2: "buildings.building_image_type.2",
-  3: "buildings.building_image_type.3",
-  4: "buildings.building_image_type.4",
-  5: "buildings.building_image_type.5",
-  6: "buildings.building_image_type.6",
-  7: "buildings.building_image_type.7",
-  8: "buildings.building_image_type.8",
-  9: "buildings.building_image_type.9",
-  10: "buildings.building_image_type.10",
-  11: "buildings.building_image_type.11",
-  12: "buildings.building_image_type.12",
-  13: "buildings.building_image_type.13",
-  14: "buildings.building_image_type.14",
-  15: "buildings.building_image_type.15",
-  16: "buildings.building_image_type.16",
-  17: "buildings.building_image_type.17",
-  0: "buildings.building_image_type.0",
+export const PROPERTY_IMAGE_TYPE = {
+  1: "properties.property_image_type.1",
+  2: "properties.property_image_type.2",
+  3: "properties.property_image_type.3",
+  4: "properties.property_image_type.4",
+  5: "properties.property_image_type.5",
+  6: "properties.property_image_type.6",
+  7: "properties.property_image_type.7",
+  8: "properties.property_image_type.8",
+  9: "properties.property_image_type.9",
+  10: "properties.property_image_type.10",
+  11: "properties.property_image_type.11",
+  12: "properties.property_image_type.12",
+  13: "properties.property_image_type.13",
+  14: "properties.property_image_type.14",
+  15: "properties.property_image_type.15",
+  16: "properties.property_image_type.16",
+  17: "properties.property_image_type.17",
+  0: "properties.property_image_type.0",
 };
 
-export const HEADER_BUILDING_CLOUDINARY = "buildings/"
+export const HEADER_PROPERTY_CLOUDINARY = "properties/"
 export const CLOUDINARY_HEADER_IMAGE_URL = import.meta.env.VITE_CLOUDINARY_URL || "https://res.cloudinary.com/dyragzjcd/image/upload"
 export const DEFAULT_ROOM_IMAGE = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop"
 
@@ -309,3 +309,4 @@ export const LANGUAGE_OPTIONS: Array<{ value: string; flag: string; label: strin
   { value: "vi", flag: "vi", label: "Việt Nam" },
   { value: "en", flag: "en", label: "English" },
 ];
+

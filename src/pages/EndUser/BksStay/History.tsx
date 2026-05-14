@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { 
   Search, 
@@ -84,7 +84,7 @@ const History = () => {
       const matchesSearch = 
         b.room?.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
         b.id.toString().includes(searchQuery) ||
-        b.room?.building?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        b.room?.property?.name?.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesTab && matchesSearch;
     });
 
@@ -106,7 +106,7 @@ const History = () => {
     const rows = processedBookings.map(b => [
       b.id,
       b.room?.title,
-      b.room?.building?.name,
+      b.room?.property?.name,
       b.start_date,
       b.end_date,
       b.price?.price,
@@ -228,7 +228,7 @@ const History = () => {
                               </div>
                               <div className="flex flex-col gap-y-1.5 text-[12px] font-medium text-slate-400 sm:text-sm">
                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                                    <span className="flex items-center gap-1.5 truncate"><MapPin className="size-3.5 shrink-0 text-sky-500" /> {booking.room?.building?.name || "Nơi ở bí ẩn"}</span>
+                                    <span className="flex items-center gap-1.5 truncate"><MapPin className="size-3.5 shrink-0 text-sky-500" /> {booking.room?.property?.name || "Nơi ở bí ẩn"}</span>
                                     <span className="hidden text-slate-200 sm:inline">|</span>
                                     <span className="whitespace-nowrap font-bold text-slate-600">{new Date(booking.start_date).toLocaleDateString("vi-VN")} - {new Date(booking.end_date).toLocaleDateString("vi-VN")}</span>
                                  </div>
@@ -338,3 +338,4 @@ const History = () => {
 };
 
 export default History;
+

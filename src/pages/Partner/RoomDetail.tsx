@@ -147,7 +147,7 @@ const RoomDetail: React.FC = () => {
                  </Badge>
               </div>
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-slate-500">
-                 <MapPin size={14} className="text-slate-300" /> {room.buildingName} • Tầng {room.floor_number}
+                 <MapPin size={14} className="text-slate-300" /> {room.propertyName} • Tầng {room.floor_number}
               </p>
            </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+﻿import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Plus, Edit, Trash2, Zap, Droplets, CircleDollarSign, Loader2, Building2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { partnerService } from '@/services/partnerService';
 import { Service } from './types';
 import InlineSheet from './components/InlineSheet';
 import { toastError, toastSuccess } from '@/components/ui/toast';
-import BuildingSelector from './components/BuildingSelector';
+import PropertySelector from './components/PropertySelector';
 
 const Services: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -22,20 +22,20 @@ const Services: React.FC = () => {
     category: 'Dịch vụ thêm',
     status: 'Hoạt động',
   });
-  const [filterBuildingId, setFilterBuildingId] = useState<string | null>(null);
-  const [selectedBuildingIds, setSelectedBuildingIds] = useState<string[]>([]);
-  const [buildings, setBuildings] = useState<any[]>([]);
+  const [filterPropertyId, setFilterPropertyId] = useState<string | null>(null);
+  const [selectedPropertyIds, setSelectedPropertyIds] = useState<string[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
 
   useEffect(() => {
     fetchServices();
-    fetchBuildings();
+    fetchProperties();
   }, []);
 
-  const fetchBuildings = async () => {
+  const fetchProperties = async () => {
     try {
-      const res: any = await partnerService.getBuildings();
+      const res: any = await partnerService.getProperties();
       const payload = res?.data?.data || res?.data || res || [];
-      setBuildings(Array.isArray(payload) ? payload : (payload?.data || []));
+      setProperties(Array.isArray(payload) ? payload : (payload?.data || []));
     } catch (error) {
        console.error(error);
     }
@@ -89,18 +89,18 @@ const Services: React.FC = () => {
     if (service) {
       setEditingService(service);
       setForm(service);
-      // In a real app, we'd load linked buildings here
-      setSelectedBuildingIds([]); 
+      // In a real app, we'd load linked properties here
+      setSelectedPropertyIds([]); 
     } else {
       setEditingService(null);
       setForm({ name: '', price: 0, unit: '', category: 'Dịch vụ thêm', status: 'Hoạt động' });
-      setSelectedBuildingIds([]);
+      setSelectedPropertyIds([]);
     }
     setIsModalOpen(true);
   };
 
-  const toggleBuilding = (id: string) => {
-    setSelectedBuildingIds(prev => 
+  const toggleProperty = (id: string) => {
+    setSelectedPropertyIds(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -136,9 +136,9 @@ const Services: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
         <div className="flex items-center gap-6">
-          <BuildingSelector 
-            selectedId={filterBuildingId} 
-            onSelect={setFilterBuildingId} 
+          <PropertySelector 
+            selectedId={filterPropertyId} 
+            onSelect={setFilterPropertyId} 
             className="w-64"
           />
           <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
@@ -216,24 +216,24 @@ const Services: React.FC = () => {
                 </Label>
                 <div className="grid max-h-48 grid-cols-2 gap-3 overflow-y-auto pr-2">
                   <div 
-                    onClick={() => setSelectedBuildingIds([])}
-                    className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition-all ${selectedBuildingIds.length === 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-600 hover:border-blue-100'}`}
+                    onClick={() => setSelectedPropertyIds([])}
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition-all ${selectedPropertyIds.length === 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-600 hover:border-blue-100'}`}
                   >
-                    <Checkbox checked={selectedBuildingIds.length === 0} />
+                    <Checkbox checked={selectedPropertyIds.length === 0} />
                     <span className="text-xs font-medium">Tất cả tòa nhà</span>
                   </div>
-                  {buildings.map((building) => (
+                  {properties.map((property) => (
                     <div 
-                      key={building.id}
-                      onClick={() => toggleBuilding(String(building.id))}
-                      className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition-all ${selectedBuildingIds.includes(String(building.id)) ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-600 hover:border-blue-100'}`}
+                      key={property.id}
+                      onClick={() => toggleProperty(String(property.id))}
+                      className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition-all ${selectedPropertyIds.includes(String(property.id)) ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-600 hover:border-blue-100'}`}
                     >
-                      <Checkbox checked={selectedBuildingIds.includes(String(building.id))} />
-                      <span className="truncate text-xs font-medium">{building.name || building.title}</span>
+                      <Checkbox checked={selectedPropertyIds.includes(String(property.id))} />
+                      <span className="truncate text-xs font-medium">{property.name || property.title}</span>
                     </div>
                   ))}
                 </div>
-                {selectedBuildingIds.length > 0 && (
+                {selectedPropertyIds.length > 0 && (
                   <p className="mt-2 text-[10px] italic text-gray-400">* Dịch vụ này sẽ chỉ xuất hiện khi lọc theo các tòa nhà đã chọn.</p>
                 )}
             </div>
@@ -244,3 +244,4 @@ const Services: React.FC = () => {
 };
 
 export default Services;
+

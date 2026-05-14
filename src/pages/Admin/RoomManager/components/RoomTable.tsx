@@ -1,4 +1,4 @@
-import RowActions from "@/components/RowActions/RowActions";
+﻿import RowActions from "@/components/RowActions/RowActions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,7 +22,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
   onView,
   onEdit,
   onDelete,
-  getBuildingName,
+  getPropertyName,
   getRoomTypeName,
   sort,
   toggleSort,
@@ -71,12 +71,12 @@ const RoomTable: React.FC<RoomTableProps> = ({
 
               <TableHead
                 className="cursor-pointer select-none whitespace-nowrap px-4 py-3 text-slate-700"
-                onClick={() => toggleSort("building")}
-                aria-sort={sort?.key === "building" ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
+                onClick={() => toggleSort("property")}
+                aria-sort={sort?.key === "property" ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
               >
                 <span className="inline-flex items-center gap-1">
-                  {t("rooms.building")}
-                  {sort?.key === "building" ? sort.direction === "asc" ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" /> : <ChevronsUpDown className="size-4" />}
+                  {t("rooms.property")}
+                  {sort?.key === "property" ? sort.direction === "asc" ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" /> : <ChevronsUpDown className="size-4" />}
                 </span>
               </TableHead>
 
@@ -157,7 +157,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle">{highlightText(room.title, filters?.title || "")}</TableCell>
                 <TableCell className="px-4 py-3 align-middle">{highlightText(room.room_number || "-", filters?.room_number || "")}</TableCell>
-                <TableCell className="px-4 py-3 align-middle">{highlightText(getBuildingName(room), filters?.title || "")}</TableCell>
+                <TableCell className="px-4 py-3 align-middle">{highlightText(getPropertyName(room), filters?.title || "")}</TableCell>
                 <TableCell className="px-4 py-3 align-middle">{getRoomTypeName(room.room_type)}</TableCell>
                 <TableCell className="px-4 py-3 text-center align-middle">{room.area} m²</TableCell>
                 <TableCell className="px-4 py-3 text-center align-middle">{room.people}</TableCell>

@@ -1,4 +1,4 @@
-import { ROUTERS } from "@/constant";
+﻿import { ROUTERS } from "@/constant";
 import { RoomFormData } from "@/dataHelper/room.dataHelper";
 import { useCreateRoomMutation } from "@/hooks/useRoomQuery";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
@@ -10,7 +10,7 @@ import { RoomAddForm } from "./components";
 
 /**
  * Room Add Page
- * Provides the interface for creating new room listings, linking them to buildings, and defining detailed specifications like area and amenities.
+ * Provides the interface for creating new room listings, linking them to properties, and defining detailed specifications like area and amenities.
  */
 const RoomAdd: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const RoomAdd: React.FC = () => {
     try {
       // Convert form data to API format
       const roomData = {
-        building_id: formData.building_id,
+        property_id: formData.property_id,
         title: formData.title,
         room_number: formData.room_number || undefined,
         deposit: formData.deposit ? parseFloat(formData.deposit) : undefined,

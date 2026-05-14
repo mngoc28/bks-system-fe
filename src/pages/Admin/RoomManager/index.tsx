@@ -1,4 +1,4 @@
-import EmptyPage from "@/components/EmptyPage";
+﻿import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
 import { toastError } from "@/components/ui/toast";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
@@ -60,7 +60,7 @@ const RoomManager: React.FC = () => {
   const [sortField, setSortField] = useState<string | undefined>(undefined);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [roomToDelete, setRoomToDelete] = useState<{ id: number; room_number: string; building_name: string; } | null>(null);
+  const [roomToDelete, setRoomToDelete] = useState<{ id: number; room_number: string; property_name: string; } | null>(null);
 
   // View mode state with localStorage persistence
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -179,7 +179,7 @@ const RoomManager: React.FC = () => {
     setRoomToDelete({
       id: room.id,
       room_number: room.room_number || '',
-      building_name: room.building_name || '-'
+      property_name: room.property_name || room.property_name || '-'
     });
     setDeleteDialogOpen(true);
   }
@@ -286,7 +286,7 @@ const RoomManager: React.FC = () => {
                         setPage(DEFAULT_PAGE);
                     }}
                     onViewModal={setSelectedImage}
-                    getBuildingName={(room) => room.building_name || "-"}
+                    getPropertyName={(room) => room.property_name || room.property_name || "-"}
                     getRoomTypeName={(type) => {
                       if (type === 1) return t("rooms.room_type_single");
                       if (type === 2) return t("rooms.room_type_double");
@@ -336,3 +336,4 @@ const RoomManager: React.FC = () => {
 };
 
 export default RoomManager;
+

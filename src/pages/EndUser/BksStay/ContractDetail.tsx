@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft,
@@ -139,7 +139,7 @@ const ContractDetail = () => {
   // Derived display values with safe optional chaining
   const guestName = contract.booking?.user?.name ?? "Khách thuê";
   const roomTitle = contract.booking?.room?.title ?? "N/A";
-  const buildingAddress = contract.booking?.room?.building?.address ?? "theo thỏa thuận";
+  const propertyAddress = contract.booking?.room?.property?.address ?? "theo thỏa thuận";
   const startDate = contract.booking?.start_date ?? "N/A";
   const endDate = contract.booking?.end_date ?? "N/A";
   const totalPrice = contract.booking?.price?.price ?? 0;
@@ -202,7 +202,7 @@ const ContractDetail = () => {
               <div className="flex-1 space-y-8 p-12 text-sm leading-relaxed text-slate-600">
                  <section className="space-y-4">
                     <h5 className="font-bold text-slate-900">ĐIỀU 1: THÔNG TIN PHÒNG THUÊ</h5>
-                    <p>Bên A đồng ý cho Bên B thuê phòng <span className="font-bold text-slate-900">"{roomTitle}"</span> tọa lạc tại địa chỉ: {buildingAddress}.</p>
+                    <p>Bên A đồng ý cho Bên B thuê phòng <span className="font-bold text-slate-900">"{roomTitle}"</span> tọa lạc tại địa chỉ: {propertyAddress}.</p>
                     <p>Dịch vụ bao gồm: Wifi tốc độ cao, Nước suối hàng ngày, Dọn phòng định kỳ (nếu yêu cầu).</p>
                  </section>
 
@@ -401,3 +401,4 @@ const ContractDetail = () => {
 };
 
 export default ContractDetail;
+

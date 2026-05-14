@@ -1,4 +1,4 @@
-# Admin Dashboard Redesign Proposal
+﻿# Admin Dashboard Redesign Proposal
 
 ## 1) Muc tieu
 
@@ -26,7 +26,7 @@ Tu code hien tai trong `src/pages/Admin/Dashboard/index.tsx`:
 - Tieu de + subtitle theo role.
 - Global filter:
   - Date range (7d/30d/90d/custom)
-  - Building (all / specific)
+  - Property (all / specific)
   - Province (all / specific)
 - Nut nhanh:
   - Export report
@@ -59,7 +59,7 @@ Moi dong co CTA "Xu ly ngay" -> route module + filter
 ### D. Insight Charts (hang 3)
 - Booking trend theo thoi gian (line/area)
 - Revenue trend theo thoi gian (bar + line moving average)
-- Booking by building (horizontal bar)
+- Booking by property (horizontal bar)
 - Conversion funnel (view -> booking -> completed)
 
 Yeu cau quan trong:
@@ -67,7 +67,7 @@ Yeu cau quan trong:
 - Co click tren diem/chart segment de drill-down sang module.
 
 ### E. Bottom Section: Top canh bao
-- Top 5 building co booking giam manh.
+- Top 5 property co booking giam manh.
 - Top 5 partner co nhieu ticket ho tro.
 - Top 5 room occupancy thap.
 
@@ -98,9 +98,9 @@ Nguyen tac:
 - Route: `/admin/booking-manage`
 - Query: `start_date=YYYY-MM-01&end_date=YYYY-MM-lastDay&page=1`
 
-6. Booking by building bar
+6. Booking by property bar
 - Route: `/admin/booking-manage`
-- Query: `building_id={id}&page=1`
+- Query: `property_id={id}&page=1`
 
 7. Room available card
 - Route: `/admin/rooms`
@@ -147,13 +147,13 @@ Typography de xuat:
 
 Uu tien 1 endpoint tong hop:
 - `GET /admin/dashboard/overview`
-- Input: `start_date`, `end_date`, `building_id`, `province_id`
+- Input: `start_date`, `end_date`, `property_id`, `province_id`
 - Output:
   - `kpis`
   - `work_queue`
   - `bookings_trend`
   - `revenue_trend`
-  - `bookings_by_building`
+  - `bookings_by_property`
 
 Neu chua gom endpoint ngay, co the giu endpoint hien tai va bo sung:
 - pending theo module
@@ -192,3 +192,4 @@ Buoc tiep theo nen lam ngay:
 1. Chot danh sach KPI + deep-link mapping (muc 4).
 2. Chot API payload (gom endpoint hay tach endpoint).
 3. Implement Phase 1 truoc de co gia tri van hanh ngay (click card -> module + filter).
+

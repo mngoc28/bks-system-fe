@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
           <div>
             <p className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">{t("bookings.table.room")}</p>
             <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-              {highlightText(booking.room.room_number, highlightTerms?.room || "")} — {highlightText(booking.room.building.name, highlightTerms?.room || "")}
+              {highlightText(booking.room.room_number, highlightTerms?.room || "")} — {highlightText(booking.room.property.name, highlightTerms?.room || "")}
             </p>
           </div>
         </div>
@@ -144,3 +144,4 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
 };
 
 export default BookingCard;
+

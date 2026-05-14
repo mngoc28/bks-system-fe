@@ -1,4 +1,4 @@
-// Props for DeleteConfirmDialog component
+﻿// Props for DeleteConfirmDialog component
 export interface DeleteConfirmDialogProps {
 	booking: Booking | null;
 	isOpen: boolean;
@@ -31,7 +31,7 @@ export interface BookingDetailDialogProps {
 	// fallback values from the list row in case detail API doesn't include joined fields
 	fallback?: {
 		user_name?: string | null;
-		building_name?: string | null;
+		property_name?: string | null;
 		room_name?: string | null;
 		room_price?: number | string | null;
 		partner_name?: string | null;
@@ -41,7 +41,7 @@ export interface BookingDetailDialogProps {
 // Room information nested in Booking
 export interface RoomInfo {
 	room_number: string;
-	building: {
+	property: {
 		name: string;
 	};
 }
@@ -95,7 +95,7 @@ export interface SearchBookingRequest {
 	page?: number;
 	per_page?: number;
 	room_id?: number;
-	building_id?: number;
+	property_id?: number;
 	start_date?: string;
 	end_date?: string;
 	status?: number;
@@ -108,7 +108,7 @@ export interface SearchBookingRequest {
 
 // Request interface for creating a booking
 export interface BookingListItem {
-	building_name: string;
+	property_name: string;
 	room_name: string;
 	user_name: string;
 	start_date: string;
@@ -157,7 +157,7 @@ export interface BookingDetail {
 	id: number;
 	user_name: string;
 	room_name: string;
-	building_name: string;
+	property_name: string;
 	start_date: string;
 	end_date: string | null;
 	status: "pending" | "confirmed" | "cancelled" | "completed";
@@ -205,3 +205,4 @@ export interface BookingTableProps {
 	onDelete: (id: string) => void;
 	filters: BookingFilters;
 }
+

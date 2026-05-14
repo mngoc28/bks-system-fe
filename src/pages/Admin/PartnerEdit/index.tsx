@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -192,7 +192,7 @@ const PartnerEdit: React.FC = () => {
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder={t("buildings.province_name_placeholder")} />
+                                                    <SelectValue placeholder={t("properties.province_name_placeholder")} />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -228,7 +228,7 @@ const PartnerEdit: React.FC = () => {
                                                         placeholder={
                                                             !provinceId 
                                                                 ? "Chọn tỉnh thành trước" 
-                                                                : (isWardsLoading ? t("common.loading") : t("buildings.ward_name_placeholder"))
+                                                                : (isWardsLoading ? t("common.loading") : t("properties.ward_name_placeholder"))
                                                         } 
                                                     />
                                                 </SelectTrigger>
@@ -412,3 +412,4 @@ const PartnerEdit: React.FC = () => {
 };
 
 export default PartnerEdit;
+

@@ -1,6 +1,6 @@
 import { dashboardApi } from "@/api/dashboardApi";
 import { ApiResponse } from "@/api/types";
-import { BookingByBuilding, BookingsPerMonthResponse, RevenueByMonthResponse, SystemBuilding, SystemRoom, TotalPartner, TotalUser } from "@/dataHelper/dashboard.dataHelper";
+import { BookingByProperty, BookingsPerMonthResponse, RevenueByMonthResponse, SystemPropertySummary, SystemRoom, TotalPartner, TotalUser } from "@/dataHelper/dashboard.dataHelper";
 import { useQuery } from "@tanstack/react-query";
 
 export const useTotalUser = () => {
@@ -25,12 +25,12 @@ export const useTotalPartner = () => {
     });
 };
 
-export const useSystemBuilding = () => {
-  return useQuery<ApiResponse<SystemBuilding>>(
+export const useSystemProperty = () => {
+  return useQuery<ApiResponse<SystemPropertySummary>>(
     {
-      queryKey:['dashboard', 'system-building'],
+      queryKey:['dashboard', 'system-property'],
       queryFn: async () => {
-        const response = await dashboardApi.getSystemBuilding();
+        const response = await dashboardApi.getSystemProperty();
         return response;
       }
     });
@@ -69,11 +69,11 @@ export const useRevenueByMonthQuery = (startDate?: string, endDate?: string, ena
   });
 };
 
-export const useBookingsByBuildingQuery = () => {
-  return useQuery<ApiResponse<BookingByBuilding[]>>({
-    queryKey: ["dashboard", "bookings-by-building"],
+export const useBookingsByPropertyQuery = () => {
+  return useQuery<ApiResponse<BookingByProperty[]>>({
+    queryKey: ["dashboard", "bookings-by-property"],
     queryFn: async () => {
-      const response = await dashboardApi.getBookingsByBuilding();
+      const response = await dashboardApi.getBookingsByProperty();
       return response;
     },
   });

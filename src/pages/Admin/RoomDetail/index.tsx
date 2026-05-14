@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { ROUTERS } from "@/constant";
 import { useRoomQuery } from "@/hooks/useRoomQuery";
 import { Loader2 } from "lucide-react";
@@ -9,7 +9,7 @@ import { RoomDetailView } from "./components";
 
 /**
  * Room Detail Page
- * Fetches and displays comprehensive information about a specific room, including its building association, pricing, and availability status.
+ * Fetches and displays comprehensive information about a specific room, including its property association, pricing, and availability status.
  */
 const RoomDetail: React.FC = () => {
   const { t } = useTranslation();

@@ -7,5 +7,5 @@ export const roomApi = {
   createRoom: (data: CreateRoomRequest): Promise<RoomResponse> => axiosClient.post("admin/rooms/store", data),
   updateRoom: (id: number, data: UpdateRoomRequest): Promise<RoomResponse> => axiosClient.put(`admin/rooms/${id}`, data),
   deleteRoom: (id: number): Promise<{ status: string; message: string | null }> => axiosClient.delete(`admin/rooms/${id}`),
-  getRoomsByBuilding: (buildingId: number): Promise<{ data: Room[] }> => axiosClient.get(`admin/rooms/building/${buildingId}`),
+  getRoomsByProperty: (propertyId: number): Promise<{ data: Room[] }> => axiosClient.get(`admin/rooms/property/${propertyId}`),
 };

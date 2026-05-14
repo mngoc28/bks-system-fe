@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { 
   CalendarDays, 
@@ -225,13 +225,13 @@ const BookingDetail = () => {
   }
 
   const handleShare = () => {
-    const text = `Thông tin đặt phòng BKS Stay: ${booking.room?.title} tại ${booking.room?.building?.address}. Mã đơn: ${booking.id}`;
+    const text = `Thông tin đặt phòng BKS Stay: ${booking.room?.title} tại ${booking.room?.property?.address}. Mã đơn: ${booking.id}`;
     navigator.clipboard.writeText(text);
     toastSuccess("Đã sao chép liên kết vào bộ nhớ tạm!");
   };
 
   const openInMaps = () => {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.room?.building?.address || "")}`, "_blank");
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.room?.property?.address || "")}`, "_blank");
   };
 
   const handleCancelBooking = () => {
@@ -457,8 +457,8 @@ const BookingDetail = () => {
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-sky-600"><MapPin className="size-6" /></div>
                     <div className="flex-1">
                       <p className="mb-1 text-[10px] font-black uppercase leading-none tracking-widest text-slate-400">Vị trí & Địa chỉ</p>
-                      <p className="font-bold text-slate-900">{booking.room?.building?.name || "BKS Stay Building"}</p>
-                      <p className="text-xs font-medium leading-relaxed text-slate-500">{booking.room?.building?.address || "Địa chỉ đang cập nhật"}</p>
+                      <p className="font-bold text-slate-900">{booking.room?.property?.name || "BKS Stay Property"}</p>
+                      <p className="text-xs font-medium leading-relaxed text-slate-500">{booking.room?.property?.address || "Địa chỉ đang cập nhật"}</p>
                       <button onClick={openInMaps} className="mt-2 flex items-center gap-1 text-[10px] font-black uppercase text-sky-600 hover:underline">
                          Mở trong bản đồ <ExternalLink className="size-2" />
                       </button>
@@ -860,3 +860,4 @@ const BookingDetail = () => {
 };
 
 export default BookingDetail;
+

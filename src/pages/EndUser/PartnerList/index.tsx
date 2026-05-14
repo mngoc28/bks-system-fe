@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { 
@@ -9,7 +9,6 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   CreditCard,
-  Building,
   ArrowRight,
   Info
 } from "lucide-react";
@@ -131,7 +130,7 @@ const PartnerList = () => {
                                   }}
                                 />
                               ) : (
-                                <Building className="size-8 text-slate-300" />
+                                <Building2 className="size-8 text-slate-300" />
                               )}
                             </div>
                             <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -290,3 +289,4 @@ const PartnerList = () => {
 };
 
 export default PartnerList;
+

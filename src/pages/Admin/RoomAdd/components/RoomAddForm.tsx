@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RoomAddFormProps } from "@/dataHelper/room.dataHelper";
 import { useAllAmenitiesQuery } from "@/hooks/useAmenityQuery";
-import { useAllBuildingsQuery } from "@/hooks/useBuildingQuery";
+import { useAllPropertiesQuery } from "@/hooks/usePropertyQuery";
 import { usePricePackagesQuery } from "@/hooks/usePricePackageQuery";
 import { useAllServicesQuery } from "@/hooks/useServiceQuery";
 import { roomFormSchema } from "@/shared/shema";
@@ -25,22 +25,22 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
   const { t } = useTranslation();
   const schema = roomFormSchema(t);
 
-  // Building
-  const { data: buildingsData, isLoading: isBuildingsLoading } = useAllBuildingsQuery();
+  // Property
+  const { data: propertiesData, isLoading: isPropertiesLoading } = useAllPropertiesQuery();
 
   // Amenities, Services
   const { data: amenitiesData, isLoading: isAmenitiesLoading } = useAllAmenitiesQuery();
   const { data: servicesData, isLoading: isServicesLoading } = useAllServicesQuery();
   const { data: pricePackagesData, isLoading: isPricePackagesLoading } = usePricePackagesQuery({ enabled: true });
 
-  const buildingOptions = useMemo(() => {
-    const allBuildings = buildingsData ?? [];
-    let filtered = allBuildings;
+  const propertyOptions = useMemo(() => {
+    const allProperties = propertiesData ?? [];
+    let filtered = allProperties;
     if (currentUser?.role === "partner" && currentUser?.partner_id) {
-      filtered = allBuildings.filter((building: any) => building.staff_id === currentUser.partner_id);
+      filtered = allProperties.filter((property: any) => property.staff_id === currentUser.partner_id);
     }
     return filtered;
-  }, [buildingsData, currentUser]);
+  }, [propertiesData, currentUser]);
 
   const amenities = useMemo(() => {
     const result = amenitiesData ?? [];
@@ -61,7 +61,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: {
-      building_id: undefined,
+      property_id: undefined,
       title: "",
       room_number: "",
       area: "",
@@ -94,7 +94,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
 
   const handleSubmit = (data: z.infer<typeof schema>) => {
       onSubmit({
-        building_id: data.building_id,
+        property_id: data.property_id,
         title: data.title,
         room_number: data.room_number ?? "",
         deposit: data.deposit ?? "",
@@ -118,19 +118,19 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Building */}
+          {/* Property */}
           <FormField
             control={form.control}
-            name="building_id"
+            name="property_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.building")} <span className="text-red-500">*</span></FormLabel>
+                <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.property")} <span className="text-red-500">*</span></FormLabel>
                 <ReactSelect
-                options={buildingOptions.map((building: any) => ({ value: building.id, label: building.name }))}
-                  value={buildingOptions.find((b: any) => field.value === b.id) ? { value: field.value, label: buildingOptions.find((b: any) => b.id === field.value)?.name } : null}
+                options={propertyOptions.map((property: any) => ({ value: property.id, label: property.name }))}
+                  value={propertyOptions.find((b: any) => field.value === b.id) ? { value: field.value, label: propertyOptions.find((b: any) => b.id === field.value)?.name } : null}
                   onChange={selected => field.onChange(selected?.value ?? null)}
-                  isDisabled={isLoading || isBuildingsLoading || buildingOptions.length === 0}
-                  placeholder={isBuildingsLoading ? t("common.loading") : buildingOptions.length === 0 ? t("rooms.no_buildings_found") : t("rooms.building_placeholder")}
+                  isDisabled={isLoading || isPropertiesLoading || propertyOptions.length === 0}
+                  placeholder={isPropertiesLoading ? t("common.loading") : propertyOptions.length === 0 ? t("rooms.no_properties_found") : t("rooms.property_placeholder")}
                   classNamePrefix="react-select"
                   isSearchable
                   isClearable

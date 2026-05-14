@@ -1,10 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PropertySkeleton: React.FC = () => {
   return (
     <div className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      {/* Building Header Skeleton */}
+      {/* Property Header Skeleton */}
       <div className="flex flex-col items-start justify-between gap-4 border-b border-gray-200 bg-slate-50 p-6 sm:flex-row sm:items-center">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
@@ -75,3 +75,4 @@ const PropertySkeleton: React.FC = () => {
 };
 
 export default PropertySkeleton;
+

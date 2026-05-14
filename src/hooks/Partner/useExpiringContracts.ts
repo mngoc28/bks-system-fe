@@ -10,7 +10,7 @@ export interface ExpiringContract {
   booking_id: number | null;
   booking_end_date: string | null;
   room_label?: string | null;
-  building_name?: string | null;
+  property_name?: string | null;
   guest_name?: string | null;
 }
 

@@ -1,4 +1,4 @@
-export interface Room {
+﻿export interface Room {
     id: number;
     province_id?: number;
     title: string;
@@ -6,7 +6,7 @@ export interface Room {
     people: number;
     description?: string;
     province_name: string;
-    building_address: string;
+    property_address: string;
     property_type_name?: string;
     property_type_id?: number;
     cheapest_daily_price: number;

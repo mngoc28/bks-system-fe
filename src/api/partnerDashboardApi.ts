@@ -6,7 +6,7 @@ import { RecentBooking, RevenueByMonthResponse } from "@/dataHelper/dashboard.da
  * Interface for Summary Stats
  */
 export interface PartnerStats {
-  totalBuildings: number;
+  totalProperties: number;
   totalRooms: number;
   vacantRooms: number;
   occupancyRate: number;

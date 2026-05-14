@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Building2, ShoppingBag, Wrench, Newspaper, Zap, AirVent, Wallet, FileText, Calendar, MessageSquare, BarChart3, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -101,3 +101,4 @@ const Sidebar: React.FC = () => {
 };
 
 export default Sidebar;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Search, Plus, Filter, 
@@ -40,7 +40,7 @@ interface Contract {
   created_at: string;
   booking?: {
     user?: { name: string };
-    room?: { title: string; name?: string; building?: { name: string } };
+    room?: { title: string; name?: string; property?: { name: string } };
   };
 }
 
@@ -201,7 +201,7 @@ const Contracts: React.FC = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-bold text-gray-900">{contract.booking?.room?.building?.name || 'N/A'}</p>
+                    <p className="text-sm font-bold text-gray-900">{contract.booking?.room?.property?.name || 'N/A'}</p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
                       <Home size={12} className="text-gray-400" /> 
                       {contract.booking?.room?.title || contract.booking?.room?.name || 'N/A'}
@@ -302,3 +302,4 @@ const Contracts: React.FC = () => {
 };
 
 export default Contracts;
+

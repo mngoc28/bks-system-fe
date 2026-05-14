@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -46,7 +46,7 @@ interface ContractBooking {
     title?: string;
     name?: string;
     utility_fees?: UtilityFee[];
-    building?: { id?: number; name?: string };
+    property?: { id?: number; name?: string };
   };
   price?: { price?: number };
 }
@@ -287,7 +287,7 @@ const ContractDetail: React.FC = () => {
             <div className="flex items-center gap-2"><Phone size={14} className="text-gray-400" /> {contract.booking?.user?.phone ?? '—'}</div>
             <div className="flex items-center gap-2 text-gray-500 text-xs">{contract.booking?.user?.email}</div>
             <div className="border-t border-gray-100 pt-2">
-              <p className="font-bold text-gray-900">{contract.booking?.room?.building?.name ?? 'N/A'}</p>
+              <p className="font-bold text-gray-900">{contract.booking?.room?.property?.name ?? contract.booking?.room?.property?.name ?? 'N/A'}</p>
               <p className="text-xs text-gray-500">{contract.booking?.room?.title ?? contract.booking?.room?.name}</p>
             </div>
           </CardContent>
@@ -399,3 +399,4 @@ const ContractDetail: React.FC = () => {
 };
 
 export default ContractDetail;
+

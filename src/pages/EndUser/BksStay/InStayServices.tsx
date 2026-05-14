@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { 
   Key, 
   Wifi, 
@@ -124,7 +124,7 @@ const InStayServices = () => {
                  <div className="mb-8 flex items-center gap-3">
                     <Badge className="rounded-full border-none bg-sky-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-400">Active Access</Badge>
                     <span className="text-xs font-bold text-slate-400">
-                       {activeBooking ? `Phòng ${activeBooking.room?.title} • ${activeBooking.room?.building?.name}` : "Đang tải..."}
+                       {activeBooking ? `Phòng ${activeBooking.room?.title} • ${activeBooking.room?.property?.name}` : "Đang tải..."}
                     </span>
                  </div>
                  
@@ -324,3 +324,4 @@ const InStayServices = () => {
 };
 
 export default InStayServices;
+

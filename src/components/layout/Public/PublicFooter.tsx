@@ -39,8 +39,8 @@ const PublicFooter = ({ className }: PublicFooterProps) => {
               </Link>
             </li>
             <li>
-              <Link to={ROUTERS.BUILDINGS} className="transition hover:text-primary">
-                {t("public.footer.sections.explore.buildings")}
+              <Link to={ROUTERS.PROPERTIES} className="transition hover:text-primary">
+                {t("public.footer.sections.explore.properties")}
               </Link>
             </li>
             <li>

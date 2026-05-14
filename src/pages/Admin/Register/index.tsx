@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toastError, toastSuccess } from "@/components/ui/toast";
@@ -6,7 +6,7 @@ import { ROUTERS } from "@/constant";
 import { useRegisterMutation } from "@/hooks/useAuthQuery";
 import { registerFormSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building, Eye, EyeOff, Mail, MapPin, Phone, User, ShieldCheck, ArrowRight } from "lucide-react";
+import { Building2, Eye, EyeOff, Mail, MapPin, Phone, User, ShieldCheck, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -142,7 +142,7 @@ export default function Register() {
 
               <div className="mb-10">
                 <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/10 bg-blue-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-400">
-                  <Building className="size-3" />
+                  <Building2 className="size-3" />
                   Cổng Đăng Ký Đối Tác
                 </span>
                 <h1 className="mb-3 text-4xl font-extrabold tracking-tight text-white">{t("register.title")}</h1>
@@ -234,7 +234,7 @@ export default function Register() {
                                 className="h-12 rounded-2xl border-white/5 bg-white/[0.02] pl-10 text-white transition-all placeholder:text-slate-600 focus:border-blue-500/50 focus:ring-blue-500/20 group-hover:bg-white/[0.04]"
                                 {...field} 
                               />
-                              <Building className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-600 transition-colors group-focus-within:text-blue-500" />
+                              <Building2 className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-600 transition-colors group-focus-within:text-blue-500" />
                             </div>
                           </FormControl>
                           <FormMessage className="text-xs font-medium text-rose-500/80" />
@@ -414,3 +414,4 @@ export default function Register() {
     </>
   );
 }
+

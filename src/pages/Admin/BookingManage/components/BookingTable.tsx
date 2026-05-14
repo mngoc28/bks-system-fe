@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BookingTableProps } from "@/dataHelper/booking.dataHelper";
@@ -58,7 +58,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                 <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(booking.user.name, filters.q || "")}</TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">
                   <div>{highlightText(booking.room.room_number, filters.room || "")}</div>
-                  <div className="text-xs text-slate-500">{highlightText(booking.room.building.name, filters.room || "")}</div>
+                  <div className="text-xs text-slate-500">{highlightText(booking.room.property.name, filters.room || "")}</div>
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">
                   {safeFormatDateTime(booking.start_date)} - {safeFormatDateTime(booking.end_date)}
@@ -83,3 +83,4 @@ const BookingTable: React.FC<BookingTableProps> = ({
 };
 
 export default BookingTable;
+

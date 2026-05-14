@@ -1,4 +1,4 @@
-# E2E Test Script — Partner Portal 360 Phase 5 (Long-term Contract Subset)
+﻿# E2E Test Script — Partner Portal 360 Phase 5 (Long-term Contract Subset)
 
 **Phiên bản:** 1.0
 **Ngày soạn:** 2026-05-12
@@ -69,7 +69,7 @@ Tất cả screenshot lưu tại `business-script/screenshots/phase5/`.
 
 **Kết quả mong đợi:**
 - Card "Thời hạn thuê": Ngày bắt đầu, Ngày kết thúc, Ngày ký.
-- Card "Khách thuê & tài sản": Tên/SĐT/email khách, building, room.
+- Card "Khách thuê & tài sản": Tên/SĐT/email khách, property, room.
 - Card "Phí tiện ích đính kèm": 4 dòng (Điện 3.500đ, Nước 25.000đ, Internet 150.000đ - Đã bao gồm, Vệ sinh 80.000đ).
 - 2 button hiển thị (vì `contract_type=LEASE_AGREEMENT`, `terminated_at=null`).
 - Đối chiếu với contract `TERMS_AND_CONDITIONS` (TC-5.3 negative): không hiển thị button.
@@ -232,3 +232,4 @@ Contract::whereIn('id', [1, 3, 5, 9])->update([
 ```
 
 Tắt scheduler (nếu cần): comment out `$schedule->command('partner:send-contract-renewal-reminders')` trong `app/Console/Kernel.php`.
+

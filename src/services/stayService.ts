@@ -1,4 +1,4 @@
-import apiService from "./apiService";
+﻿import apiService from "./apiService";
 
 export interface StayDashboardData {
   user: {
@@ -20,7 +20,7 @@ export interface StayDashboardData {
     status: number;
     room: {
       title: string;
-      building: {
+      property: {
         name: string;
       };
       room_images: Array<{ image_url: string }>;
@@ -56,7 +56,7 @@ export interface Contract {
     };
     room: {
       title: string;
-      building: {
+      property: {
         name: string;
         address: string;
       };
@@ -76,7 +76,7 @@ export interface BookingDetail {
   note: string;
   room: {
     title: string;
-    building: {
+    property: {
       name: string;
       address: string;
     };
@@ -158,3 +158,4 @@ const stayService = {
 };
 
 export default stayService;
+

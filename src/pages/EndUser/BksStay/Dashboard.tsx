@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   CalendarDays, 
@@ -211,7 +211,7 @@ const Dashboard = () => {
                       <h4 className="mb-2 text-2xl font-black text-slate-900">{activeBooking.room?.title || "Phòng nghỉ"}</h4>
                       <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">
                          <span className="flex items-center gap-1.5"><CalendarDays className="size-4" /> {new Date(activeBooking.start_date).toLocaleDateString("vi-VN")}</span>
-                         <span className="flex items-center gap-1.5"><MapPin className="size-4" /> {activeBooking.room?.building?.name || "BKS Stay"}</span>
+                         <span className="flex items-center gap-1.5"><MapPin className="size-4" /> {activeBooking.room?.property?.name || "BKS Stay"}</span>
                       </div>
                     </div>
                     <Button asChild className="group h-12 w-fit rounded-2xl bg-slate-900 px-8 font-bold shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800">
@@ -318,3 +318,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

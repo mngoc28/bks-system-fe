@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -45,8 +45,8 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
     return map;
   }, [pricePackages]);
 
-  const getBuildingName = () => {
-    return room.building_name || room.building?.name || "-";
+  const getPropertyName = () => {
+    return room.property_name || room.property_name || room.property?.name || "-";
   };
 
   const getRoomTypeName = (type: number) => {
@@ -155,8 +155,8 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">{t("rooms.building")}</label>
-                <p className="mt-1 text-sm text-gray-900">{getBuildingName()}</p>
+                <label className="text-sm font-medium text-gray-700">{t("rooms.property")}</label>
+                <p className="mt-1 text-sm text-gray-900">{getPropertyName()}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">{t("rooms.room_type")}</label>

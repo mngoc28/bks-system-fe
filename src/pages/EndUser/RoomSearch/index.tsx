@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { CLOUDINARY_HEADER_IMAGE_URL, DEFAULT_ROOM_IMAGE, ROUTERS } from "@/cons
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
 import { useRoomsQuery } from "@/hooks/EU/useRoomQuery";
-import { useBuildingTypesQuery } from "@/hooks/useBuildingQuery";
+import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { formatPrice } from "@/utils/utils";
 import {
   Select,
@@ -38,7 +38,7 @@ const RoomSearch = () => {
 
   const { data: provincesData } = useGetAllProvincesTypes();
   const { data: wardsData } = useGetHomeWardsByProvinceId(provinceId);
-  const { data: propertyTypesData } = useBuildingTypesQuery();
+  const { data: propertyTypesData } = usePropertyTypesQuery();
   const { data: rooms = [], isLoading, isError } = useRoomsQuery({}, { enabled: true });
 
   const selectedProvince = useMemo(
@@ -58,7 +58,7 @@ const RoomSearch = () => {
 
     const matched = rooms.filter((room) => {
       const roomProvince = normalize(room.province_name || "");
-      const roomAddress = normalize(room.building_address || "");
+      const roomAddress = normalize(room.property_address || "");
       const roomTitle = normalize(room.title || "");
       const roomDescription = normalize(room.description || "");
 
@@ -235,7 +235,7 @@ const RoomSearch = () => {
                         <div className="flex items-center gap-1.5 text-sm text-slate-500">
                           <MapPin className="h-4 w-4 shrink-0 text-sky-500" />
                           <span className="line-clamp-1">
-                            {room.province_name} - {room.building_address}
+                            {room.province_name} - {room.property_address}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-500">
@@ -277,3 +277,4 @@ const RoomSearch = () => {
 };
 
 export default RoomSearch;
+

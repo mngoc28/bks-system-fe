@@ -1,4 +1,4 @@
-# E2E Test Script — Partner Portal 360 Phase 3 (Calendar + Room Block)
+﻿# E2E Test Script — Partner Portal 360 Phase 3 (Calendar + Room Block)
 
 **Phiên bản:** 1.0
 **Ngày soạn:** 2026-05-10
@@ -14,7 +14,7 @@
 - Database đã chạy migration Phase 1 + Phase 3:
   - Phase 1: `2026_05_10_120001..120003_*`.
   - Phase 3: `2026_05_10_120004_create_room_blocks_table` (đã verified `migrate` + `migrate:rollback`).
-- Đã có ít nhất 1 building thuộc partner và 2+ rooms để test "Tất cả tài sản" + drag-drop.
+- Đã có ít nhất 1 property thuộc partner và 2+ rooms để test "Tất cả tài sản" + drag-drop.
 - Đã có 2+ booking trong tháng hiện tại (status `1 confirmed`) để test calendar render và drag-drop.
 - Optional cho test realtime đầy đủ (TC-3.10):
   - Soketi container chạy: `docker compose -f docker-compose.soketi.yml up -d`.
@@ -38,11 +38,11 @@
 
 **Kết quả mong đợi:**
 
-- Bước 2: HTTP 200, body có `{success, data: { bookings: [...], blocks: [...], property_id, room_id, from, to, cached_at }}`. Mỗi `booking` có `id`, `room_id`, `start_date`, `end_date`, `status`, `stay_status`, `building_id`, `room_label`, `guest_name`, `guest_phone`, `total_amount`, `note`. Mỗi `block` có `id`, `room_id`, `start_date`, `end_date`, `block_type`, `reason`, `note`.
+- Bước 2: HTTP 200, body có `{success, data: { bookings: [...], blocks: [...], property_id, room_id, from, to, cached_at }}`. Mỗi `booking` có `id`, `room_id`, `start_date`, `end_date`, `status`, `stay_status`, `property_id`, `room_label`, `guest_name`, `guest_phone`, `total_amount`, `note`. Mỗi `block` có `id`, `room_id`, `start_date`, `end_date`, `block_type`, `reason`, `note`.
 - Bước 3: HTTP 422 với message liên quan range max 31 ngày.
 - Bước 4: HTTP 200 với arrays rỗng (không thấy data của partner khác).
 
-**Đã verify:** [Manual] — logic ownership filter qua `Room.building.user_id` đã được validate trong unit test (`RoomBlockServiceTest::test_create_returns_unauthorized_when_policy_denies`) cùng pattern.
+**Đã verify:** [Manual] — logic ownership filter qua `Room.property.user_id` đã được validate trong unit test (`RoomBlockServiceTest::test_create_returns_unauthorized_when_policy_denies`) cùng pattern.
 
 ---
 
@@ -57,8 +57,8 @@
 
 **Kết quả mong đợi:**
 
-- Bước 3: events từ tất cả buildings của partner đều render trên FullCalendar (cùng grid tháng).
-- Dropdown "Lọc theo phòng" lúc này hiển thị tất cả rooms với label `"<room_number> — <building_name>"` để phân biệt.
+- Bước 3: events từ tất cả properties của partner đều render trên FullCalendar (cùng grid tháng).
+- Dropdown "Lọc theo phòng" lúc này hiển thị tất cả rooms với label `"<room_number> — <property_name>"` để phân biệt.
 - Network: gọi `GET /api/v1/partner/calendar?from=...&to=...` (KHÔNG có `property_id` query).
 
 **Đã verify:** [Manual] — code path đã implement (`ALL_PROPERTIES = '__all__'` trong `Calendar.tsx`).
@@ -111,7 +111,7 @@
 **Bước thực hiện:**
 
 1. Seed 2 booking `status=1 confirmed` cho cùng 1 room với khoảng thời gian giao nhau (ví dụ #A: 2026-05-10 → 2026-05-15; #B: 2026-05-13 → 2026-05-18) — cố ý tạo overbooking để test alert (qua DB seed/raw insert vì service từ chối qua ConflictChecker).
-2. Vào `/partner/calendar`, chọn building chứa 2 booking đó.
+2. Vào `/partner/calendar`, chọn property chứa 2 booking đó.
 3. Quan sát đầu trang và FullCalendar grid.
 
 **Kết quả mong đợi:**
@@ -129,7 +129,7 @@
 
 **Bước thực hiện:**
 
-1. Vào `/partner/calendar`, chọn building có booking `status=1 confirmed`.
+1. Vào `/partner/calendar`, chọn property có booking `status=1 confirmed`.
 2. Trên FullCalendar grid, kéo thả 1 booking event sang ngày khác **không có conflict**.
 3. Quan sát Network và toast.
 
@@ -282,3 +282,4 @@ Chưa phát hiện defect ở triple review (BA + TLA + QA) Phase 3. UI E2E pass
 | T3.14 FE render block + overbooking warning | TC-3.5 |
 | T3.15 FE drag-drop conflict revert + BE move endpoint | TC-3.6, TC-3.7 |
 | T3.16 Unit test ConflictChecker + RoomBlockService | (đã ✅ 12/12 trong Unit suite) |
+

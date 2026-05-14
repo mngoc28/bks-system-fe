@@ -1,5 +1,5 @@
-import { useSystemRoom } from "@/hooks/useDashboardQuery";
-import { Building } from "lucide-react";
+﻿import { useSystemRoom } from "@/hooks/useDashboardQuery";
+import { Building2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,25 +17,25 @@ const RoomViewCards: React.FC = () => {
     {
       label: t("dashboard.total_rooms"),
       value: room?.totalRooms ?? 0,
-      icon: Building,
+      icon: Building2,
       color: "text-primary",
     },
     {
       label: t("dashboard.total_private_rooms"),
       value: room?.totalPrivateRooms ?? 0,
-      icon: Building,
+      icon: Building2,
       color: "text-red-600",
     },
     {
       label: t("dashboard.total_public_rooms"),
       value: room?.totalPublicRooms ?? 0,
-      icon: Building,
+      icon: Building2,
       color: "text-green-700",
     },
     {
       label: t("dashboard.total_available_rooms"),
       value: room?.totalAvailableRooms ?? 0,
-      icon: Building,
+      icon: Building2,
       color: "text-emerald-700",
     },
   ];
@@ -63,3 +63,4 @@ const RoomViewCards: React.FC = () => {
 };
 
 export default RoomViewCards;
+

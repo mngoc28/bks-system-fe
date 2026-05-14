@@ -1,8 +1,8 @@
-import Header from "@/components/Header";
+﻿import Header from "@/components/Header";
 import { ROUTERS } from "@/constant";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 import { MenuItem } from "@/shared/types";
-import { BotIcon, Building, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench } from "lucide-react";
+import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router";
@@ -28,7 +28,7 @@ const Layout = () => {
     // Current layout is only for Admin/Manager, so we set all permissions
     setPermissions(new Set([
       "dashboard:view",
-      "buildings:view",
+      "properties:view",
       "rooms:view",
       "user-management:view",
       "booking:view",
@@ -74,11 +74,11 @@ const Layout = () => {
       icon: <Handshake />,
     },
     {
-      id: "buildings",
-      permissionKey: "buildings:view",
-      label: t("menu.buildings"),
-      path: ROUTERS.BUILDINGS,
-      icon: <Building />,
+      id: "properties",
+      permissionKey: "properties:view",
+      label: t("menu.properties"),
+      path: ROUTERS.PROPERTIES,
+      icon: <Building2 />,
     },
     {
       id: "rooms",
@@ -143,8 +143,8 @@ const Layout = () => {
     if (pathName.includes(ROUTERS.CONTROL)) {
       return t("dashboard.title");
     }
-    if (pathName.includes(ROUTERS.BUILDINGS)) {
-      return t("buildings.title");
+    if (pathName.includes(ROUTERS.PROPERTIES)) {
+      return t("properties.title");
     }
     if (pathName.includes(ROUTERS.ROOMS)) {
       return t("rooms.title");
@@ -215,3 +215,4 @@ const Layout = () => {
 };
 
 export default Layout;
+

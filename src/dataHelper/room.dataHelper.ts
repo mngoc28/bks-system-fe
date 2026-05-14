@@ -1,16 +1,16 @@
-import { Amenity } from "@/dataHelper/amenity.dataHelper";
-import { Building } from "@/dataHelper/building.dataHelper";
+﻿import { Amenity } from "@/dataHelper/amenity.dataHelper";
+import { Property } from "@/dataHelper/property.dataHelper";
 import { PricePackage } from "@/dataHelper/pricePackage.dataHelper";
 import { RoomImage } from "@/dataHelper/roomImage.dataHelper";
 import { ServiceListItem } from "@/dataHelper/service.dataHelper";
 // Room interfaces and types
-export type RoomSortKey = "id" | "title" | "room_number" | "building" | "area" | "people" | "status" | "created_at";
+export type RoomSortKey = "id" | "title" | "room_number" | "property" | "area" | "people" | "status" | "created_at";
 
 // Main Room interface
 export interface Room {
   id: number;
-  building_id: number;
-  building_name?: string;
+  property_id?: number;
+  property_name?: string;
   title: string;
   room_number: string | null;
   deposit: number | null;
@@ -24,7 +24,7 @@ export interface Room {
   updated_by: number;
   created_at: string;
   updated_at: string;
-  building?: Building;
+  property?: Property;
   amenities?: RoomAmenity[];
   services?: RoomService[];
   prices?: RoomPrice[];
@@ -73,7 +73,7 @@ export interface RoomPrice {
 export interface SearchRoomRequest {
   page?: number;
   per_page?: number;
-  building_id?: number;
+  property_id?: number;
   title?: string;
   room_number?: string;
   room_type?: number;
@@ -133,7 +133,7 @@ export interface RoomTableProps {
   onEdit: (id: string | number) => void;
   onDelete: (room: Room) => void;
   // canModifyRoom: (room: Room) => boolean;
-  getBuildingName: (room: Room) => string;
+  getPropertyName: (room: Room) => string;
   getRoomTypeName: (type: number) => string;
   toggleSort: (key: RoomSortKey) => void;
 }
@@ -147,7 +147,7 @@ export interface PaginationLink {
 
 // Create and Update types
 export interface CreateRoomRequest {
-  building_id: number;
+  property_id: number;
   title: string;
   room_number?: string;
   deposit?: number;
@@ -181,7 +181,7 @@ export interface RoomResponse {
 
 // Form types
 export type RoomFormData = {
-  building_id: number;
+  property_id: number;
   title: string;
   room_number?: string;
   deposit?: string;
@@ -254,7 +254,7 @@ export interface DeleteRoomDialogProps {
   room: {
     id: number;
     room_number: string;
-    building_name: string;
+    property_name: string;
   } | null;
   onCancel: () => void;
   onConfirm: () => void;
@@ -264,4 +264,5 @@ export interface DeleteRoomDialogProps {
 export interface RoomsEmptyStateProps {
   onOpenFilter?: () => void;
 }
+
 
