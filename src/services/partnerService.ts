@@ -1,4 +1,4 @@
-﻿import apiService from './apiService';
+import apiService from './apiService';
 import { NotificationData, PaginatedResponse } from './stayService';
 
 const BASE_URL = '/api/v1/partner';
@@ -91,6 +91,18 @@ export const partnerService = {
     apiService.post(`${BASE_URL}/bookings/bulk-confirm`, { ids }),
   bulkCancelBookings: (ids: Array<number | string>, reason: string) =>
     apiService.post(`${BASE_URL}/bookings/bulk-cancel`, { ids, reason }),
+
+  /** BCP — guest cancellation requests (requires `BCP_CANCELLATION_V1` on API). */
+  getCancellationRequests: (params?: {
+    status?: string;
+    property_id?: number;
+    per_page?: number;
+    page?: number;
+  }) => apiService.get(`${BASE_URL}/cancellation-requests`, { params }),
+  approveCancellationRequest: (id: number | string, body?: { note?: string }) =>
+    apiService.post(`${BASE_URL}/cancellation-requests/${id}/approve`, body ?? {}),
+  rejectCancellationRequest: (id: number | string, body: { note: string }) =>
+    apiService.post(`${BASE_URL}/cancellation-requests/${id}/reject`, body),
 
   checkIn: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/check-in`),
   checkOut: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/check-out`),

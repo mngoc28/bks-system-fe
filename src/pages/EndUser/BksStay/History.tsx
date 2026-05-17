@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { 
   Search, 
@@ -22,6 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -139,7 +140,7 @@ const History = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="size-12 animate-spin rounded-full border-y-2 border-sky-600"></div>
+        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
       </div>
     );
   }

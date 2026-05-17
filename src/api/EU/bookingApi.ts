@@ -1,7 +1,7 @@
 import axiosClient from "../axiosClient";
-import type { CreateBookingUserRequest } from "@/dataHelper/EU/booking.dataHelper";
+import type { CreateBookingUserRequest, PublicBookingLookupRequest, PublicBookingSummary } from "@/dataHelper/EU/booking.dataHelper";
 
-export type { CreateBookingUserRequest };
+export type { CreateBookingUserRequest, PublicBookingLookupRequest, PublicBookingSummary };
 
 export const bookingApi = {
     // Get room details (public)
@@ -11,4 +11,8 @@ export const bookingApi = {
     // Create booking for user (public)
     createBookingUser: (roomId: number, data: CreateBookingUserRequest): Promise<any> =>
         axiosClient.post(`bookings/${roomId}/user-create`, data),
+
+    /** To look up your application publicly: email + code (no login required). */
+    lookupBooking: (data: PublicBookingLookupRequest): Promise<any> =>
+        axiosClient.post(`bookings/lookup`, data),
 }

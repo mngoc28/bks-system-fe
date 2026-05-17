@@ -1,32 +1,23 @@
-﻿import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
-import { Plus, MapPin, Maximize, AirVent, Zap, Wallet, Edit, Trash2, X, Loader2, Image as ImageIcon } from 'lucide-react';
-import { Property, Room } from './types';
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PlainTextarea } from "@/components/ui/textarea";
-import { partnerService } from '@/services/partnerService';
 import { usePartnerPropertyTypesQuery } from '@/hooks/usePropertyQuery';
 import { useGetUserProfileQuery } from '@/hooks/useUserQuery';
+import { partnerService } from '@/services/partnerService';
+import { AirVent, ChevronDown, Edit, Image as ImageIcon, Layers, Loader2, MapPin, Maximize, Plus, Trash2, Wallet, X, Zap } from 'lucide-react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { Property, Room } from './types';
 
-import { RENT_CATEGORY } from '@/constant';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import InlineSheet from './components/InlineSheet';
-import PropertySkeleton from './components/PropertySkeleton';
-import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious,
-  PaginationEllipsis
-} from "@/components/ui/pagination";
-import { Search, Filter, RotateCcw } from 'lucide-react';
-import PartnerImageManager from './components/PartnerImageManager';
-import { toastError, toastSuccess } from '@/components/ui/toast';
+import Pagination from '@/components/Pagination';
 import {
   Select,
   SelectContent,
@@ -34,6 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { RENT_CATEGORY } from '@/constant';
+import { Filter, RotateCcw, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import InlineSheet from './components/InlineSheet';
+import PartnerImageManager from './components/PartnerImageManager';
+import PropertySkeleton from './components/PropertySkeleton';
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -59,7 +59,12 @@ const Properties: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchName, setSearchName] = useState('');
   const [selectedType, setSelectedType] = useState<number | string>(0);
-  const [perPage] = useState(5);
+  const [perPage, setPerPage] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+  const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [expandedPropertyIds, setExpandedPropertyIds] = useState<Set<string>>(new Set());
   const debouncedSearchName = useDebouncedValue(searchName, 500);
   const [refetchToken, setRefetchToken] = useState(0);
   const prevFiltersRef = useRef<{ debounced: string; type: number }>({
@@ -214,6 +219,7 @@ const Properties: React.FC = () => {
         setProperties(normalizedProperties);
         setRooms(normalizedRooms);
         setTotalPages((propertyData as { last_page?: number }).last_page || 1);
+        setTotalItems((propertyData as { total?: number }).total || 0);
       } catch (error) {
         if (!cancelled) {
           console.error('Error fetching properties:', error);
@@ -232,6 +238,69 @@ const Properties: React.FC = () => {
       cancelled = true;
     };
   }, [currentPage, selectedType, debouncedSearchName, perPage, refetchToken]);
+
+  const togglePropertyExpand = (id: string) => {
+    setExpandedPropertyIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const isPropertyExpanded = (id: string) => expandedPropertyIds.has(String(id));
+
+  useEffect(() => {
+    if (properties.length > 0 && expandedPropertyIds.size === 0) {
+      // By default, expand all properties initially
+      setExpandedPropertyIds(new Set(properties.map(p => String(p.id))));
+    }
+  }, [properties]);
+
+  const toggleSelectProperty = (id: string, checked: boolean) => {
+    setSelectedPropertyIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllProperties = (checked: boolean) => {
+    if (checked) {
+      setSelectedPropertyIds(new Set(properties.map(p => String(p.id))));
+    } else {
+      setSelectedPropertyIds(new Set());
+    }
+  };
+
+  const isAllPropertiesSelected = properties.length > 0 && selectedPropertyIds.size === properties.length;
+
+  const handleBulkDeleteProperties = () => {
+    if (selectedPropertyIds.size === 0) return;
+    setIsBulkDeleteOpen(true);
+    setDeleteConfirmText('');
+  };
+
+  const executeBulkDelete = async () => {
+    if (deleteConfirmText !== 'XÁC NHẬN XÓA') return;
+    try {
+      setLoading(true);
+      await Promise.all(Array.from(selectedPropertyIds).map(id => partnerService.deleteProperty(id)));
+      toastSuccess(`Đã xóa ${selectedPropertyIds.size} bất động sản.`);
+      setSelectedPropertyIds(new Set());
+      setIsBulkDeleteOpen(false);
+      reloadPropertyList();
+    } catch (error) {
+      toastError('Có lỗi xảy ra khi xóa hàng loạt.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -381,12 +450,48 @@ const Properties: React.FC = () => {
              <span className="text-sm font-semibold">Xóa lọc</span>
            </Button>
          )}
+         <div className="flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-slate-50/50 px-4">
+            <Checkbox 
+              id="select-all-properties"
+              checked={isAllPropertiesSelected}
+              onCheckedChange={(val: boolean) => toggleSelectAllProperties(val)}
+            />
+            <Label htmlFor="select-all-properties" className="cursor-pointer text-xs font-bold uppercase tracking-tight text-gray-500">Chọn tất cả</Label>
+         </div>
       </div>
 
+      {selectedPropertyIds.size > 0 && (
+        <div className="flex animate-in fade-in slide-in-from-top-2 items-center justify-between rounded-xl border border-blue-100 bg-blue-50/80 p-3 shadow-sm backdrop-blur-sm">
+           <div className="flex items-center gap-3 pl-2">
+             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-md">
+               {selectedPropertyIds.size}
+             </div>
+             <p className="text-sm font-bold text-blue-900">Bất động sản đã chọn</p>
+           </div>
+           <div className="flex items-center gap-2">
+             <Button 
+               variant="ghost" 
+               size="sm" 
+               onClick={() => setSelectedPropertyIds(new Set())}
+               className="text-xs font-semibold text-slate-500 hover:bg-white"
+             >
+               Hủy chọn
+             </Button>
+             <Button 
+               variant="destructive" 
+               size="sm" 
+               onClick={handleBulkDeleteProperties}
+               className="h-8 gap-1.5 px-3 text-xs font-bold shadow-sm"
+             >
+               <Trash2 size={14} /> Xóa hàng loạt
+             </Button>
+           </div>
+        </div>
+      )}
+
       {loading && properties.length > 0 && (
-         <div className="flex animate-pulse items-center gap-2 font-medium text-blue-600">
-            <Loader2 className="animate-spin" size={18} />
-            <span>Đang cập nhật danh sách...</span>
+         <div className="flex justify-start py-2">
+            <Spinner size="sm" showText text="Đang cập nhật danh sách..." className="flex-row items-center gap-2" />
          </div>
       )}
 
@@ -398,44 +503,104 @@ const Properties: React.FC = () => {
         
         return (
           <div key={property.id} className="group/property overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-col items-start justify-between gap-4 border-b border-gray-200 bg-slate-50 p-6 sm:flex-row sm:items-center">
-              <div className="flex-1">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-blue-700">
-                    {property.rent_category ? t(`RENT_CATEGORY.${property.rent_category}`) : t("common.property")}
-                  </span>
-                  <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-indigo-700">
-                    {propertyTypes?.data?.find(type => type.id === property.property_type_id)?.name || property.property_type_id}
-                  </span>
-                  <h2 className="text-xl font-bold text-gray-800">{property.name}</h2>
+            <div className="flex flex-col items-start justify-between gap-4 border-b border-gray-200 bg-white p-5 sm:flex-row sm:items-center">
+              <div 
+                className="flex flex-1 cursor-pointer items-start gap-4 transition-all hover:opacity-80"
+                onClick={() => togglePropertyExpand(String(property.id))}
+              >
+                <div className="flex items-center gap-3">
+                  <Checkbox 
+                    checked={selectedPropertyIds.has(String(property.id))}
+                    onCheckedChange={(val: boolean) => toggleSelectProperty(String(property.id), val)}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  />
+                  <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 transition-transform duration-300 ${isPropertyExpanded(String(property.id)) ? 'rotate-180' : ''}`}>
+                    <ChevronDown size={20} />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <MapPin size={16} />
-                  <span>{property.address}</span>
-                  <span className="mx-2">•</span>
-                  <span>Tổng: <span className="font-semibold text-gray-700">{property.totalRooms || 0} đơn vị</span></span>
+                <div>
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-bold text-gray-900">{property.name}</h2>
+                    <div className="flex gap-1.5">
+                      <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100">
+                        {property.rent_category ? t(`RENT_CATEGORY.${property.rent_category}`) : t("common.property")}
+                      </span>
+                      <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 ring-1 ring-indigo-100">
+                        {propertyTypes?.data?.find(type => type.id === property.property_type_id)?.name || property.property_type_id}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin size={14} className="text-blue-500" />
+                      <span>{property.address}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Layers size={14} className="text-slate-400" />
+                      <span><span className="font-bold text-gray-700">{property.totalRooms || 0}</span> đơn vị</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button type="button" onClick={() => handleAddRoom(String(property.id))} size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
-                  <Plus size={16} className="mr-1" /> Thêm Phòng
-                </Button>
-                <Button type="button" onClick={() => navigate(`/partner/properties/${property.id}/rooms`)} variant="outline" size="sm" className="text-xs">
-                  Quản lý tất cả phòng
-                </Button>
-                    <Button type="button" onClick={() => handleEditProperty(property)} variant="ghost" size="sm" className="h-9 border border-gray-200 bg-white/90 px-3 font-semibold text-gray-700 shadow-sm hover:bg-white">
-                      <Edit size={16} className="mr-1.5 text-blue-500" /> Chỉnh sửa
-                    </Button>
-                    <Button type="button" onClick={() => openImageManager('property', String(property.id), property.name)} variant="ghost" size="sm" className="h-9 border border-gray-200 bg-white/90 px-3 font-semibold text-gray-700 shadow-sm hover:bg-white">
-                      <ImageIcon size={16} className="mr-1.5 text-orange-500" /> Hình ảnh
-                    </Button>
-                    <Button type="button" onClick={() => handleDeleteProperty(String(property.id))} variant="ghost" size="sm" className="h-9 border border-gray-200 bg-white/90 px-3 text-red-500 shadow-sm hover:bg-white hover:text-red-700">
-                      <Trash2 size={16} />
-                    </Button>
+
+              <div className="flex items-center gap-2">
+                <div className="mr-2 flex items-center gap-1 rounded-xl border border-slate-100 bg-slate-50/50 p-1">
+                  <Button 
+                    type="button" 
+                    onClick={() => handleAddRoom(String(property.id))} 
+                    size="sm" 
+                    className="h-8 gap-1.5 bg-blue-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
+                  >
+                    <Plus size={14} /> Thêm Phòng
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => navigate(`/partner/properties/${property.id}/rooms`)} 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 text-xs font-bold text-slate-600 hover:bg-white hover:text-blue-600"
+                  >
+                    Quản lý phòng
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button 
+                    type="button" 
+                    onClick={() => handleEditProperty(property)} 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-blue-200 hover:text-blue-600"
+                    title="Chỉnh sửa thông tin cơ bản"
+                  >
+                    <Edit size={16} />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => openImageManager('property', String(property.id), property.name)} 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-orange-200 hover:text-orange-600"
+                    title="Quản lý hình ảnh"
+                  >
+                    <ImageIcon size={16} />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => handleDeleteProperty(String(property.id))} 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 border border-slate-200 bg-white text-red-400 shadow-sm hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                    title="Xóa tài sản"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isPropertyExpanded(String(property.id)) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="p-6">
               {propertyRooms.length > 0 ? (
                 <>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -532,6 +697,7 @@ const Properties: React.FC = () => {
                 </div>
               )}
             </div>
+            </div>
           </div>
         );
       }) : (
@@ -560,61 +726,71 @@ const Properties: React.FC = () => {
 
       {/* Pagination component */}
       {totalPages > 1 && (
-        <div className="mt-12 flex justify-center pb-8">
-           <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={`${currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer transition-colors hover:bg-blue-50 hover:text-blue-600'}`}
-                />
-              </PaginationItem>
-              
-              {[...Array(totalPages)].map((_, i) => {
-                const pageNum = i + 1;
-                // Basic logic to show limited page numbers
-                if (totalPages > 7) {
-                  if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
-                    return (
-                      <PaginationItem key={pageNum}>
-                          <PaginationLink 
-                            isActive={currentPage === pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`cursor-pointer transition-all ${currentPage === pageNum ? 'scale-110 bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-95' : 'hover:bg-blue-50'}`}
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                      </PaginationItem>
-                    );
-                  } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                    return <PaginationItem key={pageNum}><PaginationEllipsis /></PaginationItem>;
-                  }
-                  return null;
-                }
-                
-                return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink 
-                      isActive={currentPage === pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`cursor-pointer transition-all ${currentPage === pageNum ? 'scale-110 bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-95' : 'hover:bg-blue-50'}`}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
-
-              <PaginationItem>
-                <PaginationNext 
-                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                   className={`${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer transition-colors hover:bg-blue-50 hover:text-blue-600'}`}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+        <div className="mt-8 flex justify-center pb-8">
+           <Pagination 
+             currentPage={currentPage}
+             totalPages={totalPages}
+             onPageChange={setCurrentPage}
+             perPage={perPage}
+             onPerPageChange={(val) => {
+               setPerPage(val);
+               setCurrentPage(1);
+             }}
+             totalItems={totalItems}
+             perPageOptions={[5, 10, 20, 50]}
+           />
         </div>
       )}
+
+      <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-600">
+              <Trash2 size={22} />
+              Xác nhận xóa tài sản hàng loạt
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
+              <p className="font-bold">Cảnh báo hành động nguy hiểm!</p>
+              <p className="mt-1 opacity-90">
+                Bạn đang thực hiện xóa <span className="font-bold">{selectedPropertyIds.size}</span> bất động sản. Hành động này sẽ:
+              </p>
+              <ul className="mt-2 list-inside list-disc space-y-1 opacity-80">
+                <li>Xóa vĩnh viễn thông tin tài sản</li>
+                <li>Xóa tất cả các loại phòng liên quan</li>
+                <li>Ảnh hưởng đến lịch sử booking (nếu có)</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-gray-500 uppercase">
+                Nhập <span className="text-rose-600">"XÁC NHẬN XÓA"</span> để tiếp tục
+              </Label>
+              <Input 
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Nhập mã xác nhận..."
+                className="h-11 border-rose-200 focus:border-rose-500 focus:ring-rose-500"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <Button variant="ghost" onClick={() => setIsBulkDeleteOpen(false)}>
+              Hủy
+            </Button>
+            <Button 
+              variant="destructive"
+              disabled={deleteConfirmText !== 'XÁC NHẬN XÓA' || loading}
+              onClick={executeBulkDelete}
+              className="bg-rose-600 font-bold hover:bg-rose-700 disabled:opacity-30"
+            >
+              {loading ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
+              Xác nhận xóa vĩnh viễn
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <PropertyModal 
           key={isPropertyModalOpen ? 'property-open' : 'property-closed'}

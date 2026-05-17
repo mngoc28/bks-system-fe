@@ -20,6 +20,18 @@ export const useLoginMutation = () => {
   });
 };
 
+export const useStayLoginMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: LoginPayload) => authApi.stayLogin(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: () => {},
+  });
+};
+
 export const usePartnerLoginMutation = () => {
   const queryClient = useQueryClient();
 
@@ -46,6 +58,24 @@ export const useLogoutMutation = () => {
 
   return useMutation({
     mutationFn: authApi.logout,
+    onSuccess: () => {
+      localStorage.removeItem("token");
+      queryClient.removeQueries({ queryKey: ["profile"] });
+      clearAllDashboardDateRanges();
+      toastSuccess(t("auth.logout_success"));
+    },
+    onError: () => {
+      toastError(t("auth.logout_failed"));
+    },
+  });
+};
+
+export const useStayLogoutMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.stayLogout,
     onSuccess: () => {
       localStorage.removeItem("token");
       queryClient.removeQueries({ queryKey: ["profile"] });

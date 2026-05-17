@@ -1,5 +1,4 @@
-import { Search, Globe, User, LogOut, UserCircle, Bell } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Search, Globe, User, LogOut, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/useUserStore';
 import { ROUTERS } from '@/constant';
@@ -26,24 +25,6 @@ const Header: React.FC = () => {
     navigate(ROUTERS.PARTNER_LOGIN);
   };
 
-  const [realtimeBadge, setRealtimeBadge] = useState<number>(0);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ event: string; payload: { id: number } }>).detail;
-      if (detail?.event === "booking.created") {
-        setRealtimeBadge((c) => c + 1);
-      }
-    };
-    window.addEventListener("partner:realtime-booking", handler);
-    return () => window.removeEventListener("partner:realtime-booking", handler);
-  }, []);
-
-  const handleBadgeClick = () => {
-    setRealtimeBadge(0);
-    navigate(`${ROUTERS.PARTNER_BOOKINGS}?status=pending`);
-  };
-
   return (
     <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-8 shadow-sm backdrop-blur-md">
       {/* Search Bar - More premium look */}
@@ -61,20 +42,6 @@ const Header: React.FC = () => {
         <div className="flex items-center gap-2">
           <button className="flex size-10 items-center justify-center rounded-xl text-slate-500 transition-all duration-300 hover:bg-blue-50 hover:text-blue-600">
             <Globe size={20} />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleBadgeClick}
-            aria-label="Booking realtime"
-            className="relative flex size-10 items-center justify-center rounded-xl text-slate-500 transition-all duration-300 hover:bg-blue-50 hover:text-blue-600"
-          >
-            <Bell size={20} />
-            {realtimeBadge > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white">
-                {realtimeBadge > 99 ? "99+" : realtimeBadge}
-              </span>
-            )}
           </button>
 
           <NotificationBell portalType="partner" />

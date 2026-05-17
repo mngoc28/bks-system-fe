@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CLOUDINARY_HEADER_IMAGE_URL, DEFAULT_ROOM_IMAGE, ROUTERS } from "@/constant";
@@ -168,8 +169,8 @@ const RoomSearch = () => {
         </section>
 
         {isLoading ? (
-          <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center text-slate-500">
-            {t("common.loading")}
+          <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
+            <Spinner size="lg" spinnerClassName="border-y-sky-600" showText text={t("common.loading")} className="text-slate-500 font-bold" />
           </div>
         ) : isError ? (
           <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-16 text-center text-sm font-semibold text-rose-600">

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   useBookingsByPropertyQuery,
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
   const [startDate, setStartDate] = React.useState<string>(thirtyDaysAgo.toISOString().slice(0, 10));
   const [endDate, setEndDate] = React.useState<string>(today.toISOString().slice(0, 10));
 
-  const { data: dataCheckPermission } = useCheckPermissionQuery();
+  const { data: dataCheckPermission, isLoading: isPermissionLoading } = useCheckPermissionQuery();
   const permission = dataCheckPermission?.data?.role;
   const isAdmin = permission === PERMISSIONS.ADMIN;
 
@@ -62,6 +62,8 @@ const Dashboard: React.FC = () => {
   const { data: revenueByMonthData, isLoading: isRevenueByMonthLoading } = useRevenueByMonthQuery(startDate, endDate);
   const { data: pendingBookingsData } = useBookingsQuery({ page: 1, per_page: 1, status: 0 });
   const { data: totalBookingsData } = useBookingsQuery({ page: 1, per_page: 1 });
+
+
 
   const users = usersData?.data;
   const partners = partnersData?.data;
@@ -288,6 +290,14 @@ const Dashboard: React.FC = () => {
     },
   ].filter((item) => item.value > 0);
 
+  if (isPermissionLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Spinner size="lg" showText text={t("common.checking_permission", { defaultValue: "Đang kiểm tra quyền truy cập..." })} />
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-6">
@@ -426,16 +436,22 @@ const Dashboard: React.FC = () => {
           <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-600">
             {t("dashboard.work_queue", { defaultValue: "Hàng đợi xử lý" })}
           </h2>
-          <div className="mb-4 h-44 w-full">
+          <div className="mb-4 h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={healthDonutData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={74} paddingAngle={2}>
+              <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
+                <Pie data={healthDonutData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={84} paddingAngle={2}>
                   {healthDonutData.map((entry, index) => (
                     <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  align="center"
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>

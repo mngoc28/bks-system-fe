@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { 
   Plus, Tv, Wifi, Wind, Coffee, Waves, Car,
   UtensilsCrossed, Bath, Edit, Trash2, Laptop, ShieldCheck, Dumbbell, Loader2,
   BedDouble, LampCeiling, Camera, Armchair, SunMedium, ShieldAlert, Building2, Check
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -230,7 +231,13 @@ const Amenities: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Spinner size="lg" showText text="Đang tải danh sách tiện ích..." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

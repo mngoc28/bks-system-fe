@@ -40,14 +40,14 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ pendingCount, overbookingCoun
       <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold text-amber-800">
                 <CalendarClock size={16} /> Pending booking
               </p>
               <p className="text-2xl font-black text-amber-700">{pendingCount}</p>
               <p className="text-xs text-amber-700/80">Booking đang chờ partner duyệt.</p>
             </div>
-            <Button size="sm" variant="ghost" className="text-amber-800" onClick={() => navigate('/partner/bookings?status=pending')}>
+            <Button size="sm" variant="ghost" className="text-amber-800 flex-shrink-0" onClick={() => navigate('/partner/bookings?status=pending')}>
               Xử lý <ArrowRight size={14} className="ml-1" />
             </Button>
           </div>
@@ -55,14 +55,14 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ pendingCount, overbookingCoun
 
         <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold text-rose-800">
                 <AlertTriangle size={16} /> Overbooking
               </p>
               <p className="text-2xl font-black text-rose-700">{overbookingCount}</p>
               <p className="text-xs text-rose-700/80">Kiểm tra Calendar để điều phối room/date khi có cảnh báo.</p>
             </div>
-            <Button size="sm" variant="ghost" className="text-rose-800" onClick={() => navigate('/partner/calendar')}>
+            <Button size="sm" variant="ghost" className="text-rose-800 flex-shrink-0" onClick={() => navigate('/partner/calendar')}>
               Calendar <ArrowRight size={14} className="ml-1" />
             </Button>
           </div>
@@ -70,7 +70,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ pendingCount, overbookingCoun
 
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold text-slate-800">
                 <FileClock size={16} /> Contract sắp hết hạn
               </p>
@@ -86,7 +86,7 @@ const AlertCenter: React.FC<AlertCenterProps> = ({ pendingCount, overbookingCoun
             <Button
               size="sm"
               variant="ghost"
-              className="text-slate-700"
+              className="text-slate-700 flex-shrink-0"
               onClick={() => navigate(nextExpiring ? `/partner/contracts/${nextExpiring.id}` : '/partner/contracts')}
             >
               Hợp đồng <ArrowRight size={14} className="ml-1" />

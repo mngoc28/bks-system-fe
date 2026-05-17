@@ -93,6 +93,7 @@ const PartnerRoomDetail = React.lazy(() => import("./pages/Partner/RoomDetail"))
 const PartnerLogin = React.lazy(() => import("./pages/Partner/Login/index"));
 const PartnerStayServices = React.lazy(() => import("./pages/Partner/StayServiceManagement"));
 const PartnerCalendar = React.lazy(() => import("./pages/Partner/Calendar"));
+const PartnerCancellationRequests = React.lazy(() => import("./pages/Partner/CancellationRequests"));
 const PartnerPriceRules = React.lazy(() => import("./pages/Partner/PriceRules"));
 const PartnerChat = React.lazy(() => import("./pages/Partner/Chat"));
 const PartnerReports = React.lazy(() => import("./pages/Partner/Reports"));
@@ -426,6 +427,7 @@ export default function Router() {
           <Route path="dashboard" element={<PartnerDashboard />} />
           <Route path="properties" element={<PartnerProperties />} />
           <Route path="bookings" element={<PartnerBookings />} />
+          <Route path="cancellation-requests" element={<PartnerCancellationRequests />} />
           <Route path="services" element={<PartnerServices />} />
           <Route path="amenities" element={<PartnerAmenities />} />
           <Route path="finance" element={<PartnerFinance />} />

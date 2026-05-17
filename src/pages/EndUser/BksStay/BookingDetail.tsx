@@ -1,5 +1,7 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { 
   CalendarDays, 
   MapPin, 
@@ -41,8 +43,9 @@ import {
   History,
   Calendar,
   FileText,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,12 +63,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlainTextarea as Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
 import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import { useUserStore } from "@/store/useUserStore";
 
-import stayService, { BookingDetail as IBookingDetail } from "@/services/stayService";
+import stayService, {
+  BookingDetail as IBookingDetail,
+  type StayCancellationReason,
+} from "@/services/stayService";
+import { parseStayCancellationError } from "@/utils/stayCancellationError";
 
 const getAmenityIcon = (name: string) => {
     const n = name.toLowerCase();
@@ -149,47 +163,99 @@ const BookingDetail = () => {
 
   // States for professional flows
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
+  const [selectedReasonCode, setSelectedReasonCode] = useState("");
+  const [reasonNote, setReasonNote] = useState("");
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [idempotencyKey, setIdempotencyKey] = useState("");
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
 
-  useEffect(() => {
-    const fetchDetail = async () => {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const res: any = await stayService.getBookingDetail(id);
-        if (res.status === "success") {
-          setBooking(res.data);
-          
-          const start = new Date(res.data.start_date);
-          const end = new Date(res.data.end_date);
-          const now = new Date();
-          
-          if (now >= start && now <= end) {
-             setCountdown({ days: 0, hours: 0, mins: 0, isStarted: true });
-          } else {
-             const diff = start.getTime() - now.getTime();
-             if (diff > 0) {
-               setCountdown({
-                 days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-                 hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-                 mins: Math.floor((diff / (1000 * 60)) % 60),
-                 isStarted: false
-               });
-             }
+  const reloadBookingDetail = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const res: any = await stayService.getBookingDetail(id);
+      if (res.status === "success") {
+        const resData = res.data as IBookingDetail;
+        setBooking(resData);
+
+        const start = new Date(resData.start_date);
+        const end = new Date(resData.end_date);
+        const now = new Date();
+
+        if (now >= start && now <= end) {
+          setCountdown({ days: 0, hours: 0, mins: 0, isStarted: true });
+        } else {
+          const diff = start.getTime() - now.getTime();
+          if (diff > 0) {
+            setCountdown({
+              days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+              mins: Math.floor((diff / (1000 * 60)) % 60),
+              isStarted: false,
+            });
           }
         }
-      } catch (error) {
-        console.error("Failed to fetch booking detail", error);
-        toastError("Không thể tải thông tin đặt phòng.");
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchDetail();
+    } catch (error) {
+      console.error("Failed to fetch booking detail", error);
+      toastError("Không thể tải thông tin đặt phòng.");
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    void reloadBookingDetail();
+  }, [reloadBookingDetail]);
+
+  const canLoadCancelReasons = booking !== null && (booking.status === 0 || booking.status === 1);
+
+  const reasonsQuery = useQuery({
+    queryKey: ["stay", "cancellation-reasons"],
+    enabled: canLoadCancelReasons,
+    queryFn: async (): Promise<StayCancellationReason[]> => {
+      const res = (await stayService.getCancellationReasons()) as unknown as {
+        status?: string;
+        data?: StayCancellationReason[];
+      };
+      if (res.status !== "success" || !Array.isArray(res.data)) {
+        return [];
+      }
+      return res.data;
+    },
+    retry: false,
+  });
+
+  const reasonsForbidden =
+    reasonsQuery.isError &&
+    isAxiosError(reasonsQuery.error) &&
+    reasonsQuery.error.response?.status === 403;
+
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+    const t = window.setTimeout(() => setCooldownRemaining((s) => Math.max(0, s - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [cooldownRemaining]);
+
+  useEffect(() => {
+    if (!isCancelDialogOpen || booking?.status !== 1) return;
+    const k =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `idem-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    setIdempotencyKey(k);
+  }, [isCancelDialogOpen, booking?.status]);
+
+  useEffect(() => {
+    const rows = reasonsQuery.data;
+    if (!rows?.length) return;
+    if (!selectedReasonCode || !rows.some((r) => r.code === selectedReasonCode)) {
+      setSelectedReasonCode(rows[0].code);
+    }
+  }, [reasonsQuery.data, selectedReasonCode]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -207,7 +273,7 @@ const BookingDetail = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="size-12 animate-spin rounded-full border-y-2 border-sky-600"></div>
+        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
       </div>
     );
   }
@@ -234,15 +300,49 @@ const BookingDetail = () => {
     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.room?.property?.address || "")}`, "_blank");
   };
 
-  const handleCancelBooking = () => {
-    if (!cancelReason.trim()) {
-      toastError("Vui lòng nhập lý do hủy phòng.");
+  const handleCancelBooking = async () => {
+    if (!selectedReasonCode) {
+      toastError("Vui lòng chọn lý do.");
       return;
     }
-    // Simulate API call
-    toastSuccess("Yêu cầu hủy phòng đã được gửi. Chúng tôi sẽ phản hồi trong vòng 24h.");
-    setIsCancelDialogOpen(false);
-    setCancelReason("");
+    const reasons = reasonsQuery.data ?? [];
+    const row = reasons.find((r) => r.code === selectedReasonCode);
+    if (row?.requires_note && reasonNote.trim() === "") {
+      toastError("Vui lòng nhập chi tiết cho lý do đã chọn.");
+      return;
+    }
+    setCancelSubmitting(true);
+    try {
+      if (booking.status === 0) {
+        await stayService.cancelBooking(booking.id, {
+          reason_code: selectedReasonCode,
+          ...(reasonNote.trim() !== "" ? { reason_text: reasonNote.trim() } : {}),
+        });
+        toastSuccess("Đã hủy đặt phòng.");
+      } else if (booking.status === 1) {
+        await stayService.cancelBookingRequest(booking.id, {
+          reason_code: selectedReasonCode,
+          reason_text: reasonNote.trim() || undefined,
+          idempotency_key: idempotencyKey || `idem-${Date.now()}`,
+        });
+        toastSuccess("Đã gửi yêu cầu hủy. Partner sẽ xử lý.");
+      } else {
+        toastError("Trạng thái đơn không cho phép thao tác này.");
+        setCancelSubmitting(false);
+        return;
+      }
+      setIsCancelDialogOpen(false);
+      setReasonNote("");
+      await reloadBookingDetail();
+    } catch (e) {
+      const p = parseStayCancellationError(e);
+      if (p.retryAfterSeconds != null && p.retryAfterSeconds > 0) {
+        setCooldownRemaining(p.retryAfterSeconds);
+      }
+      toastError(p.message);
+    } finally {
+      setCancelSubmitting(false);
+    }
   };
 
   const handleReschedule = () => {
@@ -734,47 +834,124 @@ const BookingDetail = () => {
               </div>
            </Card>
 
+           {(booking.status === 0 || booking.status === 1 || booking.status === 4) && (
            <Card className="rounded-[32px] border-none bg-rose-50 p-8 shadow-md">
               <div className="flex gap-4">
                  <AlertCircle className="size-6 text-rose-500" />
-                 <div>
+                 <div className="min-w-0 flex-1">
                     <h3 className="mb-1 text-sm font-bold text-rose-900">Quy tắc hủy phòng</h3>
+                    {booking.status === 4 ? (
+                      <p className="text-[11px] leading-relaxed text-rose-800">
+                        Đơn đang <span className="font-semibold">chờ Partner xử lý yêu cầu hủy</span>. Bạn không cần gửi lại; kết quả sẽ được cập nhật trên hệ thống và email.
+                      </p>
+                    ) : (
+                      <>
                     <p className="mb-4 text-[11px] leading-relaxed text-rose-700/70">
                        Hủy miễn phí trước {new Date(new Date(booking.start_date).getTime() - 2*24*60*60*1000).toLocaleDateString("vi-VN")}.
                     </p>
+                    {booking.booking_code && (
+                      <p className="mb-2 text-[11px] font-mono text-rose-800/90">Mã đặt phòng: {booking.booking_code}</p>
+                    )}
+                    {cooldownRemaining > 0 && (
+                      <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-900">
+                        Bạn vừa thao tác hủy gần đây. Vui lòng thử lại sau{" "}
+                        <span className="font-bold tabular-nums">{cooldownRemaining}s</span>.
+                      </div>
+                    )}
+                    {reasonsForbidden && (
+                      <p className="mb-3 text-[11px] text-rose-800">
+                        Tính năng hủy qua cổng BKS Stay chưa bật hoặc bạn không có quyền. Vui lòng liên hệ hỗ trợ hoặc dùng email xác nhận kèm mã đặt phòng.
+                      </p>
+                    )}
+                    {!reasonsForbidden && reasonsQuery.isError && !reasonsQuery.isFetching && (
+                      <p className="mb-3 text-[11px] text-rose-800">Không tải được danh mục lý do hủy. Thử lại sau hoặc liên hệ hỗ trợ.</p>
+                    )}
                     <div className="flex flex-col gap-2">
-                       {/* Cancel Dialog */}
-                       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+                       <Dialog
+                         open={isCancelDialogOpen}
+                         onOpenChange={(open) => {
+                           setIsCancelDialogOpen(open);
+                           if (!open) setReasonNote("");
+                         }}
+                       >
                           <DialogTrigger asChild>
-                            <Button variant="ghost" className="h-auto w-fit p-0 text-xs font-bold text-rose-600 hover:bg-transparent">Yêu cầu hủy</Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              disabled={
+                                reasonsForbidden ||
+                                reasonsQuery.isLoading ||
+                                cooldownRemaining > 0 ||
+                                (reasonsQuery.isError && !reasonsForbidden) ||
+                                (((reasonsQuery.data?.length ?? 0) === 0) &&
+                                  !reasonsQuery.isLoading &&
+                                  !reasonsQuery.isFetching &&
+                                  !reasonsForbidden)
+                              }
+                              className="h-auto w-fit p-0 text-xs font-bold text-rose-600 hover:bg-transparent disabled:opacity-40"
+                            >
+                              {booking.status === 0 ? "Hủy đặt phòng" : "Yêu cầu hủy"}
+                            </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-md overflow-hidden rounded-[32px] border-none p-0">
                              <DialogHeader className="bg-rose-600 p-8 text-white">
                                 <div className="flex items-center gap-3">
                                    <div className="rounded-full bg-white/20 p-2"><AlertCircle className="size-6" /></div>
-                                   <DialogTitle className="text-xl font-black">Xác nhận hủy đơn</DialogTitle>
+                                   <DialogTitle className="text-xl font-black">
+                                     {booking.status === 0 ? "Hủy đặt phòng" : "Yêu cầu hủy đặt phòng"}
+                                   </DialogTitle>
                                 </div>
                                 <DialogDescription className="mt-2 text-rose-100">
-                                   Bạn có chắc chắn muốn gửi yêu cầu hủy cho đơn hàng #{booking.id}?
+                                   {booking.status === 0
+                                     ? `Xác nhận hủy đơn #${booking.id} (chỉ áp dụng khi đơn đang chờ xác nhận).`
+                                     : `Gửi yêu cầu hủy đơn #${booking.id} tới Partner. Đơn sẽ chuyển trạng thái chờ duyệt hủy.`}
                                 </DialogDescription>
                              </DialogHeader>
                              <div className="p-8">
                                 <div className="space-y-4">
                                    <div className="space-y-2">
-                                      <Label htmlFor="reason" className="text-xs font-bold uppercase tracking-wider text-slate-400">Lý do hủy phòng</Label>
-                                      <Textarea 
-                                        id="reason" 
-                                        placeholder="Vui lòng chia sẻ lý do để chúng tôi phục vụ tốt hơn..." 
+                                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Lý do</Label>
+                                      {reasonsQuery.isLoading ? (
+                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                          <Spinner size="sm" className="inline-block" spinnerClassName="border-y-slate-500" /> Đang tải danh mục…
+                                        </div>
+                                      ) : (
+                                        <Select
+                                          value={selectedReasonCode}
+                                          onValueChange={(val) => setSelectedReasonCode(val)}
+                                        >
+                                          <SelectTrigger className="w-full rounded-2xl">
+                                            <SelectValue placeholder="Chọn lý do..." />
+                                          </SelectTrigger>
+                                          <SelectContent className="rounded-2xl">
+                                            {(reasonsQuery.data ?? []).map((r) => (
+                                              <SelectItem key={r.code} value={r.code} className="rounded-xl">
+                                                {r.label}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      )}
+                                   </div>
+                                   {(reasonsQuery.data ?? []).find((r) => r.code === selectedReasonCode)?.requires_note && (
+                                   <div className="space-y-2">
+                                      <Label htmlFor="reason-note" className="text-xs font-bold uppercase tracking-wider text-slate-400">Chi tiết (bắt buộc)</Label>
+                                      <Textarea
+                                        id="reason-note"
+                                        placeholder="Mô tả ngắn gọn…"
                                         className="min-h-[100px] rounded-2xl"
-                                        value={cancelReason}
-                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        value={reasonNote}
+                                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setReasonNote(e.target.value)}
                                       />
                                    </div>
+                                   )}
                                    <div className="rounded-2xl bg-slate-50 p-4">
                                       <div className="flex items-start gap-3">
                                          <Info className="mt-0.5 size-4 text-slate-400" />
                                          <p className="text-[11px] leading-relaxed text-slate-500">
-                                            Yêu cầu của bạn sẽ được bộ phận chăm sóc khách hàng kiểm tra theo chính sách hủy phòng hiện hành.
+                                            {booking.status === 0
+                                              ? "Hủy trực tiếp áp dụng khi đơn đang chờ xác nhận; sau khi hủy bạn có thể đặt lại phòng khác."
+                                              : "Yêu cầu hủy dành cho đơn đã xác nhận; Partner sẽ xử lý theo chính sách."}
                                          </p>
                                       </div>
                                    </div>
@@ -782,14 +959,29 @@ const BookingDetail = () => {
                              </div>
                              <DialogFooter className="bg-slate-50 p-6">
                                 <DialogClose asChild>
-                                   <Button variant="ghost" className="rounded-xl">Bỏ qua</Button>
+                                   <Button type="button" variant="ghost" className="rounded-xl">Bỏ qua</Button>
                                 </DialogClose>
-                                <Button onClick={handleCancelBooking} className="rounded-xl bg-rose-600 hover:bg-rose-700">Gửi yêu cầu hủy</Button>
+                                <Button
+                                  type="button"
+                                  disabled={cancelSubmitting || reasonsQuery.isLoading}
+                                  onClick={() => void handleCancelBooking()}
+                                  className="rounded-xl bg-rose-600 hover:bg-rose-700"
+                                >
+                                  {cancelSubmitting ? (
+                                    <span className="inline-flex items-center gap-2">
+                                      <Spinner size="sm" className="inline-block" spinnerClassName="border-y-white" /> Đang gửi…
+                                    </span>
+                                  ) : booking.status === 0 ? (
+                                    "Xác nhận hủy"
+                                  ) : (
+                                    "Gửi yêu cầu hủy"
+                                  )}
+                                </Button>
                              </DialogFooter>
                           </DialogContent>
                        </Dialog>
 
-                       {/* Reschedule Dialog */}
+                       {(booking.status === 0 || booking.status === 1) && (
                        <Dialog open={isRescheduleDialogOpen} onOpenChange={setIsRescheduleDialogOpen}>
                           <DialogTrigger asChild>
                             <Button variant="ghost" className="h-auto w-fit p-0 text-xs font-bold text-rose-600 hover:bg-transparent">Dời ngày nghỉ</Button>
@@ -848,10 +1040,14 @@ const BookingDetail = () => {
                              </DialogFooter>
                           </DialogContent>
                        </Dialog>
+                       )}
                     </div>
+                      </>
+                    )}
                  </div>
               </div>
            </Card>
+           )}
         </div>
 
       </div>

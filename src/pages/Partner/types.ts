@@ -1,4 +1,4 @@
-﻿export interface SystemStats {
+export interface SystemStats {
   totalProperties: number;
   totalRooms: number;
   vacantRooms: number;
@@ -93,7 +93,7 @@ export interface Booking {
   totalAmount: number;
   stay_status?: 'pending' | 'checked_in' | 'checked_out' | 'no_show';
   booking_status?: number;
-  status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành';
+  status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành' | 'Chờ duyệt hủy';
 }
 
 export interface MaintenanceRequest {

@@ -4,10 +4,13 @@ import type { Booking } from '@/pages/Partner/types';
  * BE dùng khoảng nửa mở [start_date, end_date) — end_date là exclusive (trùng với FullCalendar all-day).
  */
 export function normalizePartnerBookingStatusCode(status: unknown): number {
-  if (typeof status === 'number' && status >= 0 && status <= 3) {
+  if (typeof status === 'number' && status >= 0 && status <= 4) {
     return status;
   }
   const value = String(status ?? '').toLowerCase();
+  if (value.includes('pending_cancellation') || value.includes('cancellation_pending') || value.includes('chờ hủy')) {
+    return 4;
+  }
   if (value.includes('pending') || value.includes('chờ')) {
     return 0;
   }
@@ -24,7 +27,7 @@ export function normalizePartnerBookingStatusCode(status: unknown): number {
   return 1;
 }
 
-export function partnerBaseStatusLabel(code: number): 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã hoàn thành' {
+export function partnerBaseStatusLabel(code: number): 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã hoàn thành' | 'Chờ duyệt hủy' {
   switch (code) {
     case 0:
       return 'Chờ duyệt';
@@ -32,6 +35,8 @@ export function partnerBaseStatusLabel(code: number): 'Chờ duyệt' | 'Đã du
       return 'Đã hủy';
     case 3:
       return 'Đã hoàn thành';
+    case 4:
+      return 'Chờ duyệt hủy';
     default:
       return 'Đã duyệt';
   }
@@ -44,6 +49,9 @@ export function getPartnerRowDisplayStatus(
   code: number,
   stayStatus?: string | null,
 ): Booking['status'] {
+  if (code === 4) {
+    return 'Chờ duyệt hủy';
+  }
   if (stayStatus === 'checked_in') {
     return 'Đang ở';
   }
@@ -66,6 +74,9 @@ export function getPartnerBookingCalendarHex(
   }
   if (code === 3) {
     return '#10b981';
+  }
+  if (code === 4) {
+    return '#f97316';
   }
   if (stayStatus === 'checked_in') {
     return '#8b5cf6';
@@ -102,12 +113,15 @@ export function getPartnerBookingBadgeClass(
     case 'Đang ở':
       return 'bg-violet-50 text-violet-700 border-violet-100';
     case 'Đã duyệt':
+      return 'bg-blue-50 text-blue-700 border-blue-100';
     case 'Đã hoàn thành':
       return 'bg-emerald-50 text-emerald-700 border-emerald-100';
     case 'Đã trả phòng':
       return 'bg-blue-50 text-blue-700 border-blue-100';
     case 'Đã hủy':
       return 'bg-red-50 text-red-700 border-red-100';
+    case 'Chờ duyệt hủy':
+      return 'bg-orange-50 text-orange-700 border-orange-100';
     default:
       return 'bg-gray-50 text-gray-700 border-gray-100';
   }

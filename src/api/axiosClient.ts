@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { getAccessToken } from "@/utils/storage";
 import { isTokenExpired } from "@/utils/tokenUtils";
 import axios, { AxiosError } from "axios";
+import { cancelAllRequests, getAbortSignal } from "./abortService";
 import { ErrorResponse } from "./types";
 
 const axiosClient = axios.create({
@@ -15,12 +16,21 @@ const axiosClient = axios.create({
 
 axiosClient.interceptors.request.use(
   (config) => {
+    config.signal = getAbortSignal();
     const token = getAccessToken();
 
     if (token && isTokenExpired(token)) {
       if (useUserStore.getState().isAuthenticated) {
         useUserStore.getState().logout();
-        window.location.href = ROUTERS.LOGIN;
+        cancelAllRequests();
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith("/partner")) {
+          window.location.href = ROUTERS.PARTNER_LOGIN;
+        } else if (currentPath.startsWith("/bks-stay")) {
+          window.location.href = "/bks-stay/login";
+        } else {
+          window.location.href = ROUTERS.LOGIN;
+        }
         return Promise.reject(new Error("Token expired"));
       }
     }
@@ -47,16 +57,35 @@ axiosClient.interceptors.response.use(
     if (response.data?.code === 401) {
       if (useUserStore.getState().isAuthenticated) {
         useUserStore.getState().logout();
-        window.location.href = ROUTERS.LOGIN;
+        cancelAllRequests();
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith("/partner")) {
+          window.location.href = ROUTERS.PARTNER_LOGIN;
+        } else if (currentPath.startsWith("/bks-stay")) {
+          window.location.href = "/bks-stay/login";
+        } else {
+          window.location.href = ROUTERS.LOGIN;
+        }
       }
     }
     return response.data ?? response;
   },
   (error: AxiosError<ErrorResponse>) => {
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
     if (error.response?.data?.code === 401) {
       if (useUserStore.getState().isAuthenticated) {
         useUserStore.getState().logout();
-        window.location.href = ROUTERS.LOGIN;
+        cancelAllRequests();
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith("/partner")) {
+          window.location.href = ROUTERS.PARTNER_LOGIN;
+        } else if (currentPath.startsWith("/bks-stay")) {
+          window.location.href = "/bks-stay/login";
+        } else {
+          window.location.href = ROUTERS.LOGIN;
+        }
       }
     }
     return Promise.reject(error);

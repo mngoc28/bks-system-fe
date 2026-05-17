@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Home, Square, Users, MapPin, 
   Wallet, Shield, Wrench, History as HistoryIcon, Image as ImageIcon,
-  Loader2, Calendar, Phone, Mail, CheckCircle, Clock, AlertCircle,
+  Calendar, Phone, Mail, CheckCircle, Clock, AlertCircle,
   ChevronRight
 } from 'lucide-react';
 import { partnerService } from '@/services/partnerService';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -102,9 +103,8 @@ const RoomDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
-        <Loader2 className="size-12 animate-spin text-blue-600" />
-        <p className="animate-pulse font-semibold text-slate-500">Đang tải dữ liệu phòng...</p>
+      <div className="flex h-[80vh] items-center justify-center">
+        <Spinner size="lg" showText text="Đang tải dữ liệu phòng..." />
       </div>
     );
   }

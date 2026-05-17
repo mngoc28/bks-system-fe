@@ -1,11 +1,11 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Search, Plus, Filter, 
   Download, Eye, User, 
-  Home, CheckCircle2,
-  Loader2
+  Home, CheckCircle2
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from "@/components/ui/button";
 import { partnerService } from '@/services/partnerService';
 import { toastError, toastSuccess } from '@/components/ui/toast';
@@ -135,9 +135,8 @@ const Contracts: React.FC = () => {
   );
 
   if (loading) return (
-    <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-      <Loader2 className="animate-spin text-blue-600" size={40} />
-      <p className="text-gray-500">Đang tải danh sách hợp đồng...</p>
+    <div className="flex h-[60vh] items-center justify-center">
+      <Spinner size="lg" showText text="Đang tải danh sách hợp đồng..." />
     </div>
   );
 

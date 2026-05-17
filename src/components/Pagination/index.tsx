@@ -1,5 +1,18 @@
-import { useTranslation } from "react-i18next";
-import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, Pagination as UIPagination } from "../ui/pagination";
+import { 
+  PaginationContent, 
+  PaginationEllipsis, 
+  PaginationItem, 
+  PaginationLink, 
+  Pagination as UIPagination 
+} from "../ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronLeft, ChevronRight, Layers } from "lucide-react";
 
 interface PaginationProps {
   currentPage: number;
@@ -13,16 +26,21 @@ interface PaginationProps {
   resultsText?: string;
 }
 
-const Pagination = ({ currentPage, totalPages, onPageChange, perPage, onPerPageChange, totalItems, maxVisiblePages = 5, perPageOptions = [12, 24, 48], resultsText }: PaginationProps) => {
-  const { t } = useTranslation();
+const Pagination = ({ 
+  currentPage, 
+  totalPages, 
+  onPageChange, 
+  perPage, 
+  onPerPageChange, 
+  totalItems, 
+  maxVisiblePages = 5, 
+  perPageOptions = [10, 20, 50, 100], 
+  resultsText 
+}: PaginationProps) => {
 
   const handlePageClick = (e: React.MouseEvent, page: number) => {
     e.preventDefault();
     onPageChange(page);
-  };
-
-  const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onPerPageChange?.(Number(e.target.value));
   };
 
   const getVisiblePages = (currentPage: number, totalPages: number, maxVisiblePages: number): (number | string)[] => {
@@ -53,40 +71,82 @@ const Pagination = ({ currentPage, totalPages, onPageChange, perPage, onPerPageC
   };
 
   return (
-    <div className="grid w-full grid-cols-1 items-center gap-4 md:grid-cols-3">
-      {/* Empty space on the left to balance the grid and keep pagination centered */}
-      <div className="hidden md:block" />
+    <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+      {/* Left: Per Page selection */}
+      <div className="flex items-center gap-3">
+        {onPerPageChange && perPage && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Xem</span>
+              <Select 
+                value={String(perPage)} 
+                onValueChange={(val) => onPerPageChange?.(Number(val))}
+              >
+                <SelectTrigger className="h-9 min-h-0 w-[120px] border-slate-200 bg-white px-2.5 font-bold text-slate-700 shadow-sm transition-all hover:border-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {perPageOptions.map((option) => (
+                    <SelectItem key={option} value={String(option)} className="font-bold">
+                      {option} bản ghi
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2 rounded-lg border border-blue-50 bg-blue-50/50 px-3 py-1.5 shadow-sm">
+              <Layers size={14} className="text-blue-500" />
+              <span className="whitespace-nowrap text-xs font-bold text-blue-700">
+                {(totalItems ?? 0).toLocaleString('vi-VN')} {resultsText || "kết quả"}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Centered Pagination Buttons */}
-      <div className="flex justify-center">
+      {/* Right: Pagination Buttons */}
+      <div className="flex items-center gap-4">
+        <div className="hidden items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:flex">
+          <span className="text-slate-600">Trang {currentPage}</span>
+          <span className="opacity-50">/</span>
+          <span>{totalPages}</span>
+        </div>
+
         <UIPagination className="mx-0 w-auto">
-          <PaginationContent>
+          <PaginationContent className="gap-1.5">
             <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                className="size-8 min-w-8 rounded bg-slate-100 p-0"
-                onClick={(e: React.MouseEvent) => {
-                  e.preventDefault();
-                  if (currentPage > 1) onPageChange(currentPage - 1);
-                }}
-              />
+              <button
+                disabled={currentPage === 1}
+                className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:pointer-events-none disabled:opacity-40`}
+                onClick={() => onPageChange(currentPage - 1)}
+                title="Trang trước"
+              >
+                <ChevronLeft size={18} />
+              </button>
             </PaginationItem>
 
             {getVisiblePages(currentPage, totalPages, maxVisiblePages).map((page, idx) => {
               if (page === "start-ellipsis" || page === "end-ellipsis") {
                 return (
                   <PaginationItem key={page + idx}>
-                    <PaginationEllipsis className="text-slate-500 opacity-70" />
+                    <PaginationEllipsis className="size-9 text-slate-400" />
                   </PaginationItem>
                 );
               }
               const pageNumber = page as number;
+              const isActive = pageNumber === currentPage;
+              
               return (
                 <PaginationItem key={pageNumber}>
                   <PaginationLink
                     href="#"
-                    className={`size-8 min-w-8 rounded ${pageNumber === currentPage ? "bg-slate-100 font-bold" : "p-0 text-slate-500 opacity-70"}`}
-                    isActive={pageNumber === currentPage}
+                    className={`size-9 rounded-lg border text-sm font-bold shadow-sm transition-all duration-200 active:scale-95 ${
+                      isActive 
+                        ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:text-white" 
+                        : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                    }`}
+                    isActive={isActive}
                     onClick={(e: React.MouseEvent) => handlePageClick(e, pageNumber)}
                   >
                     {pageNumber}
@@ -96,39 +156,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange, perPage, onPerPageC
             })}
 
             <PaginationItem>
-              <PaginationNext
-                href="#"
-                className="size-8 min-w-8 rounded bg-slate-100 p-0"
-                onClick={(e: React.MouseEvent) => {
-                  e.preventDefault();
-                  if (currentPage < totalPages) onPageChange(currentPage + 1);
-                }}
-              />
+              <button
+                disabled={currentPage === totalPages}
+                className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:pointer-events-none disabled:opacity-40`}
+                onClick={() => onPageChange(currentPage + 1)}
+                title="Trang tiếp"
+              >
+                <ChevronRight size={18} />
+              </button>
             </PaginationItem>
           </PaginationContent>
         </UIPagination>
-      </div>
-
-      {/* Right-aligned Results and Per Page selection */}
-      <div className="flex justify-center md:justify-end">
-        {onPerPageChange && perPage && (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 rounded bg-slate-100 px-3 py-1.5">
-              <select className="bg-transparent text-sm text-slate-700 outline-none" value={perPage} onChange={handlePerPageChange} aria-label={t("pagination.items_per_page")}>
-                {perPageOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {totalItems !== undefined && (
-              <span className="whitespace-nowrap text-sm text-slate-700">
-                {totalItems} {resultsText || t("pagination.results")}
-              </span>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

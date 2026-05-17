@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Plus, Edit, Trash2, Calendar, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Plus, Edit, Trash2, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,7 +102,11 @@ const News: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Spinner size="lg" showText text="Đang tải danh sách tin tức..." />
+      </div>
+    );
   }
 
   return (

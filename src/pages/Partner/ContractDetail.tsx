@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -6,12 +6,12 @@ import {
   CheckCircle2,
   FileText,
   Home,
-  Loader2,
   Phone,
   User,
   Zap,
   XCircle,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -188,9 +188,8 @@ const ContractDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
-        <p className="text-gray-500">Đang tải chi tiết hợp đồng...</p>
+      <div className="flex h-[60vh] items-center justify-center">
+        <Spinner size="lg" showText text="Đang tải chi tiết hợp đồng..." />
       </div>
     );
   }

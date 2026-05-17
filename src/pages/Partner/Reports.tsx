@@ -25,14 +25,21 @@ import { Button } from '@/components/ui/button';
 import { partnerService } from '@/services/partnerService';
 import { toastError } from '@/components/ui/toast';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/Pagination';
 
 const ReportsPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [timeRange, setTimeRange] = useState('30days');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   useEffect(() => {
     fetchStats();
   }, [timeRange]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [timeRange, perPage]);
 
   const fetchStats = async () => {
     try {
@@ -214,7 +221,9 @@ const ReportsPage: React.FC = () => {
                   </tr>
                </thead>
                <tbody>
-                  {(stats?.daily_stats || []).map((row: any, i: number) => (
+                  {(stats?.daily_stats || [])
+                    .slice((currentPage - 1) * perPage, currentPage * perPage)
+                    .map((row: any, i: number) => (
                      <tr key={i} className="group border-b border-slate-50 transition-colors last:border-none hover:bg-slate-50/50">
                         <td className="py-4 text-xs font-bold text-slate-700">{row.date}</td>
                         <td className="py-4 text-xs font-bold text-slate-700">{row.rooms_sold}</td>
@@ -233,6 +242,20 @@ const ReportsPage: React.FC = () => {
                </tbody>
             </table>
          </div>
+
+         {stats?.daily_stats && stats.daily_stats.length > 0 && (
+            <div className="mt-6 border-t border-slate-100 pt-6">
+               <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(stats.daily_stats.length / perPage)}
+                  onPageChange={setCurrentPage}
+                  perPage={perPage}
+                  onPerPageChange={setPerPage}
+                  totalItems={stats.daily_stats.length}
+                  resultsText="ngày ghi nhận"
+               />
+            </div>
+         )}
       </div>
     </div>
   );

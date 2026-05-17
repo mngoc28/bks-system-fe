@@ -1,28 +1,29 @@
 import React from "react";
-import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  spinnerClassName?: string;
   showText?: boolean;
   text?: string;
 }
 
 const sizeMap = {
-  sm: "size-4",
-  md: "size-8",
-  lg: "size-12",
-  xl: "size-16",
+  sm: "size-5 border-y-[2px]",
+  md: "size-10 border-y-[3px]",
+  lg: "size-14 border-y-4",
+  xl: "size-20 border-y-[6px]",
 };
 
 /**
  * Standardized Loading Spinner Component
- * A premium, reusable spinner with optional text.
+ * A premium, reusable CSS-based double spinner with two opposing segments.
  */
 export const Spinner: React.FC<SpinnerProps> = ({ 
   size = "md", 
   className, 
+  spinnerClassName,
   showText = false, 
   text, 
   ...props 
@@ -32,10 +33,11 @@ export const Spinner: React.FC<SpinnerProps> = ({
       className={cn("flex flex-col items-center justify-center gap-3", className)} 
       {...props}
     >
-      <Loader2 
+      <div 
         className={cn(
-          "animate-spin text-indigo-600 dark:text-indigo-400", 
-          sizeMap[size]
+          "animate-spin rounded-full border-x-transparent border-y-indigo-600 dark:border-y-indigo-400", 
+          sizeMap[size],
+          spinnerClassName
         )} 
       />
       {showText && (
@@ -46,3 +48,4 @@ export const Spinner: React.FC<SpinnerProps> = ({
     </div>
   );
 };
+

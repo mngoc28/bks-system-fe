@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   X
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -120,7 +121,7 @@ const ContractDetail = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="size-12 animate-spin rounded-full border-y-2 border-sky-600"></div>
+        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
       </div>
     );
   }
@@ -389,7 +390,7 @@ const ContractDetail = () => {
                <DialogFooter className="gap-3 sm:justify-start">
                   <Button onClick={handleSign} disabled={isSigning || !signatureData} className="h-12 flex-1 rounded-2xl bg-slate-900 font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800">
                      {isSigning ? (
-                        <div className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        <Spinner size="sm" className="inline-block mr-2" spinnerClassName="border-y-white" />
                      ) : "Xác nhận & Hoàn tất"}
                   </Button>
                </DialogFooter>

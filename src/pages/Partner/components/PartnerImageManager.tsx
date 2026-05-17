@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Loader2, Image as ImageIcon, Plus } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -209,10 +210,7 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
               className="group flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50"
             >
               {saving ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="animate-spin text-blue-600" size={32} />
-                  <span className="text-xs font-medium text-gray-500">Đang lưu ảnh...</span>
-                </div>
+                <Spinner size="sm" showText text="Đang lưu ảnh..." />
               ) : (
                 <>
                   <div className="rounded-full bg-gray-100 p-3 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">

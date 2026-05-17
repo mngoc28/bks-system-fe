@@ -1,4 +1,4 @@
-﻿import { bookingApi, type CreateBookingUserRequest } from "@/api/EU/bookingApi";
+import { bookingApi, type CreateBookingUserRequest, type PublicBookingSummary } from "@/api/EU/bookingApi";
 import { roomApi } from "@/api/EU/roomApi";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { ServiceItem } from "@/dataHelper/EU/booking.dataHelper";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
+import { Spinner } from "@/components/ui/spinner";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { bookingUserFormSchema } from "@/shared/shema";
 import type { z } from "zod";
@@ -114,49 +115,49 @@ const BookingPage = () => {
         mutationFn: async (data: CreateBookingUserRequest) => {
             return await bookingApi.createBookingUser(id, data);
         },
-        onSuccess: (_response, variables) => {
-            if (room) {
-                const numberOfNights = getNumberOfNights(variables.start_date, variables.end_date);
-                const totalPrice = Number(room.cheapest_daily_price || 0) * numberOfNights;
+        onSuccess: (apiBody, variables) => {
+            const payload = apiBody?.data as PublicBookingSummary | undefined;
 
-                const bookingRecord = {
-                    id: `booking-${Date.now()}`,
-                    roomId: room.id,
-                    roomTitle: room.title,
-                    provinceName: room.province_name,
-                    address: room.property_address,
-                    startDate: variables.start_date,
-                    endDate: variables.end_date,
-                    totalPrice,
-                    customerName: variables.name,
-                    createdAt: new Date().toISOString(),
-                    status: "upcoming",
-                };
-
-                const storageKey = "publicMyBookings";
-                const existingRaw = window.localStorage.getItem(storageKey);
-                const existing = existingRaw ? JSON.parse(existingRaw) : [];
-                const nextBookings = Array.isArray(existing) ? [bookingRecord, ...existing] : [bookingRecord];
-                window.localStorage.setItem(storageKey, JSON.stringify(nextBookings));
-
+            if (payload?.booking_id && room) {
+                const totalPrice = Number(payload.total_amount ?? 0);
                 toastSuccess(t("booking.success"));
                 navigate(ROUTERS.BOOKING_SUCCESS, {
                     state: {
-                        bookingId: bookingRecord.id,
-                        roomTitle: bookingRecord.roomTitle,
-                        address: bookingRecord.address,
-                        startDate: bookingRecord.startDate,
-                        endDate: bookingRecord.endDate,
-                        totalPrice: bookingRecord.totalPrice,
+                        bookingCode: payload.booking_code,
+                        bookingId: payload.booking_id,
+                        roomId: id,
+                        guestEmail: variables.email,
+                        priceId: payload.price_id,
+                        roomTitle: payload.room_title || room.title,
+                        address: payload.property_address || room.property_address,
+                        startDate: payload.start_date,
+                        endDate: payload.end_date,
+                        totalPrice,
+                    },
+                });
+                return;
+            }
+
+            if (room) {
+                const numberOfNights = getNumberOfNights(variables.start_date, variables.end_date);
+                const totalPrice = Number(room.cheapest_daily_price || 0) * numberOfNights;
+                toastSuccess(t("booking.success"));
+                navigate(ROUTERS.BOOKING_SUCCESS, {
+                    state: {
+                        bookingCode: "",
+                        roomId: id,
+                        guestEmail: variables.email,
+                        roomTitle: room.title,
+                        address: room.property_address,
+                        startDate: variables.start_date,
+                        endDate: variables.end_date,
+                        totalPrice,
                     },
                 });
                 return;
             }
 
             toastSuccess(t("booking.success"));
-            // Redirect to BKS Stay history after short delay if needed, 
-            // but for now we let them see the success page.
-            // navigate(ROUTERS.BKS_STAY_HISTORY);
         },
         onError: (error: any) => {
             console.error(error);
@@ -218,7 +219,7 @@ const BookingPage = () => {
     if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
-                <div className="size-12 animate-spin rounded-full border-y-2 border-blue-500"></div>
+                <Spinner size="lg" spinnerClassName="border-y-sky-600" />
             </div>
         );
     }

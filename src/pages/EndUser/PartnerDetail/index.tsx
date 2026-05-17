@@ -15,6 +15,7 @@ import 'swiper/css';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
+import { Spinner } from "@/components/ui/spinner";
 
 // Partner Detail Page
 const PartnerDetail = () => {
@@ -65,10 +66,13 @@ const PartnerDetail = () => {
     if (isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
-                <div className="text-center">
-                    <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-                    <p className="text-lg text-gray-600">{t("partnerDetail.loading")}</p>
-                </div>
+                <Spinner 
+                    size="lg" 
+                    spinnerClassName="border-y-sky-600" 
+                    showText 
+                    text={t("partnerDetail.loading")}
+                    className="text-slate-600 font-bold"
+                />
             </div>
         );
     }
@@ -77,10 +81,13 @@ const PartnerDetail = () => {
     if (error) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
-                <div className="text-center">
-                    <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-b-2 border-red-600"></div>
-                    <p className="text-lg text-red-600">{t("common.loading_error")}: {error.message}</p>
-                </div>
+                <Spinner 
+                    size="lg" 
+                    spinnerClassName="border-y-rose-600" 
+                    showText 
+                    text={`${t("common.loading_error")}: ${error.message}`}
+                    className="text-rose-600 font-bold"
+                />
             </div>
         );
     }

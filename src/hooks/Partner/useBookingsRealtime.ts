@@ -28,10 +28,21 @@ export type BookingEventName =
   | "room_block.changed"
   | "contract.renewal_reminder";
 
+/** Payload broadcast BCP (alias `.cancellation_request.updated`). */
+export type RealtimeCancellationRequestPayload = {
+  request_id: number;
+  booking_id: number;
+  property_id: number;
+  partner_id: number;
+  status: string;
+};
+
 export type BookingRealtimeStatus = "connecting" | "connected" | "disconnected";
 
 type Options = {
   onEvent?: (event: BookingEventName, payload: RealtimeBookingPayload) => void;
+  /** BCP: inbox yêu cầu hủy — payload không chứa PII khách. */
+  onCancellationRequestEvent?: (payload: RealtimeCancellationRequestPayload) => void;
   // Bao nhiêu giây mất kết nối liên tục mới bật polling fallback (mặc định 5s).
   fallbackThresholdMs?: number;
   // Tần suất polling fallback (mặc định 30s).
@@ -100,11 +111,20 @@ export const useBookingsRealtime = (options: Options = {}) => {
         optionsRef.current.onEvent?.(eventName, payload);
       };
 
+    const handleCancellationRequest = (payload: RealtimeCancellationRequestPayload) => {
+      queryClient.invalidateQueries({ queryKey: ["partner", "cancellation-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "kpis"] });
+      optionsRef.current.onCancellationRequestEvent?.(payload);
+    };
+
     channel.listen(".booking.created", handle("booking.created"));
     channel.listen(".booking.confirmed", handle("booking.confirmed"));
     channel.listen(".booking.cancelled", handle("booking.cancelled"));
     channel.listen(".room_block.changed", handle("room_block.changed"));
     channel.listen(".contract.renewal_reminder", handle("contract.renewal_reminder"));
+    channel.listen(".cancellation_request.updated", handleCancellationRequest);
 
     const connector = (echo as unknown as { connector: { pusher: { connection: { state: string; bind: (e: string, cb: () => void) => void; unbind: (e: string, cb: () => void) => void } } } }).connector;
     const pusher = connector?.pusher;
@@ -146,6 +166,7 @@ export const useBookingsRealtime = (options: Options = {}) => {
         channel.stopListening(".booking.cancelled");
         channel.stopListening(".room_block.changed");
         channel.stopListening(".contract.renewal_reminder");
+        channel.stopListening(".cancellation_request.updated");
         echo.leave(channelName);
       } catch {
         // ignore
@@ -173,6 +194,7 @@ export const useBookingsRealtime = (options: Options = {}) => {
       queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
       queryClient.invalidateQueries({ queryKey: ["partner-pending-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "cancellation-requests"] });
     };
 
     const intervalId = window.setInterval(tick, pollingIntervalMs);

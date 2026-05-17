@@ -9,10 +9,10 @@ import {
   Mail,
   Phone,
   MapPin,
-  Loader2,
   Globe,
   AlignLeft
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,7 +118,7 @@ const Profile = () => {
   if (isProfileLoading || isPartnerLoading) {
      return (
        <div className="flex min-h-[400px] items-center justify-center">
-         <Loader2 className="size-12 animate-spin text-blue-600" />
+         <Spinner size="lg" showText text="Đang tải thông tin hồ sơ..." />
        </div>
      );
   }

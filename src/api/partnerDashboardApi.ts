@@ -17,6 +17,9 @@ export interface PartnerStats {
   todayCheckInCount: number;
   todayCheckOutCount: number;
   inStayCount: number;
+  completedBookingsCount: number;
+  pendingCancellationCount: number;
+  totalBookingsCount: number;
 }
 
 export interface PartnerHeadlineKpis {

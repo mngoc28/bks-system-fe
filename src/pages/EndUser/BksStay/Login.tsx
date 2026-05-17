@@ -12,34 +12,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTERS } from "@/constant";
-import { useLoginMutation } from "@/hooks/useAuthQuery";
+import { useStayLoginMutation } from "@/hooks/useAuthQuery";
 import { useUserStore } from "@/store/useUserStore";
 import { toastSuccess, toastError } from "@/components/ui/toast";
+import { flushPendingLocalBookingsToServer } from "@/utils/stayLocalBookingSync";
+import { Spinner } from "@/components/ui/spinner";
 
 const GuestLogin = () => {
   const navigate = useNavigate(); const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { mutate: loginMutate } = useLoginMutation();
+  const { mutate: loginMutate } = useStayLoginMutation();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get("email") as string;
+    const formEmail = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    if (!email || !password) {
+    if (!formEmail || !password) {
       toastError("Vui lòng nhập đầy đủ email và mật khẩu");
       return;
     }
 
     setIsLoading(true);
     
-    loginMutate({ email, password }, {
-      onSuccess: (response: any) => {
-        const { token, role, name, email } = response.data;
-        useUserStore.getState().login(token, email, role, name);
+    loginMutate({ email: formEmail, password }, {
+      onSuccess: async (response: any) => {
+        const { token, role, name, email: accountEmail } = response.data;
+        useUserStore.getState().login(token, accountEmail || formEmail, role, name);
+        await flushPendingLocalBookingsToServer();
         toastSuccess(`Chào mừng trở lại, ${name}!`);
         const from = (location.state as any)?.from?.pathname || ROUTERS.BKS_STAY_DASHBOARD; navigate(from, { replace: true });
         setIsLoading(false);
@@ -166,7 +169,7 @@ const GuestLogin = () => {
                       className="h-14 w-full rounded-2xl bg-sky-600 text-lg font-black text-white shadow-xl shadow-sky-600/30 transition-all hover:scale-[1.02] hover:bg-sky-500 active:scale-[0.98]"
                     >
                        {isLoading ? (
-                         <div className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                         <Spinner size="sm" spinnerClassName="border-y-white" />
                        ) : (
                          "Truy cập ngay"
                        )}

@@ -4,12 +4,12 @@ import {
   User,
   Home,
   Clock,
-  Loader2,
   Filter,
   Search,
   MessageSquare
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { partnerService } from '@/services/partnerService';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { Input } from '@/components/ui/input';
@@ -93,7 +93,7 @@ const StayServiceManagement: React.FC = () => {
   if (loading && requests.length === 0) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
+        <Spinner size="lg" showText text="Đang tải danh sách yêu cầu..." />
       </div>
     );
   }

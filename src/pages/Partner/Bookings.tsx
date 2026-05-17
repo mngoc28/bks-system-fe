@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Calendar,
   User,
@@ -26,22 +27,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useQueryClient } from '@tanstack/react-query';
 
+import Pagination from '@/components/Pagination';
 import { usePartnerStatsQuery } from '@/hooks/usePartnerDashboardQuery';
 import CancelBookingDialog from './components/CancelBookingDialog';
 import { useQuickConfirm } from '@/hooks/Partner/useQuickConfirm';
@@ -56,7 +45,7 @@ import {
   partnerBaseStatusLabel,
 } from '@/utils/partnerBookingDisplay';
 
-type BookingStatusFilter = 'all' | 0 | 1 | 2 | 3 | 'in_stay';
+type BookingStatusFilter = 'all' | 0 | 1 | 2 | 3 | 4 | 'in_stay';
 
 interface BookingRow extends Booking {
   phone?: string;
@@ -69,9 +58,11 @@ interface BookingRow extends Booking {
 }
 
 const Bookings: React.FC = () => {
+  const queryClient = useQueryClient();
   const { data: globalStats, isLoading: statsLoading } = usePartnerStatsQuery();
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>('all');
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
@@ -83,11 +74,31 @@ const Bookings: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState<Set<number | string>>(new Set());
   const [bulkCancelOpen, setBulkCancelOpen] = useState(false);
+  const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false);
   const [bulkResult, setBulkResult] = useState<{ succeeded: number[]; failed: Array<{ id: number; reason: string }> } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Action Confirmation State
+  const [actionConfirmModalOpen, setActionConfirmModalOpen] = useState(false);
+  const [actionTargetBooking, setActionTargetBooking] = useState<BookingRow | null>(null);
+  const [actionType, setActionType] = useState<'check_in' | 'check_out' | null>(null);
+
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, debouncedSearchTerm]);
 
   useEffect(() => {
     fetchBookings();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, statusFilter, debouncedSearchTerm]);
 
 
   const normalizeBookings = (rows: any[]): BookingRow[] => {
@@ -114,43 +125,45 @@ const Bookings: React.FC = () => {
     });
   };
 
-  const isInStay = (booking: BookingRow): boolean => {
-    return booking.stay_status === 'checked_in';
-  };
-
-  const fetchBookings = async () => {
+  const fetchBookings = async (showLoading = true) => {
     try {
-      setLoading(true);
-      const res: any = await partnerService.getBookings({ 
-        page: currentPage,
-        per_page: pageSize 
-      });
+      // Use full-page loader only for initial fetch, subtle overlay for updates
+      if (showLoading) {
+        if (loading) setLoading(true);
+        else setIsRefreshing(true);
+      }
       
-      const payload = res?.status ? res : (res?.data ?? res);
-      let data: any[] = [];
-      let total = 0;
-      let lastPage = 1;
+      const params: any = {
+        page: currentPage,
+        per_page: pageSize,
+        keyword: debouncedSearchTerm || undefined,
+      };
 
-      // Detection logic
-      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-        data = payload.data?.data || (Array.isArray(payload.data) ? payload.data : (payload.data || []));
-        const meta = payload.meta || payload;
-        if (meta.total !== undefined) {
-          total = meta.total;
-          lastPage = meta.last_page || 1;
-        } else {
-          total = data.length;
-          lastPage = Math.ceil(total / pageSize);
-        }
-      } else {
-        data = Array.isArray(payload) ? payload : [];
-        total = data.length;
-        lastPage = Math.ceil(total / pageSize);
+      if (statusFilter === 'in_stay') {
+        params.stay_status = 'checked_in';
+        params.status = 1;
+      } else if (statusFilter !== 'all') {
+        params.status = statusFilter;
       }
 
-      setBookings(normalizeBookings(data));
-      setTotalItems(total);
-      setTotalPages(lastPage);
+      const res: any = await partnerService.getBookings(params);
+      
+      // Standardize response body access (handle both axios response and direct body)
+      const resBody = res?.data || res;
+      
+      // The actual paginator object returned by Laravel is usually in resBody.data
+      // or resBody itself if the interceptor already stripped the success wrapper.
+      const paginator = resBody?.data && typeof resBody.data === 'object' && !Array.isArray(resBody.data) 
+        ? resBody.data 
+        : resBody;
+
+      const rawData = Array.isArray(paginator.data) ? paginator.data : (Array.isArray(paginator) ? paginator : []);
+      const totalCount = paginator.total ?? rawData.length;
+      const pagesCount = paginator.last_page ?? (paginator.total ? Math.ceil(paginator.total / pageSize) : 1);
+
+      setBookings(normalizeBookings(rawData));
+      setTotalItems(totalCount);
+      setTotalPages(pagesCount);
       setSelectedIds(new Set());
       
     } catch (error) {
@@ -158,6 +171,7 @@ const Bookings: React.FC = () => {
       toastError('Không thể tải danh sách booking.');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -169,9 +183,12 @@ const Bookings: React.FC = () => {
         b.id === id ? { ...b, status: 'Đã duyệt' as Booking['status'], rawStatus: 1 } : b
       )));
     },
-    onUndo: () => fetchBookings(),
-    onConfirmed: () => fetchBookings(),
-    onConflict: () => fetchBookings(),
+    onUndo: () => fetchBookings(false),
+    onConfirmed: () => {
+      fetchBookings(false);
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+    },
+    onConflict: () => fetchBookings(false),
   });
 
   const handleApprove = (id: string | number) => {
@@ -187,6 +204,7 @@ const Bookings: React.FC = () => {
     try {
       await partnerService.cancelBooking(cancelTargetId, reason);
       fetchBookings();
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
       toastSuccess('Đã huỷ booking.');
     } catch (e) {
       toastError('Huỷ booking thất bại.');
@@ -223,17 +241,25 @@ const Bookings: React.FC = () => {
     setSelectedIds(next);
   };
 
-  const handleBulkConfirm = async () => {
+  const executeBulkConfirm = async () => {
     if (selectedIdArray.length === 0) return;
     try {
       const res: any = await partnerService.bulkConfirmBookings(selectedIdArray);
       const payload = res?.data?.data ?? res?.data ?? res;
       setBulkResult(payload);
       fetchBookings();
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
       toastSuccess(`Đã xác nhận ${payload?.succeeded?.length ?? 0}/${selectedIdArray.length} booking.`);
+      setIsBulkConfirmOpen(false);
+      setSelectedIds(new Set());
     } catch {
       toastError('Xác nhận hàng loạt thất bại.');
     }
+  };
+
+  const handleBulkConfirmRequest = () => {
+    if (selectedIdArray.length === 0) return;
+    setIsBulkConfirmOpen(true);
   };
 
   const handleBulkCancelSubmit = async (reason: string) => {
@@ -243,6 +269,7 @@ const Bookings: React.FC = () => {
       const payload = res?.data?.data ?? res?.data ?? res;
       setBulkResult(payload);
       fetchBookings();
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
       toastSuccess(`Đã huỷ ${payload?.succeeded?.length ?? 0}/${selectedIdArray.length} booking.`);
     } catch (e) {
       toastError('Huỷ hàng loạt thất bại.');
@@ -252,65 +279,89 @@ const Bookings: React.FC = () => {
 
   const handleCheckIn = async (id: string | number) => {
     try {
+      setActionLoadingId(id);
       await partnerService.checkIn(id);
-      fetchBookings();
+      
+      // Update local state immediately for better UX
+      setBookings(prev => prev.map(b => 
+        b.id === id ? { ...b, stay_status: 'checked_in' } : b
+      ));
+      
       toastSuccess('Check-in thành công!');
+      
+      // Invalidate stats so the "In Stay" / "Check-in today" cards update
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+
+      // Close modal if open
+      setActionConfirmModalOpen(false);
+
+      // Silent refresh to sync all data without showing global loader
+      fetchBookings(false);
     } catch {
       toastError('Lỗi khi thực hiện check-in.');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
   const handleCheckOut = async (id: string | number) => {
     try {
+      setActionLoadingId(id);
       await partnerService.checkOut(id);
-      fetchBookings();
+      
+      // Update local state immediately
+      setBookings(prev => prev.map(b => 
+        b.id === id ? { ...b, stay_status: 'checked_out' } : b
+      ));
+      
       toastSuccess('Check-out hoàn tất!');
+      
+      // Invalidate stats
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+
+      // Close modal if open
+      setActionConfirmModalOpen(false);
+
+      // Silent refresh
+      fetchBookings(false);
     } catch {
       toastError('Lỗi khi thực hiện check-out.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const requestActionConfirm = (booking: BookingRow, type: 'check_in' | 'check_out') => {
+    setActionTargetBooking(booking);
+    setActionType(type);
+    setActionConfirmModalOpen(true);
+  };
+
+  const executeActionConfirm = () => {
+    if (!actionTargetBooking || !actionType) return;
+    if (actionType === 'check_in') {
+      handleCheckIn(actionTargetBooking.id);
+    } else {
+      handleCheckOut(actionTargetBooking.id);
     }
   };
 
   const filteredBookings = useMemo(() => {
-    const keyword = searchTerm.trim().toLowerCase();
+    // Since we now filter on the server, filteredBookings is just the current page's bookings.
+    // We keep the memo to minimize downstream re-renders.
+    return bookings;
+  }, [bookings]);
 
-    return bookings.filter((booking) => {
-      const matchedStatus = statusFilter === 'all'
-        || (statusFilter === 'in_stay' ? isInStay(booking) : booking.rawStatus === statusFilter);
-      if (!matchedStatus) return false;
-
-      if (!keyword) return true;
-
-      const haystack = [
-        booking.guestName,
-        booking.roomName,
-        booking.propertyName,
-        booking.phone,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-      return haystack.includes(keyword);
-    });
-  }, [bookings, statusFilter, searchTerm]);
-
-  // Derived slice for display - handles fallback when server returns full list
-  const displayBookings = useMemo(() => {
-    // If the number of filtered items matches the total but is more than pageSize, 
-    // it's likely we need to slice client-side.
-    if (filteredBookings.length > pageSize && totalItems === bookings.length) {
-      return filteredBookings.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    }
-    return filteredBookings;
-  }, [filteredBookings, currentPage, pageSize, totalItems, bookings.length]);
+  const displayBookings = filteredBookings;
 
   const statusTabs: Array<{ key: BookingStatusFilter; label: string; count: number }> = [
-    { key: 'all', label: 'Tất cả', count: totalItems },
-    { key: 0, label: 'Chờ duyệt', count: globalStats?.pendingBookingsCount || 0 },
-    { key: 1, label: 'Đã duyệt', count: globalStats?.confirmedBookingsCount || 0 },
-    { key: 'in_stay', label: 'Đang ở', count: globalStats?.inStayCount || 0 },
-    { key: 2, label: 'Đã hủy', count: globalStats?.cancelledBookingsCount || 0 },
-    { key: 3, label: 'Đã hoàn thành', count: bookings.filter((b) => b.rawStatus === 3).length },
+    { key: 'all', label: 'Tất cả', count: globalStats?.totalBookingsCount ?? totalItems },
+    { key: 0, label: 'Chờ duyệt', count: globalStats?.pendingBookingsCount ?? 0 },
+    { key: 1, label: 'Đã duyệt', count: globalStats?.confirmedBookingsCount ?? 0 },
+    { key: 'in_stay', label: 'Đang ở', count: globalStats?.inStayCount ?? 0 },
+    { key: 4, label: 'Chờ duyệt hủy', count: globalStats?.pendingCancellationCount ?? 0 },
+    { key: 2, label: 'Đã hủy', count: globalStats?.cancelledBookingsCount ?? 0 },
+    { key: 3, label: 'Đã hoàn thành', count: globalStats?.completedBookingsCount ?? 0 },
   ];
 
   const exportCsv = () => {
@@ -356,7 +407,7 @@ const Bookings: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
+        <Spinner size="lg" showText text="Đang tải danh sách đặt phòng..." />
       </div>
     );
   }
@@ -430,6 +481,19 @@ const Bookings: React.FC = () => {
             placeholder="Tìm theo tên khách, số điện thoại, mã phòng..."
             className="pl-10"
           />
+          {(searchTerm || statusFilter !== 'all') && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+              className="mt-2 text-xs text-slate-500 hover:text-blue-600 sm:absolute sm:right-2 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2"
+            >
+              Xóa bộ lọc
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -453,7 +517,7 @@ const Bookings: React.FC = () => {
               <p className="text-xs text-blue-700">Mỗi lần bulk action xử lý tối đa 20 booking; booking lỗi sẽ được trả trong danh sách failed.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleBulkConfirm}>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleBulkConfirmRequest}>
                 Xác nhận hàng loạt
               </Button>
               <Button size="sm" variant="outline" className="border-rose-200 text-rose-600" onClick={() => setBulkCancelOpen(true)}>
@@ -480,7 +544,15 @@ const Bookings: React.FC = () => {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        {/* Subtle overlay during tab switching/filtering */}
+        {isRefreshing && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-lg">
+              <Spinner size="md" showText text="Đang cập nhật..." />
+            </div>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -571,8 +643,16 @@ const Bookings: React.FC = () => {
                        </Button>
                        {booking.rawStatus === 0 ? (
                          <>
-                           <Button onClick={() => handleApprove(booking.id)} size="sm" className="h-8 bg-emerald-600 px-3 font-bold text-white hover:bg-emerald-700">Duyệt</Button>
-                           <Button onClick={() => handleReject(booking.id)} variant="outline" size="sm" className="h-8 border-red-200 px-3 text-red-600">Hủy</Button>
+                           <Button 
+                             onClick={() => handleApprove(booking.id)} 
+                             size="sm" 
+                             className="h-8 gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 px-3 font-bold text-white shadow-sm transition-all hover:from-emerald-700 hover:to-teal-700"
+                             disabled={loading}
+                           >
+                             <UserCheck size={14} />
+                             Duyệt
+                           </Button>
+                           <Button onClick={() => handleReject(booking.id)} variant="outline" size="sm" className="h-8 border-red-200 px-3 text-red-600 hover:bg-red-50 hover:text-red-700">Hủy</Button>
                          </>
                        ) : isPendingConfirm(booking.id) ? (
                          <Button onClick={() => undoConfirm(booking.id)} variant="outline" size="sm" className="h-8 border-amber-300 px-3 text-amber-700 hover:bg-amber-50">
@@ -580,9 +660,41 @@ const Bookings: React.FC = () => {
                            Hoàn tác ({Math.ceil(remainingMs(booking.id) / 1000)}s)
                          </Button>
                        ) : booking.rawStatus === 1 && booking.stay_status === 'pending' ? (
-                          <Button onClick={() => handleCheckIn(booking.id)} size="sm" className="h-8 bg-blue-600 px-3 font-bold text-white hover:bg-blue-700">Check-in</Button>
+                          <Button 
+                            onClick={() => requestActionConfirm(booking, 'check_in')} 
+                            size="sm" 
+                            className={`
+                              h-8 gap-1.5 px-3 font-bold text-white shadow-sm transition-all
+                              bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700
+                              ${new Date(booking.checkIn).toDateString() === new Date().toDateString() ? 'animate-pulse ring-2 ring-indigo-500/20' : ''}
+                            `}
+                            disabled={actionLoadingId === booking.id}
+                          >
+                             {actionLoadingId === booking.id ? (
+                               <Loader2 className="h-4 w-4 animate-spin" />
+                             ) : (
+                               <LogIn size={14} />
+                             )}
+                            Check-in
+                          </Button>
                        ) : booking.stay_status === 'checked_in' ? (
-                          <Button onClick={() => handleCheckOut(booking.id)} size="sm" className="h-8 bg-amber-600 px-3 font-bold text-white hover:bg-amber-700">Check-out</Button>
+                          <Button 
+                            onClick={() => requestActionConfirm(booking, 'check_out')} 
+                            size="sm" 
+                            className={`
+                              h-8 gap-1.5 px-3 font-bold text-white shadow-sm transition-all
+                              bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700
+                              ${new Date(booking.checkOut).toDateString() === new Date().toDateString() ? 'animate-pulse ring-2 ring-amber-500/20' : ''}
+                            `}
+                            disabled={actionLoadingId === booking.id}
+                          >
+                             {actionLoadingId === booking.id ? (
+                               <Loader2 className="h-4 w-4 animate-spin" />
+                             ) : (
+                               <LogOut size={14} />
+                             )}
+                            Check-out
+                          </Button>
                        ) : null}
                     </div>
                   </td>
@@ -597,55 +709,48 @@ const Bookings: React.FC = () => {
         </div>
         
         {/* Pagination Footer */}
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 bg-slate-50/30 p-4 sm:flex-row">
-          <div className="flex items-center gap-3">
-            <span className="whitespace-nowrap text-xs font-medium text-slate-500">Hiển thị mỗi trang</span>
-            <Select 
-              value={String(pageSize)} 
-              onValueChange={(val) => {
-                setPageSize(Number(val));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="h-8 w-20 bg-white">
-                <SelectValue placeholder="10" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="ml-2 text-xs text-slate-400">
-              Tổng {totalItems} kết quả
-            </span>
-          </div>
-
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className={`cursor-pointer ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
-                />
-              </PaginationItem>
-              
-              <div className="mx-2 flex items-center gap-1">
-                <span className="text-xs font-bold text-slate-700">Trang {currentPage}</span>
-                <span className="text-xs text-slate-400">/ {totalPages}</span>
-              </div>
-
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className={`cursor-pointer ${currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}`}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+        <div className="border-t border-gray-100 bg-slate-50/30 p-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            perPage={pageSize}
+            onPerPageChange={(val) => {
+              setPageSize(val);
+              setCurrentPage(1);
+            }}
+            totalItems={totalItems}
+            perPageOptions={[10, 20, 50, 100]}
+          />
         </div>
       </div>
+
+      <Dialog open={isBulkConfirmOpen} onOpenChange={setIsBulkConfirmOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-600">
+              <Clock className="animate-pulse" size={20} />
+              Xác nhận phê duyệt hàng loạt
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600">
+              Bạn có chắc chắn muốn xác nhận <span className="font-bold text-emerald-600">{selectedIdArray.length}</span> booking đã chọn?
+            </p>
+            <p className="mt-2 text-xs text-slate-400 italic">
+              * Hành động này sẽ gửi email thông báo thành công đến tất cả khách hàng tương ứng.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <Button variant="ghost" onClick={() => setIsBulkConfirmOpen(false)}>
+              Hủy
+            </Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={executeBulkConfirm}>
+              Xác nhận ngay
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
         <DialogContent className="sm:max-w-2xl">
@@ -759,6 +864,56 @@ const Bookings: React.FC = () => {
         onClose={() => setBulkCancelOpen(false)}
         onConfirm={handleBulkCancelSubmit}
       />
+
+      <Dialog open={actionConfirmModalOpen} onOpenChange={setActionConfirmModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${actionType === 'check_in' ? 'text-indigo-600' : 'text-amber-600'}`}>
+              {actionType === 'check_in' ? <LogIn size={20} /> : <LogOut size={20} />}
+              {actionType === 'check_in' ? 'Xác nhận Nhận phòng (Check-in)' : 'Xác nhận Trả phòng (Check-out)'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className={`rounded-xl border p-4 ${actionType === 'check_in' ? 'border-indigo-100 bg-indigo-50/50' : 'border-amber-100 bg-amber-50/50'}`}>
+              <div className="space-y-2 text-sm text-slate-700">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Khách hàng:</span>
+                  <span className="font-bold">{actionTargetBooking?.guestName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Phòng:</span>
+                  <span className="font-semibold text-slate-900">{actionTargetBooking?.roomName}</span>
+                </div>
+                <div className="flex justify-between border-t border-slate-200/50 pt-2">
+                  <span className="text-slate-500">Tổng tiền:</span>
+                  <span className="font-bold text-emerald-600">
+                    {actionTargetBooking?.totalAmount.toLocaleString()} VNĐ
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-slate-600">
+              {actionType === 'check_in' 
+                ? 'Bạn có chắc chắn khách hàng đã đến và tiến hành nhận phòng? Hệ thống sẽ ghi nhận trạng thái Đang lưu trú.'
+                : 'Bạn có chắc chắn khách hàng đã hoàn tất thanh toán và trả phòng? Phiên lưu trú sẽ được đánh dấu Hoàn thành.'}
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <Button variant="ghost" onClick={() => setActionConfirmModalOpen(false)}>
+              Hủy
+            </Button>
+            <Button 
+              disabled={actionLoadingId !== null}
+              onClick={executeActionConfirm}
+              className={actionType === 'check_in' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}
+            >
+              {actionLoadingId !== null ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
+              {actionType === 'check_in' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

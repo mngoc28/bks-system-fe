@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface GmvChartPoint {
@@ -57,7 +57,7 @@ const GmvChart: React.FC<GmvChartProps> = ({ data = [], isLoading = false }) => 
         <div className="h-[320px] w-full">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
-              <Loader2 className="animate-spin text-blue-600" />
+              <Spinner size="md" spinnerClassName="border-y-indigo-600" />
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">

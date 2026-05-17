@@ -14,7 +14,7 @@ import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ROUTERS } from "@/constant";
+import { PERMISSIONS, ROUTERS } from "@/constant";
 
 /**
  * Premium Manager Login Screen
@@ -46,7 +46,14 @@ export default function Login() {
           if (res.status === "success" && res.data) {
             const userData = res.data.user;
             const token = res.data.token || (typeof res.data === "string" ? res.data : "");
-            
+
+            // Validate role: Partner accounts are not allowed to access the admin portal
+            const user_role = (userData?.role || "").toLowerCase();
+            if (user_role === PERMISSIONS.PARTNER) {
+              toastError(t("login.invalid_role_partner") || "Tài khoản đối tác không có quyền truy cập cổng Quản trị.");
+              return;
+            }
+
             // Persist session based on rememberMe preference
             setAccessToken(token, values.rememberMe);
             setUserEmail(values.email);
@@ -68,8 +75,9 @@ export default function Login() {
             toastError(t("login.failed"));
           }
         },
-        onError: (_err: any) => {
-          toastError(t("login.invalid_credentials"));
+        onError: (err: any) => {
+          const errorMessage = err?.response?.data?.message || t("login.invalid_credentials");
+          toastError(errorMessage);
         },
       },
     );

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useBookingsRealtime, type BookingEventName, type RealtimeBookingPayload } from "@/hooks/Partner/useBookingsRealtime";
+import { useBookingsRealtime, type BookingEventName, type RealtimeBookingPayload, type RealtimeCancellationRequestPayload } from "@/hooks/Partner/useBookingsRealtime";
 import { ROUTERS } from "@/constant";
 
 /**
@@ -43,7 +43,31 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const { isPolling } = useBookingsRealtime({ onEvent });
+  const { isPolling } = useBookingsRealtime({
+    onEvent,
+    onCancellationRequestEvent: (p: RealtimeCancellationRequestPayload) => {
+      window.dispatchEvent(new CustomEvent("partner:realtime-cancellation-request", { detail: p }));
+      if (p.status === "pending") {
+        toast.message("Yêu cầu hủy mới", {
+          description: `Request #${p.request_id} · Booking #${p.booking_id}`,
+          action: {
+            label: "Mở inbox",
+            onClick: () => navigate(ROUTERS.PARTNER_CANCELLATION_REQUESTS),
+          },
+          duration: 10_000,
+        });
+      } else {
+        toast.message("Cập nhật yêu cầu hủy", {
+          description: `Request #${p.request_id} → ${p.status}`,
+          action: {
+            label: "Xem inbox",
+            onClick: () => navigate(ROUTERS.PARTNER_CANCELLATION_REQUESTS),
+          },
+          duration: 8000,
+        });
+      }
+    },
+  });
 
   React.useEffect(() => {
     setBannerVisible(isPolling);

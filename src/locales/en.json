@@ -1,4 +1,4 @@
-﻿{
+{
   "language": {
     "label": "Language",
     "options": {
@@ -240,6 +240,8 @@
     }
   },
   "common": {
+    "checking_permission": "Checking permission...",
+    "no_permission": "You do not have permission to access this page.",
     "unknown_province": "Unknown Area",
     "retry": "Retry",
     "contact_us": "Contact Us",

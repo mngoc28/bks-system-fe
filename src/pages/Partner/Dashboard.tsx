@@ -5,7 +5,6 @@ import {
   DollarSign, 
   TrendingUp, 
   AlertCircle, 
-  Loader2, 
   CalendarClock,
   ArrowRight,
   User,
@@ -43,6 +42,9 @@ import { Button } from '@/components/ui/button';
 import OccupancyChart from './components/OccupancyChart';
 import GmvChart from './components/GmvChart';
 import AlertCenter from './components/AlertCenter';
+import { Spinner } from '@/components/ui/spinner';
+
+
 
 interface RevenueAnalytics {
   month: string;
@@ -243,7 +245,9 @@ const Dashboard: React.FC = () => {
           <CardContent className="flex-1 flex flex-col">
             <div className="h-[400px] w-full mt-auto">
               {revenueLoading ? (
-                <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-blue-600" /></div>
+                <div className="flex h-full items-center justify-center">
+                  <Spinner size="md" spinnerClassName="border-y-blue-600" />
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueAnalytics} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>

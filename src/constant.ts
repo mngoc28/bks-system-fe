@@ -1,9 +1,11 @@
-﻿export const DEFAULT_PAGE = 1;
+export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGINATION = 10;
 export const DEFAULT_LIMIT = 10;
 export const DEFAULT_CARD_LIMIT = 12;
 export const CARD_PER_PAGE_OPTIONS = [12, 24, 48] as const;
 export const DEFAULT_TOTAL = 0;
+/** localStorage key: guest bookings pending T6 sync after BKS Stay login */
+export const PUBLIC_MY_BOOKINGS_STORAGE_KEY = "publicMyBookings";
 export const enum ROUTERS {
   HOME = "/",
   LOGIN = "/admin/login",
@@ -50,6 +52,7 @@ export const enum ROUTERS {
   PARTNER_DASHBOARD = "/partner/dashboard",
   PARTNER_PROPERTIES = "/partner/properties",
   PARTNER_BOOKINGS = "/partner/bookings",
+  PARTNER_CANCELLATION_REQUESTS = "/partner/cancellation-requests",
   PARTNER_SERVICES = "/partner/services",
   PARTNER_AMENITIES = "/partner/amenities",
   PARTNER_NEWS = "/partner/news",

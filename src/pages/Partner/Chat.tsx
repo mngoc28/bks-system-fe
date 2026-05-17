@@ -19,6 +19,7 @@ import { partnerService } from '@/services/partnerService';
 import { toastError } from '@/components/ui/toast';
 import { format } from 'date-fns';
 import echo from '@/lib/echo';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Message {
   id: number;
@@ -246,7 +247,7 @@ const ChatPage: React.FC = () => {
                <div className="flex-1 space-y-6 overflow-y-auto bg-slate-50/20 p-6">
                   {loading ? (
                      <div className="flex h-full items-center justify-center">
-                        <div className="size-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                        <Spinner size="sm" spinnerClassName="border-y-blue-600" />
                      </div>
                   ) : (
                      messages.map((msg) => {

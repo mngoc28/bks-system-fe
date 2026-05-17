@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Bell, Info, CheckCircle, AlertTriangle, AlertCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,7 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTERS } from "@/constant";
 
 interface NotificationBellProps {
@@ -24,6 +25,7 @@ interface NotificationBellProps {
 
 const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
     const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const service = portalType === 'stay' ? stayService : partnerService;
     const queryKey = ["notifications", portalType];
@@ -39,7 +41,37 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
         staleTime: 20_000,
     });
 
-    const unreadCount = notifications.filter((n: NotificationData) => !n.is_read).length;
+    const { data: cancellationCount = 0 } = useQuery({
+        queryKey: ["notifications", portalType, "cancellation-pending"],
+        queryFn: async () => {
+            if (portalType !== 'partner') return 0;
+            const res = await partnerService.getCancellationRequests({ status: 'pending', per_page: 1 });
+            return (res as any)?.data?.meta?.total ?? 0;
+        },
+        enabled: portalType === 'partner',
+        refetchInterval: 60000,
+    });
+
+    // Real-time listener for Partner portal
+    useEffect(() => {
+        if (portalType !== 'partner') return;
+
+        const handleRealtime = () => {
+            // Refetch both notifications and cancellation count
+            queryClient.invalidateQueries({ queryKey: queryKey });
+            queryClient.invalidateQueries({ queryKey: ["notifications", portalType, "cancellation-pending"] });
+        };
+
+        window.addEventListener("partner:realtime-booking", handleRealtime);
+        window.addEventListener("partner:realtime-cancellation-request", handleRealtime);
+
+        return () => {
+            window.removeEventListener("partner:realtime-booking", handleRealtime);
+            window.removeEventListener("partner:realtime-cancellation-request", handleRealtime);
+        };
+    }, [portalType, queryKey, queryClient]);
+
+    const unreadCount = notifications.filter((n: NotificationData) => !n.is_read).length + (cancellationCount > 0 ? 1 : 0);
 
     const markReadMutation = useMutation({
         mutationFn: (id: number) => service.markNotificationAsRead(id),
@@ -61,6 +93,7 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
             case "success": return <CheckCircle className="size-4 text-emerald-500" />;
             case "warning": return <AlertTriangle className="size-4 text-amber-500" />;
             case "error": return <AlertCircle className="size-4 text-rose-500" />;
+            case "system": return <Bell className="size-4 text-sky-600" />;
             default: return <Info className="size-4 text-sky-500" />;
         }
     };
@@ -81,7 +114,7 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
                         {t("notifications.title")} 
                         {unreadCount > 0 && <Badge className="border-none bg-rose-500 text-[10px] text-white">{unreadCount}</Badge>}
                     </h3>
-                    {unreadCount > 0 && (
+                    {unreadCount > 0 && notifications.length > 0 && (
                         <Button 
                             variant="ghost" 
                             size="sm" 
@@ -95,34 +128,54 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
                 <div className="max-h-[400px] space-y-1 overflow-y-auto p-2">
                     {isLoading ? (
                         <div className="p-8 text-center text-sm font-medium italic text-slate-400">{t("notifications.loading")}</div>
-                    ) : notifications.length > 0 ? (
-                        notifications.map((n: NotificationData) => (
-                            <DropdownMenuItem 
-                                key={n.id} 
-                                className={`
-                                    flex cursor-pointer items-start gap-4 rounded-2xl border border-transparent p-4 transition-all
-                                    ${n.is_read ? "opacity-60" : "border-slate-50 bg-white shadow-sm hover:border-sky-100"}
-                                `}
-                                onClick={() => !n.is_read && markReadMutation.mutate(n.id)}
-                            >
-                                <div className={`mt-1 flex size-8 shrink-0 items-center justify-center rounded-xl ${n.is_read ? "bg-slate-100" : "border border-slate-50 bg-white shadow-sm"}`}>
-                                    {getIcon(n.type)}
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className={`text-sm font-bold leading-none ${n.is_read ? "text-slate-500" : "text-slate-900"}`}>{n.title}</p>
-                                    <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">{n.message}</p>
-                                    <p className="text-[10px] font-medium text-slate-400">
-                                        {formatDistanceToNow(new Date(n.created_at), { 
-                                            addSuffix: true, 
-                                            locale: i18n.language === 'vi' ? vi : enUS 
-                                        })}
-                                    </p>
-                                </div>
-                                {!n.is_read && (
+                    ) : (notifications.length > 0 || cancellationCount > 0) ? (
+                        <>
+                            {portalType === 'partner' && cancellationCount > 0 && (
+                                <DropdownMenuItem 
+                                    className="flex cursor-pointer items-start gap-4 rounded-2xl border border-sky-100 bg-sky-50/50 p-4 shadow-sm transition-all hover:bg-sky-50"
+                                    onClick={() => navigate(ROUTERS.PARTNER_CANCELLATION_REQUESTS)}
+                                >
+                                    <div className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-xl border border-sky-200 bg-white shadow-sm">
+                                        {getIcon("system")}
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <p className="text-sm font-bold leading-none text-sky-900">Yêu cầu hủy cần xử lý</p>
+                                        <p className="line-clamp-2 text-xs leading-relaxed text-sky-700">
+                                            Bạn có {cancellationCount} yêu cầu hủy từ khách hàng đang chờ phản hồi.
+                                        </p>
+                                        <p className="text-[10px] font-medium text-sky-500">Hành động ngay</p>
+                                    </div>
                                     <div className="mt-2 size-2 shrink-0 rounded-full bg-sky-500" />
-                                )}
-                            </DropdownMenuItem>
-                        ))
+                                </DropdownMenuItem>
+                            )}
+                            {notifications.map((n: NotificationData) => (
+                                <DropdownMenuItem 
+                                    key={n.id} 
+                                    className={`
+                                        flex cursor-pointer items-start gap-4 rounded-2xl border border-transparent p-4 transition-all
+                                        ${n.is_read ? "opacity-60" : "border-slate-50 bg-white shadow-sm hover:border-sky-100"}
+                                    `}
+                                    onClick={() => !n.is_read && markReadMutation.mutate(n.id)}
+                                >
+                                    <div className={`mt-1 flex size-8 shrink-0 items-center justify-center rounded-xl ${n.is_read ? "bg-slate-100" : "border border-slate-50 bg-white shadow-sm"}`}>
+                                        {getIcon(n.type)}
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <p className={`text-sm font-bold leading-none ${n.is_read ? "text-slate-500" : "text-slate-900"}`}>{n.title}</p>
+                                        <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">{n.message}</p>
+                                        <p className="text-[10px] font-medium text-slate-400">
+                                            {formatDistanceToNow(new Date(n.created_at), { 
+                                                addSuffix: true, 
+                                                locale: i18n.language === 'vi' ? vi : enUS 
+                                            })}
+                                        </p>
+                                    </div>
+                                    {!n.is_read && (
+                                        <div className="mt-2 size-2 shrink-0 rounded-full bg-sky-500" />
+                                    )}
+                                </DropdownMenuItem>
+                            ))}
+                        </>
                     ) : (
                         <div className="space-y-4 p-12 text-center">
                             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-slate-50">

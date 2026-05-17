@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Wrench, MapPin, CheckCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { Wrench, MapPin, CheckCircle } from 'lucide-react';
 import { MaintenanceRequest } from './types';
 import { Button } from "@/components/ui/button";
 import { partnerService } from '@/services/partnerService';
@@ -131,7 +132,13 @@ const Maintenances: React.FC = () => {
     toastInfo('Đã cập nhật trạng thái bảo trì.');
   };
 
-  if (loading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Spinner size="lg" showText text="Đang tải danh sách bảo trì..." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

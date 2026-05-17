@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Spinner } from '@/components/ui/spinner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Edit, Loader2, Plus, Wallet, 
+  ArrowLeft, Edit, Plus, Wallet, 
   LayoutGrid, Activity, Wrench, Camera, CheckSquare, 
   ChevronDown, Phone, Calendar, Trash, Eye, Search,
   Building2, X, LayoutDashboard, Filter
@@ -737,9 +738,8 @@ const PropertyRooms: React.FC = () => {
       ) : (
         <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
           {loadingOccupancy ? (
-            <div className="flex flex-col items-center gap-4 py-20">
-              <Loader2 className="animate-spin text-blue-600" size={40} />
-              <p className="italic text-slate-400">Đang tải sơ đồ lấp đầy...</p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <Spinner size="lg" showText text="Đang tải sơ đồ lấp đầy..." />
             </div>
           ) : occupancyData.length > 0 ? (
             <div className="space-y-10">

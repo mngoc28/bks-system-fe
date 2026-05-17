@@ -1,28 +1,30 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, CheckCircle2, Clock3, MapPin, SearchX, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock3, MapPin, SearchX } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Spinner } from "@/components/ui/spinner";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ROUTERS } from "@/constant";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 import { formatPrice } from "@/utils/utils";
+import { useUserStore } from "@/store/useUserStore";
+import stayService, { type BookingDetail } from "@/services/stayService";
+import { bookingApi } from "@/api/EU/bookingApi";
+import type { PublicBookingSummary } from "@/dataHelper/EU/booking.dataHelper";
+import { flushPendingLocalBookingsToServer, getPendingLocalBookingsCount } from "@/utils/stayLocalBookingSync";
 
 type BookingStatus = "upcoming" | "completed" | "cancelled";
 
 type UserBooking = {
   id: string;
+  source: "stay" | "lookup";
   roomId: number;
   roomTitle: string;
   provinceName?: string;
@@ -33,25 +35,10 @@ type UserBooking = {
   customerName: string;
   createdAt: string;
   status: BookingStatus;
-};
-
-const STORAGE_KEY = "publicMyBookings";
-
-const safeParseBookings = (): UserBooking[] => {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const data = window.localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-      return [];
-    }
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  /** Original status from API (0–4). */
+  serverStatus?: number;
+  bookingCode?: string;
+  stayBookingId?: number;
 };
 
 const bookingStatusLabel: Record<BookingStatus, string> = {
@@ -66,65 +53,131 @@ const bookingStatusBadgeClass: Record<BookingStatus, string> = {
   cancelled: "bg-rose-100 text-rose-700",
 };
 
-/** Số giờ tối thiểu trước 14:00 ngày nhận phòng để được phép hủy (chính sách demo, có thể chỉnh). */
-const CANCEL_MIN_HOURS_BEFORE_CHECKIN = 24;
-
-type CancelEligibility =
-  | { allowed: true }
-  | { allowed: false; reason: string };
-
-function parseLocalDateOnly(ymd: string): Date {
-  const [y, m, d] = ymd.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1, 14, 0, 0, 0);
+function formatYmd(isoOrDate: string): string {
+  if (!isoOrDate) return "";
+  return isoOrDate.length >= 10 ? isoOrDate.slice(0, 10) : isoOrDate;
 }
 
-function getCancelEligibility(booking: UserBooking): CancelEligibility {
-  if (booking.status !== "upcoming") {
-    return { allowed: false, reason: "Chỉ có thể hủy đơn đang ở trạng thái Sắp tới." };
-  }
-  const checkInAt = parseLocalDateOnly(booking.startDate);
-  const deadline = new Date(checkInAt.getTime() - CANCEL_MIN_HOURS_BEFORE_CHECKIN * 60 * 60 * 1000);
-  if (Date.now() > deadline.getTime()) {
-    return {
-      allowed: false,
-      reason: `Đã quá thời hạn hủy online (cần hủy trước ${CANCEL_MIN_HOURS_BEFORE_CHECKIN} giờ so với 14:00 ngày nhận phòng). Vui lòng liên hệ hotline để được hỗ trợ.`,
-    };
-  }
-  return { allowed: true };
+/** Enum backend: 0 pending, 1 confirmed, 2 cancelled, 3 completed, 4 pending_cancellation */
+function mapServerStatusToTab(status: number): BookingStatus {
+  if (status === 2) return "cancelled";
+  if (status === 3) return "completed";
+  return "upcoming";
+}
+
+function mapStayBooking(b: BookingDetail): UserBooking {
+  const addr = b.room?.property?.address || "";
+  return {
+    id: `stay-${b.id}`,
+    source: "stay",
+    roomId: 0,
+    roomTitle: b.room?.title || "Phòng",
+    address: addr,
+    startDate: formatYmd(b.start_date),
+    endDate: formatYmd(b.end_date),
+    totalPrice: Number(b.price?.price ?? 0),
+    customerName: "",
+    createdAt: b.created_at,
+    status: mapServerStatusToTab(b.status),
+    serverStatus: b.status,
+    stayBookingId: b.id,
+  };
+}
+
+function mapLookupSummary(s: PublicBookingSummary): UserBooking {
+  return {
+    id: `lookup-${s.booking_id}`,
+    source: "lookup",
+    roomId: s.room_id,
+    roomTitle: s.room_title,
+    address: s.property_address,
+    startDate: formatYmd(s.start_date),
+    endDate: formatYmd(s.end_date),
+    totalPrice: Number(s.total_amount ?? 0),
+    customerName: "",
+    createdAt: new Date().toISOString(),
+    status: mapServerStatusToTab(s.status),
+    serverStatus: s.status,
+    bookingCode: s.booking_code,
+  };
 }
 
 const MyBookings = () => {
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
+  const queryClient = useQueryClient();
+
   const [tab, setTab] = useState<BookingStatus>("upcoming");
-  const [bookings, setBookings] = useState<UserBooking[]>(() => safeParseBookings());
-  const [bookingToCancel, setBookingToCancel] = useState<UserBooking | null>(null);
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupCode, setLookupCode] = useState("");
+  const [lookupHit, setLookupHit] = useState<UserBooking | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
-  const filteredBookings = useMemo(() => bookings.filter((booking) => booking.status === tab), [bookings, tab]);
+  const [pendingLocalCount, setPendingLocalCount] = useState(0);
 
-  const cancelEligibility = useMemo(
-    () => (bookingToCancel ? getCancelEligibility(bookingToCancel) : null),
-    [bookingToCancel],
-  );
-
-  const persistBookings = (nextBookings: UserBooking[]) => {
-    setBookings(nextBookings);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextBookings));
-    }
-  };
-
-  const confirmCancelBooking = () => {
-    if (!bookingToCancel) return;
-    const eligibility = getCancelEligibility(bookingToCancel);
-    if (!eligibility.allowed) {
-      toastError(eligibility.reason);
+  useEffect(() => {
+    if (!isAuthenticated) {
       return;
     }
-    const nextBookings = bookings.map((booking) =>
-      booking.id === bookingToCancel.id ? { ...booking, status: "cancelled" as const } : booking,
-    );
-    persistBookings(nextBookings);
-    toastSuccess("Đã hủy đơn trên thiết bị này. Nếu cần hủy chính thức với khách sạn, vui lòng liên hệ BKS.");
-    setBookingToCancel(null);
+    void (async () => {
+      await flushPendingLocalBookingsToServer();
+      await queryClient.invalidateQueries({ queryKey: ["my-bookings", "stay-list"] });
+      setPendingLocalCount(getPendingLocalBookingsCount());
+    })();
+  }, [isAuthenticated, queryClient]);
+
+  const stayQuery = useQuery({
+    queryKey: ["my-bookings", "stay-list"],
+    enabled: isAuthenticated,
+    queryFn: async () => {
+      const res: { data?: { data?: BookingDetail[] } } = (await stayService.getBookings(1)) as {
+        data?: { data?: BookingDetail[] };
+      };
+      return res?.data?.data ?? [];
+    },
+  });
+
+  const stayCards = useMemo(() => (stayQuery.data ?? []).map(mapStayBooking), [stayQuery.data]);
+
+  const allBookings = useMemo(() => {
+    const merged = [...stayCards];
+    if (lookupHit) {
+      merged.push(lookupHit);
+    }
+    return merged;
+  }, [stayCards, lookupHit]);
+
+  const filteredBookings = useMemo(() => allBookings.filter((b) => b.status === tab), [allBookings, tab]);
+
+  const handleLookup = async () => {
+    const email = lookupEmail.trim();
+    const code = lookupCode.trim();
+    if (!email || !code) {
+      toastError("Vui lòng nhập email và mã đặt phòng.");
+      return;
+    }
+    setLookupLoading(true);
+    try {
+      const res = (await bookingApi.lookupBooking({ email, booking_code: code })) as {
+        data?: PublicBookingSummary;
+        message?: string;
+      };
+      if (res?.data?.booking_id) {
+        setLookupHit(mapLookupSummary(res.data));
+        toastSuccess(res.message || "Đã tìm thấy đơn đặt phòng.");
+      } else {
+        setLookupHit(null);
+        toastError("Không tìm thấy đơn khớp với thông tin đã nhập.");
+      }
+    } catch (e: unknown) {
+      setLookupHit(null);
+      const msg =
+        typeof e === "object" && e !== null && "response" in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      toastError(msg || "Tra cứu thất bại. Vui lòng thử lại.");
+    } finally {
+      setLookupLoading(false);
+    }
   };
 
   return (
@@ -139,15 +192,15 @@ const MyBookings = () => {
           </p>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng của tôi</h1>
           <p className="mt-3 max-w-2xl text-slate-200">
-            Theo dõi đơn đặt qua website công khai — dữ liệu được lưu trên trình duyệt thiết bị này.
+            Dữ liệu lấy từ hệ thống BKS: tra cứu công khai bằng email + mã đặt (trong email xác nhận), hoặc danh sách đặt qua cổng BKS Stay khi bạn đã đăng nhập.
           </p>
           <p className="mt-2 max-w-2xl text-sm text-slate-300">
-            Để xem lịch sử và quản lý lưu trú đầy đủ trên cổng BKS Stay (sau khi có tài khoản / hệ thống đồng bộ), hãy{" "}
+            Đăng nhập để xem toàn bộ lịch sử và chi tiết lưu trú:{" "}
             <Link
               to={ROUTERS.BKS_STAY_LOGIN}
               className="font-semibold text-sky-300 underline-offset-2 hover:underline"
             >
-              đăng nhập BKS Stay
+              BKS Stay
             </Link>
             .
           </p>
@@ -167,6 +220,76 @@ const MyBookings = () => {
       </div>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <Card className="mb-8 rounded-3xl border-slate-200 shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Tra cứu đơn (không cần đăng nhập)</h2>
+            <p className="text-sm text-slate-600">
+              Nhập email đã dùng khi đặt và mã đặt phòng (dạng RM-YYYY-XXXXXX) trong email xác nhận.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="lookup-email">Email</Label>
+                <Input
+                  id="lookup-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="ban@email.com"
+                  value={lookupEmail}
+                  onChange={(e) => setLookupEmail(e.target.value)}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lookup-code">Mã đặt phòng</Label>
+                <Input
+                  id="lookup-code"
+                  placeholder="RM-2026-000042"
+                  value={lookupCode}
+                  onChange={(e) => setLookupCode(e.target.value)}
+                  className="rounded-xl font-mono"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" className="rounded-xl bg-sky-600 hover:bg-sky-700" onClick={handleLookup} disabled={lookupLoading}>
+                {lookupLoading ? (
+                  <>
+                    <Spinner size="sm" className="inline-block mr-2" spinnerClassName="border-y-white" />
+                    Đang tra cứu…
+                  </>
+                ) : (
+                  "Tra cứu"
+                )}
+              </Button>
+              {lookupHit && (
+                <Button type="button" variant="secondary" className="rounded-xl" onClick={() => setLookupHit(null)}>
+                  Xóa kết quả tra cứu
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {isAuthenticated && pendingLocalCount > 0 && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p className="font-semibold">Còn {pendingLocalCount} đơn lưu trên thiết bị chưa gộp vào tài khoản</p>
+            <p className="mt-1 text-amber-900/90">
+              Hãy đảm bảo bạn đã đăng nhập BKS Stay bằng đúng email đã dùng khi đặt phòng, rồi tải lại trang này để hệ thống đồng bộ.
+            </p>
+          </div>
+        )}
+
+        {isAuthenticated && stayQuery.isLoading && (
+          <div className="mb-6 flex items-center gap-2 text-sm text-slate-600">
+            <Spinner size="sm" className="inline-block" spinnerClassName="border-y-sky-600" />
+            Đang tải đơn từ BKS Stay…
+          </div>
+        )}
+
+        {isAuthenticated && stayQuery.isError && (
+          <p className="mb-6 text-sm text-rose-600">Không tải được danh sách BKS Stay. Bạn vẫn có thể tra cứu đơn bằng form phía trên.</p>
+        )}
+
         <div className="mb-6 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
           {(["upcoming", "completed", "cancelled"] as const).map((status) => (
             <button
@@ -186,7 +309,9 @@ const MyBookings = () => {
           <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-14 text-center">
             <SearchX className="mx-auto mb-3 size-8 text-slate-400" />
             <p className="text-base font-semibold text-slate-700">Chưa có đơn đặt phòng nào ở mục này</p>
-            <p className="mt-2 text-sm text-slate-500">Hãy tìm phòng phù hợp và tạo đơn đặt đầu tiên của bạn.</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Thử tra cứu bằng email và mã đặt, hoặc đăng nhập BKS Stay để xem lịch sử đầy đủ.
+            </p>
             <Button asChild className="mt-5 rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
               <Link to={ROUTERS.SEARCH_ROOMS}>Tìm phòng ngay</Link>
             </Button>
@@ -202,8 +327,22 @@ const MyBookings = () => {
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-lg font-semibold text-slate-900">{booking.roomTitle}</h3>
-                          <Badge className={`rounded-full border-0 ${bookingStatusBadgeClass[booking.status]}`}>{bookingStatusLabel[booking.status]}</Badge>
+                          <Badge className={`rounded-full border-0 ${bookingStatusBadgeClass[booking.status]}`}>
+                            {bookingStatusLabel[booking.status]}
+                          </Badge>
+                          <Badge variant="outline" className="rounded-full border-slate-300 text-slate-600">
+                            {booking.source === "stay" ? "BKS Stay" : "Tra cứu"}
+                          </Badge>
+                          {booking.serverStatus === 4 && (
+                            <Badge className="rounded-full border-0 bg-violet-100 text-violet-800">Chờ duyệt hủy</Badge>
+                          )}
                         </div>
+                        {booking.bookingCode && (
+                          <p className="text-xs font-mono text-slate-500">Mã: {booking.bookingCode}</p>
+                        )}
+                        {booking.source === "stay" && booking.stayBookingId != null && (
+                          <p className="text-xs text-slate-500">Mã đơn hệ thống: #{booking.stayBookingId}</p>
+                        )}
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                           <MapPin className="size-4 text-sky-500" />
                           {booking.address || "Đang cập nhật địa chỉ"}
@@ -214,7 +353,7 @@ const MyBookings = () => {
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
                           <Clock3 className="size-4" />
-                          Tạo lúc: {new Date(booking.createdAt).toLocaleString("vi-VN")}
+                          {booking.source === "stay" ? `Cập nhật: ${new Date(booking.createdAt).toLocaleString("vi-VN")}` : "Kết quả tra cứu mới nhất"}
                         </p>
                       </div>
 
@@ -222,27 +361,16 @@ const MyBookings = () => {
                         <p className="text-sm text-slate-500">Tổng tạm tính</p>
                         <p className="text-2xl font-bold text-sky-600">{formatPrice(booking.totalPrice)}</p>
                         <div className="flex flex-wrap gap-2 md:justify-end">
-                          <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-                            <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>Xem phòng</Link>
-                          </Button>
-
-                          {booking.status === "upcoming" && (
-                            <Button
-                              variant="secondary"
-                              className="rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
-                              type="button"
-                              onClick={() => setBookingToCancel(booking)}
-                            >
-                              <XCircle className="mr-1 size-4" />
-                              Hủy đơn
+                          {booking.source === "lookup" && booking.roomId > 0 && (
+                            <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                              <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>Xem phòng</Link>
                             </Button>
                           )}
-
-                          {booking.status === "completed" && (
+                          {booking.source === "stay" && booking.stayBookingId != null && (
                             <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
-                              <Link to={`${ROUTERS.BOOKING}/${booking.roomId}`}>
+                              <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", String(booking.stayBookingId))}>
                                 <CheckCircle2 className="mr-1 size-4" />
-                                Đặt lại
+                                Chi tiết Stay
                               </Link>
                             </Button>
                           )}
@@ -255,50 +383,6 @@ const MyBookings = () => {
           </div>
         )}
       </main>
-
-      <Dialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
-        <DialogContent className="max-w-md rounded-2xl sm:rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Hủy đặt phòng?</DialogTitle>
-            {bookingToCancel && (
-              <DialogDescription>
-                Xác nhận hủy đơn {bookingToCancel.roomTitle} ({bookingToCancel.startDate} — {bookingToCancel.endDate}).
-              </DialogDescription>
-            )}
-          </DialogHeader>
-          {bookingToCancel && (
-            <div className="space-y-3 text-sm text-slate-600">
-              <p>
-                <span className="font-semibold text-slate-800">{bookingToCancel.roomTitle}</span>
-                <span className="text-slate-500"> — </span>
-                {bookingToCancel.startDate} → {bookingToCancel.endDate}
-              </p>
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                Đơn đang xem chỉ lưu trên trình duyệt (đặt qua website công khai). Thao tác &quot;Hủy&quot; tại đây{" "}
-                <strong>không tự động gửi yêu cầu hủy tới khách sạn</strong> — khi hệ thống đồng bộ server, luồng hủy
-                sẽ gọi API chính thức.
-              </div>
-              {cancelEligibility && !cancelEligibility.allowed && (
-                <p className="text-sm text-rose-600">{cancelEligibility.reason}</p>
-              )}
-            </div>
-          )}
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="secondary" className="rounded-xl" onClick={() => setBookingToCancel(null)}>
-              Quay lại
-            </Button>
-            {cancelEligibility?.allowed === true && (
-              <Button
-                type="button"
-                className="rounded-xl bg-rose-600 text-white hover:bg-rose-700"
-                onClick={confirmCancelBooking}
-              >
-                Xác nhận hủy đơn
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <PublicFooter />
     </div>

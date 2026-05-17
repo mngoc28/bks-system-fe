@@ -12,6 +12,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { ROUTERS } from "@/constant";
 
 const ForceChangePassword = () => {
@@ -114,7 +115,7 @@ const ForceChangePassword = () => {
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 text-lg font-black text-white shadow-xl shadow-slate-900/20 transition-all hover:scale-[1.01] hover:bg-slate-800"
                   >
                      {isLoading ? (
-                        <div className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        <Spinner size="sm" spinnerClassName="border-y-white" />
                      ) : (
                         <>
                            Xác nhận thay đổi <ArrowRight className="size-5" />

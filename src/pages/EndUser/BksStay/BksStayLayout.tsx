@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { 
   House, 
@@ -16,18 +16,66 @@ import {
 import { ROUTERS } from "@/constant";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
-import { useUserStore } from "@/store/useUserStore";
-import { useLogoutMutation } from "@/hooks/useAuthQuery";
+import { readPersistedUserProfile, useUserStore } from "@/store/useUserStore";
+import { getAccessToken } from "@/utils/storage";
+import stayService from "@/services/stayService";
+import { useStayLogoutMutation } from "@/hooks/useAuthQuery";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/layout/NotificationBell";
 
 const BksStayLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  /** Snapshot sync từ localStorage — tránh sidebar "Guest" trước khi zustand/persist rehydrate. */
+  const [persistSnapshot] = useState(() => readPersistedUserProfile());
   const location = useLocation();
   const navigate = useNavigate();
   const userEmail = useUserStore((state) => state.userEmail);
   const user = useUserStore((state) => state.userName);
-  const logoutMutate = useLogoutMutation();
+  const logoutMutate = useStayLogoutMutation();
+
+  const displayEmail = userEmail || persistSnapshot.userEmail;
+  const displayName = user || persistSnapshot.userName;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const repairIdentityFromStayApi = () => {
+      const token = getAccessToken();
+      if (!token || useUserStore.getState().userEmail) {
+        return;
+      }
+
+      stayService
+        .getDashboard()
+        .then((res: { data?: { user?: { email?: string; name?: string } } }) => {
+          if (cancelled) {
+            return;
+          }
+          const u = res?.data?.user;
+          if (!u?.email) {
+            return;
+          }
+          const role = useUserStore.getState().userRole || "user";
+          useUserStore.getState().login(token, u.email, role, u.name || "");
+        })
+        .catch(() => {});
+    };
+
+    if (useUserStore.persist.hasHydrated()) {
+      repairIdentityFromStayApi();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const unsub = useUserStore.persist.onFinishHydration(() => {
+      repairIdentityFromStayApi();
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, []);
 
   const handleLogout = () => {
     logoutMutate.mutate(undefined, {
@@ -82,16 +130,16 @@ const BksStayLayout = () => {
           {/* User Profile Summary */}
           <div className="p-8">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center overflow-hidden rounded-full border border-sky-500/20 bg-sky-500/20 font-bold text-sky-400">
-                {user ? (
-                   <img src={`https://ui-avatars.com/api/?name=${user}&background=random`} alt={user} className="size-full object-cover" />
+              <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sky-500/20 bg-sky-500/20 font-bold text-sky-400">
+                {displayName ? (
+                   <img src={`https://ui-avatars.com/api/?name=${displayName}&background=random`} alt={displayName} className="size-full object-cover" />
                 ) : (
                   "U"
                 )}
               </div>
               <div>
-                <p className="max-w-[150px] truncate text-sm font-bold leading-tight text-white underline decoration-sky-500/50 underline-offset-4">{user || "Người dùng"}</p>
-                <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-widest text-slate-500">{userEmail || "GUEST"}</p>
+                <p className="max-w-[150px] truncate text-sm font-bold leading-tight text-white underline decoration-sky-500/50 underline-offset-4">{displayName || "Người dùng"}</p>
+                <p className="mt-0.5 truncate text-xs text-slate-400">{displayEmail || "Guest"}</p>
               </div>
             </div>
             

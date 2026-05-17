@@ -74,8 +74,9 @@ export default function PartnerLogin() {
             toastError(t("login.failed"));
           }
         },
-        onError: (_err: any) => {
-          toastError(t("login.invalid_credentials"));
+        onError: (err: any) => {
+          const errorMessage = err?.response?.data?.message || t("login.invalid_credentials");
+          toastError(errorMessage);
         },
       },
     );

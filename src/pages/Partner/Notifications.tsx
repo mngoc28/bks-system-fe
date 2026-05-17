@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import Pagination from "@/components/Pagination";
+import { Spinner } from "@/components/ui/spinner";
 
 const Notifications: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -132,8 +133,13 @@ const Notifications: React.FC = () => {
                 <CardContent className="p-4">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center gap-4 py-20">
-                            <div className="size-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"></div>
-                            <p className="animate-pulse font-bold italic text-slate-400">{t("notifications.loading")}</p>
+                            <Spinner 
+                                size="lg" 
+                                spinnerClassName="border-y-blue-600" 
+                                showText 
+                                text={t("notifications.loading")} 
+                                className="text-slate-400 italic font-bold"
+                            />
                         </div>
                     ) : filteredNotifications.length > 0 ? (
                         <div className="space-y-3">

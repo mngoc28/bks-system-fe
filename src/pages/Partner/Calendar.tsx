@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -15,13 +15,13 @@ import {
   LogIn,
   LogOut,
   Phone,
-  Loader2,
   Lock,
   Plus,
   Trash2,
   Info,
   FileText,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { partnerService } from '@/services/partnerService';
 import {
@@ -676,7 +676,7 @@ const CalendarPage: React.FC = () => {
           <div className="calendar-container relative">
             {loading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
-                <Loader2 className="animate-spin text-blue-600" size={40} />
+                <Spinner size="lg" showText text="Đang đồng bộ..." />
               </div>
             )}
             <FullCalendar

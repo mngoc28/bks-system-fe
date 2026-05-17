@@ -3,6 +3,7 @@ import { Clock3, Newspaper } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { NewsGridProps } from "@/dataHelper/news.dataHelper";
+import { Spinner } from "@/components/ui/spinner";
 
 const NewsGrid = ({
   articles,
@@ -54,8 +55,8 @@ const NewsGrid = ({
       )}
 
       {loading ? (
-        <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/70 px-6 py-10 text-center text-sm text-slate-500">
-          {loadingLabel}
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
+          <Spinner size="lg" spinnerClassName="border-y-sky-600" showText text={loadingLabel} className="text-slate-500 font-bold" />
         </div>
       ) : error ? (
         <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-10 text-center text-sm font-semibold text-rose-500">

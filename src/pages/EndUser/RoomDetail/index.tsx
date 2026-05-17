@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info } from "lucide-react";
@@ -7,6 +7,7 @@ import { roomApi } from "@/api/EU/roomApi";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
@@ -150,8 +151,8 @@ const PublicRoomDetail = () => {
       <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
         <section className="space-y-6">
           {isLoading ? (
-            <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white px-6 py-12 text-center text-slate-500">
-              Đang tải chi tiết phòng...
+            <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
+              <Spinner size="lg" spinnerClassName="border-y-sky-600" showText text="Đang tải chi tiết phòng..." className="text-slate-500 font-bold" />
             </div>
           ) : isError || !room ? (
             <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-12 text-center text-rose-600">

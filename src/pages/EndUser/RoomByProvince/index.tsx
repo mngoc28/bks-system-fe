@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Filter, MapPin, SearchX, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import Pagination from "@/components/Pagination";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
@@ -197,8 +198,8 @@ const RoomByProvince = () => {
             </div>
           </section>
         ) : isLoadingProvinces || isLoadingRooms ? (
-          <section className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center text-slate-500">
-            {t("public.roomByProvince.loading")}
+          <section className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
+            <Spinner size="lg" spinnerClassName="border-y-sky-600" showText text={t("public.roomByProvince.loading")} className="text-slate-500 font-bold" />
           </section>
         ) : isError ? (
           <section className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-16 text-center">

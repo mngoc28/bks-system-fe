@@ -1,7 +1,35 @@
+import { disconnectEcho } from "@/lib/echoClient";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { getAccessToken, removeAccessToken, setAccessToken, clearAllDashboardDateRanges } from "../utils/storage";
-import { disconnectEcho } from "@/lib/echoClient";
+import { cancelAllRequests } from "../api/abortService";
+import { clearAllDashboardDateRanges, getAccessToken, removeAccessToken, setAccessToken } from "../utils/storage";
+
+const USER_PERSIST_KEY = "user";
+
+/** Read the persist (sync) snapshot — used when the UI renders before Zustand rehydrates.. */
+export function readPersistedUserProfile(): {
+  userEmail: string;
+  userName: string;
+  userRole: string;
+} {
+  if (typeof window === "undefined") {
+    return { userEmail: "", userName: "", userRole: "" };
+  }
+  try {
+    const raw = localStorage.getItem(USER_PERSIST_KEY);
+    if (!raw) {
+      return { userEmail: "", userName: "", userRole: "" };
+    }
+    const parsed = JSON.parse(raw) as { state?: { userEmail?: string; userName?: string; userRole?: string } };
+    return {
+      userEmail: parsed?.state?.userEmail ?? "",
+      userName: parsed?.state?.userName ?? "",
+      userRole: parsed?.state?.userRole ?? "",
+    };
+  } catch {
+    return { userEmail: "", userName: "", userRole: "" };
+  }
+}
 
 interface UserStore {
   userEmail: string;
@@ -36,6 +64,7 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
         removeAccessToken();
         clearAllDashboardDateRanges();
         disconnectEcho();
+        cancelAllRequests();
         set(() => ({
           userEmail: "",
           userRole: "",
@@ -44,7 +73,7 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
       },
     }),
     {
-      name: "user",
+      name: USER_PERSIST_KEY,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         userEmail: state.userEmail,
