@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { ROUTERS } from "@/constant";
 import { FaFacebookF, FaGoogle, FaMap, FaPhone } from "react-icons/fa";
+import { CheckCircle } from "lucide-react";
 
 /**
  * Reset Token Success Page
@@ -23,14 +24,14 @@ const ResetTokenSuccess: React.FC = () => {
                 <div className=" ">
                     <div className="grid size-full grid-cols-1 grid-rows-3 rounded-lg bg-white px-5">
                         <div className="flex flex-col items-center justify-center">
-                            <img src="/assets/images/success.png" alt="success" className="size-[80px]" />
+                            <CheckCircle className="size-[80px] text-emerald-500" />
                             <p className="text-center font-roboto text-xl text-green-500">
                                 {t("verify_email.reset_token_success") || "Reset token verify email successfully"}
                             </p>
                         </div>
                         <div className="flex flex-col items-center justify-center">
                             <button
-                                onClick={() => navigate(ROUTERS.LOGIN)}
+                                onClick={() => navigate(ROUTERS.PARTNER_LOGIN)}
                                 className="w-full rounded-sm border border-green-500 bg-green-500 px-10 py-2 text-white">
                                 {t("verify_email.back_to_login") || "Back to Login"}
                             </button>

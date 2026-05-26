@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Loader2, RefreshCw } from "lucide-react";
+import { ClipboardList, Loader2, RefreshCw, Calendar, Building2, Home, FileText, AlertCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { partnerService } from "@/services/partnerService";
 import { toastError, toastSuccess } from "@/components/ui/toast";
@@ -30,8 +30,6 @@ import {
 } from "@/components/ui/dialog";
 import { PlainTextarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ROUTERS } from "@/constant";
-import { Link } from "react-router-dom";
 
 export type PartnerCancellationListItem = {
   id: number;
@@ -101,7 +99,7 @@ function formatReasonCode(code: string): string {
 function formatBookingStatus(status: number): string {
   const map: Record<number, string> = {
     0: "Chờ duyệt",
-    1: "Đã duyệt",
+    1: "Đã xác nhận",
     2: "Đã hủy",
     3: "Đã hoàn thành",
     4: "Chờ duyệt hủy",
@@ -109,6 +107,118 @@ function formatBookingStatus(status: number): string {
   return map[status] || `TT #${status}`;
 }
 
+function statusLabel(status: string): string {
+  switch (status) {
+    case "pending":   return "Chờ xử lý";
+    case "approved":  return "Đã duyệt hủy";
+    case "rejected":  return "Đã từ chối";
+    case "withdrawn": return "Khách rút";
+    default:          return status;
+  }
+}
+
+// ─── Detail Modal ────────────────────────────────────────────────────────────
+function DetailModal({
+  row,
+  onClose,
+  onApprove,
+  onReject,
+}: {
+  row: PartnerCancellationListItem;
+  onClose: () => void;
+  onApprove: (row: PartnerCancellationListItem) => void;
+  onReject:  (row: PartnerCancellationListItem) => void;
+}) {
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-[520px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-slate-900">
+            <FileText className="size-5 text-blue-600" />
+            Chi tiết yêu cầu hủy
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 text-sm">
+          {/* Booking info */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+              <Calendar className="size-3.5" /> Thông tin đặt phòng
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+              <span className="text-slate-500">Mã yêu cầu</span>
+              <span className="font-mono font-bold text-slate-900">#{row.id}</span>
+              <span className="text-slate-500">Mã booking</span>
+              <span className="font-mono font-bold text-blue-700">#{row.booking_id}</span>
+              <span className="text-slate-500">Trạng thái đơn</span>
+              <span>{row.booking_status != null ? formatBookingStatus(row.booking_status) : "—"}</span>
+            </div>
+          </div>
+
+          {/* Property / room */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+              <Building2 className="size-3.5" /> Cơ sở / Phòng
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+              <span className="text-slate-500">Cơ sở</span>
+              <span className="font-medium text-slate-900">{row.property?.name ?? "—"}</span>
+              <span className="text-slate-500">Phòng</span>
+              <span className="font-medium text-slate-900">
+                {row.room
+                  ? `${row.room.title}${row.room.room_number ? ` (#${row.room.room_number})` : ""}`
+                  : "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* Reason */}
+          <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-wide">
+              <AlertCircle className="size-3.5" /> Lý do khách yêu cầu hủy
+            </div>
+            <p className="font-semibold text-slate-800">{formatReasonCode(row.reason_code)}</p>
+            {row.reason_text && (
+              <p className="text-slate-600 leading-relaxed">{row.reason_text}</p>
+            )}
+          </div>
+
+          {/* Timestamps & status */}
+          <div className="flex flex-wrap gap-3 items-center justify-between">
+            <div className="text-xs text-slate-500">
+              <span className="font-medium">Gửi lúc:</span> {formatRequestedAt(row.requested_at)}
+            </div>
+            <Badge variant="outline" className={`${statusBadgeClass(row.status)} text-xs`}>
+              {statusLabel(row.status)}
+            </Badge>
+          </div>
+        </div>
+
+        {row.status === "pending" && (
+          <DialogFooter className="gap-2 border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-800 transition-colors"
+              onClick={() => { onClose(); onReject(row); }}
+            >
+              Từ chối
+            </Button>
+            <Button
+              type="button"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => { onClose(); onApprove(row); }}
+            >
+              Duyệt hủy
+            </Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 const CancellationRequests: React.FC = () => {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("pending");
@@ -116,6 +226,10 @@ const CancellationRequests: React.FC = () => {
   const [page, setPage] = useState(1);
   const perPage = 15;
 
+  // Detail modal state
+  const [detailRow, setDetailRow] = useState<PartnerCancellationListItem | null>(null);
+
+  // Action dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"approve" | "reject">("approve");
   const [activeRow, setActiveRow] = useState<PartnerCancellationListItem | null>(null);
@@ -123,8 +237,8 @@ const CancellationRequests: React.FC = () => {
 
   const propertiesQuery = useQuery({
     queryKey: ["partner", "properties", "names-for-filter"],
-    queryFn: async () => {
-      const res: any = await partnerService.getProperties({ per_page: 200 });
+    queryFn: async ({ signal }) => {
+      const res: any = await partnerService.getProperties({ per_page: 200 }, { signal });
       const rows = res?.data?.data || res?.data || [];
       return rows.map((p: any) => ({
         id: Number(p.id),
@@ -136,11 +250,11 @@ const CancellationRequests: React.FC = () => {
 
   const listQuery = useQuery({
     queryKey: ["partner", "cancellation-requests", { page, perPage, statusFilter, propertyFilter }],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const params: Record<string, string | number> = { page, per_page: perPage };
       if (statusFilter && statusFilter !== "all") params.status = statusFilter;
       if (propertyFilter && propertyFilter !== "all") params.property_id = Number(propertyFilter);
-      const res = await partnerService.getCancellationRequests(params);
+      const res = await partnerService.getCancellationRequests(params, { signal });
       return parseListResponse(res);
     },
   });
@@ -233,15 +347,15 @@ const CancellationRequests: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
             <ClipboardList className="size-7 text-blue-600" />
             Yêu cầu hủy đặt phòng
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Inbox yêu cầu hủy từ khách (BCP). Cần bật <code className="rounded bg-slate-100 px-1">BCP_CANCELLATION_V1</code>{" "}
-            trên API.
+          <p className="mt-1 text-sm text-slate-500">
+            Danh sách các yêu cầu hủy phòng từ khách. Duyệt để hoàn tất hủy hoặc từ chối để giữ nguyên đặt phòng.
           </p>
         </div>
         <Button
@@ -250,19 +364,22 @@ const CancellationRequests: React.FC = () => {
           size="sm"
           onClick={() => void listQuery.refetch()}
           disabled={listQuery.isFetching}
+          className="gap-2 hover:border-blue-200 hover:text-blue-600 transition-colors"
         >
-          {listQuery.isFetching ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
+          {listQuery.isFetching ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Làm mới
         </Button>
       </div>
 
+      {/* 403 Banner */}
       {forbidden && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          API trả 403 — có thể tính năng BCP đang tắt trên server. Liên hệ quản trị để bật{" "}
-          <code className="rounded bg-amber-100 px-1">BCP_CANCELLATION_V1</code>.
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-start gap-2">
+          <AlertCircle className="size-4 mt-0.5 shrink-0 text-amber-600" />
+          <span>Không thể tải dữ liệu. Tính năng yêu cầu hủy đang bị tắt trên hệ thống. Vui lòng liên hệ quản trị viên để được hỗ trợ.</span>
         </div>
       )}
 
+      {/* Filters */}
       <div className="flex flex-wrap items-end gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="min-w-[180px] space-y-2">
           <Label>Trạng thái</Label>
@@ -275,7 +392,7 @@ const CancellationRequests: React.FC = () => {
               <SelectItem value="pending">Chờ xử lý</SelectItem>
               <SelectItem value="approved">Đã duyệt hủy</SelectItem>
               <SelectItem value="rejected">Đã từ chối</SelectItem>
-              <SelectItem value="withdrawn">Đã rút</SelectItem>
+              <SelectItem value="withdrawn">Khách đã rút</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -297,6 +414,7 @@ const CancellationRequests: React.FC = () => {
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {listQuery.isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -306,47 +424,50 @@ const CancellationRequests: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Booking</TableHead>
+                <TableHead className="w-12">STT</TableHead>
                 <TableHead>Cơ sở / Phòng</TableHead>
-                <TableHead>Lý do (mã)</TableHead>
-                <TableHead>Gửi lúc</TableHead>
-                <TableHead>TT đơn</TableHead>
-                <TableHead>Trạng thái</TableHead>
+                <TableHead>Lý do yêu cầu</TableHead>
+                <TableHead>Thời gian gửi</TableHead>
+                <TableHead>Trạng thái đặt phòng</TableHead>
+                <TableHead>Trạng thái xử lý</TableHead>
                 <TableHead className="text-right">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center text-slate-500">
+                  <TableCell colSpan={7} className="py-12 text-center text-slate-500">
                     Không có yêu cầu phù hợp bộ lọc.
                   </TableCell>
                 </TableRow>
               ) : (
-                items.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-mono text-sm">{row.id}</TableCell>
-                    <TableCell>
-                      <Link
-                        to={ROUTERS.PARTNER_BOOKINGS}
-                        className="font-medium text-blue-600 hover:underline"
-                      >
-                        #{row.booking_id}
-                      </Link>
+                items.map((row, idx) => (
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer hover:bg-blue-50/40 transition-colors"
+                    onClick={() => setDetailRow(row)}
+                  >
+                    <TableCell className="font-mono text-xs text-slate-400">
+                      {(page - 1) * perPage + idx + 1}
                     </TableCell>
                     <TableCell className="max-w-[240px]">
-                      <div className="truncate text-sm font-medium text-slate-900">
-                        {row.property?.name ?? "—"}
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="size-3.5 shrink-0 text-slate-400" />
+                        <span className="truncate text-sm font-medium text-slate-900">
+                          {row.property?.name ?? "—"}
+                        </span>
                       </div>
-                      <div className="truncate text-xs text-slate-500">{roomLabel(row)}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Home className="size-3.5 shrink-0 text-slate-300" />
+                        <span className="truncate text-xs text-slate-500">{roomLabel(row)}</span>
+                      </div>
                     </TableCell>
                     <TableCell className="max-w-[200px]">
                       <div className="font-semibold text-slate-800">{formatReasonCode(row.reason_code)}</div>
                       {row.reason_text ? (
-                        <div className="line-clamp-2 text-xs text-slate-500">{row.reason_text}</div>
+                        <div className="line-clamp-2 text-xs text-slate-500 mt-0.5">{row.reason_text}</div>
                       ) : (
-                        <div className="text-[10px] text-slate-400 italic">Mã gốc: {row.reason_code}</div>
+                        <div className="text-[10px] text-slate-400 italic mt-0.5">Không có ghi chú thêm</div>
                       )}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm text-slate-700">
@@ -362,19 +483,27 @@ const CancellationRequests: React.FC = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${statusBadgeClass(row.status)} capitalize`}>
-                        {row.status === 'pending' ? 'Chờ xử lý' : 
-                         row.status === 'approved' ? 'Đã duyệt' : 
-                         row.status === 'rejected' ? 'Từ chối' : row.status}
+                      <Badge variant="outline" className={`${statusBadgeClass(row.status)}`}>
+                        {statusLabel(row.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       {row.status === "pending" ? (
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="default" onClick={() => openApprove(row)}>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="bg-slate-900 hover:bg-slate-700 text-white transition-colors"
+                            onClick={(e) => { e.stopPropagation(); openApprove(row); }}
+                          >
                             Duyệt
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => openReject(row)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-800 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); openReject(row); }}
+                          >
                             Từ chối
                           </Button>
                         </div>
@@ -390,10 +519,11 @@ const CancellationRequests: React.FC = () => {
         )}
       </div>
 
+      {/* Pagination */}
       {metaSafe.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-slate-600">
           <span>
-            Trang {metaSafe.current_page} / {metaSafe.last_page} — {metaSafe.total} mục
+            Trang {metaSafe.current_page} / {metaSafe.last_page} — {metaSafe.total} yêu cầu
           </span>
           <div className="flex gap-2">
             <Button
@@ -418,33 +548,55 @@ const CancellationRequests: React.FC = () => {
         </div>
       )}
 
+      {/* Row Detail Modal */}
+      {detailRow && (
+        <DetailModal
+          row={detailRow}
+          onClose={() => setDetailRow(null)}
+          onApprove={openApprove}
+          onReject={openReject}
+        />
+      )}
+
+      {/* Action Confirm Dialog (Approve / Reject with note) */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{dialogMode === "approve" ? "Duyệt hủy đặt phòng" : "Từ chối yêu cầu hủy"}</DialogTitle>
+            <DialogTitle>
+              {dialogMode === "approve" ? "Duyệt yêu cầu hủy" : "Từ chối yêu cầu hủy"}
+            </DialogTitle>
           </DialogHeader>
           {activeRow && (
-            <div className="space-y-3 text-sm text-slate-600">
-              <p>
-                Request <span className="font-mono">#{activeRow.id}</span> · Booking{" "}
-                <span className="font-mono">#{activeRow.booking_id}</span>
-              </p>
-              <Label htmlFor="cr-note">{dialogMode === "approve" ? "Ghi chú (tuỳ chọn)" : "Ghi chú từ chối (≥ 5 ký tự)"}</Label>
-              <PlainTextarea
-                id="cr-note"
-                rows={4}
-                value={note}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)}
-                placeholder={dialogMode === "approve" ? "Ví dụ: đã xác minh với khách…" : "Nêu lý do từ chối rõ ràng…"}
-              />
+            <div className="space-y-4 text-sm text-slate-600">
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 space-y-1">
+                <p>Mã yêu cầu: <span className="font-mono font-bold text-slate-900">#{activeRow.id}</span></p>
+                <p>Mã booking: <span className="font-mono font-bold text-blue-700">#{activeRow.booking_id}</span></p>
+                <p className="font-medium text-slate-800">{activeRow.property?.name} — {roomLabel(activeRow)}</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cr-note">
+                  {dialogMode === "approve" ? "Ghi chú cho khách (tùy chọn)" : "Lý do từ chối (bắt buộc, ≥ 5 ký tự)"}
+                </Label>
+                <PlainTextarea
+                  id="cr-note"
+                  rows={4}
+                  value={note}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)}
+                  placeholder={dialogMode === "approve" ? "Ví dụ: đã xác minh với khách, hoàn tiền trong 3-5 ngày…" : "Nêu rõ lý do từ chối để khách hiểu…"}
+                />
+              </div>
             </div>
           )}
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
             <Button type="button" variant="ghost" onClick={closeDialog} disabled={busy}>
               Hủy
             </Button>
-            <Button type="button" onClick={submitDialog} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : dialogMode === "approve" ? "Xác nhận duyệt" : "Xác nhận từ chối"}
+            <Button type="button" onClick={submitDialog} disabled={busy}
+              className={dialogMode === "approve" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-rose-600 hover:bg-rose-700 text-white"}
+            >
+              {busy
+                ? <Loader2 className="size-4 animate-spin" />
+                : dialogMode === "approve" ? "Xác nhận duyệt hủy" : "Xác nhận từ chối"}
             </Button>
           </DialogFooter>
         </DialogContent>

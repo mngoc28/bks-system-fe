@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { partnerService } from "@/services/partnerService";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 
-const UNDO_WINDOW_MS = 30_000;
+const UNDO_WINDOW_MS = 15_000;
 const TICK_MS = 1_000;
 
 type PendingState = {
@@ -18,12 +18,12 @@ type Options = {
 };
 
 /**
- * Quản lý quick confirm với cửa sổ hoàn tác 30 giây.
+ * Quản lý quick confirm với cửa sổ hoàn tác 15 giây.
  *
  * Flow:
  *   1. UI gọi confirm(id) → lập tức optimistic (callback onOptimisticConfirm).
- *   2. Hook ghi pending entry; nếu user gọi undo trong 30s → revert.
- *   3. Sau 30s không undo → gọi API thực sự.
+ *   2. Hook ghi pending entry; nếu user gọi undo trong 15s → revert.
+ *   3. Sau 15s không undo → gọi API thực sự.
  *   4. Nếu API trả 409 conflict → revert UI + invoke onConflict.
  *
  * Nếu user confirm liên tiếp nhiều booking, mỗi booking có timer riêng.
@@ -95,7 +95,7 @@ export const useQuickConfirm = (options: Options = {}) => {
     const startedAt = Date.now();
     setPending((prev) => ({ ...prev, [key]: { id, remainingMs: UNDO_WINDOW_MS } }));
     optionsRef.current.onOptimisticConfirm?.(id);
-    toastSuccess(`Đã xác nhận booking #${id}. Có thể hoàn tác trong 30s.`);
+    toastSuccess(`Đã xác nhận booking #${id}. Có thể hoàn tác trong ${UNDO_WINDOW_MS / 1000}s.`);
 
     const tickInterval = window.setInterval(() => {
       const elapsed = Date.now() - startedAt;

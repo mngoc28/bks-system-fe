@@ -1,5 +1,5 @@
 import axiosClient from "@/api/axiosClient";
-import { Room } from "@/dataHelper/EU/room.dataHelper";
+import { Room, type SuggestedRoomsByProvinceParams } from "@/dataHelper/EU/room.dataHelper";
 import { AxiosResponse } from "axios";
 
 export interface PublicRoomListParams {
@@ -20,5 +20,11 @@ export const roomApi = {
 
     getLatestRooms: (): Promise<AxiosResponse<any>> => {
         return axiosClient.get("home/rooms/getLatest");
+    },
+
+    getSuggestedRoomsByProvince: (
+        params: SuggestedRoomsByProvinceParams = {},
+    ): Promise<AxiosResponse<any>> => {
+        return axiosClient.get("home/rooms/by-province", { params });
     },
 }

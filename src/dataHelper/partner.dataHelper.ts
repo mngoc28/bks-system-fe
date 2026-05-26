@@ -153,6 +153,8 @@ export interface PartnerCard {
   name: string;
   address: string;
   image: string;
+  reviews_count?: number;
+  reviews_avg_rating?: number | string;
 }
 
 export interface PartnerGridProps {

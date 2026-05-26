@@ -55,8 +55,8 @@ export const useGetAllProvinces = (data: ProvinceFilter) => {
 export const useGetAllProvincesTypes = () => {
   return useQuery<ApiResponse<ProvinceTypes[]>, Error>({
     queryKey: ["home-provinces"],
-    queryFn: async () => {
-      const response = await provinceApi.getHomeProvinces();
+    queryFn: async ({ signal }) => {
+      const response = await provinceApi.getHomeProvinces({ signal });
       return response;
     },
   });

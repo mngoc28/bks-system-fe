@@ -56,12 +56,17 @@ const ChatPage: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchConversations();
+    const controller = new AbortController();
+    fetchConversations(controller.signal);
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   useEffect(() => {
     if (activeConversation) {
-      fetchMessages(activeConversation.id);
+      const controller = new AbortController();
+      fetchMessages(activeConversation.id, controller.signal);
       
       // Listen for real-time messages
       (echo as any).private(`conversation.${activeConversation.id}`)
@@ -78,6 +83,7 @@ const ChatPage: React.FC = () => {
 
       return () => {
         (echo as any).leave(`conversation.${activeConversation.id}`);
+        controller.abort();
       };
     }
   }, [activeConversation]);
@@ -86,27 +92,34 @@ const ChatPage: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const fetchConversations = async () => {
+  const fetchConversations = async (signal?: AbortSignal) => {
     try {
-      const res: any = await partnerService.getConversations();
+      const res: any = await partnerService.getConversations({ signal });
+      if (signal?.aborted) return;
       setConversations(res?.data || []);
-      if (res?.data?.length > 0 && !activeConversation) {
-        // setActiveConversation(res.data[0]); // Don't auto-select to keep it clean
+    } catch (error: any) {
+      if (error?.name === 'CanceledError' || error?.name === 'AbortError' || signal?.aborted) {
+        return;
       }
-    } catch {
       toastError('Không thể tải danh sách hội thoại.');
     }
   };
 
-  const fetchMessages = async (id: number) => {
+  const fetchMessages = async (id: number, signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getMessages(id);
+      const res: any = await partnerService.getMessages(id, { signal });
+      if (signal?.aborted) return;
       setMessages(res?.data || []);
-    } catch {
+    } catch (error: any) {
+      if (error?.name === 'CanceledError' || error?.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải tin nhắn.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 

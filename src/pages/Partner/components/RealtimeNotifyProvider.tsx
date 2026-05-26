@@ -24,22 +24,19 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     window.dispatchEvent(new CustomEvent("partner:realtime-booking", { detail }));
 
     if (event === "booking.created") {
-      toast.success("Có booking mới", {
-        description: `Mã booking #${payload.id} vừa được tạo.`,
+      toast.success(`🆕 Có booking mới – Mã #${payload.id}`, {
         action: {
           label: "Xem ngay",
           onClick: () => navigate(`${ROUTERS.PARTNER_BOOKINGS}?status=pending`),
         },
         duration: 8000,
+        style: { background: "#10B981", color: "#FFFFFF" },
+        className: "border-green-500",
       });
     } else if (event === "booking.confirmed") {
-      toast.message("Booking đã xác nhận", {
-        description: `Mã booking #${payload.id}.`,
-      });
+      toast.info(`✅ Booking #${payload.id} đã xác nhận`);
     } else if (event === "booking.cancelled") {
-      toast.warning("Booking bị huỷ", {
-        description: `Mã booking #${payload.id}.`,
-      });
+      toast.warning(`⚠ Booking #${payload.id} bị huỷ`);
     }
   };
 
@@ -48,22 +45,24 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     onCancellationRequestEvent: (p: RealtimeCancellationRequestPayload) => {
       window.dispatchEvent(new CustomEvent("partner:realtime-cancellation-request", { detail: p }));
       if (p.status === "pending") {
-        toast.message("Yêu cầu hủy mới", {
-          description: `Request #${p.request_id} · Booking #${p.booking_id}`,
+        toast.warning(`📩 Yêu cầu hủy mới – Booking #${p.booking_id}`, {
           action: {
             label: "Mở inbox",
             onClick: () => navigate(ROUTERS.PARTNER_CANCELLATION_REQUESTS),
           },
           duration: 10_000,
+          style: { background: "#F59E0B", color: "#FFFFFF" },
+          className: "border-yellow-500",
         });
       } else {
-        toast.message("Cập nhật yêu cầu hủy", {
-          description: `Request #${p.request_id} → ${p.status}`,
+        toast.info(`🔄 Yêu cầu hủy #${p.request_id} → ${p.status}`, {
           action: {
             label: "Xem inbox",
             onClick: () => navigate(ROUTERS.PARTNER_CANCELLATION_REQUESTS),
           },
           duration: 8000,
+          style: { background: "#007BFF", color: "#FFFFFF" },
+          className: "border-blue-500",
         });
       }
     },

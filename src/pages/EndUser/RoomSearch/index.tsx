@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow } from "lucide-react";
+import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
@@ -120,10 +120,14 @@ const RoomSearch = () => {
               Lọc theo loại hình
             </h2>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               variant={selectedPropertyTypeId === null ? "default" : "outline"}
-              className="rounded-full px-6 transition-all"
+              className={`rounded-full px-6 transition-all ${
+                selectedPropertyTypeId === null
+                  ? "bg-primary hover:bg-primary/90 text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-600 hover:bg-slate-50"
+              }`}
               onClick={() => setSelectedPropertyTypeId(null)}
             >
               Tất cả
@@ -133,7 +137,9 @@ const RoomSearch = () => {
                 key={type.id}
                 variant={selectedPropertyTypeId === type.id ? "default" : "outline"}
                 className={`rounded-full px-6 transition-all ${
-                  selectedPropertyTypeId === type.id ? "bg-sky-600 hover:bg-sky-700" : "hover:border-sky-300 hover:text-sky-600"
+                  selectedPropertyTypeId === type.id
+                    ? "bg-primary hover:bg-primary/90 text-white"
+                    : "border border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-600 hover:bg-slate-50"
                 }`}
                 onClick={() => setSelectedPropertyTypeId(type.id)}
               >
@@ -183,7 +189,7 @@ const RoomSearch = () => {
             <p className="mt-1 text-slate-500">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn</p>
             <Button
               variant="outline"
-              className="mt-6 rounded-xl"
+              className="mt-6 rounded-full"
               onClick={() => {
                 setKeyword("");
                 setSelectedPropertyTypeId(null);
@@ -216,28 +222,49 @@ const RoomSearch = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       <div className="absolute right-3 top-3 flex flex-col gap-2">
                         {hasMonthlyPrice && (
-                          <Badge className={isHotel ? "bg-amber-500 hover:bg-amber-600" : "bg-sky-600 hover:bg-sky-700"}>
+                          <Badge className={`rounded-full border ${isHotel ? "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100/50" : "bg-sky-50 text-sky-700 border-sky-100 hover:bg-sky-100/50"}`}>
                             {isHotel ? "Ưu đãi ở dài hạn" : "Thuê dài hạn"}
                           </Badge>
                         )}
-                        <Badge variant="secondary" className="bg-white/95 text-slate-900 shadow-sm backdrop-blur-sm">
+                        <Badge variant="secondary" className="rounded-full border border-slate-200 bg-white/95 text-slate-900 shadow-sm backdrop-blur-sm">
                           {room.property_type_name}
                         </Badge>
                       </div>
                     </div>
                     <CardContent className="flex flex-col p-4">
-                      <div className="mb-2 flex items-start justify-between gap-2">
+                      <div className="mb-2 flex flex-col gap-1">
                         <h3 className="line-clamp-1 flex-1 font-bold text-slate-800 transition-colors group-hover:text-sky-600">
                           {room.title}
                         </h3>
+                        {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
+                          <div className="flex items-center gap-1 text-[0.75rem] font-bold text-amber-500">
+                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                            <span>{room.reviews_avg_rating}</span>
+                            <span className="text-slate-400 font-normal">({room.reviews_count})</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-[0.75rem] text-slate-400">
+                            <Star className="size-3.5 text-slate-300" />
+                            <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="mb-4 space-y-2">
-                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                          <MapPin className="h-4 w-4 shrink-0 text-sky-500" />
-                          <span className="line-clamp-1">
-                            {room.province_name} - {room.property_address}
-                          </span>
+                        <div className="flex flex-col gap-1.5 text-sm text-slate-500">
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="h-4 w-4 shrink-0 text-sky-500" />
+                            <span className="line-clamp-1">
+                              {room.province_name} - {room.property_address}
+                            </span>
+                          </div>
+                          {room.tourist_summary && room.tourist_summary.has_tourist_mapping && (
+                            <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                              <svg className="size-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                              <span className="font-medium">{room.tourist_summary.tourist_spot_name}</span>
+                              {room.tourist_summary.travel_time_label && <span className="ml-2">• {room.tourist_summary.travel_time_label}</span>}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <div className="flex items-center gap-1">
@@ -259,7 +286,7 @@ const RoomSearch = () => {
                             <span className="text-xs font-medium text-slate-400">/đêm</span>
                           </div>
                         </div>
-                        <Button className="rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition-all hover:bg-sky-600">
+                        <Button className="rounded-full font-semibold shadow-sm transition-all hover:shadow active:scale-95">
                           Chi tiết
                         </Button>
                       </div>

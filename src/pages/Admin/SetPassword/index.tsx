@@ -4,6 +4,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { ROUTERS } from '@/constant';
 import { setPasswordFormSchema } from '@/shared/shema';
+import { useUserStore } from '@/store/useUserStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -22,6 +23,7 @@ const SetPassword: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [userRole, setUserRole] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -35,6 +37,9 @@ const SetPassword: React.FC = () => {
     });
 
     useEffect(() => {
+        // Clear any existing active session to avoid auto-redirects
+        useUserStore.getState().logout();
+
         if (!token) {
             setError(t('setPassword.invalid_token'));
         }
@@ -46,7 +51,13 @@ const SetPassword: React.FC = () => {
         setLoading(true);
         setError('');
         try {
-            await authApi.setPassword(token, values.password, values.confirmPassword);
+            const response = await authApi.setPassword(token, values.password, values.confirmPassword);
+            if (response && 'data' in response && response.data) {
+                const responseData = response.data as any;
+                if (responseData && responseData.role) {
+                    setUserRole(responseData.role);
+                }
+            }
             setSuccess(true);
         } catch (err: any) {
             setError(err.response?.data?.message || t('setPassword.error'));
@@ -66,7 +77,15 @@ const SetPassword: React.FC = () => {
                     <div className="p-6">
                         <p className="text-center text-green-600">{t('setPassword.success_message')}</p>
                         <Button
-                            onClick={() => navigate(ROUTERS.LOGIN)}
+                            onClick={() => {
+                                if (userRole.toLowerCase() === 'user') {
+                                    navigate("/bks-stay/login");
+                                } else if (userRole.toLowerCase() === 'partner') {
+                                    navigate(ROUTERS.PARTNER_LOGIN);
+                                } else {
+                                    navigate(ROUTERS.LOGIN);
+                                }
+                            }}
                             className="mt-4 w-full bg-blue-600 hover:bg-blue-700"
                         >
                             {t('setPassword.go_to_login')}

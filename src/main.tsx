@@ -8,6 +8,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import Router from "./Router";
 import "./assets/fonts.css";
 import "./index.css";
+import "@splidejs/splide/css";
 import "./lib/changeLanguageUtils";
 
 const queryClient = new QueryClient();

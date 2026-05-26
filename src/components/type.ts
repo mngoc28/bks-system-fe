@@ -179,6 +179,9 @@ export interface RoomCarouselContainerProps {
   heading?: string;
   description?: string;
   className?: string;
+  sectionId?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
 }
 
 export interface PublicFooterProps {

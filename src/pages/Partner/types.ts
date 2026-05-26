@@ -19,6 +19,8 @@ export interface Property {
   description?: string;
   property_type_name?: string;
   type?: string; 
+  reviews_count?: number;
+  reviews_avg_rating?: number | string;
 }
 
 export interface Amenity {
@@ -74,6 +76,8 @@ export interface Room {
   cheapest_monthly_price?: number;
   all_prices?: string;
   status: 'Trống' | 'Đang thuê' | 'Đang bảo trì';
+  reviews_count?: number;
+  reviews_avg_rating?: number;
 }
 
 export interface Booking {

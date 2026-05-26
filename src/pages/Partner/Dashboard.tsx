@@ -415,6 +415,9 @@ const Dashboard: React.FC = () => {
         bookingId={cancelTargetId}
         onClose={() => setCancelTargetId(null)}
         onConfirm={handleCancelSubmit}
+        title={cancelTargetId ? `Xác nhận từ chối booking #${cancelTargetId}` : undefined}
+        description={cancelTargetId ? "Vui lòng nhập lý do từ chối booking này. Lý do sẽ được lưu lại và gửi tới khách hàng." : undefined}
+        confirmText="Từ chối booking"
       />
     </div>
   );

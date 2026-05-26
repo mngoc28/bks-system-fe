@@ -41,7 +41,7 @@ export const useUpdatePartnerQuery = () => {
 export const usePartnerProfileQuery = () => {
     return useQuery<PartnerDetailResponse, Error>({
         queryKey: ["partner-profile"],
-        queryFn: () => partnerApi.getPartnerProfile(),
+        queryFn: ({ signal }) => partnerApi.getPartnerProfile({ signal }),
         staleTime: 60_000,
         gcTime: 5 * 60_000,
     });

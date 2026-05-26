@@ -18,6 +18,7 @@ const buttonVariants = cva(
         outline: "",
         ghost: "",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient: "bg-gradient-to-r from-primary via-sky-600 to-sky-700 text-white shadow-lg shadow-sky-200 transition-all hover:shadow-sky-300 active:scale-[0.98] rounded-xl",
         none: "",
       },
       size: {

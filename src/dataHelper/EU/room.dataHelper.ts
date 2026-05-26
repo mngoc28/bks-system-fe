@@ -1,4 +1,4 @@
-﻿export interface Room {
+export interface Room {
     id: number;
     province_id?: number;
     title: string;
@@ -15,4 +15,24 @@
     amenities?: string;
     room_image?: string;
     area?: number | string;
+    tourist_summary?: {
+        has_tourist_mapping: boolean;
+        tourist_spot_name?: string | null;
+        travel_time_label?: string | null;
+        distance_label?: string | null;
+    } | null;
+    reviews_count?: number;
+    reviews_avg_rating?: number | string;
+}
+
+export interface SuggestedRoomsByProvinceGroup {
+    province_id: number | null;
+    province_name: string;
+    province_name_en?: string | null;
+    rooms: Room[];
+}
+
+export interface SuggestedRoomsByProvinceParams {
+    province_ids?: number[];
+    limit?: number;
 }

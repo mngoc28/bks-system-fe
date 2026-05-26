@@ -99,6 +99,9 @@ export interface BookingDetail {
     price: number;
   };
   created_at: string;
+  cancelled_at?: string;
+  cancellation_reason?: string;
+  stay_status?: string;
   contracts?: Array<{
     id: number;
     status: number;
@@ -150,24 +153,11 @@ const stayService = {
   orderService: (bookingId: string | number, serviceId: number | string, note: string = "") => {
     return apiService.post(`/api/v1/stay/services/${bookingId}`, { service_id: serviceId, note });
   },
-  getNotifications: (page: number = 1) => {
-    return apiService.get<PaginatedResponse<NotificationData>>(`/api/v1/stay/notifications?page=${page}`);
+  getNotifications: (page: number = 1, config?: any) => {
+    return apiService.get<PaginatedResponse<NotificationData>>(`/api/v1/stay/notifications?page=${page}`, config);
   },
   extendBooking: (bookingId: string | number, newEndDate: string) => {
     return apiService.post(`/api/v1/stay/bookings/${bookingId}/extend`, { new_end_date: newEndDate });
-  },
-  syncLocalBookings: (body: {
-    items: Array<{
-      local_id: string;
-      fingerprint: string;
-      room_id: number;
-      start_date: string;
-      end_date: string;
-      email: string;
-      price_id?: number;
-    }>;
-  }) => {
-    return apiService.post<unknown>("/api/v1/stay/bookings/sync-local", body);
   },
 
   getCancellationReasons: () => {
@@ -183,6 +173,10 @@ const stayService = {
     body: { reason_code: string; reason_text?: string; idempotency_key: string },
   ) => {
     return apiService.post<unknown>(`/api/v1/stay/bookings/${bookingId}/cancel-request`, body);
+  },
+
+  withdrawCancelBookingRequest: (bookingId: number | string) => {
+    return apiService.post<unknown>(`/api/v1/stay/bookings/${bookingId}/withdraw-cancel-request`);
   },
 
   markNotificationAsRead: (id: number) => {

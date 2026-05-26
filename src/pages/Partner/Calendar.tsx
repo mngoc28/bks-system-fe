@@ -155,38 +155,54 @@ const CalendarPage: React.FC = () => {
   const invalidateCalendar = useInvalidatePartnerCalendar();
 
   useEffect(() => {
-    fetchProperties();
+    const abortController = new AbortController();
+    fetchProperties(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {
-    void fetchRoomsForFilter();
+    const abortController = new AbortController();
+    void fetchRoomsForFilter(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, [selectedPropertyId]);
 
-  const fetchRoomsForFilter = async () => {
+  const fetchRoomsForFilter = async (signal?: AbortSignal) => {
     setRoomsLoading(true);
     try {
       const params: Record<string, string | number> = { page: 1, per_page: 300 };
       if (selectedPropertyId !== ALL_PROPERTIES) {
         params.property_id = Number(selectedPropertyId);
       }
-      const res: any = await partnerService.getRooms(params);
+      const res: any = await partnerService.getRooms(params, { signal });
       const list = parsePartnerRoomsSearchResponse(res);
       setRooms(list);
       setSelectedRoomId('all');
-    } catch {
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải danh sách phòng.');
       setRooms([]);
     } finally {
-      setRoomsLoading(false);
+      if (!signal?.aborted) {
+        setRoomsLoading(false);
+      }
     }
   };
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (signal?: AbortSignal) => {
     try {
-      const res: any = await partnerService.getProperties();
+      const res: any = await partnerService.getProperties(undefined, { signal });
       const list = res?.data?.data || res?.data || [];
       setProperties(list);
-    } catch {
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải danh sách bất động sản.');
     }
   };

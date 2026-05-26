@@ -30,19 +30,28 @@ const StayServiceManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
-    fetchRequests();
+    const abortController = new AbortController();
+    fetchRequests(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getStayServiceRequests();
+      const res: any = await partnerService.getStayServiceRequests({ signal });
       setRequests(res.data || []);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching service requests:', error);
       toastError('Không thể tải danh sách yêu cầu dịch vụ.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -105,7 +114,7 @@ const StayServiceManagement: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Yêu cầu dịch vụ lưu trú</h1>
           <p className="mt-1 text-gray-500">Quản lý các yêu cầu từ khách đang lưu trú (Dọn phòng, đồ dùng, sự cố...).</p>
         </div>
-        <Button onClick={fetchRequests} variant="outline" size="sm" className="gap-2">
+        <Button onClick={() => fetchRequests()} variant="outline" size="sm" className="gap-2">
             Làm mới
         </Button>
       </div>

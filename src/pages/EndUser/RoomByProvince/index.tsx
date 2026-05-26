@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users } from "lucide-react";
+import { Filter, MapPin, SearchX, Users, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -192,7 +192,7 @@ const RoomByProvince = () => {
             <p className="text-lg font-semibold text-amber-800">{t("public.roomByProvince.invalidTitle")}</p>
             <p className="mt-2 text-sm text-amber-700">{t("public.roomByProvince.invalidDescription")}</p>
             <div className="mt-6">
-              <Button asChild className="rounded-xl">
+              <Button asChild className="rounded-full">
                 <Link to={ROUTERS.HOME}>{t("public.roomByProvince.backHome")}</Link>
               </Button>
             </div>
@@ -205,7 +205,7 @@ const RoomByProvince = () => {
           <section className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-16 text-center">
             <p className="text-base font-semibold text-rose-600">{t("public.roomByProvince.loadError")}</p>
             <div className="mt-6">
-              <Button className="rounded-xl" variant="outline" onClick={() => void refetch()}>
+              <Button className="rounded-full" variant="outline" onClick={() => void refetch()}>
                 {t("public.roomByProvince.retry")}
               </Button>
             </div>
@@ -216,7 +216,7 @@ const RoomByProvince = () => {
             <p className="text-base font-semibold text-slate-700">{t("public.roomByProvince.emptyTitle")}</p>
             <p className="mt-2 text-sm text-slate-500">{t("public.roomByProvince.emptyDescription")}</p>
             <div className="mt-6">
-              <Button asChild className="rounded-xl" variant="outline">
+              <Button asChild className="rounded-full" variant="outline">
                 <Link to={ROUTERS.HOME}>{t("public.roomByProvince.backHome")}</Link>
               </Button>
             </div>
@@ -259,20 +259,43 @@ const RoomByProvince = () => {
                       <div className="flex h-full flex-col gap-4">
                         <div className="flex flex-col gap-2">
                           <div className="flex items-start justify-between">
-                            <h3 className="line-clamp-2 text-xl font-bold text-slate-900 transition-colors group-hover:text-sky-600">{room.title}</h3>
+                            <div className="flex flex-col gap-1 flex-1 pr-2">
+                              <h3 className="line-clamp-2 text-xl font-bold text-slate-900 transition-colors group-hover:text-sky-600">{room.title}</h3>
+                              {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
+                                <div className="flex items-center gap-1 text-[0.8rem] font-bold text-amber-500">
+                                  <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                  <span>{room.reviews_avg_rating}</span>
+                                  <span className="text-slate-400 font-normal">({room.reviews_count} đánh giá)</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-[0.8rem] text-slate-400">
+                                  <Star className="size-3.5 text-slate-300" />
+                                  <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                                </div>
+                              )}
+                            </div>
                             <Badge variant="secondary" className={`shrink-0 rounded-full px-3 py-1 ${isAvailable ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
                               {isAvailable ? t("public.roomByProvince.roomStatus.available") : t("public.roomByProvince.roomStatus.private")}
                             </Badge>
                           </div>
                           
-                          <p className="inline-flex items-start gap-2 text-sm text-slate-600">
-                            <MapPin className="mt-0.5 size-4 shrink-0 text-sky-500" />
-                            <span className="line-clamp-2">{room.property_address || t("public.roomByProvince.fallbackAddress")}</span>
-                          </p>
+                          <div className="flex flex-col gap-1">
+                            <p className="inline-flex items-start gap-2 text-sm text-slate-600">
+                              <MapPin className="mt-0.5 size-4 shrink-0 text-sky-500" />
+                              <span className="line-clamp-2">{room.property_address || t("public.roomByProvince.fallbackAddress")}</span>
+                            </p>
+                            {room.tourist_summary && room.tourist_summary.has_tourist_mapping && (
+                              <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                                <svg className="size-4 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                                <span className="font-medium">{room.tourist_summary.tourist_spot_name}</span>
+                                {room.tourist_summary.travel_time_label && <span className="ml-2 text-xs text-slate-400">• {room.tourist_summary.travel_time_label}</span>}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5">
                             <Users className="size-4 text-sky-500" />
                             {t("public.roomByProvince.guests", { count: room.people })}
                           </span>
@@ -287,7 +310,7 @@ const RoomByProvince = () => {
                             </span>
                           </div>
                           <div className="flex shrink-0 gap-3">
-                            <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-8 shadow-md shadow-sky-100 hover:from-sky-600 hover:to-blue-700">
+                            <Button asChild variant="gradient" className="px-8 rounded-full">
                               <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>
                                 {t("public.roomByProvince.viewDetails")}
                               </Link>

@@ -13,7 +13,7 @@ import { PlainTextarea } from "@/components/ui/textarea";
 import { usePartnerPropertyTypesQuery } from '@/hooks/usePropertyQuery';
 import { useGetUserProfileQuery } from '@/hooks/useUserQuery';
 import { partnerService } from '@/services/partnerService';
-import { AirVent, ChevronDown, Edit, Image as ImageIcon, Layers, Loader2, MapPin, Maximize, Plus, Trash2, Wallet, X, Zap } from 'lucide-react';
+import { AirVent, ChevronDown, Edit, Eye, Image as ImageIcon, Layers, Loader2, MapPin, Maximize, Plus, Star, Trash2, Wallet, X, Zap } from 'lucide-react';
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Property, Room } from './types';
 
@@ -118,6 +118,8 @@ const Properties: React.FC = () => {
           }))
         : [],
       status: normalizeRoomStatus(room.status),
+      reviews_count: room.reviews_count,
+      reviews_avg_rating: room.reviews_avg_rating,
     }));
   };
 
@@ -151,11 +153,14 @@ const Properties: React.FC = () => {
       property_type_name: property.property_type_name,
       type: property.type,
       rooms_count: property.rooms_count,
+      reviews_count: property.reviews_count,
+      reviews_avg_rating: property.reviews_avg_rating,
     }));
   };
 
   useEffect(() => {
     let cancelled = false;
+    const abortController = new AbortController();
 
     const run = async () => {
       const typeNum = Number(selectedType);
@@ -176,38 +181,30 @@ const Properties: React.FC = () => {
         const propertiesParams: Record<string, unknown> = {
           page: pageForProperties,
           per_page: perPage,
+          with_rooms: 1,
         };
         if (debouncedSearchName) propertiesParams.name = debouncedSearchName;
         if (typeNum && typeNum !== 0) propertiesParams.property_type_id = typeNum;
 
-        const propertiesRes: any = await partnerService.getProperties(propertiesParams);
+        const propertiesRes: any = await partnerService.getProperties(propertiesParams, {
+          signal: abortController.signal
+        });
         if (cancelled) {
           return;
         }
 
         const propertyData = propertiesRes?.data || {};
         const rawProperties = Array.isArray(propertyData) ? propertyData : (propertyData.data || []);
-        const propertyIds = (rawProperties as { id?: string | number }[])
-          .map((b) => b.id)
-          .filter((id) => id !== undefined && id !== null && String(id) !== '');
-
-        let rawRooms: any[] = [];
-        if (propertyIds.length > 0) {
-          const roomsRes: any = await partnerService.getRooms({
-            property_ids: propertyIds,
-            per_page: 1000,
-            page: 1,
-          });
-          if (cancelled) {
-            return;
+        
+        const rawRooms: any[] = [];
+        rawProperties.forEach((property: any) => {
+          if (Array.isArray(property.rooms)) {
+            property.rooms.forEach((room: any) => {
+              room.property_name = property.name; // preserve compatibility with room.propertyName
+              rawRooms.push(room);
+            });
           }
-          const roomPayload = roomsRes?.data;
-          if (Array.isArray(roomPayload)) {
-            rawRooms = roomPayload;
-          } else if (roomPayload?.data && Array.isArray(roomPayload.data)) {
-            rawRooms = roomPayload.data;
-          }
-        }
+        });
 
         const normalizedRooms = normalizeRooms(rawRooms);
         const normalizedProperties = normalizeProperties(rawProperties, normalizedRooms);
@@ -220,7 +217,10 @@ const Properties: React.FC = () => {
         setRooms(normalizedRooms);
         setTotalPages((propertyData as { last_page?: number }).last_page || 1);
         setTotalItems((propertyData as { total?: number }).total || 0);
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'CanceledError' || error.name === 'AbortError') {
+          return;
+        }
         if (!cancelled) {
           console.error('Error fetching properties:', error);
         }
@@ -236,6 +236,7 @@ const Properties: React.FC = () => {
 
     return () => {
       cancelled = true;
+      abortController.abort();
     };
   }, [currentPage, selectedType, debouncedSearchName, perPage, refetchToken]);
 
@@ -539,6 +540,20 @@ const Properties: React.FC = () => {
                       <Layers size={14} className="text-slate-400" />
                       <span><span className="font-bold text-gray-700">{property.totalRooms || 0}</span> đơn vị</span>
                     </div>
+                    <div className="flex items-center gap-1.5">
+                      {property.reviews_avg_rating && Number(property.reviews_avg_rating) > 0 ? (
+                        <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                          <Star className="size-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                          <span>{property.reviews_avg_rating}</span>
+                          <span className="font-normal text-slate-400">({property.reviews_count} đánh giá)</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-xs text-slate-400">
+                          <Star className="size-3.5 text-slate-300 shrink-0" />
+                          <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -605,9 +620,29 @@ const Properties: React.FC = () => {
                 <>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {previewRooms.map(room => (
-                    <div key={room.id} className="group/room relative flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                    <div 
+                      key={room.id} 
+                      className="group/room relative flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                      onClick={() => navigate(`/partner/rooms/${room.id}`)}
+                    >
                       <div className="mb-4 flex items-start justify-between">
-                        <h3 className="text-lg font-bold text-gray-800 transition-colors group-hover/room:text-blue-600">{room.name}</h3>
+                        <div className="max-w-[70%]">
+                          <h3 className="text-lg font-bold text-gray-800 transition-colors group-hover/room:text-blue-600">
+                            {room.name}
+                          </h3>
+                          {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                              <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                              <span>{room.reviews_avg_rating}</span>
+                              <span className="text-slate-400 font-normal">({room.reviews_count} đánh giá)</span>
+                            </div>
+                          ) : (
+                            <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+                              <Star className="size-3.5 text-slate-300" />
+                              <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                            </div>
+                          )}
+                        </div>
                         <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm ${getStatusColor(room.status)}`}>
                           {room.status}
                         </span>
@@ -626,7 +661,17 @@ const Properties: React.FC = () => {
                           </div>
                           <p className="leading-snug">
                              <span className="font-medium text-gray-500">Tiện ích:</span> {Array.isArray(room.amenities) ? room.amenities.slice(0, 5).join(', ') : 'Trống'}
-                             {room.amenities.length > 5 && <span className="ml-1 cursor-pointer text-blue-500 hover:underline">...xem thêm</span>}
+                             {room.amenities.length > 5 && (
+                               <span 
+                                 className="ml-1 cursor-pointer text-blue-500 hover:underline"
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   navigate(`/partner/rooms/${room.id}`, { state: { activeTab: 'amenities' } });
+                                 }}
+                               >
+                                 ...xem thêm
+                               </span>
+                             )}
                           </p>
                         </div>
                         <div className="flex items-start gap-2.5">
@@ -635,7 +680,17 @@ const Properties: React.FC = () => {
                           </div>
                           <p className="leading-snug">
                              <span className="font-medium text-gray-500">Dịch vụ:</span> {Array.isArray(room.services) ? room.services.slice(0, 5).join(', ') : 'Trống'}
-                             {room.services.length > 5 && <span className="ml-1 cursor-pointer text-blue-500 hover:underline">...xem thêm</span>}
+                             {room.services.length > 5 && (
+                               <span 
+                                 className="ml-1 cursor-pointer text-blue-500 hover:underline"
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   navigate(`/partner/rooms/${room.id}`, { state: { activeTab: 'amenities' } });
+                                 }}
+                               >
+                                 ...xem thêm
+                               </span>
+                             )}
                           </p>
                         </div>
                       </div>
@@ -655,14 +710,53 @@ const Properties: React.FC = () => {
                         )) : <div className="text-[10px] italic text-gray-400">Chưa cài đặt giá</div>}
                       </div>
 
-                      <div className="mt-5 flex gap-2 border-t border-gray-100 pt-4">
-                        <Button type="button" onClick={() => handleEditRoom(room)} size="sm" className="h-9 flex-1 border border-blue-200 bg-blue-50 text-xs font-bold text-blue-600 shadow-sm transition-all hover:border-blue-600 hover:bg-blue-600 hover:text-white">
-                           <Edit size={14} className="mr-1.5" /> Chỉnh sửa
+                      <div className="mt-5 flex gap-1.5 border-t border-gray-100 pt-4">
+                        <Button 
+                          type="button" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/partner/rooms/${room.id}`);
+                          }} 
+                          size="sm" 
+                          className="h-9 flex-1 bg-blue-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700"
+                        >
+                           <Eye size={14} className="mr-1" /> Chi tiết
                         </Button>
-                        <Button type="button" onClick={() => openImageManager('room', String(room.id), room.name)} variant="outline" size="sm" className="h-9 border-orange-200 text-xs font-bold text-orange-600 shadow-sm transition-all hover:bg-orange-600 hover:text-white">
-                           <ImageIcon size={14} className="mr-1.5" /> Ảnh
+                        <Button 
+                          type="button" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditRoom(room);
+                          }} 
+                          size="sm" 
+                          className="h-9 flex-1 border border-blue-200 bg-blue-50 text-xs font-bold text-blue-600 shadow-sm transition-all hover:border-blue-600 hover:bg-blue-600 hover:text-white"
+                        >
+                           <Edit size={14} className="mr-1" /> Sửa
                         </Button>
-                        <Button type="button" onClick={() => handleDeleteRoom(String(room.id))} variant="ghost" size="sm" className="h-9 px-2.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600">
+                        <Button 
+                          type="button" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openImageManager('room', String(room.id), room.name);
+                          }} 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 border-orange-200 text-xs font-bold text-orange-600 shadow-sm transition-all hover:bg-orange-600 hover:text-white px-2.5"
+                          title="Quản lý ảnh phòng"
+                        >
+                           <ImageIcon size={14} />
+                        </Button>
+                        <Button 
+                          type="button" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRoom(String(room.id));
+                          }} 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-9 px-2.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                          title="Xóa phòng"
+                        >
                            <Trash2 size={16} />
                         </Button>
                       </div>
@@ -792,55 +886,57 @@ const Properties: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <PropertyModal 
-          key={isPropertyModalOpen ? 'property-open' : 'property-closed'}
-        isOpen={isPropertyModalOpen} 
-        onClose={() => setIsPropertyModalOpen(false)} 
-        property={editingProperty}
-        propertyTypes={propertyTypes?.data || []}
-        onSave={async (data) => {
-          try {
-            // Map address -> address_detail (backend field name)
-            const { address, ...rest } = data as any;
-            const mappedData = { ...rest, address_detail: address };
-            if (editingProperty) {
-              await partnerService.updateProperty(String(editingProperty.id), mappedData);
-            } else {
-              const submitData = {
-                ...mappedData,
-                user_id: userProfile?.id || 0,
-              };
-              await partnerService.createProperty(submitData);
+      {isPropertyModalOpen && (
+        <PropertyModal 
+          isOpen={isPropertyModalOpen} 
+          onClose={() => setIsPropertyModalOpen(false)} 
+          property={editingProperty}
+          propertyTypes={propertyTypes?.data || []}
+          onSave={async (data) => {
+            try {
+              // Map address -> address_detail (backend field name)
+              const { address, ...rest } = data as any;
+              const mappedData = { ...rest, address_detail: address };
+              if (editingProperty) {
+                await partnerService.updateProperty(String(editingProperty.id), mappedData);
+              } else {
+                const submitData = {
+                  ...mappedData,
+                  user_id: userProfile?.id || 0,
+                };
+                await partnerService.createProperty(submitData);
+              }
+              reloadPropertyList();
+              setIsPropertyModalOpen(false);
+            } catch (error) {
+              console.error('Save error:', error);
+              toastError('Lỗi khi lưu thông tin bất động sản.');
             }
-            reloadPropertyList();
-            setIsPropertyModalOpen(false);
-          } catch (error) {
-            console.error('Save error:', error);
-            toastError('Lỗi khi lưu thông tin bất động sản.');
-          }
-        }}
-      />
+          }}
+        />
+      )}
 
-      <RoomModal
-        key={isRoomModalOpen ? 'room-open' : 'room-closed'}
-        isOpen={isRoomModalOpen}
-        onClose={() => setIsRoomModalOpen(false)}
-        room={editingRoom}
-        propertyId={targetPropertyId || ''}
-        onSave={async (data) => {
-          try {
-            if (editingRoom) {
-              await partnerService.updateRoom(String(editingRoom.id), data);
-            } else {
-              await partnerService.createRoom(data);
+      {isRoomModalOpen && (
+        <RoomModal
+          isOpen={isRoomModalOpen}
+          onClose={() => setIsRoomModalOpen(false)}
+          room={editingRoom}
+          propertyId={targetPropertyId || ''}
+          onSave={async (data) => {
+            try {
+              if (editingRoom) {
+                await partnerService.updateRoom(String(editingRoom.id), data);
+              } else {
+                await partnerService.createRoom(data);
+              }
+              reloadPropertyList();
+              setIsRoomModalOpen(false);
+            } catch {
+              toastError('Lỗi khi lưu thông tin phòng.');
             }
-            reloadPropertyList();
-            setIsRoomModalOpen(false);
-          } catch {
-            toastError('Lỗi khi lưu thông tin phòng.');
-          }
-        }}
-      />
+          }}
+        />
+      )}
 
       {/* Image Manager Modal */}
       {imageManagerTarget && (

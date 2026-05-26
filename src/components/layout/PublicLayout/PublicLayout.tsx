@@ -3,11 +3,12 @@ import { Outlet } from "react-router-dom";
 import { Toaster } from "sonner";
 import { FloatingChatbot } from "@/components/chatbot";
 import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 
 const PublicLayout = () => {
   return (
     <div className="relative min-h-screen">
-      <Suspense fallback={<div className="p-6">Đang tải nội dung...</div>}>
+      <Suspense fallback={<LoadingScreen />}>
         <Outlet />
       </Suspense>
       <div className="pointer-events-none fixed bottom-6 right-6 z-[9999]">

@@ -157,7 +157,7 @@ const NewsList = () => {
                       }}
                     />
                     <div className="absolute left-4 top-4 z-10">
-                      <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+                      <Badge className="gradient-indigo border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg rounded-full">
                         {item.published_at ? format(new Date(item.published_at), "dd/MM/yyyy") : "-"}
                       </Badge>
                     </div>
@@ -231,7 +231,7 @@ const NewsList = () => {
                       }}
                     />
                     <div className="absolute left-3 top-3 z-10">
-                      <Badge className="gradient-indigo border-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-lg">
+                      <Badge className="gradient-indigo border-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-lg rounded-full">
                         {item.published_at ? format(new Date(item.published_at), "dd/MM/yyyy") : "-"}
                       </Badge>
                     </div>
@@ -311,8 +311,12 @@ const NewsList = () => {
             <Button asChild className="h-auto rounded-full bg-sky-500 px-8 py-4 text-lg font-bold text-white hover:bg-sky-600">
               <Link to={ROUTERS.SEARCH_ROOMS}>{t("public.home.hero.cta", "Tìm phòng ngay")}</Link>
             </Button>
-            <Button asChild variant="outline" className="h-auto rounded-full border-white px-8 py-4 text-lg font-bold text-white hover:bg-white hover:text-slate-900">
-              <Link to={ROUTERS.CONTACT}>{t("public.contact.title", "Liên hệ với chúng tôi")}</Link>
+            <Button 
+              onClick={() => window.dispatchEvent(new CustomEvent("open-public-chatbot"))}
+              variant="outline" 
+              className="h-auto rounded-full border-white px-8 py-4 text-lg font-bold text-white hover:bg-white hover:text-slate-900"
+            >
+              {t("public.contact.title", "Liên hệ với chúng tôi")}
             </Button>
           </div>
         </div>

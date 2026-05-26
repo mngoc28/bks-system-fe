@@ -61,33 +61,33 @@ export const partnerDashboardApi = {
   /**
    * Get summary stats for the partner
    */
-  getStats: (): Promise<ApiResponse<PartnerStats>> => 
-    axiosClient.get("/partner/dashboard/stats"),
+  getStats: (config?: any): Promise<ApiResponse<PartnerStats>> => 
+    axiosClient.get("/partner/dashboard/stats", config),
 
-  getHeadlineKpis: (): Promise<ApiResponse<PartnerHeadlineKpis>> =>
-    axiosClient.get("/partner/dashboard/kpis"),
+  getHeadlineKpis: (config?: any): Promise<ApiResponse<PartnerHeadlineKpis>> =>
+    axiosClient.get("/partner/dashboard/kpis", config),
 
-  getOccupancyChart: (): Promise<ApiResponse<OccupancyChartPoint[]>> =>
-    axiosClient.get("/partner/dashboard/charts/occupancy"),
+  getOccupancyChart: (config?: any): Promise<ApiResponse<OccupancyChartPoint[]>> =>
+    axiosClient.get("/partner/dashboard/charts/occupancy", config),
 
-  getGmvChart: (): Promise<ApiResponse<GmvChartPoint[]>> =>
-    axiosClient.get("/partner/dashboard/charts/gmv"),
+  getGmvChart: (config?: any): Promise<ApiResponse<GmvChartPoint[]>> =>
+    axiosClient.get("/partner/dashboard/charts/gmv", config),
   
   /**
    * Get list of bookings awaiting approval for the partner
    */
-  getPendingBookings: (): Promise<ApiResponse<RecentBooking[]>> => 
-    axiosClient.get("/partner/dashboard/pending-bookings"),
+  getPendingBookings: (config?: any): Promise<ApiResponse<RecentBooking[]>> => 
+    axiosClient.get("/partner/dashboard/pending-bookings", config),
   
   /**
    * Get list of urgent maintenance tasks for the partner
    */
-  getUrgentMaintenances: (): Promise<ApiResponse<UrgentMaintenance[]>> => 
-    axiosClient.get("/partner/dashboard/urgent-maintenances"),
+  getUrgentMaintenances: (config?: any): Promise<ApiResponse<UrgentMaintenance[]>> => 
+    axiosClient.get("/partner/dashboard/urgent-maintenances", config),
     
   /**
    * Get revenue analytics and monthly history for the partner
    */
-  getRevenueAnalytics: (): Promise<ApiResponse<RevenueByMonthResponse>> => 
-    axiosClient.get("/partner/dashboard/revenue-analytics"),
+  getRevenueAnalytics: (config?: any): Promise<ApiResponse<RevenueByMonthResponse>> => 
+    axiosClient.get("/partner/dashboard/revenue-analytics", config),
 };

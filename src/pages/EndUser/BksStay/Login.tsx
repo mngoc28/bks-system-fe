@@ -15,13 +15,18 @@ import { ROUTERS } from "@/constant";
 import { useStayLoginMutation } from "@/hooks/useAuthQuery";
 import { useUserStore } from "@/store/useUserStore";
 import { toastSuccess, toastError } from "@/components/ui/toast";
-import { flushPendingLocalBookingsToServer } from "@/utils/stayLocalBookingSync";
 import { Spinner } from "@/components/ui/spinner";
 
 const GuestLogin = () => {
   const navigate = useNavigate(); const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem("bks_stay_remember_me") === "true";
+  });
+  const [email, setEmail] = useState(() => {
+    return localStorage.getItem("bks_stay_remembered_email") || "";
+  });
 
   const { mutate: loginMutate } = useStayLoginMutation();
 
@@ -42,7 +47,20 @@ const GuestLogin = () => {
       onSuccess: async (response: any) => {
         const { token, role, name, email: accountEmail } = response.data;
         useUserStore.getState().login(token, accountEmail || formEmail, role, name);
-        await flushPendingLocalBookingsToServer();
+        try {
+          window.localStorage.removeItem("publicMyBookings");
+        } catch (syncError) {
+          console.error("Failed to clear local bookings cache:", syncError);
+        }
+
+        if (rememberMe) {
+          localStorage.setItem("bks_stay_remember_me", "true");
+          localStorage.setItem("bks_stay_remembered_email", formEmail);
+        } else {
+          localStorage.removeItem("bks_stay_remember_me");
+          localStorage.removeItem("bks_stay_remembered_email");
+        }
+
         toastSuccess(`Chào mừng trở lại, ${name}!`);
         const from = (location.state as any)?.from?.pathname || ROUTERS.BKS_STAY_DASHBOARD; navigate(from, { replace: true });
         setIsLoading(false);
@@ -80,9 +98,17 @@ const GuestLogin = () => {
         {/* Left Side: Branding / Welcome */}
         <div className="space-y-8 duration-700 animate-in fade-in slide-in-from-left-8">
            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-white shadow-2xl shadow-white/20">
-                 <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-10 drop-shadow-md" />
-              </div>
+              <Link 
+                to="/" 
+                className="relative flex size-12 items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                title="Quay lại Trang chủ"
+              >
+                 <img
+                   src="/app/images/front/bks-icon.svg"
+                   alt="BKS Logo"
+                   className="pointer-events-none size-12 object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+                 />
+              </Link>
               <div>
                  <p className="text-xs font-black uppercase tracking-[0.3em] text-sky-400">Welcome to</p>
                  <h1 className="text-3xl font-black tracking-tight text-white">BKS Stay <span className="text-sky-400">Portal</span></h1>
@@ -112,7 +138,7 @@ const GuestLogin = () => {
               <CardContent className="p-10 md:p-12">
                  <div className="mb-10 text-center lg:text-left">
                     <h3 className="mb-2 text-2xl font-black text-white underline decoration-sky-500 underline-offset-8">Đăng nhập</h3>
-                    <p className="text-sm text-slate-400">Vui lòng nhập Email và mã đặt phòng (Booking ID) được cung cấp.</p>
+                    <p className="text-sm text-slate-400">Vui lòng nhập Email và mật khẩu đã thiết lập để tiếp tục.</p>
                  </div>
 
                  <form onSubmit={handleLogin} className="space-y-6">
@@ -122,8 +148,10 @@ const GuestLogin = () => {
                           <Mail className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-sky-400" />
                           <Input 
                             id="email"
-                             name="email"
+                            name="email"
                             type="email" 
+                            value={email}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                             placeholder="example@gmail.com" 
                             className="h-14 rounded-2xl border-white/10 bg-white/10 pl-12 font-medium text-white transition-all placeholder:text-slate-600 focus:border-sky-500/50 focus:bg-white/20"
                             required
@@ -154,9 +182,12 @@ const GuestLogin = () => {
                     </div>
 
                     <div className="flex items-center justify-between pb-4">
-                       <div className="group flex cursor-pointer items-center gap-2">
+                       <div 
+                         onClick={() => setRememberMe(!rememberMe)}
+                         className="group flex cursor-pointer items-center gap-2 select-none"
+                       >
                           <div className="flex size-5 items-center justify-center rounded-lg border-2 border-white/10 transition-colors group-hover:border-sky-400">
-                            <div className="size-2 rounded-full bg-sky-400 opacity-0 group-hover:opacity-100" />
+                            <div className={`size-2 rounded-full bg-sky-400 transition-opacity ${rememberMe ? 'opacity-100' : 'opacity-0 group-hover:opacity-55'}`} />
                           </div>
                           <span className="text-xs font-bold text-slate-400">Ghi nhớ tôi</span>
                        </div>

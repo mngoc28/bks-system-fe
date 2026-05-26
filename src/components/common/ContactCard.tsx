@@ -1,7 +1,5 @@
-import { Link } from "react-router-dom";
 import { Phone, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ROUTERS } from "@/constant";
 import { ContactCardProps } from "../type";
 
 const ContactCard = ({
@@ -14,7 +12,6 @@ const ContactCard = ({
   emailLabel,
   email,
   ctaLabel,
-  ctaHref = ROUTERS.CONTACT,
 }: ContactCardProps) => {
   const { t } = useTranslation();
 
@@ -28,7 +25,7 @@ const ContactCard = ({
   const ctaText = ctaLabel ?? t("public.contactCard.cta");
 
   return (
-    <section className={className}>
+    <section id="contact" className={className}>
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-slate-100 p-8 shadow-sm md:p-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl space-y-4">
@@ -51,12 +48,13 @@ const ContactCard = ({
             </div>
           </div>
 
-          <Link
-            to={ctaHref}
-            className="group inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary px-7 py-4 text-sm font-semibold text-white shadow-lg transition hover:translate-y-[-2px] hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-public-chatbot"))}
+            className="group inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-primary via-sky-600 to-sky-700 px-7 py-4 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-300 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {ctaText}
-          </Link>
+          </button>
         </div>
       </div>
     </section>

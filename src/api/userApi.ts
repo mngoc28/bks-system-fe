@@ -4,7 +4,7 @@ import { AxiosResponse } from "axios";
 import { ApiResponse } from "./types";
 
 export const userApi = {
-  getProfile: (): Promise<ApiResponse<UserProfile>> => axiosClient.get(`admin/user/profile`),
+  getProfile: (config?: any): Promise<ApiResponse<UserProfile>> => axiosClient.get(`admin/user/profile`, config),
 
   getProfileById: (id: number): Promise<UserProfileDetailResponse> => axiosClient.get(`admin/user/profile/${id}`),
 

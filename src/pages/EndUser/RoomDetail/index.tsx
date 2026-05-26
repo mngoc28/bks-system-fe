@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info } from "lucide-react";
+import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck } from "lucide-react";
+import { useRoomReviewsQuery } from "@/hooks/useReviewQuery";
 
 import { roomApi } from "@/api/EU/roomApi";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ReviewsModal } from "@/components/rooms/ReviewsModal";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
 
@@ -24,6 +26,10 @@ const PublicRoomDetail = () => {
       const response = await roomApi.getRoomDetail(id);
       return response.data;
     },
+    enabled: !!id,
+  });
+
+  const { data: reviewsData, isLoading: isLoadingReviews } = useRoomReviewsQuery(id, {
     enabled: !!id,
   });
 
@@ -103,7 +109,7 @@ const PublicRoomDetail = () => {
         <PublicHeader />
         <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
           <p className="text-slate-600">Không tìm thấy phòng hợp lệ.</p>
-          <Button className="mt-5" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
+          <Button className="mt-5 rounded-full" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
             Quay lại tìm phòng
           </Button>
         </main>
@@ -116,8 +122,8 @@ const PublicRoomDetail = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
       <PublicHeader />
 
-      <section className="relative overflow-hidden bg-primary text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80" />
+      <section className="relative overflow-hidden bg-slate-950 text-white">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -127,11 +133,41 @@ const PublicRoomDetail = () => {
             <ArrowLeft className="size-3.5" />
             Quay lại
           </button>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{room?.title || "Chi tiết phòng"}</h1>
-          <p className="mt-3 inline-flex items-center gap-2 text-slate-200">
-            <MapPin className="size-4 text-primary-light" />
-            {room?.property_address || "Đang cập nhật địa chỉ"}
-          </p>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">{room?.title || "Chi tiết phòng"}</h1>
+          <div className="mt-4 flex flex-col gap-2.5 text-slate-200">
+            <p className="inline-flex items-center gap-2 text-sm sm:text-base">
+              <MapPin className="size-4 text-primary-light shrink-0" />
+              <span>{room?.property_address || "Đang cập nhật địa chỉ"}</span>
+            </p>
+            
+            {room && (room.partner_company_name || room.partner_name) && (
+              <p className="inline-flex items-center gap-2 text-sm sm:text-base text-slate-200/95">
+                <Building2 className="size-4 text-primary-light shrink-0" />
+                <span>
+                  Đơn vị vận hành:{" "}
+                  {room.partner_id ? (
+                    <Link 
+                      to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))} 
+                      className="font-bold text-sky-300 hover:text-white hover:underline transition-all duration-200 inline-flex items-center gap-1.5"
+                    >
+                      {room.partner_company_name || room.partner_name}
+                      <CheckCircle2 className="size-4 text-sky-400 shrink-0" />
+                    </Link>
+                  ) : (
+                    <span className="font-bold text-white">{room.partner_company_name || room.partner_name}</span>
+                  )}
+                </span>
+              </p>
+            )}
+
+            {room?.tourist_summary && room.tourist_summary.has_tourist_mapping && (
+              <p className="inline-flex items-center gap-2 text-sm text-primary-light/95">
+                <svg className="size-4.5 text-amber-200 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                <span className="font-medium">{room.tourist_summary.tourist_spot_name}</span>
+                {room.tourist_summary.travel_time_label && <span className="text-slate-300 font-normal">• {room.tourist_summary.travel_time_label}</span>}
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
@@ -241,7 +277,7 @@ const PublicRoomDetail = () => {
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                         Phụ phí & Tiền cọc
-                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-amber-600 border-amber-200 bg-amber-50">Bắt buộc</Badge>
+                        <Badge variant="outline" className="rounded-full text-[10px] uppercase font-bold text-amber-700 border-amber-100 bg-amber-50">Bắt buộc</Badge>
                       </h2>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {utilityFees.map((fee: any, index: number) => (
@@ -254,7 +290,7 @@ const PublicRoomDetail = () => {
                                 {fee.type === 'electricity' ? 'Tiền điện' : fee.type === 'water' ? 'Tiền nước' : 'Phí dịch vụ'}
                               </span>
                               {fee.included ? (
-                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[10px]">Đã bao gồm</Badge>
+                                <Badge className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px]">Đã bao gồm</Badge>
                               ) : (
                                 <span className="text-sm font-bold text-sky-600">
                                   {formatPrice(fee.price)}
@@ -309,6 +345,196 @@ const PublicRoomDetail = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Partner Information Card */}
+              {room && (room.partner_name || room.partner_company_name) && (
+                <Card className="rounded-3xl border-slate-200 shadow-sm bg-white overflow-hidden transition-all hover:shadow-md">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="border-b border-slate-100 pb-4">
+                      <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <Building2 className="size-5 text-primary" />
+                        Thông tin nhà cung cấp
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">Đơn vị vận hành và quản lý căn hộ/phòng</p>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-4">
+                        {room.partner_company_name && (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Tên doanh nghiệp / Đơn vị</p>
+                            {room.partner_id ? (
+                              <Link 
+                                to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))} 
+                                className="mt-1 inline-block text-base font-bold text-slate-800 hover:text-primary hover:underline transition-all duration-200"
+                              >
+                                {room.partner_company_name}
+                              </Link>
+                            ) : (
+                              <p className="mt-1 text-base font-bold text-slate-800">{room.partner_company_name}</p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {room.partner_name && (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Người đại diện</p>
+                            {room.partner_id ? (
+                              <Link 
+                                to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))} 
+                                className="mt-1 text-sm font-medium text-slate-700 flex items-center gap-1.5 hover:text-primary hover:underline transition-all duration-200"
+                              >
+                                <UserCheck className="size-4 text-emerald-500 shrink-0" />
+                                {room.partner_name}
+                              </Link>
+                            ) : (
+                              <p className="mt-1 text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                                <UserCheck className="size-4 text-emerald-500 shrink-0" />
+                                {room.partner_name}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {room.partner_address && (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Địa chỉ văn phòng</p>
+                            <p className="mt-1 text-sm text-slate-600 flex items-start gap-1.5">
+                              <MapPin className="size-4 text-slate-400 mt-0.5 shrink-0" />
+                              <span>{room.partner_address}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        {room.partner_phone && (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Số điện thoại liên hệ</p>
+                            <p className="mt-1 text-sm text-slate-700 flex items-center gap-2 font-semibold">
+                              <Phone className="size-4 text-sky-500" />
+                              <a href={`tel:${room.partner_phone}`} className="hover:text-primary transition-colors">
+                                {room.partner_phone}
+                              </a>
+                            </p>
+                          </div>
+                        )}
+
+                        {room.partner_email && (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Email liên hệ</p>
+                            <p className="mt-1 text-sm text-slate-700 flex items-center gap-2">
+                              <Mail className="size-4 text-sky-500" />
+                              <a href={`mailto:${room.partner_email}`} className="hover:text-primary transition-colors underline decoration-sky-100 hover:decoration-primary">
+                                {room.partner_email}
+                              </a>
+                            </p>
+                          </div>
+                        )}
+
+                        {room.partner_description && (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Giới thiệu</p>
+                            <p className="mt-1 text-sm text-slate-600 italic leading-relaxed">
+                              "{room.partner_description}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Room Reviews List */}
+              <Card className="rounded-3xl border-slate-200 shadow-sm bg-white">
+                <CardContent className="p-6 space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">Đánh giá từ khách hàng</h2>
+                      <p className="text-xs text-slate-500 mt-1">Trải nghiệm thực tế từ các vị khách đã lưu trú</p>
+                    </div>
+                    {reviewsData && reviewsData.total_count > 0 && (
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-slate-900 flex items-center gap-1.5 justify-end">
+                            <Star className="size-5 text-amber-500 fill-amber-500 shrink-0" />
+                            {reviewsData.average_rating}
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-400">/ {reviewsData.total_count} đánh giá</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {isLoadingReviews ? (
+                    <div className="py-8 text-center">
+                      <Spinner size="md" spinnerClassName="border-y-sky-600" />
+                    </div>
+                  ) : !reviewsData || reviewsData.reviews.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400 text-sm">
+                      Chưa có đánh giá nào cho phòng này. Hãy là người đầu tiên trải nghiệm và chia sẻ cảm nhận!
+                    </div>
+                  ) : (
+                    <>
+                      <div className="divide-y divide-slate-100">
+                        {reviewsData.reviews.slice(0, 5).map((review) => (
+                          <div key={review.id} className="py-5 first:pt-0 last:pb-0 space-y-3">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-center gap-3">
+                                <div className="size-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                  {review.user?.avatar ? (
+                                    <img src={review.user.avatar} alt={review.user.name} className="size-full object-cover" />
+                                  ) : (
+                                    <Users className="size-5 text-slate-400" />
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-bold text-slate-800">{review.user?.name || "Khách hàng"}</h4>
+                                  <span className="text-[10px] text-slate-400">{new Date(review.created_at).toLocaleDateString("vi-VN")}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`size-3.5 ${
+                                      i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {review.comment && (
+                              <p className="text-sm text-slate-600 leading-relaxed pl-13 italic">
+                                "{review.comment}"
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {reviewsData.reviews.length > 5 && (
+                        <div className="mt-6 flex justify-center border-t border-slate-100 pt-4">
+                          <ReviewsModal
+                            title="Đánh giá về phòng"
+                            reviews={reviewsData.reviews}
+                            averageRating={reviewsData.average_rating}
+                            totalCount={reviewsData.total_count}
+                            trigger={
+                              <Button
+                                variant="outline"
+                                className="rounded-full px-8 transition-all hover:bg-slate-50 font-semibold text-slate-700"
+                              >
+                                Xem thêm {reviewsData.reviews.length - 5} đánh giá
+                              </Button>
+                            }
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             </>
           )}
         </section>
@@ -358,7 +584,7 @@ const PublicRoomDetail = () => {
                 </div>
               </div>
 
-              <Button asChild className="w-full h-12 rounded-xl bg-gradient-to-r from-primary via-sky-600 to-sky-700 text-white font-bold shadow-lg shadow-sky-200 transition-all hover:shadow-sky-300 active:scale-[0.98]">
+              <Button asChild variant="gradient" className="w-full rounded-full">
                 <Link to={`${ROUTERS.BOOKING}/${id}`}>Đặt phòng ngay</Link>
               </Button>
             </CardContent>

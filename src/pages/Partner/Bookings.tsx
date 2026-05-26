@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Spinner } from '@/components/ui/spinner';
 import {
   Calendar,
   User,
@@ -35,7 +34,7 @@ import { usePartnerStatsQuery } from '@/hooks/usePartnerDashboardQuery';
 import CancelBookingDialog from './components/CancelBookingDialog';
 import { useQuickConfirm } from '@/hooks/Partner/useQuickConfirm';
 import { isPartner360Enabled } from '@/lib/featureFlags';
-import { Undo2 } from 'lucide-react';
+import { Undo2, RefreshCw } from 'lucide-react';
 import {
   countPartnerBookingNightsExclusive,
   formatPartnerBookingDateVi,
@@ -84,6 +83,10 @@ const Bookings: React.FC = () => {
   const [actionType, setActionType] = useState<'check_in' | 'check_out' | null>(null);
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const prevFiltersRef = React.useRef({
+    status: statusFilter,
+    search: debouncedSearchTerm,
+  });
 
   // Debounce search term to avoid excessive API calls
   useEffect(() => {
@@ -91,13 +94,27 @@ const Bookings: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Reset to first page when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, debouncedSearchTerm]);
+    const filtersChanged =
+      prevFiltersRef.current.status !== statusFilter ||
+      prevFiltersRef.current.search !== debouncedSearchTerm;
 
-  useEffect(() => {
-    fetchBookings();
+    prevFiltersRef.current = {
+      status: statusFilter,
+      search: debouncedSearchTerm,
+    };
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
+    const abortController = new AbortController();
+    fetchBookings(true, abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
   }, [currentPage, pageSize, statusFilter, debouncedSearchTerm]);
 
 
@@ -125,7 +142,7 @@ const Bookings: React.FC = () => {
     });
   };
 
-  const fetchBookings = async (showLoading = true) => {
+  const fetchBookings = async (showLoading = true, signal?: AbortSignal) => {
     try {
       // Use full-page loader only for initial fetch, subtle overlay for updates
       if (showLoading) {
@@ -146,7 +163,7 @@ const Bookings: React.FC = () => {
         params.status = statusFilter;
       }
 
-      const res: any = await partnerService.getBookings(params);
+      const res: any = await partnerService.getBookings(params, { signal });
       
       // Standardize response body access (handle both axios response and direct body)
       const resBody = res?.data || res;
@@ -166,13 +183,80 @@ const Bookings: React.FC = () => {
       setTotalPages(pagesCount);
       setSelectedIds(new Set());
       
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching bookings:', error);
       toastError('Không thể tải danh sách booking.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      await Promise.all([
+        fetchBookings(false),
+        queryClient.refetchQueries({ queryKey: ["partner-stats"] }),
+      ]);
+      toastSuccess('Đã làm mới dữ liệu.');
+    } catch {
+      toastError('Không thể làm mới dữ liệu.');
+    } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const renderSkeletons = () => {
+    return Array.from({ length: pageSize || 5 }).map((_, idx) => (
+      <tr key={`skeleton-${idx}`} className="animate-pulse">
+        <td className="px-6 py-4">
+          <Skeleton className="h-4 w-4 rounded" />
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-4 w-32 animate-pulse bg-slate-200" />
+            <Skeleton className="h-3.5 w-24 animate-pulse bg-slate-200" />
+            <Skeleton className="h-3 w-16 animate-pulse bg-slate-200" />
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-3.5 w-28 animate-pulse bg-slate-200" />
+            <Skeleton className="h-3.5 w-28 animate-pulse bg-slate-200" />
+            <Skeleton className="h-3 w-20 animate-pulse bg-slate-200" />
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-3.5 w-20 animate-pulse bg-slate-200" />
+            <Skeleton className="h-3 w-12 animate-pulse bg-slate-200" />
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-4 w-4 rounded-full animate-pulse bg-slate-200" />
+            <Skeleton className="h-3.5 w-28 animate-pulse bg-slate-200" />
+          </div>
+        </td>
+        <td className="px-6 py-4 text-center">
+          <div className="flex justify-center">
+            <Skeleton className="h-6 w-24 rounded-full animate-pulse bg-slate-200" />
+          </div>
+        </td>
+        <td className="px-6 py-4 text-right">
+          <div className="flex justify-end gap-2">
+            <Skeleton className="h-8 w-8 rounded animate-pulse bg-slate-200" />
+            <Skeleton className="h-8 w-16 rounded animate-pulse bg-slate-200" />
+          </div>
+        </td>
+      </tr>
+    ));
   };
 
   const [cancelTargetId, setCancelTargetId] = useState<number | string | null>(null);
@@ -404,13 +488,8 @@ const Bookings: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Spinner size="lg" showText text="Đang tải danh sách đặt phòng..." />
-      </div>
-    );
-  }
+  const targetBooking = bookings.find((b) => b.id === cancelTargetId);
+  const isRejecting = targetBooking ? targetBooking.rawStatus === 0 : false;
 
   return (
     <div className="space-y-6">
@@ -496,18 +575,30 @@ const Bookings: React.FC = () => {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {statusTabs.map((tab) => (
-            <Button
-              key={String(tab.key)}
-              size="sm"
-              variant={statusFilter === tab.key ? 'default' : 'outline'}
-              onClick={() => setStatusFilter(tab.key)}
-              className="rounded-full"
-            >
-              {tab.label} ({tab.count})
-            </Button>
-          ))}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-2">
+            {statusTabs.map((tab) => (
+              <Button
+                key={String(tab.key)}
+                size="sm"
+                variant={statusFilter === tab.key ? 'default' : 'outline'}
+                onClick={() => setStatusFilter(tab.key)}
+                className="rounded-full"
+              >
+                {tab.label} ({tab.count})
+              </Button>
+            ))}
+          </div>
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="sm"
+            className="shrink-0 gap-1.5 text-slate-600 hover:text-blue-600 hover:border-blue-200 active:scale-95 transition-all"
+            disabled={loading || isRefreshing}
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin text-blue-500' : ''} />
+            Làm mới
+          </Button>
         </div>
 
         {isPartner360Enabled() && selectedIds.size > 0 && (
@@ -545,14 +636,6 @@ const Bookings: React.FC = () => {
       </div>
 
       <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        {/* Subtle overlay during tab switching/filtering */}
-        {isRefreshing && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-lg">
-              <Spinner size="md" showText text="Đang cập nhật..." />
-            </div>
-          </div>
-        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -566,15 +649,22 @@ const Bookings: React.FC = () => {
                 </th>
                 <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Khách hàng / Phòng</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Ngày nhận/Trả</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Ngày đặt</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Tòa nhà</th>
                 <th className="px-6 py-4 text-center text-xs font-bold uppercase text-gray-500">Trạng thái</th>
                 <th className="px-6 py-4 text-right text-xs font-bold uppercase text-gray-500">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {displayBookings.length > 0 ? displayBookings.map((booking) => (
-                <tr key={booking.id} className="transition-colors hover:bg-slate-50/30">
-                  <td className="px-6 py-4 align-top">
+              {(loading || isRefreshing) ? (
+                renderSkeletons()
+              ) : displayBookings.length > 0 ? displayBookings.map((booking) => (
+                <tr 
+                  key={booking.id} 
+                  className="transition-colors hover:bg-slate-50/30 cursor-pointer"
+                  onClick={() => setSelectedBooking(booking)}
+                >
+                  <td className="px-6 py-4 align-top" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.has(booking.id)}
                       onCheckedChange={(checked) => toggleSelected(booking.id, Boolean(checked))}
@@ -615,6 +705,21 @@ const Bookings: React.FC = () => {
                       })()}
                     </div>
                   </td>
+                  <td className="px-6 py-4">
+                    {booking.createdAt ? (
+                      <div className="space-y-0.5 text-xs">
+                        <div className="flex items-center gap-1 font-semibold text-slate-600">
+                          <Clock size={11} className="text-blue-400" />
+                          {new Date(booking.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </div>
+                        <p className="pl-4 text-[11px] text-slate-400">
+                          {new Date(booking.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-300">—</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-sm text-slate-600">
                     <div className="flex items-center gap-1.5">
                       <Building2 size={14} className="text-slate-400" />
@@ -631,7 +736,7 @@ const Bookings: React.FC = () => {
                       {getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
                        <Button
                          onClick={() => setSelectedBooking(booking)}
@@ -652,7 +757,7 @@ const Bookings: React.FC = () => {
                              <UserCheck size={14} />
                              Duyệt
                            </Button>
-                           <Button onClick={() => handleReject(booking.id)} variant="outline" size="sm" className="h-8 border-red-200 px-3 text-red-600 hover:bg-red-50 hover:text-red-700">Hủy</Button>
+                           <Button onClick={() => handleReject(booking.id)} variant="outline" size="sm" className="h-8 border-red-200 px-3 text-red-600 hover:bg-red-50 hover:text-red-700">Từ chối</Button>
                          </>
                        ) : isPendingConfirm(booking.id) ? (
                          <Button onClick={() => undoConfirm(booking.id)} variant="outline" size="sm" className="h-8 border-amber-300 px-3 text-amber-700 hover:bg-amber-50">
@@ -701,7 +806,7 @@ const Bookings: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                   <td colSpan={6} className="px-6 py-20 text-center italic text-gray-400">Không có booking phù hợp bộ lọc hiện tại.</td>
+                   <td colSpan={7} className="px-6 py-20 text-center italic text-gray-400">Không có booking phù hợp bộ lọc hiện tại.</td>
                 </tr>
               )}
             </tbody>
@@ -800,6 +905,26 @@ const Bookings: React.FC = () => {
                 );
               })()}
 
+              {selectedBooking.createdAt && (
+                <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-2.5">
+                  <Clock size={14} className="shrink-0 text-blue-400" />
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-400">Thời gian đặt phòng</p>
+                    <p className="text-sm font-semibold text-blue-700">
+                      {new Date(selectedBooking.createdAt).toLocaleString('vi-VN', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-xl border border-slate-200 p-3">
                 <p className="text-xs font-bold uppercase text-slate-500">Ghi chú khách hàng</p>
                 <p className="mt-1 whitespace-pre-wrap text-slate-700">{selectedBooking.note || 'Không có ghi chú.'}</p>
@@ -816,15 +941,6 @@ const Bookings: React.FC = () => {
                   {getPartnerRowDisplayStatus(selectedBooking.rawStatus ?? 1, selectedBooking.stay_status)}
                 </Badge>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setSelectedBooking(null)}
-                    className="text-slate-500 hover:text-slate-700 font-medium"
-                  >
-                    Đóng
-                  </Button>
-                  
                   {selectedBooking.rawStatus === 0 && (
                     <>
                       <Button 
@@ -856,6 +972,9 @@ const Bookings: React.FC = () => {
         bookingId={cancelTargetId}
         onClose={() => setCancelTargetId(null)}
         onConfirm={handleCancelSubmit}
+        title={isRejecting ? `Xác nhận từ chối booking #${cancelTargetId}` : undefined}
+        description={isRejecting ? "Vui lòng nhập lý do từ chối booking này. Lý do sẽ được lưu lại và gửi tới khách hàng." : undefined}
+        confirmText="Từ chối booking"
       />
 
       <CancelBookingDialog

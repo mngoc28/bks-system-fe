@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin } from "lucide-react";
+import { MapPin, Star, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { PartnerGridProps } from "@/dataHelper/partner.dataHelper";
@@ -12,16 +12,24 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
 
   const headingText = heading ?? t("public.home.partners.heading");
   const descriptionText = description ?? t("public.home.partners.description");
-  const badgeText = t("public.home.partners.badge");
-  const trustText = t("public.home.partners.trust");
   const ctaText = ctaLabel ?? t("public.home.partners.cta");
 
   return (
     <section className={className}>
       {(headingText || descriptionText) && (
-        <div className="mb-6 max-w-2xl">
-          {headingText && <h2 className="text-[1.75rem] font-semibold text-slate-900">{headingText}</h2>}
-          {descriptionText && <p className="mt-1 text-sm text-slate-600">{descriptionText}</p>}
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            {headingText && <h2 className="text-[1.75rem] font-semibold text-slate-900">{headingText}</h2>}
+            {descriptionText && <p className="mt-1 text-sm text-slate-600">{descriptionText}</p>}
+          </div>
+          {ctaText && (
+            <Link
+              to={ctaHref}
+              className="hidden sm:inline-flex items-center justify-center rounded-full bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+            >
+              {ctaText}
+            </Link>
+          )}
         </div>
       )}
 
@@ -45,32 +53,40 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/5 to-transparent" />
-              <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-slate-700 shadow">
-                {badgeText}
-              </span>
             </div>
-            <div className="flex flex-1 flex-col gap-2.5 px-5 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-[1rem] font-semibold text-slate-900 transition group-hover:text-primary">{company.name}</h3>
+              <div className="flex flex-1 flex-col gap-2.5 px-5 py-4">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-[1rem] font-semibold text-slate-900 transition group-hover:text-primary flex items-center gap-1.5">
+                    <span className="truncate">{company.name}</span>
+                    <CheckCircle2 className="size-4 text-blue-500 fill-blue-500/10 shrink-0" />
+                  </h3>
+                  {company.reviews_avg_rating && Number(company.reviews_avg_rating) > 0 ? (
+                    <div className="flex items-center gap-1 text-[0.75rem] font-bold text-amber-500">
+                      <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                      <span>{company.reviews_avg_rating}</span>
+                      <span className="text-slate-400 font-normal">({company.reviews_count} đánh giá)</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-[0.75rem] text-slate-400">
+                      <Star className="size-3.5 text-slate-300" />
+                      <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                    </div>
+                  )}
+                </div>
+                <p className="inline-flex items-start gap-2 text-[0.875rem] leading-6 text-slate-600">
+                  <MapPin className="mt-0.5 size-4 text-primary" />
+                  <span>{company.address}</span>
+                </p>
               </div>
-              <p className="inline-flex items-start gap-2 text-[0.875rem] leading-6 text-slate-600">
-                <MapPin className="mt-0.5 size-4 text-primary" />
-                <span>{company.address}</span>
-              </p>
-              <div className="mt-auto inline-flex items-center gap-2 text-[0.875rem] font-semibold text-primary">
-                <span className="size-1.5 rounded-full bg-primary" aria-hidden />
-                <span className="tracking-wide">{trustText}</span>
-              </div>
-            </div>
           </Link>
         ))}
       </div>
 
       {ctaText && (
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center sm:hidden">
           <Link
             to={ctaHref}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-200/60 transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
           >
             {ctaText}
           </Link>

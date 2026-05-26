@@ -9,7 +9,7 @@ const PublicFooter = ({ className }: PublicFooterProps) => {
 
   return (
     <footer className={className ? className : "border-t border-slate-800 bg-slate-900"}>
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 text-sm text-slate-600 md:grid-cols-[minmax(0,1.4fr)_repeat(2,minmax(0,1fr))]">
+      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 text-sm text-slate-600 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
         <div className="space-y-4">
           <Link to={ROUTERS.HOME} className="inline-flex items-center gap-3">
             <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-11" />
@@ -51,6 +51,27 @@ const PublicFooter = ({ className }: PublicFooterProps) => {
             <li>
               <Link to={ROUTERS.PARTNER_MANAGEMENT} className="transition hover:text-primary">
                 {t("public.footer.sections.explore.partners")}
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-white">Đối tác liên kết</h4>
+          <ul className="mt-4 space-y-3 text-sm text-slate-400">
+            <li>
+              <Link to={ROUTERS.BECOME_PARTNER} className="transition hover:text-blue-400 font-bold text-blue-500/90">
+                Đăng ký đối tác mới
+              </Link>
+            </li>
+            <li>
+              <Link to={ROUTERS.PARTNER_LOGIN} className="transition hover:text-primary">
+                Cổng thông tin đối tác
+              </Link>
+            </li>
+            <li>
+              <Link to={ROUTERS.HOME} className="transition hover:text-primary">
+                Chính sách đối tác
               </Link>
             </li>
           </ul>

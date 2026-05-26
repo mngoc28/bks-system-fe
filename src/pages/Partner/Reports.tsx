@@ -34,18 +34,25 @@ const ReportsPage: React.FC = () => {
   const [perPage, setPerPage] = useState(10);
 
   useEffect(() => {
-    fetchStats();
+    const abortController = new AbortController();
+    fetchStats(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, [timeRange]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [timeRange, perPage]);
 
-  const fetchStats = async () => {
+  const fetchStats = async (signal?: AbortSignal) => {
     try {
-      const res: any = await partnerService.getPartnerReports({ range: timeRange });
+      const res: any = await partnerService.getPartnerReports({ range: timeRange }, { signal });
       setStats(res?.data || null);
-    } catch {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải báo cáo phân tích.');
     }
   };

@@ -11,17 +11,17 @@ export const partnerService = {
     apiService.get(`${BASE_URL}/wards/${provinceId}`),
 
   // --- PROPERTIES (partner) ---
-  getProperties: (params?: any) => apiService.get(`${BASE_URL}/properties/searchAll`, { params }),
+  getProperties: (params?: any, config?: any) => apiService.get(`${BASE_URL}/properties/searchAll`, { params, ...config }),
   getPropertyTypes: () => apiService.get(`${BASE_URL}/properties/types`),
   createProperty: (data: any) => apiService.post(`${BASE_URL}/properties`, data),
   updateProperty: (id: number | string, data: any) => apiService.put(`${BASE_URL}/properties/${id}`, data),
   deleteProperty: (id: number | string) => apiService.delete(`${BASE_URL}/properties/${id}`),
 
   // --- ROOMS ---
-  getRooms: (params?: any) => apiService.get(`${BASE_URL}/rooms/search`, { params }),
-  getRoomDetail: (id: number | string) => apiService.get(`${BASE_URL}/rooms/${id}`),
+  getRooms: (params?: any, config?: any) => apiService.get(`${BASE_URL}/rooms/search`, { params, ...config }),
+  getRoomDetail: (id: number | string, config?: any) => apiService.get(`${BASE_URL}/rooms/${id}`, config),
   getPricePackages: () => apiService.get(`${BASE_URL}/rooms/price-packages`),
-  getRoomsOccupancy: (params?: any) => apiService.get(`${BASE_URL}/rooms/occupancy`, { params }),
+  getRoomsOccupancy: (params?: any, config?: any) => apiService.get(`${BASE_URL}/rooms/occupancy`, { params, ...config }),
   getRoomNamesByPropertyId: (propertyId: number | string) =>
     apiService.get(`${BASE_URL}/rooms/property/${propertyId}`),
   createRoom: (data: any) => {
@@ -54,30 +54,30 @@ export const partnerService = {
   addPropertyImage: (propertyId: number | string, data: any) => apiService.post(`${BASE_URL}/property-images/${propertyId}`, data),
   deletePropertyImage: (propertyId: number | string, imageId: number | string) => apiService.delete(`${BASE_URL}/property-images/${propertyId}/${imageId}`),
 
-  getRoomImages: (roomId: number | string) => apiService.get(`${BASE_URL}/room-images/room/${roomId}`),
+  getRoomImages: (roomId: number | string, config?: any) => apiService.get(`${BASE_URL}/room-images/room/${roomId}`, config),
   addRoomImage: (roomId: number | string, data: any) => apiService.post(`${BASE_URL}/room-images/${roomId}`, data),
   deleteRoomImage: (roomId: number | string, imageId: number | string) => apiService.delete(`${BASE_URL}/room-images/${roomId}/${imageId}`),
 
   // --- SERVICES ---
-  getAllServices: () => apiService.get(`${BASE_URL}/services/all`),
+  getAllServices: (config?: any) => apiService.get(`${BASE_URL}/services/all`, config),
   createService: (data: any) => apiService.post(`${BASE_URL}/services`, data),
   updateService: (id: number | string, data: any) => apiService.put(`${BASE_URL}/services/${id}`, data),
   deleteService: (id: number | string) => apiService.delete(`${BASE_URL}/services/${id}`),
 
   // --- AMENITIES ---
-  getAllAmenities: () => apiService.get(`${BASE_URL}/amenities/all`),
+  getAllAmenities: (config?: any) => apiService.get(`${BASE_URL}/amenities/all`, config),
   createAmenity: (data: any) => apiService.post(`${BASE_URL}/amenities/store`, data),
   updateAmenity: (id: number | string, data: any) => apiService.put(`${BASE_URL}/amenities/${id}`, data),
   deleteAmenity: (id: number | string) => apiService.delete(`${BASE_URL}/amenities/${id}`),
 
   // --- NEWS ---
-  getNews: () => apiService.get(`${BASE_URL}/news`),
+  getNews: (config?: any) => apiService.get(`${BASE_URL}/news`, config),
   createNews: (data: any) => apiService.post(`${BASE_URL}/news`, data),
   updateNews: (id: number | string, data: any) => apiService.put(`${BASE_URL}/news/${id}`, data),
   deleteNews: (id: number | string) => apiService.delete(`${BASE_URL}/news/${id}`),
 
   // --- BOOKINGS ---
-  getBookings: (params?: any) => apiService.get(`${BASE_URL}/bookings`, { params }),
+  getBookings: (params?: any, config?: any) => apiService.get(`${BASE_URL}/bookings`, { params, ...config }),
   confirmBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/confirm`),
   // Partner Portal 360 Phase 2: quickConfirm là alias rõ nghĩa của confirmBooking,
   // dùng cho quick action trong list/dashboard. Server-side cùng endpoint.
@@ -98,7 +98,7 @@ export const partnerService = {
     property_id?: number;
     per_page?: number;
     page?: number;
-  }) => apiService.get(`${BASE_URL}/cancellation-requests`, { params }),
+  }, config?: any) => apiService.get(`${BASE_URL}/cancellation-requests`, { params, ...config }),
   approveCancellationRequest: (id: number | string, body?: { note?: string }) =>
     apiService.post(`${BASE_URL}/cancellation-requests/${id}/approve`, body ?? {}),
   rejectCancellationRequest: (id: number | string, body: { note: string }) =>
@@ -135,56 +135,55 @@ export const partnerService = {
   deleteRoomBlock: (id: number | string) =>
     apiService.delete(`${BASE_URL}/room-blocks/${id}`),
 
-  // Drag-drop: cập nhật khoảng/phòng. Server trả 409 + payload chi tiết khi
-  // conflict — caller phải revert UI.
+  // drag-drop: update booking
   moveBooking: (
     id: number | string,
     payload: { start_date?: string; end_date?: string; room_id?: number | string },
   ) => apiService.put(`${BASE_URL}/bookings/${id}/move`, payload),
 
   // --- CHAT ---
-  getConversations: () => apiService.get(`${BASE_URL}/chat`),
-  getMessages: (conversationId: number | string) => apiService.get(`${BASE_URL}/chat/${conversationId}`),
-  sendMessage: (data: { conversation_id: number | string, content: string, metadata?: any }) => 
+  getConversations: (config?: any) => apiService.get(`${BASE_URL}/chat`, config),
+  getMessages: (conversationId: number | string, config?: any) => apiService.get(`${BASE_URL}/chat/${conversationId}`, config),
+  sendMessage: (data: { conversation_id: number | string, content: string, metadata?: any }) =>
     apiService.post(`${BASE_URL}/chat`, data),
 
   // --- PRICE RULES ---
-  getPriceRules: (params?: any) => apiService.get(`${BASE_URL}/price-rules`, { params }),
+  getPriceRules: (params?: any, config?: any) => apiService.get(`${BASE_URL}/price-rules`, { params, ...config }),
   createPriceRule: (data: any) => apiService.post(`${BASE_URL}/price-rules`, data),
   updatePriceRule: (id: number | string, data: any) => apiService.put(`${BASE_URL}/price-rules/${id}`, data),
   deletePriceRule: (id: number | string) => apiService.delete(`${BASE_URL}/price-rules/${id}`),
 
   // --- REPORTS ---
-  getPartnerReports: (params?: any) => 
-    apiService.get(`${BASE_URL}/reports/kpis`, { params }),
-  getKPIs: (startDate?: string, endDate?: string) => 
+  getPartnerReports: (params?: any, config?: any) =>
+    apiService.get(`${BASE_URL}/reports/kpis`, { params, ...config }),
+  getKPIs: (startDate?: string, endDate?: string) =>
     apiService.get(`${BASE_URL}/reports/kpis`, { params: { start_date: startDate, end_date: endDate } }),
 
   // --- MAINTENANCE ---
-  getMaintenances: (params?: any) => apiService.get(`${BASE_URL}/room-maintenances`, { params }),
+  getMaintenances: (params?: any, config?: any) => apiService.get(`${BASE_URL}/room-maintenances`, { params, ...config }),
   createMaintenance: (data: any) => apiService.post(`${BASE_URL}/room-maintenances`, data),
 
   // --- STAY SERVICES ---
-  getStayServiceRequests: () => apiService.get(`${BASE_URL}/stay-services`),
-  updateStayServiceStatus: (id: number | string, status: number) => 
+  getStayServiceRequests: (config?: any) => apiService.get(`${BASE_URL}/stay-services`, config),
+  updateStayServiceStatus: (id: number | string, status: number) =>
     apiService.patch(`${BASE_URL}/stay-services/${id}`, { status }),
 
   // --- CONTRACTS ---
-  getContracts: () => apiService.get(`${BASE_URL}/contracts`),
-  getContractDetail: (id: number | string) => apiService.get(`${BASE_URL}/contracts/${id}`),
+  getContracts: (config?: any) => apiService.get(`${BASE_URL}/contracts`, config),
+  getContractDetail: (id: number | string, config?: any) => apiService.get(`${BASE_URL}/contracts/${id}`, config),
   createContract: (data: any) => apiService.post(`${BASE_URL}/contracts`, data),
   // Partner Portal 360 Phase 5: renewal reminder + termination + alert listing.
-  getExpiringContracts: () => apiService.get(`${BASE_URL}/contracts/expiring-soon`),
+  getExpiringContracts: (config?: any) => apiService.get(`${BASE_URL}/contracts/expiring-soon`, config),
   setContractRenewalReminder: (id: number | string, remindAt?: string) =>
     apiService.put(`${BASE_URL}/contracts/${id}/renewal-reminder`, remindAt ? { remind_at: remindAt } : {}),
   terminateContract: (id: number | string, reason: string) =>
     apiService.post(`${BASE_URL}/contracts/${id}/terminate`, { reason }),
   // --- NOTIFICATIONS ---
-  getNotifications: (page: number = 1) => 
-    apiService.get<PaginatedResponse<NotificationData>>(`${BASE_URL}/notifications?page=${page}`),
-  markNotificationAsRead: (id: number) => 
+  getNotifications: (page: number = 1, config?: any) =>
+    apiService.get<PaginatedResponse<NotificationData>>(`${BASE_URL}/notifications?page=${page}`, config),
+  markNotificationAsRead: (id: number) =>
     apiService.put(`${BASE_URL}/notifications/${id}/read`),
-  markAllAsRead: () => 
+  markAllAsRead: () =>
     apiService.put(`${BASE_URL}/notifications/read-all`),
 };
 

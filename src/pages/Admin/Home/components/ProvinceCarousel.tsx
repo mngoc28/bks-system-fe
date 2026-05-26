@@ -16,7 +16,7 @@ const sliderOptions = {
   },
 } as const;
 
-const ProvinceCarousel = ({ provinces, className, heading, description }: ProvinceCarouselProps) => {
+const ProvinceCarousel = ({ provinces, className, heading, description, ctaLabel, ctaHref }: ProvinceCarouselProps) => {
   const { t } = useTranslation();
 
   if (!provinces?.length) {
@@ -29,11 +29,22 @@ const ProvinceCarousel = ({ provinces, className, heading, description }: Provin
   return (
     <section className={className}>
       {(headingText || descriptionText) && (
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            {headingText && <h2 className="text-2xl font-semibold text-slate-900">{headingText}</h2>}
-            {descriptionText && <p className="mt-1 text-sm text-slate-600">{descriptionText}</p>}
+        <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-2 inline-flex rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
+              Điểm đến nổi bật
+            </p>
+            {headingText && <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">{headingText}</h2>}
+            {descriptionText && <p className="mt-2 text-sm text-slate-600 md:text-base">{descriptionText}</p>}
           </div>
+          {ctaLabel && ctaHref && (
+            <Link
+              to={ctaHref}
+              className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+            >
+              {ctaLabel}
+            </Link>
+          )}
         </div>
       )}
 

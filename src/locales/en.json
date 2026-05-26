@@ -65,7 +65,7 @@
         "provinceSearch": "Search provinces",
         "provinceEmpty": "No provinces found",
         "districtPlaceholder": "Select a district",
-        "provinceFirstPlaceholder": "Choose a province first",
+        "provinceFirstPlaceholder": "Select a district",
         "districtSearch": "Search districts",
         "districtEmpty": "No districts found",
         "districtPrompt": "Select a province to view districts",
@@ -84,6 +84,7 @@
         "description": "Explore standout listings in our network across Ho Chi Minh City.",
         "aria": "Featured rooms",
         "badge": "Room #{{id}}",
+        "badgeLabel": "Room",
         "area": "{{area}}",
         "price": "{{price}}",
         "beds_one": "{{count}} bed",
@@ -144,7 +145,7 @@
       "nav": {
         "contact": "Contact",
         "points": "Points",
-        "favorites": "Favorite Rooms"
+        "bookings": "My Bookings"
       }
     },
     "footer": {
