@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { 
@@ -10,7 +10,8 @@ import {
   ShieldCheck, 
   CreditCard,
   ArrowRight,
-  Info
+  Info,
+  Star
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -127,6 +128,7 @@ const PartnerList = () => {
                                   className="size-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.src = "/assets/images/photo_error2.png";
+                                    e.currentTarget.className = "size-full object-contain p-2 bg-slate-50 opacity-60";
                                   }}
                                 />
                               ) : (
@@ -137,7 +139,19 @@ const PartnerList = () => {
                               <h3 className="truncate text-lg font-black text-slate-900 transition-colors group-hover:text-primary">
                                 {partner.company_name}
                               </h3>
-                              <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                              {partner.reviews_avg_rating && Number(partner.reviews_avg_rating) > 0 ? (
+                                <div className="flex items-center gap-1 text-[0.75rem] font-bold text-amber-500">
+                                  <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                  <span>{partner.reviews_avg_rating}</span>
+                                  <span className="text-slate-400 font-normal">({partner.reviews_count} đánh giá)</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-[0.75rem] text-slate-400">
+                                  <Star className="size-3.5 text-slate-300" />
+                                  <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1.5 text-sm text-slate-500 mt-0.5">
                                 <MapPin className="size-3.5 text-primary" />
                                 <span className="truncate">{partner.address || "Địa chỉ chưa cập nhật"}</span>
                               </div>

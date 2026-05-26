@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Search, 
   CalendarDays, 
-  ArrowUpRight, 
   MoreVertical,
   ChevronRight,
   ChevronLeft,
@@ -38,6 +37,7 @@ import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import stayService, { BookingDetail } from "@/services/stayService";
 
 const History = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -68,9 +68,9 @@ const History = () => {
       case 0:
       case 1:
         return { label: "Upcoming", color: "bg-sky-100 text-sky-700" };
-      case 2:
-        return { label: "Completed", color: "bg-emerald-100 text-emerald-700" };
       case 3:
+        return { label: "Completed", color: "bg-emerald-100 text-emerald-700" };
+      case 2:
       case 4:
         return { label: "Cancelled", color: "bg-rose-100 text-rose-700" };
       default:
@@ -135,6 +135,17 @@ const History = () => {
 
   const handleDeleteBooking = (id: number) => {
     toastError(`Bạn không thể xóa đơn đặt phòng ${id} đã được hệ thống ghi nhận.`);
+  };
+
+  const openBookingDetail = (bookingId: number) => {
+    navigate(ROUTERS.BKS_STAY_DETAILS.replace(":id", bookingId.toString()));
+  };
+
+  const handleBookingRowKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, bookingId: number) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openBookingDetail(bookingId);
+    }
   };
 
   if (loading) {
@@ -217,7 +228,14 @@ const History = () => {
                 processedBookings.map((booking) => {
                    const statusInfo = getStatusInfo(booking.status);
                    return (
-                     <div key={booking.id} className="group flex flex-col justify-between gap-6 py-6 transition-all lg:flex-row lg:items-center">
+                     <div
+                        key={booking.id}
+                        role="link"
+                        tabIndex={0}
+                        onClick={() => openBookingDetail(booking.id)}
+                        onKeyDown={(event) => handleBookingRowKeyDown(event, booking.id)}
+                        className="group -mx-3 flex cursor-pointer flex-col justify-between gap-6 rounded-[28px] border border-transparent px-3 py-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50/70 hover:shadow-[0_18px_40px_rgba(14,165,233,0.14)] focus:outline-none focus-visible:-translate-y-0.5 focus-visible:border-sky-200 focus-visible:bg-sky-50/70 focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-4 lg:flex-row lg:items-center"
+                     >
                         <div className="flex items-start gap-4 sm:gap-6">
                            <div className={`size-14 rounded-[20px] sm:size-16 sm:rounded-[24px] ${statusInfo.color} flex shrink-0 items-center justify-center shadow-inner`}>
                               <CalendarDays className="size-6 sm:size-7" />
@@ -241,7 +259,10 @@ const History = () => {
                            </div>
                         </div>
 
-                        <div className="flex items-center justify-between gap-6 border-t border-slate-50 pt-4 lg:justify-end lg:border-none lg:pt-0">
+                        <div
+                           className="flex items-center justify-between gap-6 border-t border-slate-50 pt-4 lg:justify-end lg:border-none lg:pt-0"
+                           onClick={(event) => event.stopPropagation()}
+                        >
                            <div className="text-left lg:text-right">
                               <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Giá trị đơn</p>
                               <p className="text-lg font-black text-slate-900 sm:text-xl">{formatPrice(booking.price?.price || 0)}</p>
@@ -252,12 +273,6 @@ const History = () => {
                                     <FileText className="size-5" />
                                  </Button>
                               )}
-                              <Button asChild variant="ghost" title="Xem chi tiết" className="size-10 shrink-0 rounded-xl hover:bg-sky-50 hover:text-sky-600 sm:size-12 sm:rounded-2xl">
-                                 <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", booking.id.toString())}>
-                                    <ArrowUpRight className="size-5" />
-                                  </Link>
-                              </Button>
-                              
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="size-10 shrink-0 rounded-xl hover:bg-slate-100 sm:size-12 sm:rounded-2xl">

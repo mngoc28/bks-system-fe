@@ -28,3 +28,6 @@ yarn.lock
 
 tsconfig.app.tsbuildinfo
 tsconfig.node.tsbuildinfo
+
+# Playwright MCP files
+.playwright-mcp/

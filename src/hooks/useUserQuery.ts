@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next";
 export const useGetUserProfileQuery = () => {
   return useQuery({
     queryKey: ["profile"],
-    queryFn: async () => {
-      const response = await userApi.getProfile();
+    queryFn: async ({ signal }) => {
+      const response = await userApi.getProfile({ signal });
       return response;
     },
     retry: 1,

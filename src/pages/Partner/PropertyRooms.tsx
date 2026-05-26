@@ -5,7 +5,7 @@ import {
   ArrowLeft, Edit, Plus, Wallet, 
   LayoutGrid, Activity, Wrench, Camera, CheckSquare, 
   ChevronDown, Phone, Calendar, Trash, Eye, Search,
-  Building2, X, LayoutDashboard, Filter
+  Building2, X, LayoutDashboard, Filter, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,13 @@ const PropertyRooms: React.FC = () => {
   const [pageSize, setPageSize] = useState(12);
 
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const prevFiltersRef = React.useRef({
+    status: statusFilter,
+    search: debouncedSearchKeyword,
+    propertyId: propertyId,
+  });
 
   // Bulk Actions
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -150,60 +156,75 @@ const PropertyRooms: React.FC = () => {
       .map(([name]) => name);
   }, [bulkRoomNames]);
 
+  // Debounce search keyword
   useEffect(() => {
-    fetchData(1);
-    fetchOptions();
-  }, [propertyId]);
-
-  // Real-time filter: status
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchData(1, searchKeyword, statusFilter);
-    }
-  }, [statusFilter]);
-
-  // Real-time search: debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentPage !== 1) {
-        setCurrentPage(1);
-      } else {
-        fetchData(1, searchKeyword, statusFilter);
-      }
-    }, 500);
+    const timer = setTimeout(() => setDebouncedSearchKeyword(searchKeyword), 500);
     return () => clearTimeout(timer);
   }, [searchKeyword]);
 
-  // Pagination effect
   useEffect(() => {
-    fetchData(currentPage, searchKeyword, statusFilter);
-  }, [currentPage, pageSize]);
+    const abortController = new AbortController();
+    fetchOptions(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const filtersChanged =
+      prevFiltersRef.current.status !== statusFilter ||
+      prevFiltersRef.current.search !== debouncedSearchKeyword ||
+      prevFiltersRef.current.propertyId !== propertyId;
+
+    prevFiltersRef.current = {
+      status: statusFilter,
+      search: debouncedSearchKeyword,
+      propertyId: propertyId,
+    };
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
+    const abortController = new AbortController();
+    fetchData(currentPage, debouncedSearchKeyword, statusFilter, pageSize, abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
+  }, [currentPage, pageSize, statusFilter, debouncedSearchKeyword, propertyId]);
 
   useEffect(() => {
     if (viewMode === 'occupancy') {
-      fetchOccupancy();
+      const abortController = new AbortController();
+      fetchOccupancy(abortController.signal);
+      return () => {
+        abortController.abort();
+      };
     }
   }, [viewMode, propertyId]);
 
-  const fetchOptions = async () => {
+  const fetchOptions = async (signal?: AbortSignal) => {
     try {
       const [ams, svs]: any = await Promise.all([
-        partnerService.getAllAmenities(),
-        partnerService.getAllServices()
+        partnerService.getAllAmenities({ signal }),
+        partnerService.getAllServices({ signal })
       ]);
       setAvailableAmenities(ams?.data || []);
       setAvailableServices(svs?.data || []);
-    } catch {
-      // ignore
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
+      console.error(err);
     }
   };
 
-  const fetchOccupancy = async () => {
+  const fetchOccupancy = async (signal?: AbortSignal) => {
     try {
       setLoadingOccupancy(true);
-      const res: any = await partnerService.getRoomsOccupancy({ property_id: propertyId });
+      const res: any = await partnerService.getRoomsOccupancy({ property_id: propertyId }, { signal });
       if (res?.status === 'success' && res?.data) {
         setOccupancyData(res.data.rooms || []);
         setOccupancyStats(res.data.stats || null);
@@ -212,14 +233,25 @@ const PropertyRooms: React.FC = () => {
         setOccupancyStats(null);
         toastError(res?.message || 'Không thể tải sơ đồ phòng.');
       }
-    } catch {
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải sơ đồ phòng.');
     } finally {
-      setLoadingOccupancy(false);
+      if (!signal?.aborted) {
+        setLoadingOccupancy(false);
+      }
     }
   };
 
-  const fetchData = async (page: number = 1, keyword: string = searchKeyword, visibility: string = statusFilter, size: number = pageSize) => {
+  const fetchData = async (
+    page: number = 1,
+    keyword: string = debouncedSearchKeyword,
+    visibility: string = statusFilter,
+    size: number = pageSize,
+    signal?: AbortSignal
+  ) => {
     try {
       setLoading(true);
       setCurrentPage(page);
@@ -233,7 +265,7 @@ const PropertyRooms: React.FC = () => {
         per_page: size,
         room_number: normalizedKeyword || undefined,
         status: mappedStatus,
-      });
+      }, { signal });
 
       const roomData = roomsRes?.data || {};
       const rawRooms = roomData.data || (Array.isArray(roomData) ? roomData : []);
@@ -244,17 +276,22 @@ const PropertyRooms: React.FC = () => {
       setSelectedIds(prev => prev.filter(id => rawRooms.some((r: any) => Number(r.id) === id)));
 
       if (propertyName === 'Bất động sản') {
-        const propertiesRes: any = await partnerService.getProperties({ id: propertyId });
+        const propertiesRes: any = await partnerService.getProperties({ id: propertyId }, { signal });
         const selectedProperty = (propertiesRes?.data?.data || propertiesRes?.data || []).find((b: any) => String(b.id) === String(propertyId));
         if (selectedProperty) {
           setPropertyName(selectedProperty.name);
           setPropertyType(selectedProperty.property_type_name || '');
         }
       }
-    } catch {
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải danh sách phòng.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -587,9 +624,23 @@ const PropertyRooms: React.FC = () => {
                     className={`rounded-xl border bg-white ${selectedIds.includes(Number(room.id)) ? 'border-blue-500 ring-2 ring-blue-50' : 'border-slate-200'} group relative flex flex-col p-5 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
                   >
                     <div className="relative mb-4 flex items-start justify-between">
-                      <h3 className="max-w-[80%] truncate pl-1 pr-16 text-lg font-semibold uppercase text-slate-800" title={room.title || room.name}>
-                        {room.title || room.name}
-                      </h3>
+                      <div className="max-w-[80%] pl-1">
+                        <h3 className="truncate text-lg font-semibold uppercase text-slate-800" title={room.title || room.name}>
+                          {room.title || room.name}
+                        </h3>
+                        {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
+                          <div className="mt-1 flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                            <span>{room.reviews_avg_rating}</span>
+                            <span className="text-slate-400 font-normal">({room.reviews_count} đánh giá)</span>
+                          </div>
+                        ) : (
+                          <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+                            <Star className="size-3.5 text-slate-300" />
+                            <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="absolute right-0 top-0 flex items-center gap-2">
                         <Badge variant="outline" className={`border text-[10px] font-semibold shadow-sm transition-all duration-300 ${isBulkMode ? 'mr-10' : ''} ${
                           (room.status === 'Trống' || String(room.status) === 'true' || String(room.status) === '1') ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 

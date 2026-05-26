@@ -9,7 +9,8 @@ export const PUBLIC_MY_BOOKINGS_STORAGE_KEY = "publicMyBookings";
 export const enum ROUTERS {
   HOME = "/",
   LOGIN = "/admin/login",
-  REGISTER = "/admin/register",
+  REGISTER = "/partner/register",
+  BECOME_PARTNER = "/become-a-partner",
   FORGOT_PASSWORD = "/admin/forgot-password",
   RESET_PASSWORD = "/admin/reset-password",
   PROFILE = "/admin/profile",
@@ -46,6 +47,7 @@ export const enum ROUTERS {
   NEWS_EDIT = "/admin/news/edit",
   NEWS_DETAIL = "/admin/news/detail",
   PARTNER_MANAGEMENT = "/admin/partner-information",
+  PARTNER_APPROVAL = "/admin/partner-approval",
   
   // Partner Routes
   PARTNER_LOGIN = "/partner/login",
@@ -221,6 +223,22 @@ export const PROPERTY_IMAGE_TYPE = {
 export const HEADER_PROPERTY_CLOUDINARY = "properties/"
 export const CLOUDINARY_HEADER_IMAGE_URL = import.meta.env.VITE_CLOUDINARY_URL || "https://res.cloudinary.com/dyragzjcd/image/upload"
 export const DEFAULT_ROOM_IMAGE = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop"
+
+export const FEATURED_CITY_PRIORITY = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng"];
+export const FEATURED_DESTINATION_PRIORITY = [
+  "Quảng Ninh",
+  "Khánh Hòa",
+  "Lâm Đồng",
+  "Huế",
+  "Hải Phòng",
+  "Ninh Bình",
+  "Cần Thơ",
+  "Đồng Nai",
+  "Phú Thọ",
+  "Cà Mau",
+];
+
+export const SUGGESTED_ROOM_CITY_PRIORITY = ["Đà Nẵng", "Khánh Hòa", "Quảng Ninh"];
 
 // Lightbox configuration
 export const LIGHTBOX_MAX_ZOOM_PIXEL_RATIO = 5;

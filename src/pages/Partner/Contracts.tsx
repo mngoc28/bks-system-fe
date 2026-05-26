@@ -60,30 +60,42 @@ const Contracts: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchContracts();
-    fetchConfirmedBookings();
+    const abortController = new AbortController();
+    fetchContracts(abortController.signal);
+    fetchConfirmedBookings(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  const fetchContracts = async () => {
+  const fetchContracts = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getContracts();
+      const res: any = await partnerService.getContracts({ signal });
       setContracts(res?.data || []);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching contracts:', error);
       toastError('Không thể tải danh sách hợp đồng.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
-  const fetchConfirmedBookings = async () => {
+  const fetchConfirmedBookings = async (signal?: AbortSignal) => {
     try {
       // Pass numeric status 1 for 'confirmed'
-      const res: any = await partnerService.getBookings({ status: 1 });
+      const res: any = await partnerService.getBookings({ status: 1 }, { signal });
       const data = res?.data?.data || res?.data || res || [];
       setBookings(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching bookings:', error);
     }
   };

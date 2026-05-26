@@ -127,21 +127,30 @@ const ContractDetail: React.FC = () => {
 
   useEffect(() => {
     if (!contractId) return;
-    void fetchContract();
+    const abortController = new AbortController();
+    void fetchContract(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, [contractId]);
 
-  const fetchContract = async () => {
+  const fetchContract = async (signal?: AbortSignal) => {
     if (!contractId) return;
     try {
       setLoading(true);
-      const res: any = await partnerService.getContractDetail(contractId);
+      const res: any = await partnerService.getContractDetail(contractId, { signal });
       const payload = (res?.data?.data ?? res?.data ?? null) as ContractDetailModel | null;
       setContract(payload);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.name === 'CanceledError' || e.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error(e);
       toastError('Không thể tải chi tiết hợp đồng.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 

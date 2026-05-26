@@ -304,7 +304,7 @@ const BookingPage = () => {
                 <div className="grid flex-1 grid-cols-1 gap-8 lg:grid-cols-2">
                     {/* Left Column - Room Info */}
                     <div className="flex flex-col space-y-6">
-                        <Card className="overflow-hidden border-slate-200/80 shadow-sm">
+                        <Card className="overflow-hidden rounded-3xl border-slate-200/80 shadow-sm">
                                 <div className="flex flex-col gap-4 p-4 md:flex-row">
                                     <div className="flex w-full flex-col gap-3 md:w-2/5">
                                         <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-md md:aspect-square">
@@ -371,7 +371,7 @@ const BookingPage = () => {
                                                 ).map((amenity: string, idx: number) => {
                                                     const Icon = getAmenityIcon(amenity);
                                                     return (
-                                                        <span key={idx} className="flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50/50 px-3 py-1.5 text-xs font-medium text-sky-700 transition-all hover:bg-sky-100 hover:shadow-sm">
+                                                        <span key={idx} className="flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50/50 px-3 py-1.5 text-xs font-medium text-sky-700 transition-all hover:bg-sky-100 hover:shadow-sm">
                                                             <Icon className="size-3.5" />
                                                             {amenity.trim()}
                                                         </span>
@@ -384,7 +384,7 @@ const BookingPage = () => {
                             </div>
                         </Card>
 
-                        <Card className="flex-1 border-slate-200/80 shadow-sm">
+                        <Card className="flex-1 rounded-3xl border-slate-200/80 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                                 <CardTitle className="text-xl">{t("booking.services")}</CardTitle>
                                 {services.length > 0 && (
@@ -459,8 +459,8 @@ const BookingPage = () => {
                             </CardContent>
                         </Card>
 
-                        <Card className="flex-1 border-slate-200/80 shadow-sm">
-                            <CardHeader>
+                        <Card className="flex-1 rounded-3xl border-slate-200/80 shadow-sm">
+                            <CardHeader className="pb-4">
                                 <CardTitle className="text-xl">{t("booking.policySection.title")}</CardTitle>
                             </CardHeader>
                             <CardContent className="h-full space-y-4">
@@ -492,7 +492,7 @@ const BookingPage = () => {
 
                     {/* Right Column - Booking Form */}
                     <div className="flex">
-                        <Card className="flex-1 border-slate-200/80 shadow-sm">
+                        <Card className="flex-1 rounded-3xl border-slate-200/80 shadow-sm">
                             <CardHeader className="pb-4">
                                 <CardTitle className="mb-2 text-xl flex items-center gap-2">
                                     {currentStep === 1 ? (
@@ -677,7 +677,8 @@ const BookingPage = () => {
                                         <div className="mt-auto pt-6">
                                             <Button
                                                 type="button"
-                                                className="group w-full bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 py-7 text-lg font-bold shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl active:scale-[0.99]"
+                                                variant="gradient"
+                                                className="group w-full shadow-lg rounded-full"
                                                 onClick={handleContinueToConfirm}
                                             >
                                                 Tiếp tục xác nhận
@@ -749,7 +750,7 @@ const BookingPage = () => {
                                             <Button
                                                 type="button"
                                                 variant="secondary"
-                                                className="flex-1 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                                                className="flex-1 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 rounded-full"
                                                 onClick={() => {
                                                     const latestData = getValues();
                                                     setPreviewData(latestData);
@@ -760,7 +761,8 @@ const BookingPage = () => {
                                             </Button>
                                             <Button
                                                 type="button"
-                                                className="flex-1 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90"
+                                                variant="gradient"
+                                                className="flex-1 rounded-full"
                                                 disabled={createBookingMutation.isPending}
                                                 onClick={() => {
                                                     if (previewData) {

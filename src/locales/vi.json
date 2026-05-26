@@ -65,7 +65,7 @@
         "provinceSearch": "Tìm tỉnh/thành",
         "provinceEmpty": "Không tìm thấy tỉnh/thành",
         "districtPlaceholder": "Chọn phường/xã",
-        "provinceFirstPlaceholder": "Chọn tỉnh/thành trước",
+        "provinceFirstPlaceholder": "Chọn phường/xã",
         "districtSearch": "Tìm phường/xã",
         "districtEmpty": "Không có phường/xã nào",
         "districtPrompt": "Chọn tỉnh/thành để xem phường/xã",
@@ -84,6 +84,7 @@
         "description": "Khám phá các lựa chọn lưu trú nổi bật với tiện nghi tốt và giá rõ ràng.",
         "aria": "Phòng nổi bật",
         "badge": "Phòng #{{id}}",
+        "badgeLabel": "Phòng",
         "area": "{{area}}",
         "price": "{{price}}",
         "beds_one": "{{count}} giường",
@@ -95,7 +96,7 @@
         }
       },
       "partners": {
-        "heading": "Đối tác đáng tin cậy",
+        "heading": "Đối tác nổi bật",
         "description": "Gặp gỡ các khách sạn, homestay và đơn vị vận hành lưu trú uy tín trong hệ thống BKS System.",
         "badge": "Lưu trú",
         "cardLabel": "Xem chi tiết {{name}}",
@@ -144,7 +145,7 @@
       "nav": {
         "contact": "Liên hệ",
         "points": "Điểm thưởng",
-        "favorites": "Phòng yêu thích"
+        "bookings": "Đặt phòng của tôi"
       }
     },
     "footer": {
@@ -2017,4 +2018,3 @@
     "sunday": "Chủ Nhật"
   }
 }
-

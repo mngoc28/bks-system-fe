@@ -26,6 +26,16 @@ const FloatingChatbot = () => {
   }, []);
 
   useEffect(() => {
+    const handleOpen = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener("open-public-chatbot", handleOpen);
+    return () => {
+      window.removeEventListener("open-public-chatbot", handleOpen);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isOpen) {
       return;
     }

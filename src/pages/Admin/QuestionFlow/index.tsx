@@ -47,10 +47,10 @@ import type {
 import QuestionDeleteDialog from "../QuestionManager/components/QuestionDeleteDialog";
 import isEqual from "lodash/isEqual";
 
-  /**
- * Question Flow Page
- * An interactive React Flow-based visual canvas for managing chatbot conversational logic, branching, and node positioning.
- */
+/**
+* Question Flow Page
+* An interactive React Flow-based visual canvas for managing chatbot conversational logic, branching, and node positioning.
+*/
 const QuestionFlowPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -157,11 +157,10 @@ const QuestionFlowPage: React.FC = () => {
 
   const QuestionFlowNode: React.FC<NodeProps<NodeData>> = ({ data }) => (
     <div
-      className={`relative min-h-[320px] w-[420px] rounded-2xl border-2 bg-white shadow-[0_24px_55px_-30px_rgba(15,23,42,0.28)] transition hover:-translate-y-1 hover:shadow-[0_32px_68px_-35px_rgba(15,23,42,0.35)] ${
-        data.isHighlighted
-          ? "border-[#3399FF] ring-2 ring-[#3399FF]/30"
-          : "border-slate-200"
-      }`}
+      className={`relative min-h-[320px] w-[420px] rounded-2xl border-2 bg-white shadow-[0_24px_55px_-30px_rgba(15,23,42,0.28)] transition hover:-translate-y-1 hover:shadow-[0_32px_68px_-35px_rgba(15,23,42,0.35)] ${data.isHighlighted
+        ? "border-[#3399FF] ring-2 ring-[#3399FF]/30"
+        : "border-slate-200"
+        }`}
     >
       {!data.isStartNode ? (
         <Handle
@@ -288,7 +287,7 @@ const QuestionFlowPage: React.FC = () => {
     </div>
   );
 
-    const nodeTypes = useMemo(() => ({ questionNode: QuestionFlowNode }), []);
+  const nodeTypes = useMemo(() => ({ questionNode: QuestionFlowNode }), []);
   const edgeTypes = useMemo(() => ({ questionEdge: QuestionFlowEdge }), []);
 
   const startNodeIds = useMemo(() => {
@@ -404,17 +403,17 @@ const QuestionFlowPage: React.FC = () => {
     [updatePositionMutation],
   );
 
-useEffect(() => {
-  setNodes((current) => {
-    return isEqual(current, initialNodes) ? current : initialNodes;
-  });
-}, [initialNodes]);
+  useEffect(() => {
+    setNodes((current) => {
+      return isEqual(current, initialNodes) ? current : initialNodes;
+    });
+  }, [initialNodes]);
 
-useEffect(() => {
-  setEdges((current) => {
-    return isEqual(current, initialEdges) ? current : initialEdges;
-  });
-}, [initialEdges]);
+  useEffect(() => {
+    setEdges((current) => {
+      return isEqual(current, initialEdges) ? current : initialEdges;
+    });
+  }, [initialEdges]);
 
   useEffect(
     () => () => {
@@ -554,12 +553,12 @@ useEffect(() => {
       current.map((node) =>
         node.data && typeof node.data === "object"
           ? {
-              ...node,
-              data: {
-                ...node.data,
-                isHighlighted: highlightedNodeId === node.id,
-              },
-            }
+            ...node,
+            data: {
+              ...node.data,
+              isHighlighted: highlightedNodeId === node.id,
+            },
+          }
           : node,
       ),
     );
@@ -794,7 +793,7 @@ useEffect(() => {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4 md:p-6">
+    <div className="flex h-[calc(100vh-220px)] min-h-[600px] flex-col gap-4 p-4 md:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button
           variant="ghost"

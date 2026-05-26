@@ -1,14 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, CalendarDays, MapPin } from "lucide-react";
-import { useEffect } from "react";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ROUTERS, PUBLIC_MY_BOOKINGS_STORAGE_KEY } from "@/constant";
-import type { LocalPublicBookingRow } from "@/dataHelper/EU/booking.dataHelper";
+import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
+import { formatDate } from "@/utils/dateUtils";
 
 type BookingSuccessState = {
   /** Code RM-YYYY-XXXXXX from server (email + API). */
@@ -30,38 +29,6 @@ const BookingSuccess = () => {
 
   const state = (location.state as BookingSuccessState | null) ?? null;
 
-  useEffect(() => {
-    if (!state?.roomId || !state.guestEmail || !state.startDate || !state.endDate) {
-      return;
-    }
-    try {
-      const localId =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `local-${Date.now()}`;
-      const row: LocalPublicBookingRow = {
-        local_id: localId,
-        room_id: state.roomId,
-        start_date: state.startDate.slice(0, 10),
-        end_date: state.endDate.slice(0, 10),
-        email: state.guestEmail.trim().toLowerCase(),
-        ...(state.priceId != null && state.priceId > 0 ? { price_id: state.priceId } : {}),
-      };
-      const raw = window.localStorage.getItem(PUBLIC_MY_BOOKINGS_STORAGE_KEY);
-      let list: LocalPublicBookingRow[] = [];
-      if (raw) {
-        const parsed = JSON.parse(raw) as unknown;
-        if (Array.isArray(parsed)) {
-          list = parsed as LocalPublicBookingRow[];
-        }
-      }
-      list.push(row);
-      window.localStorage.setItem(PUBLIC_MY_BOOKINGS_STORAGE_KEY, JSON.stringify(list));
-    } catch {
-      /* ignore */
-    }
-  }, [state]);
-
   if (!state) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
@@ -80,8 +47,8 @@ const BookingSuccess = () => {
             nếu đã có tài khoản.
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Button onClick={() => navigate(ROUTERS.MY_BOOKINGS)}>Tra cứu đơn</Button>
-            <Button variant="secondary" className="border border-slate-300 bg-white text-slate-700" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
+            <Button onClick={() => navigate(ROUTERS.MY_BOOKINGS)} className="rounded-full">Tra cứu đơn</Button>
+            <Button variant="secondary" className="border border-slate-300 bg-white text-slate-700 rounded-full" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
               Tìm phòng khác
             </Button>
           </div>
@@ -104,11 +71,11 @@ const BookingSuccess = () => {
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng thành công</h1>
           <div className="mt-6 inline-flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm max-w-3xl mx-auto">
             <p className="text-base sm:text-lg text-slate-100 leading-relaxed">
-              Yêu cầu của bạn đã được ghi nhận trên hệ thống. Chúng tôi đã gửi thông tin xác nhận chi tiết về email đăng ký.
+              Yêu cầu của bạn đã được ghi nhận trên hệ thống. Chúng tôi đã gửi thông tin xác nhận chi tiết về email mà bạn đã đăng ký.
             </p>
             <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <p className="text-sm sm:text-base text-slate-300">
-              <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-400 mr-2">
+              <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider mr-2">
                 Quan trọng
               </span>
               Vui lòng kiểm tra kỹ hộp thư đến và cả thư mục <span className="font-semibold text-sky-400 italic">Spam (Thư rác)</span> nếu không thấy email.
@@ -139,14 +106,14 @@ const BookingSuccess = () => {
 
             <h2 className="text-xl font-semibold text-slate-900">{state.roomTitle}</h2>
 
-            <p className="inline-flex items-start gap-2 text-sm text-slate-600">
-              <MapPin className="mt-0.5 size-4 text-sky-500" />
+            <p className="flex items-start gap-2 text-sm text-slate-600">
+              <MapPin className="mt-0.5 size-4 text-sky-500 shrink-0" />
               {state.address || "Đang cập nhật địa chỉ"}
             </p>
 
-            <p className="inline-flex items-center gap-2 text-sm text-slate-600">
-              <CalendarDays className="size-4 text-sky-500" />
-              {state.startDate} - {state.endDate}
+            <p className="flex items-center gap-2 text-sm text-slate-600">
+              <CalendarDays className="size-4 text-sky-500 shrink-0" />
+              {formatDate(state.startDate)} - {formatDate(state.endDate)}
             </p>
 
             <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
@@ -167,10 +134,10 @@ const BookingSuccess = () => {
                 .
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
+                <Button asChild variant="gradient" className="rounded-full">
                   <Link to={ROUTERS.MY_BOOKINGS}>Tra cứu / đơn của tôi</Link>
                 </Button>
-                <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                <Button asChild variant="secondary" className="rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
                   <Link to={ROUTERS.SEARCH_ROOMS}>Tiếp tục tìm phòng</Link>
                 </Button>
               </div>

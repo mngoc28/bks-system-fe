@@ -53,23 +53,23 @@
 
 ---
 
-## TC-2.11 — Quick confirm với undo 30 giây
+## TC-2.11 — Quick confirm với undo 15 giây
 
 **Bước thực hiện:**
 
 1. Đăng nhập, ở Dashboard, scroll đến panel **"Yêu cầu mới"** (pending bookings).
 2. Bấm nút `Duyệt` trên booking đầu tiên.
 3. Quan sát toast và button.
-4. Trong vòng 30 giây, bấm `Hoàn tác (XXs)` (XX là đếm ngược).
+4. Trong vòng 15 giây, bấm `Hoàn tác (XXs)` (XX là đếm ngược).
 
 **Kết quả mong đợi:**
 
-- Bước 2: Toast notification: *"Đã xác nhận booking #ID. Có thể hoàn tác trong 30s."*. Button đổi thành `Hoàn tác (30s)`, đếm ngược mỗi giây.
+- Bước 2: Toast notification: *"Đã xác nhận booking #ID. Có thể hoàn tác trong 15s."*. Button đổi thành `Hoàn tác (15s)`, đếm ngược mỗi giây.
 - Booking khác trong list không bị ảnh hưởng.
-- Bước 4 (undo trong 30s): Button quay lại `Từ chối` / `Duyệt`. Không có request `PUT /confirm` được gửi.
-- Nếu KHÔNG bấm undo, sau 30s tự gửi `PUT /api/v1/partner/bookings/{id}/confirm`.
+- Bước 4 (undo trong 15s): Button quay lại `Từ chối` / `Duyệt`. Không có request `PUT /confirm` được gửi.
+- Nếu KHÔNG bấm undo, sau 15s tự gửi `PUT /api/v1/partner/bookings/{id}/confirm`.
 
-**Đã verify:** ✅ Click `Duyệt` (booking #127) → toast hiện + button `Hoàn tác (30s)` xuất hiện → click `Hoàn tác` → revert. Booking khác không bị ảnh hưởng.
+**Đã verify:** ✅ Click `Duyệt` (booking #127) → toast hiện + button `Hoàn tác (15s)` xuất hiện → click `Hoàn tác` → revert. Booking khác không bị ảnh hưởng.
 
 ---
 

@@ -67,6 +67,8 @@ export default function SearchableSelect({
     }
   }, [open, showSearch]);
 
+  const isDark = triggerClassName?.includes("text-white");
+
   return (
     <div ref={containerRef} className="relative z-[500] w-full">
       <div className="absolute -inset-x-3 -inset-y-2 -z-10" />
@@ -80,19 +82,26 @@ export default function SearchableSelect({
         }}
         className={cn(
           "flex min-h-12 w-full items-center justify-between gap-2",
-          "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm",
+          "rounded-md border px-3 py-2 text-sm",
           "shadow-sm ring-offset-white focus:outline-none ",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "hover:border-blue-400 hover:bg-gray-50 transition-colors",
-          "text-gray-900",
+          "transition-colors",
+          isDark
+            ? "bg-white/[0.02] border-white/5 text-white hover:bg-white/[0.08]"
+            : "bg-white border-slate-300 text-gray-900 hover:bg-gray-50 hover:border-blue-400",
           triggerClassName,
           className
         )}
         disabled={disabled}
       >
         <div className="flex flex-1 items-center gap-2 overflow-hidden">
-          {icon && <span className="text-gray-400">{icon}</span>}
-          <span className={`flex-1 truncate text-left ${selectedOption ? "text-[14px] font-medium text-black" : "text-[14px] font-normal text-gray-500"}`}>
+          {icon && <span className={cn(isDark ? "text-slate-500" : "text-gray-400")}>{icon}</span>}
+          <span className={cn(
+            "flex-1 truncate text-left text-[14px]",
+            selectedOption
+              ? "font-medium text-inherit"
+              : isDark ? "font-normal text-slate-500" : "font-normal text-gray-500"
+          )}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>
@@ -107,8 +116,11 @@ export default function SearchableSelect({
       {open && (
         <div
           className={cn(
-            "absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white p-0 shadow-lg",
-            "animate-in fade-in-0 zoom-in-95",
+            "absolute z-50 mt-1 w-full rounded-xl border p-0 shadow-lg",
+            "animate-in fade-in-0 zoom-in-95 backdrop-blur-md",
+            isDark
+              ? "bg-[#0f172a] border-slate-800 text-white shadow-2xl"
+              : "bg-white border-gray-200 text-gray-900 shadow-lg",
             contentClassName
           )}
           style={{
@@ -117,16 +129,21 @@ export default function SearchableSelect({
           }}
         >
           {showSearch && (
-            <div className="border-b p-3">
+            <div className={cn("border-b p-3", isDark ? "border-slate-800 bg-slate-900/40 rounded-t-xl" : "border-gray-100 bg-gray-50/20")}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+                <Search className={cn("absolute left-3 top-1/2 size-4 -translate-y-1/2", isDark ? "text-slate-500" : "text-gray-400")} />
                 <Input
                   ref={searchInputRef}
                   type="text"
                   placeholder={searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-10 px-9"
+                  className={cn(
+                    "h-10 px-9 text-sm rounded-lg border transition-all",
+                    isDark
+                      ? "bg-slate-950 border-slate-800 text-white placeholder:text-slate-600 focus:border-blue-500/50"
+                      : "bg-white border-slate-200 text-slate-700 placeholder:text-slate-400 focus:border-blue-400"
+                  )}
                   onClick={(e) => e.stopPropagation()}
                 />
                 {search && (
@@ -136,7 +153,10 @@ export default function SearchableSelect({
                       e.stopPropagation();
                       setSearch("");
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className={cn(
+                      "absolute right-3 top-1/2 -translate-y-1/2 transition-colors",
+                      isDark ? "text-slate-500 hover:text-slate-300" : "text-gray-400 hover:text-gray-600"
+                    )}
                   >
                     <X className="size-4" />
                   </button>
@@ -145,14 +165,30 @@ export default function SearchableSelect({
             </div>
           )}
 
-          <div className="max-h-64 overflow-y-auto py-1">
+          <style>{`
+            .custom-select-scrollbar::-webkit-scrollbar {
+              width: 5px;
+            }
+            .custom-select-scrollbar::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .custom-select-scrollbar::-webkit-scrollbar-thumb {
+              background: ${isDark ? '#334155' : '#cbd5e1'};
+              border-radius: 9999px;
+            }
+            .custom-select-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: ${isDark ? '#475569' : '#94a3b8'};
+            }
+          `}</style>
+
+          <div className="max-h-64 overflow-y-auto py-1 custom-select-scrollbar">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="size-5 animate-spin text-blue-500" />
-                <span className="ml-2 text-sm text-gray-500">{t("common.loading")}</span>
+                <span className={cn("ml-2 text-sm", isDark ? "text-slate-400" : "text-gray-500")}>{t("common.loading")}</span>
               </div>
             ) : filteredOptions.length === 0 ? (
-              <div className="py-6 text-center text-sm text-gray-500">
+              <div className={cn("py-6 text-center text-sm", isDark ? "text-slate-500" : "text-gray-500")}>
                 {emptyMessage}
               </div>
             ) : (
@@ -171,23 +207,32 @@ export default function SearchableSelect({
                     onMouseDown={(e) => e.preventDefault()}
                     className={cn(
                       "flex w-full items-center rounded-md px-3 py-2.5 text-sm text-left",
-                      "hover:bg-blue-50 hover:text-blue-700",
-                      "transition-colors cursor-pointer active:scale-[0.98]",
-                      "focus:outline-none focus:bg-blue-50",
-                      value === option.value && "bg-blue-50 text-blue-700 font-medium"
+                      "transition-colors cursor-pointer active:scale-[0.98] focus:outline-none",
+                      isDark
+                        ? cn(
+                            "text-slate-300 hover:bg-slate-800/80 hover:text-white focus:bg-slate-800/80",
+                            value === option.value && "bg-blue-600/20 text-blue-400 font-bold"
+                          )
+                        : cn(
+                            "text-slate-700 hover:bg-blue-50 hover:text-blue-700 focus:bg-blue-50",
+                            value === option.value && "bg-blue-50 text-blue-700 font-medium"
+                          )
                     )}
                   >
                     <Check
                       className={cn(
                         "mr-3 h-4 w-4 flex-shrink-0",
                         value === option.value
-                          ? "opacity-100 text-blue-600"
+                          ? cn("opacity-100", isDark ? "text-blue-400" : "text-blue-600")
                           : "opacity-0"
                       )}
                     />
                     <span className="flex-1">{option.label}</span>
                     {option.code && (
-                      <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                      <span className={cn(
+                        "ml-2 rounded px-1.5 py-0.5 text-xs",
+                        isDark ? "bg-slate-800 text-slate-400" : "bg-gray-100 text-gray-500"
+                      )}>
                         {option.code}
                       </span>
                     )}

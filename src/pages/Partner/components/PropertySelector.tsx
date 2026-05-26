@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
+import { useMemo } from "react";
+
 interface PropertyOption {
   id: number | string;
   name: string;
@@ -20,6 +22,7 @@ interface PropertySelectorProps {
   className?: string;
   placeholder?: string;
   allowAll?: boolean;
+  properties?: any[];
 }
 
 const PropertySelector: React.FC<PropertySelectorProps> = ({
@@ -28,18 +31,25 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
   className = "",
   placeholder = "Chọn tòa nhà",
   allowAll = true,
+  properties: passedProperties,
 }) => {
-  const [properties, setProperties] = useState<PropertyOption[]>([]);
+  const [internalProperties, setProperties] = useState<PropertyOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    void fetchProperties();
-  }, []);
+    if (!passedProperties) {
+      const abortController = new AbortController();
+      void fetchProperties(abortController.signal);
+      return () => {
+        abortController.abort();
+      };
+    }
+  }, [passedProperties]);
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getProperties();
+      const res: any = await partnerService.getProperties(undefined, { signal });
       const payload = res?.data?.data || res?.data || res || [];
       const list = Array.isArray(payload) ? payload : payload?.data || [];
 
@@ -49,12 +59,27 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
           name: b.name || b.title,
         })),
       );
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error("Error fetching properties for selector:", error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
+
+  const properties = useMemo(() => {
+    if (passedProperties) {
+      return passedProperties.map((p: any) => ({
+        id: p.id,
+        name: p.name || p.title || "",
+      }));
+    }
+    return internalProperties;
+  }, [passedProperties, internalProperties]);
 
   const selectedProperty = properties.find((p) => String(p.id) === String(selectedId));
 

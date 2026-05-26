@@ -1,12 +1,18 @@
 import { authApi } from "@/api/authApi";
+import { cancelAllRequests } from "@/api/abortService";
 import { ApiResponse } from "@/api/types";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { CheckPermissionResponse, LoginPayload, RegisterPayload } from "@/dataHelper/auth.dataHelper";
 import { clearAllDashboardDateRanges } from "@/utils/storage";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import { ErrorResponse } from "react-router";
+
+const prepareLogout = async (queryClient: QueryClient) => {
+  await queryClient.cancelQueries();
+  cancelAllRequests();
+};
 
 export const useLoginMutation = () => {
   const queryClient = useQueryClient();
@@ -58,6 +64,7 @@ export const useLogoutMutation = () => {
 
   return useMutation({
     mutationFn: authApi.logout,
+    onMutate: () => prepareLogout(queryClient),
     onSuccess: () => {
       localStorage.removeItem("token");
       queryClient.removeQueries({ queryKey: ["profile"] });
@@ -76,6 +83,7 @@ export const useStayLogoutMutation = () => {
 
   return useMutation({
     mutationFn: authApi.stayLogout,
+    onMutate: () => prepareLogout(queryClient),
     onSuccess: () => {
       localStorage.removeItem("token");
       queryClient.removeQueries({ queryKey: ["profile"] });
@@ -94,6 +102,7 @@ export const usePartnerLogoutMutation = () => {
 
   return useMutation({
     mutationFn: authApi.partnerLogout,
+    onMutate: () => prepareLogout(queryClient),
     onSuccess: () => {
       localStorage.removeItem("token");
       queryClient.removeQueries({ queryKey: ["profile"] });

@@ -7,8 +7,8 @@ import { partnerDashboardApi } from "@/api/partnerDashboardApi";
 export const usePartnerStatsQuery = () => {
   return useQuery({
     queryKey: ["partner-stats"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getStats();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getStats({ signal });
       return response.data;
     },
   });
@@ -17,8 +17,8 @@ export const usePartnerStatsQuery = () => {
 export const usePartnerHeadlineKpisQuery = () => {
   return useQuery({
     queryKey: ["partner", "dashboard", "kpis"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getHeadlineKpis();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getHeadlineKpis({ signal });
       return response.data;
     },
   });
@@ -27,8 +27,8 @@ export const usePartnerHeadlineKpisQuery = () => {
 export const usePartnerOccupancyChartQuery = () => {
   return useQuery({
     queryKey: ["partner", "dashboard", "charts", "occupancy"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getOccupancyChart();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getOccupancyChart({ signal });
       return response.data;
     },
     staleTime: 60_000,
@@ -38,8 +38,8 @@ export const usePartnerOccupancyChartQuery = () => {
 export const usePartnerGmvChartQuery = () => {
   return useQuery({
     queryKey: ["partner", "dashboard", "charts", "gmv"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getGmvChart();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getGmvChart({ signal });
       return response.data;
     },
     staleTime: 60_000,
@@ -52,8 +52,8 @@ export const usePartnerGmvChartQuery = () => {
 export const usePartnerPendingBookingsQuery = () => {
   return useQuery({
     queryKey: ["partner-pending-bookings"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getPendingBookings();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getPendingBookings({ signal });
       return response.data;
     },
   });
@@ -65,8 +65,8 @@ export const usePartnerPendingBookingsQuery = () => {
 export const usePartnerUrgentMaintenancesQuery = () => {
   return useQuery({
     queryKey: ["partner-urgent-maintenances"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getUrgentMaintenances();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getUrgentMaintenances({ signal });
       return response.data;
     },
   });
@@ -78,8 +78,8 @@ export const usePartnerUrgentMaintenancesQuery = () => {
 export const usePartnerRevenueAnalyticsQuery = () => {
   return useQuery({
     queryKey: ["partner-revenue-analytics"],
-    queryFn: async () => {
-      const response = await partnerDashboardApi.getRevenueAnalytics();
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getRevenueAnalytics({ signal });
       return response.data;
     },
   });

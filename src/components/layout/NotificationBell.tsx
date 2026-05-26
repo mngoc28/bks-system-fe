@@ -32,8 +32,8 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
     
     const { data: notifications = [], isLoading } = useQuery<NotificationData[]>({
         queryKey: queryKey,
-        queryFn: async () => {
-            const res = await service.getNotifications();
+        queryFn: async ({ signal }) => {
+            const res = await service.getNotifications(1, { signal });
             // Laravel pagination returns { data: { data: [...] } } via our apiService
             return (res as any).data?.data || [];
         },
@@ -43,9 +43,9 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
 
     const { data: cancellationCount = 0 } = useQuery({
         queryKey: ["notifications", portalType, "cancellation-pending"],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             if (portalType !== 'partner') return 0;
-            const res = await partnerService.getCancellationRequests({ status: 'pending', per_page: 1 });
+            const res = await partnerService.getCancellationRequests({ status: 'pending', per_page: 1 }, { signal });
             return (res as any)?.data?.meta?.total ?? 0;
         },
         enabled: portalType === 'partner',

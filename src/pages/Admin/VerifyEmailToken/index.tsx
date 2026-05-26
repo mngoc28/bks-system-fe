@@ -6,6 +6,7 @@ import { FaFacebookF, FaGoogle, FaMap, FaPhone } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { ThreeDot } from "react-loading-indicators";
 import { ROUTERS } from "@/constant";
+import { CheckCircle, XCircle } from "lucide-react";
 
 /**
  * Verify Email Token Page
@@ -39,7 +40,6 @@ const VerifyEmailToken: React.FC = () => {
         { text: t("verify_email.VET6"), isSuccess: true, value: "VET6", color: "green-500", checkSuccess: true },
     ]
     const resultResetTokenVerifyEmail = textResetTokenVerifyEmail.find(item => item.value === data?.data);
-    const urlImage = resultResetTokenVerifyEmail?.checkSuccess ? "/assets/images/success.png" : "/assets/images/fail.png";
     return (
         <>
             {isLoading && <LoadingScreen text={t("common.loading")} />}
@@ -49,7 +49,11 @@ const VerifyEmailToken: React.FC = () => {
                         <div className=" ">
                             <div className="grid size-full grid-cols-1 grid-rows-3 rounded-lg bg-white px-5">
                                 <div className="flex flex-col items-center justify-center">
-                                    <img src={urlImage} alt="success" className="size-[80px]" />
+                                    {resultResetTokenVerifyEmail?.checkSuccess ? (
+                                        <CheckCircle className="size-[80px] text-emerald-500" />
+                                    ) : (
+                                        <XCircle className="size-[80px] text-rose-500" />
+                                    )}
                                     {
                                         resultResetTokenVerifyEmail?.value === "VET5" || resultResetTokenVerifyEmail?.value === "VET6" ?
                                             <></> :
@@ -70,7 +74,7 @@ const VerifyEmailToken: React.FC = () => {
                                                             resetTokenVerifyEmail.mutate();
                                                         }
                                                         else if (resultResetTokenVerifyEmail.value === "VET6" || resultResetTokenVerifyEmail.value === "VET5") {
-                                                            navigate(ROUTERS.LOGIN);
+                                                            navigate(ROUTERS.PARTNER_LOGIN);
                                                         }
                                                     }}
                                                     disabled={resetTokenVerifyEmail.isPending || isClick}

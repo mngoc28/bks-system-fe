@@ -7,6 +7,6 @@ export const WardApi = {
     getWardsByProvinceId: (provinceId: number): Promise<ApiResponse<Ward[]>> => 
         axiosClient.get(`/admin/wards/${provinceId}`),
     // get wards for public home view
-    getHomeWardsByProvinceId: (provinceId: number): Promise<ApiResponse<Ward[]>> =>
-        axiosClient.get(`home/wards/${provinceId}`),
+    getHomeWardsByProvinceId: (provinceId: number, config?: any): Promise<ApiResponse<Ward[]>> =>
+        axiosClient.get(`home/wards/${provinceId}`, config),
 }

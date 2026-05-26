@@ -30,7 +30,11 @@ const News: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchNews();
+    const abortController = new AbortController();
+    fetchNews(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   const formatDate = (value: unknown): string => {
@@ -52,16 +56,21 @@ const News: React.FC = () => {
     })) as NewsPost[];
   };
 
-  const fetchNews = async () => {
+  const fetchNews = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getNews();
+      const res: any = await partnerService.getNews({ signal });
       const payload = res?.data?.data?.data || res?.data?.data || [];
       setNewsList(normalizeNews(payload));
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching news:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 

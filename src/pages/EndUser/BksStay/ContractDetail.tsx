@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
+import { formatDate } from "@/utils/dateUtils";
 import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import SignaturePad from "@/components/shared/SignaturePad";
 import stayService, { Contract } from "@/services/stayService";
@@ -141,8 +142,8 @@ const ContractDetail = () => {
   const guestName = contract.booking?.user?.name ?? "Khách thuê";
   const roomTitle = contract.booking?.room?.title ?? "N/A";
   const propertyAddress = contract.booking?.room?.property?.address ?? "theo thỏa thuận";
-  const startDate = contract.booking?.start_date ?? "N/A";
-  const endDate = contract.booking?.end_date ?? "N/A";
+  const startDate = contract.booking?.start_date ? formatDate(contract.booking.start_date) : "N/A";
+  const endDate = contract.booking?.end_date ? formatDate(contract.booking.end_date) : "N/A";
   const totalPrice = contract.booking?.price?.price ?? 0;
   const bookingId = contract.booking?.id ?? contract.booking_id;
 

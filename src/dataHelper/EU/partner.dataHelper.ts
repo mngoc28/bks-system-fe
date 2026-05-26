@@ -11,6 +11,8 @@ export interface Partner {
     description?: string;
     image_1?: string;
     province_name: string;
+    reviews_count?: number;
+    reviews_avg_rating?: number | string;
 }
 
 export interface PartnerDetail extends Partner {

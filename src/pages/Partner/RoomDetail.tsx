@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Home, Square, Users, MapPin, 
   Wallet, Shield, Wrench, History as HistoryIcon, Image as ImageIcon,
   Calendar, Phone, Mail, CheckCircle, Clock, AlertCircle,
-  ChevronRight
+  ChevronRight, Star
 } from 'lucide-react';
 import { partnerService } from '@/services/partnerService';
+import { useRoomReviewsQuery } from '@/hooks/useReviewQuery';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,30 +20,40 @@ import { cn } from '@/lib/utils';
 const RoomDetail: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [room, setRoom] = useState<Room | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [maintenances, setMaintenances] = useState<MaintenanceRequest[]>([]);
   const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState((location.state as any)?.activeTab || 'overview');
+
+  const { data: reviewsData, isLoading: isLoadingReviews } = useRoomReviewsQuery(Number(roomId || 0), {
+    enabled: !!roomId,
+  });
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
   useEffect(() => {
     if (roomId) {
-      fetchData();
+      const abortController = new AbortController();
+      fetchData(abortController.signal);
+      return () => {
+        abortController.abort();
+      };
     }
   }, [roomId]);
 
-  const fetchData = async () => {
+  const fetchData = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
       
       const [roomRes, bookingsRes, maintRes, imagesRes]: any = await Promise.all([
-        partnerService.getRoomDetail(roomId!),
-        partnerService.getBookings({ room_id: roomId }),
-        partnerService.getMaintenances({ room_id: roomId }),
-        partnerService.getRoomImages(roomId!)
+        partnerService.getRoomDetail(roomId!, { signal }),
+        partnerService.getBookings({ room_id: roomId }, { signal }),
+        partnerService.getMaintenances({ room_id: roomId }, { signal }),
+        partnerService.getRoomImages(roomId!, { signal })
       ]);
 
       const rawRoom = roomRes?.status === 'success' ? roomRes.data : (roomRes?.data ?? roomRes);
@@ -59,7 +70,9 @@ const RoomDetail: React.FC = () => {
         status: rawRoom.status === 1 ? 'Trống' : rawRoom.status === 2 ? 'Đang thuê' : 'Đang bảo trì',
         amenities: rawRoom.amenities || [],
         services: rawRoom.services || [],
-        prices: rawRoom.prices || []
+        prices: rawRoom.prices || [],
+        reviews_count: rawRoom.reviews_count,
+        reviews_avg_rating: rawRoom.reviews_avg_rating
       });
 
       const rawBookings = bookingsRes?.data?.data || bookingsRes?.data || (Array.isArray(bookingsRes) ? bookingsRes : []);
@@ -86,10 +99,15 @@ const RoomDetail: React.FC = () => {
       setImages(imagesRes?.data || []);
 
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error(err);
       setError(err.message || 'Lỗi khi tải dữ liệu phòng');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -99,6 +117,7 @@ const RoomDetail: React.FC = () => {
     { id: 'tenants', label: 'Lịch sử đặt phòng' },
     { id: 'maintenance', label: 'Bảo trì' },
     { id: 'gallery', label: 'Hình ảnh' },
+    { id: 'reviews', label: 'Đánh giá khách hàng' },
   ];
 
   if (loading) {
@@ -135,16 +154,24 @@ const RoomDetail: React.FC = () => {
               <ArrowLeft size={16} /> <span className="text-xs uppercase tracking-widest">Quay lại danh sách</span>
            </Button>
            <div>
-              <div className="mb-1 flex items-center gap-3">
+              <div className="mb-1 flex flex-wrap items-center gap-3">
                  <h1 className="text-4xl font-bold tracking-tight text-slate-900">Phòng {room.name}</h1>
-                 <Badge className={cn(
-                   "px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider",
-                   room.status === 'Trống' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                   room.status === 'Đang thuê' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                   "bg-amber-50 text-amber-700 border-amber-200"
-                 )}>
-                   {room.status}
-                 </Badge>
+                 <div className="flex gap-2">
+                    <Badge className={cn(
+                      "px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider",
+                      room.status === 'Trống' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                      room.status === 'Đang thuê' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                      "bg-amber-50 text-amber-700 border-amber-200"
+                    )}>
+                      {room.status}
+                    </Badge>
+                    {reviewsData && reviewsData.total_count > 0 && (
+                       <Badge className="flex items-center gap-1 border border-amber-200 bg-amber-50 px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider text-amber-700">
+                          <Star className="size-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                          {reviewsData.average_rating} ({reviewsData.total_count} đánh giá)
+                       </Badge>
+                    )}
+                 </div>
               </div>
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-slate-500">
                  <MapPin size={14} className="text-slate-300" /> {room.propertyName} • Tầng {room.floor_number}
@@ -420,6 +447,97 @@ const RoomDetail: React.FC = () => {
                      <p className="text-xs font-bold uppercase italic tracking-[0.2em] text-slate-400">Chưa có bộ sưu tập hình ảnh cho phòng này</p>
                   </div>
                )}
+            </div>
+         )}
+
+         {activeTab === 'reviews' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+               <Card className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
+                  <CardContent className="p-8 space-y-8">
+                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-100 pb-6">
+                        <div>
+                           <h2 className="text-2xl font-bold text-slate-900">Nhận xét từ khách hàng</h2>
+                           <p className="text-sm text-slate-500 mt-1">Đánh giá thực tế về phòng này do khách thuê trải nghiệm và chia sẻ</p>
+                        </div>
+                        {reviewsData && reviewsData.total_count > 0 ? (
+                           <div className="flex items-center gap-6 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-sm">
+                              <div className="text-center md:text-right">
+                                 <div className="text-4xl font-black text-slate-900 flex items-center gap-2 justify-center md:justify-end">
+                                    <Star className="size-8 text-amber-500 fill-amber-500 shrink-0" />
+                                    {reviewsData.average_rating}
+                                 </div>
+                                 <span className="text-xs font-bold text-slate-400">Trên tổng số {reviewsData.total_count} đánh giá</span>
+                              </div>
+                           </div>
+                        ) : null}
+                     </div>
+
+                     {isLoadingReviews ? (
+                        <div className="py-12 text-center">
+                           <Spinner size="lg" spinnerClassName="border-y-blue-600" showText text="Đang tải danh sách đánh giá..." />
+                        </div>
+                     ) : !reviewsData || reviewsData.reviews.length === 0 ? (
+                        <div className="py-16 text-center text-slate-400 text-sm italic">
+                           Chưa có đánh giá nào cho phòng này.
+                        </div>
+                     ) : (
+                        <>
+                           <div className="divide-y divide-slate-100">
+                              {reviewsData.reviews.slice(0, showAllReviews ? undefined : 5).map((review) => (
+                                 <div key={review.id} className="py-6 first:pt-0 last:pb-0 space-y-4">
+                                    <div className="flex items-start justify-between gap-4">
+                                       <div className="flex items-center gap-4">
+                                          <div className="size-12 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-sm animate-in zoom-in-75">
+                                             {review.user?.avatar ? (
+                                                <img src={review.user.avatar} alt={review.user.name} className="size-full object-cover" />
+                                             ) : (
+                                                <Users className="size-6 text-slate-400" />
+                                             )}
+                                          </div>
+                                          <div className="space-y-1">
+                                             <h4 className="text-base font-bold text-slate-800">{review.user?.name || "Khách hàng ẩn danh"}</h4>
+                                             <span className="text-xs font-medium text-slate-400">{new Date(review.created_at).toLocaleDateString("vi-VN")}</span>
+                                          </div>
+                                       </div>
+                                       <div className="flex items-center gap-1 rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 shadow-sm">
+                                          {[...Array(5)].map((_, i) => (
+                                             <Star
+                                                key={i}
+                                                className={`size-3.5 ${
+                                                   i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                                                }`}
+                                             />
+                                          ))}
+                                       </div>
+                                    </div>
+                                    {review.comment ? (
+                                       <div className="rounded-2xl bg-slate-50/50 border border-slate-100 p-5 pl-6 italic text-slate-600 leading-relaxed text-sm">
+                                          "{review.comment}"
+                                       </div>
+                                    ) : (
+                                       <div className="text-sm italic text-slate-400 pl-6">
+                                          Khách hàng không để lại nhận xét bằng lời.
+                                       </div>
+                                    )}
+                                 </div>
+                              ))}
+                           </div>
+
+                           {reviewsData.reviews.length > 5 && (
+                              <div className="mt-8 flex justify-center border-t border-slate-100 pt-6">
+                                 <Button
+                                    variant="outline"
+                                    className="rounded-xl border-2 border-slate-100 px-8 py-5 transition-all hover:bg-slate-50 font-bold uppercase tracking-wider text-xs text-slate-700 shadow-sm"
+                                    onClick={() => setShowAllReviews(!showAllReviews)}
+                                 >
+                                    {showAllReviews ? "Thu gọn nhận xét" : `Xem thêm ${reviewsData.reviews.length - 5} nhận xét`}
+                                 </Button>
+                              </div>
+                           )}
+                        </>
+                     )}
+                  </CardContent>
+               </Card>
             </div>
          )}
       </div>

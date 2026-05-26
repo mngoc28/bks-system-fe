@@ -28,17 +28,24 @@ const Services: React.FC = () => {
   const [properties, setProperties] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchServices();
-    fetchProperties();
+    const abortController = new AbortController();
+    fetchServices(abortController.signal);
+    fetchProperties(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (signal?: AbortSignal) => {
     try {
-      const res: any = await partnerService.getProperties();
+      const res: any = await partnerService.getProperties(undefined, { signal });
       const payload = res?.data?.data || res?.data || res || [];
       setProperties(Array.isArray(payload) ? payload : (payload?.data || []));
-    } catch (error) {
-       console.error(error);
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
+      console.error(error);
     }
   };
 
@@ -74,15 +81,20 @@ const Services: React.FC = () => {
     }));
   };
 
-  const fetchServices = async () => {
+  const fetchServices = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getAllServices();
+      const res: any = await partnerService.getAllServices({ signal });
       setServices(normalizeServices(extractRows(res)));
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching services:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -146,6 +158,7 @@ const Services: React.FC = () => {
           <PropertySelector 
             selectedId={filterPropertyId} 
             onSelect={setFilterPropertyId} 
+            properties={properties}
             className="w-64"
           />
           <div className="hidden h-10 w-px bg-gray-100 md:block"></div>

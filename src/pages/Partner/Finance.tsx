@@ -53,8 +53,8 @@ const Finance: React.FC = () => {
     refetch: refetchBookings
   } = useQuery({
     queryKey: ['partner-recent-bookings'],
-    queryFn: async () => {
-      const res: any = await partnerService.getBookings({ per_page: 5 });
+    queryFn: async ({ signal }) => {
+      const res: any = await partnerService.getBookings({ per_page: 5 }, { signal });
       const payload = res?.data || res;
       const paginator = payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data) 
         ? payload.data 

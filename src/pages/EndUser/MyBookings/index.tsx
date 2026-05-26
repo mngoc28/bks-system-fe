@@ -14,11 +14,11 @@ import { Label } from "@/components/ui/label";
 import { ROUTERS } from "@/constant";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 import { formatPrice } from "@/utils/utils";
+import { formatDate } from "@/utils/dateUtils";
 import { useUserStore } from "@/store/useUserStore";
 import stayService, { type BookingDetail } from "@/services/stayService";
 import { bookingApi } from "@/api/EU/bookingApi";
 import type { PublicBookingSummary } from "@/dataHelper/EU/booking.dataHelper";
-import { flushPendingLocalBookingsToServer, getPendingLocalBookingsCount } from "@/utils/stayLocalBookingSync";
 
 type BookingStatus = "upcoming" | "completed" | "cancelled";
 
@@ -112,16 +112,17 @@ const MyBookings = () => {
   const [lookupHit, setLookupHit] = useState<UserBooking | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
 
-  const [pendingLocalCount, setPendingLocalCount] = useState(0);
-
   useEffect(() => {
     if (!isAuthenticated) {
       return;
     }
     void (async () => {
-      await flushPendingLocalBookingsToServer();
+      try {
+        window.localStorage.removeItem("publicMyBookings");
+      } catch {
+        /* ignore */
+      }
       await queryClient.invalidateQueries({ queryKey: ["my-bookings", "stay-list"] });
-      setPendingLocalCount(getPendingLocalBookingsCount());
     })();
   }, [isAuthenticated, queryClient]);
 
@@ -162,7 +163,9 @@ const MyBookings = () => {
         message?: string;
       };
       if (res?.data?.booking_id) {
-        setLookupHit(mapLookupSummary(res.data));
+        const booking = mapLookupSummary(res.data);
+        setLookupHit(booking);
+        setTab(booking.status);
         toastSuccess(res.message || "Đã tìm thấy đơn đặt phòng.");
       } else {
         setLookupHit(null);
@@ -251,7 +254,7 @@ const MyBookings = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" className="rounded-xl bg-sky-600 hover:bg-sky-700" onClick={handleLookup} disabled={lookupLoading}>
+              <Button type="button" className="rounded-full bg-sky-600 hover:bg-sky-700" onClick={handleLookup} disabled={lookupLoading}>
                 {lookupLoading ? (
                   <>
                     <Spinner size="sm" className="inline-block mr-2" spinnerClassName="border-y-white" />
@@ -262,7 +265,7 @@ const MyBookings = () => {
                 )}
               </Button>
               {lookupHit && (
-                <Button type="button" variant="secondary" className="rounded-xl" onClick={() => setLookupHit(null)}>
+                <Button type="button" variant="secondary" className="rounded-full" onClick={() => setLookupHit(null)}>
                   Xóa kết quả tra cứu
                 </Button>
               )}
@@ -270,14 +273,7 @@ const MyBookings = () => {
           </CardContent>
         </Card>
         
-        {isAuthenticated && pendingLocalCount > 0 && (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            <p className="font-semibold">Còn {pendingLocalCount} đơn lưu trên thiết bị chưa gộp vào tài khoản</p>
-            <p className="mt-1 text-amber-900/90">
-              Hãy đảm bảo bạn đã đăng nhập BKS Stay bằng đúng email đã dùng khi đặt phòng, rồi tải lại trang này để hệ thống đồng bộ.
-            </p>
-          </div>
-        )}
+
 
         {isAuthenticated && stayQuery.isLoading && (
           <div className="mb-6 flex items-center gap-2 text-sm text-slate-600">
@@ -290,13 +286,13 @@ const MyBookings = () => {
           <p className="mb-6 text-sm text-rose-600">Không tải được danh sách BKS Stay. Bạn vẫn có thể tra cứu đơn bằng form phía trên.</p>
         )}
 
-        <div className="mb-6 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="mb-6 inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
           {(["upcoming", "completed", "cancelled"] as const).map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => setTab(status)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 tab === status ? "bg-sky-600 text-white" : "text-slate-600 hover:bg-slate-100"
               }`}
             >
@@ -312,7 +308,7 @@ const MyBookings = () => {
             <p className="mt-2 text-sm text-slate-500">
               Thử tra cứu bằng email và mã đặt, hoặc đăng nhập BKS Stay để xem lịch sử đầy đủ.
             </p>
-            <Button asChild className="mt-5 rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
+            <Button asChild variant="gradient" className="mt-5 rounded-full">
               <Link to={ROUTERS.SEARCH_ROOMS}>Tìm phòng ngay</Link>
             </Button>
           </div>
@@ -349,7 +345,7 @@ const MyBookings = () => {
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                           <CalendarDays className="size-4 text-sky-500" />
-                          {booking.startDate} - {booking.endDate}
+                          {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
                           <Clock3 className="size-4" />
@@ -362,12 +358,12 @@ const MyBookings = () => {
                         <p className="text-2xl font-bold text-sky-600">{formatPrice(booking.totalPrice)}</p>
                         <div className="flex flex-wrap gap-2 md:justify-end">
                           {booking.source === "lookup" && booking.roomId > 0 && (
-                            <Button asChild variant="secondary" className="rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                            <Button asChild variant="secondary" className="rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
                               <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>Xem phòng</Link>
                             </Button>
                           )}
                           {booking.source === "stay" && booking.stayBookingId != null && (
-                            <Button asChild className="rounded-xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 hover:opacity-90">
+                            <Button asChild variant="gradient" className="rounded-full">
                               <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", String(booking.stayBookingId))}>
                                 <CheckCircle2 className="mr-1 size-4" />
                                 Chi tiết Stay

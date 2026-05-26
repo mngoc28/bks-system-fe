@@ -18,8 +18,8 @@ export const useGetWardsByProvinceId = (provinceId: number) => {
 export const useGetHomeWardsByProvinceId = (provinceId: number) => {
   return useQuery<ApiResponse<Ward[]>, Error>({
     queryKey: ["home-wards", provinceId],
-    queryFn: async () => {
-      const response = await WardApi.getHomeWardsByProvinceId(provinceId);
+    queryFn: async ({ signal }) => {
+      const response = await WardApi.getHomeWardsByProvinceId(provinceId, { signal });
       return response;
     },
     enabled: !!provinceId,

@@ -51,18 +51,27 @@ const PriceRulesPage: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchRules();
+    const abortController = new AbortController();
+    fetchRules(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  const fetchRules = async () => {
+  const fetchRules = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getPriceRules();
+      const res: any = await partnerService.getPriceRules(undefined, { signal });
       setRules(res?.data || []);
-    } catch {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       toastError('Không thể tải danh sách quy tắc giá.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 

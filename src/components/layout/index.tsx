@@ -1,8 +1,8 @@
-﻿import Header from "@/components/Header";
+import Header from "@/components/Header";
 import { ROUTERS } from "@/constant";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 import { MenuItem } from "@/shared/types";
-import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench } from "lucide-react";
+import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router";
@@ -72,6 +72,13 @@ const Layout = () => {
       label: t("menu.partner"),
       path: ROUTERS.PARTNER_MANAGEMENT,
       icon: <Handshake />,
+    },
+    {
+      id: "partner-approval",
+      permissionKey: "partner-management:view",
+      label: t("menu.partner_approval", { defaultValue: "Duyệt đối tác" }),
+      path: ROUTERS.PARTNER_APPROVAL,
+      icon: <ShieldCheck />,
     },
     {
       id: "properties",
@@ -169,6 +176,9 @@ const Layout = () => {
     }
     if (pathName.includes(ROUTERS.SERVICE_MANAGEMENT)) {
       return t("menu.service");
+    }
+    if (pathName.includes(ROUTERS.PARTNER_APPROVAL)) {
+      return t("menu.partner_approval", { defaultValue: "Phê duyệt đối tác" });
     }
     if (pathName.includes(ROUTERS.PARTNER_MANAGEMENT)  || pathName.includes(ROUTERS.PARTNER_DETAIL) || pathName.includes(ROUTERS.PARTNER_EDIT)) {
       return t("menu.partner");

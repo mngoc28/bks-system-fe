@@ -21,7 +21,8 @@ const BookingSuccess = React.lazy(() => import("./pages/EndUser/BookingSuccess")
 const PublicNewsDetail = React.lazy(() => import("./pages/EndUser/NewsDetail"));
 const PublicNewsList = React.lazy(() => import("./pages/EndUser/NewsList"));
 const Login = React.lazy(() => import("./pages/Admin/Login"));
-const Register = React.lazy(() => import("./pages/Admin/Register"));
+const Register = React.lazy(() => import("./pages/Partner/Register"));
+const BecomeAPartner = React.lazy(() => import("./pages/Partner/BecomeAPartner"));
 const CompanyHub = React.lazy(() => import("./pages/Admin/CompanyHub"));
 const Dashboard = React.lazy(() => import("./pages/Admin/Dashboard"));
 const Properties = React.lazy(() => import("./pages/Admin/PropertyManager"));
@@ -58,6 +59,7 @@ const NewsDetail = React.lazy(() => import("./pages/Admin/NewsDetail"));
 const NewsEdit = React.lazy(() => import("./pages/Admin/NewsEdit"));
 const NewsAdd = React.lazy(() => import("./pages/Admin/NewsAdd"));
 const PartnerManagement = React.lazy(() => import("./pages/Admin/PartnerManagement"));
+const PartnerApproval = React.lazy(() => import("./pages/Admin/PartnerApproval"));
 const PartnerDetailManager = React.lazy(() => import("./pages/Admin/PartnerDetail"));
 const PartnerEditManager = React.lazy(() => import("./pages/Admin/PartnerEdit"));
 const Booking = React.lazy(() => import("./pages/EndUser/Booking/BookingPage"));
@@ -99,6 +101,7 @@ const PartnerChat = React.lazy(() => import("./pages/Partner/Chat"));
 const PartnerReports = React.lazy(() => import("./pages/Partner/Reports"));
 const PartnerNotifications = React.lazy(() => import("./pages/Partner/Notifications"));
 const PartnerProfile = React.lazy(() => import("./pages/Partner/Profile"));
+const PartnerOnboardingWrapper = React.lazy(() => import("./pages/Partner/PartnerOnboardingWizardWrapper"));
 
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center">
@@ -217,20 +220,19 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     if (
       role === PERMISSIONS.PARTNER &&
       (location.pathname === ROUTERS.PARTNER_LOGIN ||
-        location.pathname === ROUTERS.LOGIN ||
-        location.pathname === ROUTERS.REGISTER)
+        location.pathname === ROUTERS.LOGIN)
     ) {
       return <Navigate to="/partner/dashboard" replace />;
     }
     if (
       role === PERMISSIONS.ADMIN &&
-      (location.pathname === ROUTERS.LOGIN || location.pathname === ROUTERS.REGISTER)
+      location.pathname === ROUTERS.LOGIN
     ) {
       return <Navigate to={ROUTERS.CONTROL} replace />;
     }
     if (
       role === PERMISSIONS.USER &&
-      (location.pathname === ROUTERS.LOGIN || location.pathname === ROUTERS.REGISTER)
+      location.pathname === ROUTERS.LOGIN
     ) {
       return <Navigate to={ROUTERS.BKS_STAY_DASHBOARD} replace />;
     }
@@ -307,6 +309,15 @@ export default function Router() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path={ROUTERS.BECOME_PARTNER}
+          element={
+            <PublicRoute>
+              <BecomeAPartner />
             </PublicRoute>
           }
         />
@@ -398,9 +409,22 @@ export default function Router() {
           <Route path={ROUTERS.NEWS_EDIT + "/:id"} element={<NewsEdit />} />
           <Route path={ROUTERS.NEWS_ADD} element={<NewsAdd />} />
           <Route path={ROUTERS.PARTNER_MANAGEMENT} element={<PartnerManagement />} />
+          <Route path={ROUTERS.PARTNER_APPROVAL} element={<PartnerApproval />} />
           <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/detail/:id`} element={<PartnerDetailManager />} />
           <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/edit/:id`} element={<PartnerEditManager />} />
         </Route>
+
+        {/* Partner Onboarding - Standalone (for status 3: pending approval, 4: rejected) */}
+        <Route
+          path="/partner/onboarding"
+          element={
+            <PartnerPrivateRoute>
+              <Suspense fallback={<LoadingFallback />}>
+                <PartnerOnboardingWrapper />
+              </Suspense>
+            </PartnerPrivateRoute>
+          }
+        />
 
         {/* Partner Login */}
         <Route

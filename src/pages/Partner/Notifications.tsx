@@ -32,7 +32,7 @@ const Notifications: React.FC = () => {
 
     const { data: notificationResponse, isLoading } = useQuery({
         queryKey: ["notifications", "partner", "all", currentPage],
-        queryFn: () => partnerService.getNotifications(currentPage),
+        queryFn: ({ signal }) => partnerService.getNotifications(currentPage, { signal }),
     });
 
     const notifications = (notificationResponse as any)?.data?.data || [];

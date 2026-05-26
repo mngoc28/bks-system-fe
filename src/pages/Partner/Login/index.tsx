@@ -69,7 +69,10 @@ export default function PartnerLogin() {
             useUserStore.getState().login(token, values.email, user_role, userData?.name || "");
             
             toastSuccess(t("login.success"));
-            navigate("/partner/dashboard");
+            // Redirect based on partner activation status
+            // status 1 = active partner, otherwise goes to onboarding/approval flow
+            const partnerStatus = Number(userData?.status ?? 0);
+            navigate(partnerStatus === 1 ? "/partner/dashboard" : "/partner/onboarding");
           } else {
             toastError(t("login.failed"));
           }

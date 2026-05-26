@@ -207,7 +207,7 @@ const Dashboard = () => {
                   <div className="flex flex-col justify-between p-8 sm:col-span-3">
                     <div>
                       <Badge className="mb-3 rounded-full border-none bg-sky-100 px-3 py-1 font-bold text-sky-700 hover:bg-sky-100">
-                        {activeBooking.status === 2 ? "ĐANG Ở" : "ĐÃ XÁC NHẬN"}
+                        {(activeBooking.status as any) === 'In Progress' ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}
                       </Badge>
                       <h4 className="mb-2 text-2xl font-black text-slate-900">{activeBooking.room?.title || "Phòng nghỉ"}</h4>
                       <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">

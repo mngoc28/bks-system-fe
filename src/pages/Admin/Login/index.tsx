@@ -106,10 +106,12 @@ export default function Login() {
             
             <div className="relative z-10 space-y-8">
               <div className="flex items-center gap-4">
-                <div className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md transition-transform duration-500 hover:scale-110 active:scale-95">
-                  <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
-                </div>
-                <span className="text-2xl font-bold uppercase italic tracking-tight text-white">BKS System</span>
+                <img 
+                  src="/app/images/front/bks-icon.svg" 
+                  alt="BKS Logo" 
+                  className="size-14 object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.2)] transition-transform duration-500 hover:scale-105 active:scale-95" 
+                />
+                <span className="text-3xl font-bold uppercase italic tracking-tight text-white">BKS System</span>
               </div>
 
               <div>

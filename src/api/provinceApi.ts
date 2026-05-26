@@ -10,6 +10,6 @@ export const provinceApi = {
     // get all provinces types
     getAllProvincesTypes: (): Promise<ApiResponse<ProvinceTypes[]>> =>
         axiosClient.get('admin/provinces/types'),
-    getHomeProvinces: (): Promise<ApiResponse<ProvinceTypes[]>> =>
-        axiosClient.get('home/provinces'),
+    getHomeProvinces: (config?: any): Promise<ApiResponse<ProvinceTypes[]>> =>
+        axiosClient.get('home/provinces', config),
 }

@@ -36,7 +36,7 @@ const NewsDetail = () => {
           <div className="space-y-4 text-center">
             <h2 className="text-2xl font-bold text-slate-800">{t("public.newsDetail.errorTitle", "Không tìm thấy tin tức")}</h2>
             <p className="text-slate-600">{t("public.newsDetail.errorDesc", "Bài viết bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ bỏ.")}</p>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="rounded-full">
               <Link to={ROUTERS.HOME}>{t("public.newsDetail.backHome", "Quay lại trang chủ")}</Link>
             </Button>
           </div>
@@ -165,7 +165,7 @@ const NewsDetail = () => {
                       </div>
                     </div>
                     
-                    <Button asChild variant="outline" className="gap-2 rounded-xl border-slate-200 hover:bg-slate-50">
+                    <Button asChild variant="outline" className="gap-2 rounded-full border-slate-200 hover:bg-slate-50">
                       <Link to={ROUTERS.HOME}>
                         <ArrowLeft className="size-4" />
                         {t("public.newsDetail.backToList", "Xem tin tức khác")}
@@ -233,7 +233,7 @@ const NewsDetail = () => {
                 )}
               </div>
 
-              <Button asChild className="mt-4 w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800">
+              <Button asChild className="mt-4 w-full rounded-full bg-slate-900 text-white hover:bg-slate-800">
                 <Link to={ROUTERS.HOME}>
                   {t("public.newsDetail.viewAllNews", "Xem tất cả tin tức")}
                 </Link>
@@ -252,7 +252,7 @@ const NewsDetail = () => {
                 <p className="text-sm leading-relaxed text-sky-100">
                   {t("public.newsDetail.ctaDesc", "Hàng ngàn căn hộ và phòng trọ chất lượng đang chờ đón bạn. Khám phá ngay!")}
                 </p>
-                <Button asChild className="w-full rounded-xl bg-white px-6 text-sky-600 hover:bg-sky-50 sm:w-auto">
+                <Button asChild className="w-full rounded-full bg-white px-6 text-sky-600 hover:bg-sky-50 sm:w-auto">
                   <Link to={ROUTERS.SEARCH_ROOMS}>{t("public.newsDetail.ctaBtn", "Tìm phòng ngay")}</Link>
                 </Button>
               </div>

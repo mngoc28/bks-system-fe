@@ -44,6 +44,7 @@ import {
   Calendar,
   FileText,
   ArrowRight,
+  Clock,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -74,6 +75,8 @@ import { ROUTERS } from "@/constant";
 import { formatPrice } from "@/utils/utils";
 import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import { useUserStore } from "@/store/useUserStore";
+import { Star } from "lucide-react";
+import { useBookingReviewsQuery, useSubmitReviewMutation } from "@/hooks/useReviewQuery";
 
 import stayService, {
   BookingDetail as IBookingDetail,
@@ -161,11 +164,23 @@ const BookingDetail = () => {
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0, isStarted: false });
 
+  // Reviews queries and states
+  const { data: bookingReviews, isLoading: isLoadingReviews } = useBookingReviewsQuery(Number(id), {
+    enabled: !!id && (booking?.status === 3 || booking?.stay_status === 'checked_out')
+  });
+  const submitReviewMutation = useSubmitReviewMutation();
+
+  const [roomRating, setRoomRating] = useState<number>(5);
+  const [roomComment, setRoomComment] = useState<string>("");
+  const [partnerRating, setPartnerRating] = useState<number>(5);
+  const [partnerComment, setPartnerComment] = useState<string>("");
+
   // States for professional flows
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedReasonCode, setSelectedReasonCode] = useState("");
   const [reasonNote, setReasonNote] = useState("");
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
@@ -345,6 +360,20 @@ const BookingDetail = () => {
     }
   };
 
+  const handleWithdrawCancelRequest = async () => {
+    if (!booking) return;
+    setWithdrawSubmitting(true);
+    try {
+      await stayService.withdrawCancelBookingRequest(booking.id);
+      toastSuccess("Đã rút yêu cầu hủy đặt phòng thành công. Kỳ nghỉ của bạn vẫn được giữ nguyên!");
+      await reloadBookingDetail();
+    } catch (_e) {
+      toastError("Không thể rút yêu cầu hủy phòng. Vui lòng thử lại sau.");
+    } finally {
+      setWithdrawSubmitting(false);
+    }
+  };
+
   const handleReschedule = () => {
     if (!newStartDate || !newEndDate) {
       toastError("Vui lòng chọn đầy đủ ngày nhận và trả phòng mới.");
@@ -354,13 +383,28 @@ const BookingDetail = () => {
     setIsRescheduleDialogOpen(false);
   };
 
+  const handleSubmitReview = async () => {
+    if (!booking) return;
+    try {
+      await submitReviewMutation.mutateAsync({
+        booking_id: booking.id,
+        room_rating: roomRating,
+        room_comment: roomComment.trim() || undefined,
+        partner_rating: partnerRating,
+        partner_comment: partnerComment.trim() || undefined,
+      });
+    } catch (_e) {
+      // handled in mutation
+    }
+  };
+
   const nights = Math.ceil((new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime()) / (1000 * 60 * 60 * 24));
 
   const steps = [
-    { label: "Đã đặt", active: true, completed: booking.status >= 0 },
-    { label: "Xác nhận", active: booking.status === 0, completed: booking.status >= 1 },
-    { label: "Nhận phòng", active: booking.status === 1, completed: booking.status >= 2 },
-    { label: "Hoàn thành", active: booking.status === 2, completed: booking.status >= 2 }
+    { label: "Đã đặt", active: booking.status === 0, completed: booking.status >= 0 && booking.status !== 2 && booking.status !== 4 },
+    { label: "Xác nhận", active: booking.status === 1 && booking.stay_status !== 'checked_in', completed: booking.status >= 1 && booking.status !== 2 && booking.status !== 4 },
+    { label: "Nhận phòng", active: booking.status === 1 && booking.stay_status === 'checked_in', completed: (booking.status === 3 || booking.stay_status === 'checked_in' || booking.stay_status === 'checked_out') && booking.status !== 2 && booking.status !== 4 },
+    { label: "Hoàn thành", active: booking.status === 3 || booking.stay_status === 'checked_out', completed: (booking.status === 3 || booking.stay_status === 'checked_out') && booking.status !== 2 && booking.status !== 4 }
   ];
 
   const amenities = booking.room?.amenities || [
@@ -386,29 +430,68 @@ const BookingDetail = () => {
       </div>
 
       {/* Booking Stepper */}
-      <div className="flex w-full items-center justify-between px-4">
-         {steps.map((step, idx) => (
-            <div key={idx} className="relative flex flex-1 flex-col items-center">
-               <div className={`z-10 flex size-8 items-center justify-center rounded-full border-2 transition-all duration-500 ${
-                  step.completed 
-                  ? "border-sky-600 bg-sky-600 text-white" 
-                  : step.active 
-                  ? "border-sky-600 bg-white text-sky-600" 
-                  : "border-slate-200 bg-white text-slate-300"
-               }`}>
-                  {step.completed ? <CheckCircle2 className="size-5" /> : <span className="text-xs font-bold">{idx + 1}</span>}
-               </div>
-               <span className={`mt-2 text-[10px] font-black uppercase tracking-wider ${step.active || step.completed ? "text-slate-900" : "text-slate-400"}`}>
-                  {step.label}
-               </span>
-               {idx < steps.length - 1 && (
-                  <div className={`absolute left-1/2 top-4 h-[2px] w-full -translate-y-1/2 transition-all duration-500 ${
-                     steps[idx+1].completed ? "bg-sky-600" : "bg-slate-100"
-                  }`} />
-               )}
+      {booking.status === 2 ? (
+         <div className="flex items-center gap-4 rounded-[24px] border border-rose-100 bg-rose-50 p-6 text-rose-900 mx-4">
+            <AlertCircle className="size-8 shrink-0 text-rose-500" />
+            <div>
+               <h4 className="font-bold text-rose-950 text-base">Đặt phòng này đã bị hủy</h4>
+               <p className="text-xs font-medium text-rose-800 mt-1 leading-relaxed">
+                  Đơn đặt phòng của bạn đã bị hủy thành công. Mọi thắc mắc hoặc cần hỗ trợ đặt phòng mới, vui lòng liên hệ bộ phận CSKH của BKS Stay.
+               </p>
             </div>
-         ))}
-      </div>
+         </div>
+      ) : booking.status === 4 ? (
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-[24px] border border-amber-100 bg-amber-50 p-6 text-amber-900 mx-4">
+            <div className="flex items-center gap-4">
+               <AlertCircle className="size-8 shrink-0 text-amber-500 animate-pulse" />
+               <div>
+                  <h4 className="font-bold text-amber-950 text-base">Đang chờ xử lý yêu cầu hủy</h4>
+                  <p className="text-xs font-medium text-amber-800 mt-1 leading-relaxed">
+                     Yêu cầu hủy đặt phòng của bạn đã được tiếp nhận và đang chờ Partner duyệt.
+                  </p>
+               </div>
+            </div>
+            <Button
+               type="button"
+               variant="outline"
+               onClick={handleWithdrawCancelRequest}
+               disabled={withdrawSubmitting}
+               className="border-amber-300 text-amber-900 hover:bg-amber-100 hover:text-amber-950 rounded-xl transition-all self-start md:self-center font-bold px-4 h-10 shrink-0"
+            >
+               {withdrawSubmitting ? (
+                 <span className="flex items-center gap-2">
+                   <Spinner size="sm" spinnerClassName="border-y-amber-900" /> Đang rút...
+                 </span>
+               ) : (
+                 "Rút yêu cầu hủy"
+               )}
+            </Button>
+         </div>
+      ) : (
+         <div className="flex w-full items-center justify-between px-4">
+            {steps.map((step, idx) => (
+               <div key={idx} className="relative flex flex-1 flex-col items-center">
+                  <div className={`z-10 flex size-8 items-center justify-center rounded-full border-2 transition-all duration-500 ${
+                     step.completed 
+                     ? "border-sky-600 bg-sky-600 text-white" 
+                     : step.active 
+                     ? "border-sky-600 bg-white text-sky-600" 
+                     : "border-slate-200 bg-white text-slate-300"
+                  }`}>
+                     {step.completed ? <CheckCircle2 className="size-5" /> : <span className="text-xs font-bold">{idx + 1}</span>}
+                  </div>
+                  <span className={`mt-2 text-[10px] font-black uppercase tracking-wider ${step.active || step.completed ? "text-slate-900" : "text-slate-400"}`}>
+                     {step.label}
+                  </span>
+                  {idx < steps.length - 1 && (
+                     <div className={`absolute left-1/2 top-4 h-[2px] w-full -translate-y-1/2 transition-all duration-500 ${
+                        steps[idx+1].completed ? "bg-sky-600" : "bg-slate-100"
+                     }`} />
+                  )}
+               </div>
+            ))}
+         </div>
+      )}
 
       {/* Hero Section */}
       <section className="relative h-[300px] overflow-hidden rounded-[32px] shadow-2xl shadow-slate-900/10">
@@ -422,16 +505,48 @@ const BookingDetail = () => {
         </div>
 
         <div className="relative z-10 flex h-full flex-col justify-center px-10 md:px-12">
-          <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-sky-300 backdrop-blur-md">
-            <Zap className="size-3" />
-            {countdown.isStarted ? "Kỳ nghỉ đang diễn ra" : "Chi tiết kỳ nghỉ sắp tới"}
-          </div>
+          {booking.status === 2 ? (
+            <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-rose-300 backdrop-blur-md">
+              <X className="size-3" />
+              Kỳ nghỉ đã hủy
+            </div>
+          ) : booking.status === 4 ? (
+            <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-300 backdrop-blur-md">
+              <Clock className="size-3" />
+              Đang yêu cầu hủy
+            </div>
+          ) : (
+            <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-sky-300 backdrop-blur-md">
+              <Zap className="size-3" />
+              {countdown.isStarted ? "Kỳ nghỉ đang diễn ra" : "Chi tiết kỳ nghỉ sắp tới"}
+            </div>
+          )}
           <h1 className="mb-6 max-w-2xl text-4xl font-black tracking-tight text-white md:text-5xl">
             {booking.room?.title || "Kỳ nghỉ của bạn"}
           </h1>
           
           <div className="flex flex-wrap items-center gap-6">
-             {countdown.isStarted ? (
+             {booking.status === 2 ? (
+                <div className="flex items-center gap-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 px-6 py-4 backdrop-blur-md">
+                   <div className="flex size-10 items-center justify-center rounded-full bg-rose-50/20 text-rose-400">
+                      <X className="size-6" />
+                   </div>
+                   <div>
+                      <p className="text-xs font-bold text-rose-300">Rất tiếc!</p>
+                      <p className="text-sm font-black text-white">Đơn đặt phòng này không còn hiệu lực</p>
+                   </div>
+                </div>
+             ) : booking.status === 4 ? (
+                <div className="flex items-center gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 px-6 py-4 backdrop-blur-md">
+                   <div className="flex size-10 items-center justify-center rounded-full bg-amber-550/20 text-amber-400">
+                      <Clock className="size-6" />
+                   </div>
+                   <div>
+                      <p className="text-xs font-bold text-amber-300">Đang chờ xử lý</p>
+                      <p className="text-sm font-black text-white">Yêu cầu hủy đang được Partner kiểm tra</p>
+                   </div>
+                </div>
+             ) : countdown.isStarted ? (
                 <div className="flex items-center gap-3 rounded-2xl bg-white/10 px-6 py-4 backdrop-blur-md">
                    <div className="flex size-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
                       <CheckCircle2 className="size-6" />
@@ -479,12 +594,44 @@ const BookingDetail = () => {
                 </div>
                 <Badge className={`rounded-full border-none px-4 py-1.5 font-bold ${
                    booking.status === 1 ? "bg-emerald-100 text-emerald-700" : 
-                   booking.status === 2 ? "bg-sky-100 text-sky-700" : 
+                   booking.status === 2 ? "bg-rose-100 text-rose-700" : 
+                   booking.status === 3 ? "bg-sky-100 text-sky-700" : 
+                   booking.status === 4 ? "bg-orange-100 text-orange-700" : 
                    "bg-amber-100 text-amber-700"
                 }`}>
-                   {booking.status === 1 ? "ĐÃ XÁC NHẬN" : booking.status === 2 ? "HOÀN THÀNH" : "CHỜ XÁC NHẬN"}
+                   {booking.status === 1 ? "ĐÃ XÁC NHẬN" : 
+                    booking.status === 2 ? "ĐÃ HỦY" : 
+                    booking.status === 3 ? "HOÀN THÀNH" : 
+                    booking.status === 4 ? "CHỜ DUYỆT HỦY" : 
+                    "CHỜ XÁC NHẬN"}
                 </Badge>
               </div>
+
+              {/* Cancellation Details */}
+              {booking.status === 2 && (
+                <div className="mb-8 rounded-[24px] border border-rose-100 bg-rose-50/40 p-6">
+                  <h4 className="flex items-center gap-2 text-sm font-bold text-rose-950">
+                    <AlertCircle className="size-4 text-rose-600" />
+                    Thông tin hủy đặt phòng
+                  </h4>
+                  <div className="mt-4 space-y-3 text-xs text-rose-800">
+                    {booking.cancelled_at && (
+                      <div className="flex justify-between border-b border-rose-100/50 pb-2">
+                        <span className="font-semibold text-rose-700">Thời điểm hủy</span>
+                        <span className="font-bold">{new Date(booking.cancelled_at).toLocaleString("vi-VN")}</span>
+                      </div>
+                    )}
+                    {booking.cancellation_reason && (
+                      <div className="flex flex-col gap-1 pt-1">
+                        <span className="font-semibold text-rose-700">Lý do hủy</span>
+                        <p className="mt-1 rounded-xl bg-white p-3 font-medium text-slate-800 border border-rose-100 leading-relaxed">
+                          {booking.cancellation_reason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Confirmation Action Card */}
               {booking.status === 0 && (
@@ -590,6 +737,136 @@ const BookingDetail = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Review & Comment Section */}
+          {(booking.status === 3 || booking.stay_status === "checked_out") && (
+            <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+              <CardContent className="p-8">
+                <h3 className="mb-2 flex items-center gap-2 text-xl font-bold text-slate-900">
+                  <Star className="size-5 text-amber-500 fill-amber-500" />
+                  {bookingReviews && bookingReviews.length > 0 ? "Đánh giá của bạn" : "Đánh giá kỳ nghỉ của bạn"}
+                </h3>
+                <p className="mb-6 text-xs font-medium text-slate-500">
+                  {bookingReviews && bookingReviews.length > 0
+                    ? "Cảm ơn bạn đã đóng góp ý kiến để BKS Stay ngày một hoàn thiện hơn."
+                    : "Chia sẻ trải nghiệm lưu trú của bạn để giúp các vị khách tiếp theo và nâng cao chất lượng dịch vụ."}
+                </p>
+
+                {isLoadingReviews ? (
+                  <div className="py-4 text-center">
+                    <Spinner size="sm" spinnerClassName="border-y-sky-600" />
+                  </div>
+                ) : bookingReviews && bookingReviews.length > 0 ? (
+                  <div className="space-y-6">
+                    {bookingReviews.map((review) => (
+                      <div key={review.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            {review.room_id ? "Đánh giá phòng nghỉ" : "Đánh giá chủ nhà / đối tác"}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {new Date(review.created_at).toLocaleDateString("vi-VN")}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`size-4 ${
+                                i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                              }`}
+                            />
+                          ))}
+                          <span className="ml-2 text-sm font-bold text-slate-800">{review.rating} / 5</span>
+                        </div>
+                        {review.comment && (
+                          <p className="mt-3 text-sm text-slate-600 italic leading-relaxed">
+                            "{review.comment}"
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Room Review */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-bold text-slate-800">1. Đánh giá phòng nghỉ ({booking.room?.title})</h4>
+                      <div className="flex items-center gap-1.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRoomRating(star)}
+                            className="transition-transform duration-200 hover:scale-125 focus:outline-none"
+                          >
+                            <Star
+                              className={`size-7 ${
+                                star <= roomRating ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="ml-2 text-sm font-black text-amber-500">
+                          {roomRating === 5 ? "Rất tốt" : roomRating === 4 ? "Tốt" : roomRating === 3 ? "Bình thường" : roomRating === 2 ? "Kém" : "Rất kém"}
+                        </span>
+                      </div>
+                      <Textarea
+                        placeholder="Nhập cảm nhận của bạn về phòng nghỉ (không gian, nội thất, tiện nghi...)..."
+                        value={roomComment}
+                        onChange={(e) => setRoomComment(e.target.value)}
+                        className="min-h-[80px] rounded-2xl border-slate-200 text-sm focus-visible:ring-sky-500"
+                      />
+                    </div>
+
+                    {/* Partner Review */}
+                    <div className="space-y-3 border-t border-slate-100 pt-6">
+                      <h4 className="text-sm font-bold text-slate-800">2. Đánh giá đối tác / chủ nhà</h4>
+                      <div className="flex items-center gap-1.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setPartnerRating(star)}
+                            className="transition-transform duration-200 hover:scale-125 focus:outline-none"
+                          >
+                            <Star
+                              className={`size-7 ${
+                                star <= partnerRating ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="ml-2 text-sm font-black text-amber-500">
+                          {partnerRating === 5 ? "Rất tốt" : partnerRating === 4 ? "Tốt" : partnerRating === 3 ? "Bình thường" : partnerRating === 2 ? "Kém" : "Rất kém"}
+                        </span>
+                      </div>
+                      <Textarea
+                        placeholder="Nhập cảm nhận của bạn về chủ nhà (thái độ phục vụ, hỗ trợ, giao tiếp...)..."
+                        value={partnerComment}
+                        onChange={(e) => setPartnerComment(e.target.value)}
+                        className="min-h-[80px] rounded-2xl border-slate-200 text-sm focus-visible:ring-sky-500"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={() => void handleSubmitReview()}
+                      disabled={submitReviewMutation.isPending}
+                      className="mt-2 w-full h-11 rounded-2xl bg-sky-600 hover:bg-sky-700 font-bold shadow-lg shadow-sky-100 text-white"
+                    >
+                      {submitReviewMutation.isPending ? (
+                        <span className="flex items-center gap-2">
+                          <Spinner size="sm" spinnerClassName="border-y-white" /> Đang gửi đánh giá...
+                        </span>
+                      ) : (
+                        "Gửi đánh giá kỳ nghỉ"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Selected Services Section */}
           {(booking.services && booking.services.length > 0) && (
@@ -841,9 +1118,20 @@ const BookingDetail = () => {
                  <div className="min-w-0 flex-1">
                     <h3 className="mb-1 text-sm font-bold text-rose-900">Quy tắc hủy phòng</h3>
                     {booking.status === 4 ? (
-                      <p className="text-[11px] leading-relaxed text-rose-800">
-                        Đơn đang <span className="font-semibold">chờ Partner xử lý yêu cầu hủy</span>. Bạn không cần gửi lại; kết quả sẽ được cập nhật trên hệ thống và email.
-                      </p>
+                      <div className="space-y-2">
+                        <p className="text-[11px] leading-relaxed text-rose-800">
+                          Đơn đang <span className="font-semibold">chờ Partner xử lý yêu cầu hủy</span>. Bạn không cần gửi lại; kết quả sẽ được cập nhật trên hệ thống và email.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="link"
+                          onClick={handleWithdrawCancelRequest}
+                          disabled={withdrawSubmitting}
+                          className="h-auto p-0 text-xs font-black uppercase tracking-wider text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50"
+                        >
+                          {withdrawSubmitting ? "Đang rút..." : "Rút yêu cầu hủy"}
+                        </Button>
+                      </div>
                     ) : (
                       <>
                     <p className="mb-4 text-[11px] leading-relaxed text-rose-700/70">

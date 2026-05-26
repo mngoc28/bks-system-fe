@@ -32,8 +32,24 @@ const Maintenances: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
+  const prevFiltersRef = React.useRef({
+    propertyId: filterPropertyId,
+  });
+
   useEffect(() => {
-    fetchMaintenances();
+    const filtersChanged = prevFiltersRef.current.propertyId !== filterPropertyId;
+    prevFiltersRef.current = { propertyId: filterPropertyId };
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
+    const abortController = new AbortController();
+    fetchMaintenances(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
   }, [currentPage, pageSize, filterPropertyId]);
 
   const normalizeStatus = (status: unknown): MaintenanceRequest['status'] => {
@@ -57,14 +73,14 @@ const Maintenances: React.FC = () => {
     }));
   };
 
-  const fetchMaintenances = async () => {
+  const fetchMaintenances = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       const res: any = await partnerService.getMaintenances({
         page: currentPage,
         per_page: pageSize,
         property_id: filterPropertyId || undefined
-      });
+      }, { signal });
       
       const payload = res?.status ? res : (res?.data ?? res);
       let data: any[] = [];
@@ -111,10 +127,15 @@ const Maintenances: React.FC = () => {
         setTotalPages(lastPage);
       }
       
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching maintenance requests:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 

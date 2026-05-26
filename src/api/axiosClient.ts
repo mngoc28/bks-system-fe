@@ -16,7 +16,11 @@ const axiosClient = axios.create({
 
 axiosClient.interceptors.request.use(
   (config) => {
-    config.signal = getAbortSignal();
+    const requestConfig = config as typeof config & { skipAbortSignal?: boolean };
+
+    if (!requestConfig.skipAbortSignal && !requestConfig.signal) {
+      requestConfig.signal = getAbortSignal();
+    }
     const token = getAccessToken();
 
     if (token && isTokenExpired(token)) {
@@ -45,7 +49,7 @@ axiosClient.interceptors.request.use(
       delete config.headers["Content-Type"];
     }
     
-    return config;
+    return requestConfig;
   },
   (error) => {
     return Promise.reject(error);

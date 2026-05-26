@@ -108,7 +108,11 @@ const Amenities: React.FC = () => {
   const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
-    fetchAmenities();
+    const controller = new AbortController();
+    fetchAmenities(controller.signal);
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   const extractRows = (res: any): any[] => {
@@ -141,15 +145,21 @@ const Amenities: React.FC = () => {
     }));
   };
 
-  const fetchAmenities = async () => {
+  const fetchAmenities = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getAllAmenities();
+      const res: any = await partnerService.getAllAmenities({ signal });
+      if (signal?.aborted) return;
       setAmenities(normalizeAmenities(extractRows(res)));
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'CanceledError' || error?.name === 'AbortError' || signal?.aborted) {
+        return;
+      }
       console.error('Error fetching amenities:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 

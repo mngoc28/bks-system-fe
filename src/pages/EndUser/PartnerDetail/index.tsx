@@ -1,13 +1,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ReviewsModal } from "@/components/rooms/ReviewsModal";
 import { CLOUDINARY_HEADER_IMAGE_URL, PROVINCES, ROUTERS } from "@/constant";
 import { Room } from "@/dataHelper/EU/room.dataHelper";
 import { usePartnerDetailQuery } from "@/hooks/EU/usePartnerQuery";
 import { useRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { formatCurrencyInput } from "@/utils/utils";
-import { ArrowRight, ChevronLeft, ChevronRight, Globe, Mail, MapPin, Phone, Users } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Globe, Mail, MapPin, Phone, Users, Star } from "lucide-react";
+import { usePartnerReviewsQuery } from "@/hooks/useReviewQuery";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
@@ -31,6 +33,9 @@ const PartnerDetail = () => {
     // call api to get rooms of partner
     const { data: roomsData } = useRoomsQuery({ partner_id: partnerId }, { enabled: !!partnerId });
 
+    // call api to get partner reviews
+    const { data: reviewsData, isLoading: isLoadingReviews } = usePartnerReviewsQuery(partnerId, { enabled: !!partnerId });
+
     const partnerImages = [partnerData?.image_1, partnerData?.image_2, partnerData?.image_3].filter(Boolean);
 
     const provinceNameEn = PROVINCES.find(p => p.id === Number(partnerData?.province_id))?.name_en || "";
@@ -50,12 +55,14 @@ const PartnerDetail = () => {
                     capacity: room.people,
                     amenities: room.amenities ? room.amenities.split(',').map((a: string) => a.trim()) : [],
                     image: room.room_image || "",
+                    reviews_count: (room as any).reviews_count ?? 0,
+                    reviews_avg_rating: (room as any).reviews_avg_rating ?? 0,
                 });
                 return acc;
             }, {} as Record<string, any[]>)
         ) as [string, any[]][]).map(([province, rooms]) => ({ province, rooms }))
         : [];
-
+        
     // state for carousel
     const [currentSlides, setCurrentSlides] = useState<Record<number, number>>({});
 
@@ -155,6 +162,7 @@ const PartnerDetail = () => {
                                     className="size-full object-cover"
                                     onError={(e) => {
                                         e.currentTarget.src = "/assets/images/photo_error2.png";
+                                        e.currentTarget.className = "size-full object-contain p-8 bg-slate-50 opacity-60";
                                     }}
                                 />
                             </div>
@@ -165,7 +173,7 @@ const PartnerDetail = () => {
 
             {/* Partner Information Section */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <Card className="border-slate-200/80 shadow-sm">
+                <Card className="rounded-3xl border-slate-200/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-2xl font-bold text-gray-900">{t("partnerDetail.partnerInfo")}</CardTitle>
                     </CardHeader>
@@ -265,63 +273,84 @@ const PartnerDetail = () => {
                                         setCurrentSlides(prev => ({ ...prev, [provinceIndex]: swiper.activeIndex }));
                                     }}
                                 >
-                                    {provinceData.rooms.map((room: any) => (
-                                        <SwiperSlide key={room.id}>
-                                            <Card
-                                                key={room.id}
-                                                className="flex h-full flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                                            >
-                                                <div className="relative">
-
-                                                    <img
-                                                        src={room.image.startsWith('http') ? room.image : `${CLOUDINARY_HEADER_IMAGE_URL}/${room.image}`}
-                                                        alt={room.name}
-                                                        className="h-48 w-full object-cover transition-transform duration-300 hover:scale-105"
-                                                    />
-                                                </div>
-                                                <CardHeader className="shrink-0 pb-3">
-                                                    <CardTitle className="flex items-center justify-between">
-                                                        <span className="truncate pr-2 text-lg font-semibold">{room.name}</span>
-                                                        <span className="text-l shrink-0 font-bold text-red-600">
-                                                            {formatCurrencyInput(room.price.toString())} {room.currency}
-                                                        </span>
-                                                    </CardTitle>
-                                                </CardHeader>
-                                                <CardContent className="flex flex-1 flex-col justify-between">
-                                                    <div className="flex-1">
-                                                        <p className="mb-4 line-clamp-2 min-h-12 text-gray-600">{room.description}</p>
-                                                        <div className="mb-4 flex items-center gap-4">
-                                                            <div className="flex items-center gap-1">
-                                                                <Users className="size-4 text-sky-700" />
-                                                                <span className="text-sm text-sky-700">{t("partnerDetail.maxGuests")} {room.capacity} {t("partnerDetail.guests")}</span>
+                                    {provinceData.rooms.map((room: any) => {
+                                        const isFallback = !room.image;
+                                        return (
+                                            <SwiperSlide key={room.id} className="flex h-auto">
+                                                <Card
+                                                    key={room.id}
+                                                    className="flex h-full w-full flex-col overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                                >
+                                                    <div className="relative h-48 w-full overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
+                                                        <img
+                                                            src={room.image ? (room.image.startsWith('http') ? room.image : `${CLOUDINARY_HEADER_IMAGE_URL}/${room.image}`) : "/assets/images/photo_error2.png"}
+                                                            alt={room.name}
+                                                            className={`size-full transition-transform duration-300 ${
+                                                                isFallback ? "object-contain p-8 opacity-60" : "object-cover hover:scale-105"
+                                                            }`}
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = "/assets/images/photo_error2.png";
+                                                                e.currentTarget.className = "size-full object-contain p-8 opacity-60 transition-transform duration-300";
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <CardHeader className="shrink-0 pb-3">
+                                                        <CardTitle className="flex items-center justify-between">
+                                                            <span className="truncate pr-2 text-lg font-semibold">{room.name}</span>
+                                                            <span className="text-l shrink-0 font-bold text-red-600">
+                                                                {formatCurrencyInput(room.price.toString())} {room.currency}
+                                                            </span>
+                                                        </CardTitle>
+                                                    </CardHeader>
+                                                    <CardContent className="flex flex-1 flex-col justify-between">
+                                                        <div className="flex-1">
+                                                            {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
+                                                                <div className="mb-3 flex items-center gap-1 text-[0.8rem] font-bold text-amber-500">
+                                                                    <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                                                    <span>{room.reviews_avg_rating}</span>
+                                                                    <span className="text-slate-400 font-normal">({room.reviews_count} đánh giá)</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="mb-3 flex items-center gap-1 text-[0.8rem] text-slate-400">
+                                                                    <Star className="size-3.5 text-slate-300" />
+                                                                    <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                                                                </div>
+                                                            )}
+                                                            <p className="mb-4 line-clamp-2 min-h-12 text-gray-600">{room.description}</p>
+                                                            <div className="mb-4 flex items-center gap-4">
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="size-4 text-sky-700" />
+                                                                    <span className="text-sm text-sky-700">{t("partnerDetail.maxGuests")} {room.capacity} {t("partnerDetail.guests")}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mb-4 flex h-14 flex-wrap gap-1 overflow-hidden content-start">
+                                                                {room.amenities.slice(0, 4).map((amenity: string, index: number) => (
+                                                                    <Badge key={index} variant="outline" className="text-xs rounded-full bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                                                                        {amenity}
+                                                                    </Badge>
+                                                                ))}
+                                                                {room.amenities.length > 4 && (
+                                                                    <Badge variant="outline" className="text-xs rounded-full bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                                                                        +{room.amenities.length - 4}
+                                                                    </Badge>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="mb-4 flex min-h-8 flex-wrap gap-1">
-                                                            {room.amenities.slice(0, 4).map((amenity: string, index: number) => (
-                                                                <Badge key={index} variant="outline" className="text-xs">
-                                                                    {amenity}
-                                                                </Badge>
-                                                            ))}
-                                                            {room.amenities.length > 4 && (
-                                                                <Badge variant="outline" className="text-xs">
-                                                                    +{room.amenities.length - 4}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <Button
-                                                        className="mt-auto w-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 transition-all duration-200 hover:opacity-90"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            navigate(`${ROUTERS.BOOKING}/${room.id}`);
-                                                        }}
-                                                    >
-                                                        {t("partnerDetail.bookNow")}
-                                                    </Button>
-                                                </CardContent>
-                                            </Card>
-                                        </SwiperSlide>
-                                    ))}
+                                                        <Button
+                                                            variant="gradient"
+                                                            className="mt-auto w-full rounded-full"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`${ROUTERS.BOOKING}/${room.id}`);
+                                                            }}
+                                                        >
+                                                            {t("partnerDetail.bookNow")}
+                                                        </Button>
+                                                    </CardContent>
+                                                </Card>
+                                            </SwiperSlide>
+                                        );
+                                    })}
                                 </Swiper>
 
                                 {/* Slide Indicators */}
@@ -342,9 +371,9 @@ const PartnerDetail = () => {
                             {/* View All Button */}
                             <div className="mt-8 flex justify-center">
                                 <Button
-                                    variant="outline"
-                                    disabled={provinceData.rooms.length < 3}
-                                    className={`group transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 ${provinceData.rooms.length < 3 ? 'cursor-not-allowed opacity-50' : ''}`}
+                                                    variant="outline"
+                                                    disabled={provinceData.rooms.length < 3}
+                                                    className={`group rounded-full transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 ${provinceData.rooms.length < 3 ? 'cursor-not-allowed opacity-50' : ''}`}
                                     onClick={() => {
                                         // TODO: Navigate to all rooms of this province
                                     }}
@@ -357,6 +386,95 @@ const PartnerDetail = () => {
                     ))}
                 </div>
             )}
+
+            {/* Reviews Section */}
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <Card className="rounded-3xl border-slate-200/80 shadow-sm bg-white">
+                    <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <CardTitle className="text-2xl font-bold text-gray-900">Đánh giá về đối tác</CardTitle>
+                            <p className="text-xs text-slate-500 mt-1">Phản hồi thực tế của khách thuê về chủ nhà</p>
+                        </div>
+                        {reviewsData && reviewsData.total_count > 0 && (
+                            <div className="text-right">
+                                <div className="text-2xl font-black text-slate-900 flex items-center gap-1.5 justify-end">
+                                    <Star className="size-5 text-amber-500 fill-amber-500 shrink-0" />
+                                    {reviewsData.average_rating}
+                                </div>
+                                <span className="text-[11px] font-bold text-slate-400">/ {reviewsData.total_count} đánh giá</span>
+                            </div>
+                        )}
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        {isLoadingReviews ? (
+                            <div className="py-8 text-center">
+                                <Spinner size="md" spinnerClassName="border-y-sky-600" />
+                            </div>
+                        ) : !reviewsData || reviewsData.reviews.length === 0 ? (
+                            <p className="py-4 text-center text-slate-400 text-sm">
+                                Chưa có đánh giá nào cho đối tác này.
+                            </p>
+                        ) : (
+                            <>
+                                <div className="divide-y divide-slate-100">
+                                    {reviewsData.reviews.slice(0, 5).map((review) => (
+                                        <div key={review.id} className="py-5 first:pt-0 last:pb-0 space-y-3">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="size-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                                        {review.user?.avatar ? (
+                                                            <img src={review.user.avatar} alt={review.user.name} className="size-full object-cover" />
+                                                        ) : (
+                                                            <Users className="size-5 text-slate-400" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-slate-800">{review.user?.name || "Khách hàng"}</h4>
+                                                        <span className="text-[10px] text-slate-400">{new Date(review.created_at).toLocaleDateString("vi-VN")}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`size-3.5 ${
+                                                                i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                                                            }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {review.comment && (
+                                                <p className="text-sm text-slate-600 leading-relaxed pl-13 italic">
+                                                    "{review.comment}"
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                {reviewsData.reviews.length > 5 && (
+                                    <div className="mt-6 flex justify-center border-t border-slate-100 pt-4">
+                                        <ReviewsModal
+                                            title="Đánh giá về đối tác"
+                                            reviews={reviewsData.reviews}
+                                            averageRating={reviewsData.average_rating}
+                                            totalCount={reviewsData.total_count}
+                                            trigger={
+                                                <Button
+                                                    variant="outline"
+                                                    className="rounded-full px-8 transition-all hover:bg-slate-50 font-semibold text-slate-700"
+                                                >
+                                                    Xem thêm {reviewsData.reviews.length - 5} đánh giá
+                                                </Button>
+                                            }
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
 
             <PublicFooter/>
         </div>
