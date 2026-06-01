@@ -45,6 +45,8 @@ import {
   FileText,
   ArrowRight,
   Clock,
+  QrCode,
+  Download,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -72,11 +74,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ROUTERS } from "@/constant";
+import {
+  computeBookingRoomStayTotal,
+  computeBookingServicesTotal,
+  computeBookingTotalAmount,
+} from "@/utils/bookingAmount";
+import {
+  BOOKING_DAYS_LABEL,
+  countBookingDaysInclusive,
+  formatBookingDaysCount,
+  formatRoomRentalLineLabel,
+} from "@/utils/dateUtils";
 import { formatPrice } from "@/utils/utils";
 import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import { useUserStore } from "@/store/useUserStore";
 import { Star } from "lucide-react";
 import { useBookingReviewsQuery, useSubmitReviewMutation } from "@/hooks/useReviewQuery";
+import { useUploadImageMutation } from "@/hooks/useCloudinariQuery";
 
 import stayService, {
   BookingDetail as IBookingDetail,
@@ -187,6 +201,103 @@ const BookingDetail = () => {
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
 
+  const uploadMutation = useUploadImageMutation();
+  const [isDragging, setIsDragging] = useState(false);
+  const [graceTimeLeft, setGraceTimeLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!booking || booking.deposit_status !== "pending") return;
+
+    const createdAt = new Date(booking.created_at).getTime();
+    const start = new Date(booking.start_date).getTime();
+    const now = new Date().getTime();
+
+    const isWithin48h = (start - createdAt) <= 172800000;
+    const graceDuration = isWithin48h ? 2 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+    const expirationTime = createdAt + graceDuration;
+
+    const remaining = Math.max(0, Math.floor((expirationTime - now) / 1000));
+    setGraceTimeLeft(remaining);
+
+    const timer = setInterval(() => {
+      const currentNow = new Date().getTime();
+      const currentRemaining = Math.max(0, Math.floor((expirationTime - currentNow) / 1000));
+      setGraceTimeLeft(currentRemaining);
+      if (currentRemaining <= 0) {
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [booking]);
+
+  const formatGraceTime = (seconds: number | null) => {
+    if (seconds === null) return "00:00:00";
+    const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!booking) return;
+    if (!file.type.startsWith("image/")) {
+      toastError("Vui lòng tải lên một file ảnh hợp lệ (PNG/JPG/JPEG).");
+      return;
+    }
+
+    try {
+      toastInfo("Đang tải ảnh biên lai lên hệ thống...");
+      const uploadRes = await uploadMutation.mutateAsync({
+        image: file,
+        folder: "booking-deposits",
+      });
+
+      if (uploadRes?.data?.url) {
+        const imageUrl = uploadRes.data.url;
+        const submitRes: any = await stayService.submitReceipt(booking.id, imageUrl);
+        if (submitRes.status === "success" || submitRes.success) {
+          toastSuccess("Gửi biên lai thành công! Đang chờ đối tác xác thực cọc.");
+          void reloadBookingDetail();
+        } else {
+          toastError(submitRes.message || "Không thể gửi biên lai cọc.");
+        }
+      } else {
+        toastError("Tải ảnh biên lai thất bại.");
+      }
+    } catch (e: any) {
+      toastError(e?.message || "Đã xảy ra lỗi khi tải ảnh.");
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      void handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      void handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const handleCopyText = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toastSuccess(`Đã sao chép ${label}!`);
+  };
+
   const reloadBookingDetail = useCallback(async () => {
     if (!id) return;
     setLoading(true);
@@ -288,7 +399,7 @@ const BookingDetail = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -398,7 +509,34 @@ const BookingDetail = () => {
     }
   };
 
-  const nights = Math.ceil((new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime()) / (1000 * 60 * 60 * 24));
+  const bookingDays = countBookingDaysInclusive(booking.start_date, booking.end_date);
+  const priceInput = { price: booking.price?.price, unit: booking.price?.unit };
+  const roomStayTotal = computeBookingRoomStayTotal({
+    start_date: booking.start_date,
+    end_date: booking.end_date,
+    price: priceInput,
+  });
+  const servicesTotal = computeBookingServicesTotal(booking.services);
+  const totalAmount = computeBookingTotalAmount({
+    start_date: booking.start_date,
+    end_date: booking.end_date,
+    price: priceInput,
+    services: booking.services,
+    total_amount: booking.total_amount,
+  });
+
+  const propertyTypeSlug = booking.room?.property?.property_type?.slug ?? "";
+  const isLongTerm =
+    ['can-ho', 'apartment', 'can-ho-dich-vu'].includes(propertyTypeSlug.toLowerCase()) ||
+    booking.contracts?.some((c) => c.contract_type === 'LEASE_AGREEMENT') ||
+    booking.price?.unit === 'month';
+
+  const isPartnerConfirmed = booking.status === 1;
+  const hasPendingContract = booking.contracts?.some((c) => c.status === 0) ?? false;
+  const activeContract = booking.contracts?.[0];
+  const showContractSignCard =
+    booking.status === 0 ||
+    (isPartnerConfirmed && (isLongTerm ? hasPendingContract : activeContract !== undefined));
 
   const steps = [
     { label: "Đã đặt", active: booking.status === 0, completed: booking.status >= 0 && booking.status !== 2 && booking.status !== 4 },
@@ -582,6 +720,147 @@ const BookingDetail = () => {
         {/* Left Column */}
         <div className="space-y-8 lg:col-span-2">
           
+          {/* VietQR & Receipt Dropzone Card */}
+          {booking.deposit_amount && booking.deposit_amount > 0 && (booking.deposit_status === "pending" || booking.deposit_status === "payment_submitted") ? (
+            <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+              <CardContent className="p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <CreditCard className="size-5 text-sky-600 animate-pulse" />
+                      Thanh toán tiền đặt cọc phòng
+                    </h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Phương thức chuyển khoản VietQR
+                    </p>
+                  </div>
+                  {booking.deposit_status === "pending" && graceTimeLeft !== null && (
+                    <div className="flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-100 px-3 py-1.5 rounded-full text-xs font-bold font-mono">
+                      <Clock className="size-4" />
+                      <span>{formatGraceTime(graceTimeLeft)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {booking.deposit_status === "payment_submitted" ? (
+                  <div className="rounded-2xl border border-emerald-100 bg-[#f0fdf4] p-6 text-center space-y-4 shadow-sm">
+                    <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold">
+                      <CheckCircle2 className="size-6 text-emerald-500 animate-bounce" />
+                      <span>Đã gửi biên lai cọc thành công</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
+                      Biên lai chuyển khoản cọc đã được lưu nhận trên hệ thống. Vui lòng chờ phía lễ tân/chủ phòng xác thực số dư để hoàn tất đặt cọc.
+                    </p>
+                    {booking.booking_deposit?.receipt_path && (
+                      <div className="relative mx-auto w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-inner group">
+                        <img 
+                          src={booking.booking_deposit.receipt_path} 
+                          alt="Receipt Preview" 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* VietQR QR Block */}
+                    <div className="flex flex-col items-center justify-center border border-slate-100 bg-slate-50/50 rounded-2xl p-6 space-y-3">
+                      <div className="relative p-2 bg-white border border-slate-200 rounded-2xl shadow-inner">
+                        <img
+                          src={`https://img.vietqr.io/image/bidv-1234567890-compact2.png?amount=${booking.deposit_amount}&addInfo=BKS%20DEPOSIT%20${booking.id}&accountName=BKS%20Systems`}
+                          alt="VietQR code"
+                          className="w-44 h-44 object-contain"
+                        />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                        <QrCode className="size-3.5" />
+                        Quét mã VietQR để thanh toán
+                      </span>
+                    </div>
+
+                    {/* Bank Transfer Details & Copy actions */}
+                    <div className="space-y-4 flex flex-col justify-center">
+                      <div className="space-y-2 text-xs font-semibold text-slate-500">
+                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                          <span>Ngân hàng</span>
+                          <span className="text-slate-900 font-bold">BIDV</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                          <span>Số tài khoản</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-900 font-bold">1234567890</span>
+                            <button
+                              onClick={() => handleCopyText("1234567890", "Số tài khoản")}
+                              className="text-sky-600 hover:text-sky-500"
+                            >
+                              <Copy className="size-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                          <span>Chủ tài khoản</span>
+                          <span className="text-slate-900 font-bold">BKS Systems</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                          <span>Số tiền cọc</span>
+                          <span className="text-rose-600 font-bold text-sm">{formatPrice(booking.deposit_amount)} VNĐ</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-2">
+                          <span>Nội dung chuyển khoản</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-900 font-bold">BKS DEPOSIT {booking.id}</span>
+                            <button
+                              onClick={() => handleCopyText(`BKS DEPOSIT ${booking.id}`, "Nội dung chuyển khoản")}
+                              className="text-sky-600 hover:text-sky-500"
+                            >
+                              <Copy className="size-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dropzone for Receipt Upload */}
+                {booking.deposit_status === "pending" && (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
+                      isDragging 
+                        ? "border-sky-600 bg-sky-50/50" 
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      id="receipt-file-input"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    <label
+                      htmlFor="receipt-file-input"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                    >
+                      <div className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mb-1">
+                        <Download className="size-5 transform rotate-180" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-800">
+                        Kéo thả ảnh hoặc click để chọn ảnh biên lai cọc
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Hỗ trợ định dạng JPG, JPEG, PNG dung lượng dưới 5MB.
+                      </p>
+                    </label>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
+
           {/* Main Details */}
           <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
             <CardContent className="p-8">
@@ -634,38 +913,71 @@ const BookingDetail = () => {
               )}
 
               {/* Confirmation Action Card */}
-              {booking.status === 0 && (
+              {showContractSignCard && (
                 <div className="relative overflow-hidden bg-gradient-to-br from-sky-600/10 via-white to-indigo-600/5 backdrop-blur-md border border-sky-100 rounded-[32px] p-8 shadow-xl shadow-sky-900/5 group mb-8">
                   <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/20 transition-colors duration-500" />
                   <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-500" />
                   
                   <div className="relative flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex-shrink-0 w-20 h-20 bg-sky-600 rounded-[24px] flex items-center justify-center shadow-lg shadow-sky-600/20 animate-pulse">
+                    <div className={`flex-shrink-0 w-20 h-20 rounded-[24px] flex items-center justify-center shadow-lg ${isPartnerConfirmed ? "bg-sky-600 shadow-sky-600/20 animate-pulse" : "bg-amber-500 shadow-amber-500/20"}`}>
                       <FileText className="text-white" size={32} />
                     </div>
                     
                     <div className="flex-1 text-center md:text-left">
                       <h3 className="text-2xl font-black text-slate-900 mb-2">
-                        Xác nhận kỳ nghỉ của bạn
+                        {isPartnerConfirmed 
+                          ? (isLongTerm ? "Xác nhận hợp đồng thuê của bạn" : "Phiếu xác nhận lưu trú đã sẵn sàng") 
+                          : "Đang chờ Partner xác nhận"}
                       </h3>
-                      <p className="text-slate-600 font-medium leading-relaxed max-w-lg">
-                        Vui lòng kiểm tra lại thông tin và tiến hành ký hợp đồng lưu trú để chính thức hoàn tất thủ tục đặt phòng.
-                      </p>
+                      <div className="text-slate-600 font-medium leading-relaxed max-w-lg">
+                        {isLongTerm ? (
+                          isPartnerConfirmed ? (
+                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
+                              <p>• Đơn đặt phòng dài hạn của bạn đã được đối tác xác nhận <span className="text-emerald-600 font-bold">thành công</span>.</p>
+                              <p>• <strong>Khuyến nghị:</strong> Hãy bấm <strong>"Ký hợp đồng & Xác nhận"</strong> để thực hiện ký tay hoặc tải chữ ký số hoàn tất thủ tục đặt phòng.</p>
+                              <p>• Sau khi ký, bạn hãy chọn <strong>"In hợp đồng / Xem trước"</strong> để lưu bản sao hợp đồng về máy nhằm xuất trình khi nhận bàn giao căn hộ lúc check-in.</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
+                              <p>• Đơn đặt phòng của bạn đang được Partner xem xét.</p>
+                              <p>• Sau khi được xác nhận, hợp đồng thuê nhà sẽ được tự động khởi tạo để bạn tiến hành ký trực tuyến trước khi check-in nhận phòng.</p>
+                            </div>
+                          )
+                        ) : (
+                          isPartnerConfirmed ? (
+                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
+                              <p>• Đơn đặt phòng ngắn hạn của bạn đã được xác nhận <span className="text-emerald-600 font-bold">thành công</span> và Phiếu xác nhận lưu trú đã được tự động cấp phát.</p>
+                              <p>• <strong>Khuyến nghị:</strong> Hãy bấm <strong>"Nhận phiếu xác nhận"</strong> và chọn <strong>"Tải ảnh (PNG)"</strong> để lưu phiếu về máy ngay khi có thể để dễ dàng xuất trình cho lễ tân khi check-in ngay cả khi thiết bị mất sóng hoặc không có mạng internet.</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
+                              <p>• Đơn đặt phòng của bạn đang được Partner xem xét. Sau khi được xác nhận, phiếu xác nhận lưu trú sẽ được tự động phát hành để bạn làm thủ tục nhận phòng lúc check-in.</p>
+                              <p>• <strong>Lưu ý:</strong> Hãy tải ảnh phiếu về máy ngay khi được cấp phát để phòng trường hợp thiết bị mất sóng.</p>
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex-shrink-0 w-full md:w-auto">
                       <Button
+                        disabled={!isPartnerConfirmed}
                         onClick={() => {
-                          const contractId = booking.contracts?.[0]?.id;
-                          if (contractId) {
-                            navigate(`/bks-stay/contracts/${contractId}`);
+                          if (!isPartnerConfirmed) return;
+                          if (isLongTerm) {
+                            const contractId = booking.contracts?.[0]?.id;
+                            if (contractId) {
+                              navigate(`/bks-stay/contracts/${contractId}`);
+                            } else {
+                              toastInfo("Hợp đồng đang được khởi tạo, vui lòng đợi trong giây lát...");
+                            }
                           } else {
-                            toastInfo("Hợp đồng đang được khởi tạo, vui lòng đợi trong giây lát...");
+                            navigate(`/bks-stay/bookings/${booking.id}/voucher`);
                           }
                         }}
-                        className="relative z-20 flex h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-full bg-sky-600 px-8 font-black text-white shadow-xl shadow-sky-600/20 transition-all duration-300 hover:scale-[1.02] hover:bg-sky-500 active:scale-95 md:w-auto"
+                        className="relative z-20 flex h-14 w-full items-center justify-center gap-3 rounded-full bg-sky-600 px-8 font-black text-white shadow-xl shadow-sky-600/20 transition-all duration-300 hover:scale-[1.02] hover:bg-sky-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-sky-600 md:w-auto"
                       >
-                        Ký hợp đồng & Xác nhận
+                        {isLongTerm ? "Ký hợp đồng & Xác nhận" : "Nhận phiếu xác nhận"}
                         <ArrowRight className="size-5" />
                       </Button>
                     </div>
@@ -677,12 +989,16 @@ const BookingDetail = () => {
                       Thông tin đã sẵn sàng
                     </div>
                     <div className="flex items-center gap-2 text-slate-500 text-sm font-semibold">
-                      <div className="w-2 h-2 rounded-full bg-amber-500" />
-                      Chờ ký hợp đồng
+                      <div className={`w-2 h-2 rounded-full ${isPartnerConfirmed ? "bg-amber-500" : "bg-amber-500 animate-pulse"}`} />
+                      {isPartnerConfirmed 
+                        ? (isLongTerm ? "Chờ ký hợp đồng" : "Đã phát hành phiếu") 
+                        : "Chờ Partner xác nhận"}
                     </div>
                     <div className="flex items-center gap-2 text-slate-500 text-sm font-semibold">
-                      <div className="w-2 h-2 rounded-full bg-sky-500" />
-                      Bước 2/4: Xác nhận
+                      <div className={`w-2 h-2 rounded-full ${isPartnerConfirmed ? "bg-sky-500" : "bg-slate-300"}`} />
+                      {isLongTerm 
+                        ? (isPartnerConfirmed ? "Bước 2/4: Ký hợp đồng" : "Bước 2/4: Xác nhận Partner")
+                        : (isPartnerConfirmed ? "Bước 2/3: Nhận phiếu" : "Bước 2/3: Xác nhận Partner")}
                     </div>
                   </div>
                 </div>
@@ -697,7 +1013,9 @@ const BookingDetail = () => {
                       <p className="font-bold text-slate-900">
                          {new Date(booking.start_date).toLocaleDateString("vi-VN")} — {new Date(booking.end_date).toLocaleDateString("vi-VN")}
                       </p>
-                      <p className="mt-0.5 text-xs font-medium text-slate-500">Tổng cộng {nights} đêm nghỉ</p>
+                      <p className="mt-0.5 text-xs font-medium text-slate-500">
+                        {BOOKING_DAYS_LABEL}: {formatBookingDaysCount(bookingDays)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -726,7 +1044,7 @@ const BookingDetail = () => {
                       <div className="absolute right-0 top-0 p-4 opacity-5"><CreditCard className="size-16" /></div>
                       <div className="relative z-10">
                          <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">Tổng thanh toán</p>
-                         <p className="text-2xl font-black text-white">{formatPrice(booking.price?.price || 0)}</p>
+                         <p className="text-2xl font-black text-white">{formatPrice(totalAmount)}</p>
                       </div>
                       <div className="relative z-10 mt-4 flex items-center justify-between border-t border-white/5 pt-3">
                          <p className="text-[10px] font-medium text-slate-400">Đã bao gồm thuế & phí</p>
@@ -754,7 +1072,7 @@ const BookingDetail = () => {
 
                 {isLoadingReviews ? (
                   <div className="py-4 text-center">
-                    <Spinner size="sm" spinnerClassName="border-y-sky-600" />
+                    <Spinner size="sm" />
                   </div>
                 ) : bookingReviews && bookingReviews.length > 0 ? (
                   <div className="space-y-6">
@@ -1058,16 +1376,25 @@ const BookingDetail = () => {
               </h3>
               <div className="space-y-4">
                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Giá phòng ({nights} đêm)</span>
-                    <span className="font-bold text-slate-900">{formatPrice(booking.price?.price * 0.9)}</span>
+                    <span className="text-slate-500">{formatRoomRentalLineLabel(bookingDays, booking.price?.unit)}</span>
+                    <span className="font-bold text-slate-900">{formatPrice(roomStayTotal)}</span>
                  </div>
-                 <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Phí dịch vụ & VAT</span>
-                    <span className="font-bold text-slate-900">{formatPrice(booking.price?.price * 0.1)}</span>
-                 </div>
+                 {booking.services && booking.services.length > 0 ? (
+                   booking.services.map((svc) => (
+                     <div key={svc.id} className="flex justify-between text-sm">
+                       <span className="text-slate-500">{svc.name}</span>
+                       <span className="font-bold text-slate-900">{formatPrice(svc.price)}</span>
+                     </div>
+                   ))
+                 ) : servicesTotal > 0 ? (
+                   <div className="flex justify-between text-sm">
+                     <span className="text-slate-500">Dịch vụ bổ sung</span>
+                     <span className="font-bold text-slate-900">{formatPrice(servicesTotal)}</span>
+                   </div>
+                 ) : null}
                  <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
                     <span className="text-sm font-bold text-slate-900">Tổng cộng</span>
-                    <span className="text-xl font-black text-sky-600">{formatPrice(booking.price?.price)}</span>
+                    <span className="text-xl font-black text-sky-600">{formatPrice(totalAmount)}</span>
                  </div>
               </div>
            </Card>

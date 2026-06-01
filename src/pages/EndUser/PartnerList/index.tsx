@@ -22,6 +22,39 @@ import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { resolveImageUrl } from "@/utils/imageUtils";
 
+const getProvinceHeroImage = (provinceName: string | undefined): string => {
+  if (!provinceName) return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80"; // Luxury resort default
+
+  const name = provinceName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  if (name.includes("da nang")) {
+    return "https://images.unsplash.com/photo-1559592442-7486a0952042?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("ha noi")) {
+    return "https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("ho chi minh") || name.includes("sai gon")) {
+    return "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("quang ninh") || name.includes("ha long")) {
+    return "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("nha trang") || name.includes("khanh hoa")) {
+    return "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("lam dong") || name.includes("da lat")) {
+    return "https://images.unsplash.com/photo-1583002621936-e82a0134ba44?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("lao cai") || name.includes("sa pa") || name.includes("sapa")) {
+    return "https://images.unsplash.com/photo-1550950158-d0d960dff51b?auto=format&fit=crop&w=1600&q=80";
+  }
+  if (name.includes("phu quoc") || name.includes("kien giang")) {
+    return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+  }
+
+  return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80";
+};
+
 const PartnerList = () => {
     const { t } = useTranslation();
     const { provinceNameEn } = useParams<{ provinceNameEn: string }>();
@@ -59,9 +92,104 @@ const PartnerList = () => {
         <div className="min-h-screen bg-white text-slate-900">
             <PublicHeader />
 
-            {/* 1. Breadcrumb Header */}
-            <div className="border-b border-slate-100 bg-slate-50">
-                <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4 sm:px-6 lg:px-8">
+            {/* 1. Hero Section — Premium 2-column with background image and premium overlay */}
+            <section className="relative isolate overflow-hidden bg-slate-950 py-12 text-white">
+                {/* Background Image with elegant overlay */}
+                <div className="absolute inset-0 -z-10 overflow-hidden">
+                  <img
+                    src={getProvinceHeroImage(provinceName)}
+                    alt={provinceName || "Background"}
+                    className="absolute inset-0 size-full object-cover opacity-60 transition-all duration-700 scale-105"
+                  />
+                  {/* Lighter gradients for elite readability on the left and balanced visibility/tint on the right */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-slate-950/20" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
+                </div>
+
+                {/* Ambient glows */}
+                <div className="absolute -left-40 top-0 h-96 w-96 rounded-full bg-sky-600/10 blur-3xl" />
+                <div className="absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+
+                {/* Coordinate grid */}
+                <div
+                    className="absolute inset-0 opacity-[0.03]"
+                    style={{
+                        backgroundImage: "linear-gradient(rgba(148,163,184,1) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,1) 1px, transparent 1px)",
+                        backgroundSize: "48px 48px",
+                    }}
+                />
+
+                {/* Glowing floating dots */}
+                <div className="absolute top-12 right-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
+                <div className="absolute bottom-16 left-1/4 h-3 w-3 rounded-full bg-indigo-400/30 animate-pulse pointer-events-none" />
+
+                <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 sm:px-6 lg:grid-cols-5 lg:px-8">
+                    {/* LEFT — 3/5 */}
+                    <div className="lg:col-span-3">
+                        {/* Badge */}
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-1.5 text-sm font-semibold text-sky-300">
+                            <Building2 className="size-4" />
+                            {t("endUserPartners.hero_badge", "Đối tác lưu trú")}
+                        </div>
+
+                        {/* Title */}
+                        <h1 className="mb-4 text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                            {t("endUserPartners.hero_title", "Đối tác lưu trú tại")}{" "}
+                            <span className="text-sky-400">{provinceName}</span>
+                        </h1>
+
+                        {/* Subtitle */}
+                        <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                            {t("endUserPartners.hero_sub", "Khám phá các đơn vị quản lý lưu trú uy tín đang hoạt động tại khu vực này. Chọn đối tác phù hợp để xem danh sách phòng và đặt chỗ ngay.")}
+                        </p>
+
+                        {/* Stat cards */}
+                        <div className="flex flex-wrap gap-3">
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+                                <Building2 className="size-5 text-sky-400" />
+                                <div>
+                                    <div className="text-lg font-bold text-white">
+                                        {isLoading ? "—" : partners.length > 0 ? (partners.length >= 100 ? `${Math.floor(partners.length / 10) * 10}+` : `${partners.length}`) : "0"}
+                                    </div>
+                                    <div className="text-xs text-slate-400">Đối tác</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+                                <MapPin className="size-5 text-emerald-400" />
+                                <div>
+                                    <div className="text-lg font-bold text-white">{provinceName}</div>
+                                    <div className="text-xs text-slate-400">Khu vực</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT — 2/5 */}
+                    <div className="hidden lg:col-span-2 lg:block">
+                        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+                            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-sky-300">Tại sao chọn BKS?</p>
+                            <ul className="space-y-3 text-sm text-slate-300">
+                                <li className="flex items-start gap-2">
+                                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
+                                    Đối tác được xác minh và đánh giá bởi hàng nghìn người dùng
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
+                                    Đặt phòng trực tiếp, không qua trung gian
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
+                                    Tích điểm 3% mỗi giao dịch với BKS Business
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Breadcrumb below hero */}
+            <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl">
                     <Breadcrumb
                         items={[
                             { label: t("breadcrumb.home"), href: "/" },
@@ -69,14 +197,6 @@ const PartnerList = () => {
                             { label: provinceName }
                         ]}
                     />
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold uppercase tracking-widest text-primary">
-                        {t("endUserPartners.hero_badge", "Danh mục đối tác")}
-                      </p>
-                      <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
-                          {t("endUserPartners.hero_title", "Tìm kiếm các đơn vị quản lý vận hành tại")} {provinceName}
-                      </h1>
-                    </div>
                 </div>
             </div>
 
@@ -199,9 +319,9 @@ const PartnerList = () => {
                   </h2>
                   <div className="space-y-3">
                     {[
-                      { id: 1, title: `Tìm kiếm căn hộ cho thuê theo tuần và theo tháng tại ${provinceName} bằng cách xem danh sách đẹp mắt...` },
-                      { id: 2, title: `Thu hẹp phạm vi tìm kiếm của bạn và tìm kiếm căn hộ cho thuê theo tuần và theo tháng tại ${provinceName} trực tiếp trên bản đồ của chúng tôi.` },
-                      { id: 3, title: `Tìm kiếm căn hộ cho thuê theo tuần và theo tháng tại ${provinceName} theo tuyến tàu và danh sách...` }
+                      { id: 1, title: `Tìm kiếm căn hộ / căn hộ dịch vụ lưu trú ngắn và trung hạn tại ${provinceName} bằng cách xem danh sách đẹp mắt...` },
+                      { id: 2, title: `Thu hẹp phạm vi tìm kiếm của bạn và khám phá căn hộ / căn hộ dịch vụ lưu trú ngắn và trung hạn tại ${provinceName} trực tiếp trên bản đồ của chúng tôi.` },
+                      { id: 3, title: `Tìm kiếm căn hộ / căn hộ dịch vụ lưu trú ngắn và trung hạn tại ${provinceName} theo tuyến tàu và danh sách...` }
                     ].map((item) => (
                       <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 transition-colors hover:border-primary/20">
                         <button 

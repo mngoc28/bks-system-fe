@@ -48,6 +48,7 @@ export interface Contract {
   signature_date?: string;
   booking: {
     id: number;
+    booking_code?: string;
     start_date: string;
     end_date: string;
     status: number;
@@ -86,6 +87,15 @@ export interface BookingDetail {
     property: {
       name: string;
       address: string;
+      property_type?: {
+        id: number;
+        name: string;
+        slug: string;
+      };
+      user?: {
+        name: string;
+        phone?: string;
+      };
     };
     images: Array<{ image_url: string }>;
     amenities?: string[];
@@ -97,7 +107,12 @@ export interface BookingDetail {
   }>;
   price: {
     price: number;
+    unit?: string;
   };
+  /** Tổng tạm tính (phòng × ngày + dịch vụ), từ BE khi có. */
+  total_amount?: number;
+  deposit_amount?: number;
+  deposit_status?: string;
   created_at: string;
   cancelled_at?: string;
   cancellation_reason?: string;
@@ -106,7 +121,14 @@ export interface BookingDetail {
     id: number;
     status: number;
     title?: string;
+    contract_type?: string;
   }>;
+  booking_deposit?: {
+    id: number;
+    amount: number;
+    status: string;
+    receipt_path?: string;
+  };
 }
 
 export interface NotificationData {
@@ -177,6 +199,10 @@ const stayService = {
 
   withdrawCancelBookingRequest: (bookingId: number | string) => {
     return apiService.post<unknown>(`/api/v1/stay/bookings/${bookingId}/withdraw-cancel-request`);
+  },
+
+  submitReceipt: (bookingId: number | string, receiptPath: string) => {
+    return apiService.post<unknown>(`/api/v1/stay/bookings/${bookingId}/submit-receipt`, { receipt_path: receiptPath });
   },
 
   markNotificationAsRead: (id: number) => {

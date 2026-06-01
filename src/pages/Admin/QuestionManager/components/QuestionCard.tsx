@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,16 +28,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
       onClick={() => onView(question.id)}
     >
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner dark:bg-primary/20">
           <MessageSquare className="size-5" />
         </div>
-        <Badge className="border-none bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+        <Badge className="border-none bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
           QA-{question.id}
         </Badge>
       </div>
 
       <h3
-        className="mb-4 line-clamp-3 text-lg font-black leading-tight text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100"
+        className="mb-4 line-clamp-3 text-lg font-black leading-tight text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100"
         title={question.content}
       >
         {highlightText(question.content, searchTerm || "")}
@@ -46,10 +46,10 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
       <div className="mb-6 flex-1 space-y-3 border-t border-slate-50 pt-4 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-            <MessageSquare className="size-3.5 text-indigo-500" />
+            <MessageSquare className="size-3.5 text-primary" />
             {t("questions.table.total_answer")}:
           </div>
-          <Badge variant="secondary" className="border-none bg-indigo-50 font-black text-indigo-600">{question.total_answers}</Badge>
+          <Badge variant="secondary" className="border-none bg-primary/10 font-black text-primary">{question.total_answers}</Badge>
         </div>
 
         <div className="pt-2">
@@ -74,7 +74,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onView, onEdit, o
         <Button
           variant="outline"
           size="sm"
-          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-primary dark:border-slate-800"
           onClick={(e) => { e.stopPropagation(); onEdit(question.id); }}
         >
           <Edit className="size-4" />

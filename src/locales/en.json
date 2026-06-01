@@ -71,7 +71,17 @@
         "districtPrompt": "Select a province to view districts",
         "cta": "SEARCH",
         "provinceRequired": "Please choose a province before searching.",
-        "districtRequiresProvince": "Please choose a province or city before selecting a district."
+        "districtRequiresProvince": "Please choose a province or city before selecting a district.",
+        "tabDaily": "Daily Booking",
+        "tabMonthly": "Monthly Rental",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "guests": "guests",
+        "adults": "Adults",
+        "children": "Children",
+        "adultsLabel": "Adults (12+ years)",
+        "childrenLabel": "Children (2-11 years)",
+        "selectGuests": "guests"
       },
       "provinceCarousel": {
         "heading": "Explore provinces",
@@ -405,6 +415,19 @@
     "show_password": "Show Password",
     "hide_password": "Hide Password",
     "viewAll": "View All"
+  },
+  "adminCrossNav": {
+    "view_profile": "View profile",
+    "edit": "Update information",
+    "properties": "Property list",
+    "view_property": "Property details",
+    "view_room": "Room details",
+    "rooms": "Room list",
+    "bookings": "Booking management",
+    "partner_profile": "Partner profile",
+    "user_account": "User account",
+    "representative_account": "Representative account",
+    "related_actions": "Related actions"
   },
   "auth": {
     "reset_password_sent": "Reset link sent",
@@ -963,12 +986,14 @@
   },
   "menu": {
     "header_general": "GENERAL",
-    "header_system": "SYSTEM MANAGEMENT",
-    "header_property": "PROPERTY MANAGEMENT",
-    "header_services": "SERVICES & NEWS",
+    "header_partner": "PARTNERS",
+    "header_accommodation": "ACCOMMODATION & OPERATIONS",
+    "header_finance": "FINANCIAL MANAGEMENT",
+    "settlements": "Partner Settlement",
+    "header_catalog_content": "CATALOG & CONTENT",
+    "header_system": "SYSTEM",
     "user-management": "Users",
     "dashboard": "Dashboard",
-    "properties": "Properties",
     "properties": "Properties",
     "rooms": "Rooms",
     "bookings": "Bookings",
@@ -979,6 +1004,7 @@
     "news": "News",
     "users": "Users",
     "partner": "Partners",
+    "partner_approval": "Partner Approval",
     "maintenances": "Maintenance",
     "notifications": "Notifications"
   },

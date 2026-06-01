@@ -88,6 +88,7 @@ const Partners: React.FC = () => {
 
         return list.map((item: any) => ({
             id: item.id,
+            user_id: item.user_id,
             user_name: item.user_name,
             company_name: item.company_name,
             website: item.website,

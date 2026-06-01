@@ -1,20 +1,25 @@
-﻿import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
+import { Spinner } from "@/components/ui/spinner";
 import { useImagesByPropertyIdQuery } from "@/hooks/usePropertyImageQuery";
 import { usePropertyQuery, usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { safeFormatDateTime } from "@/utils/dateUtils";
 import {
     ArrowLeft,
+    BedDouble,
     Building2,
     Calendar,
+    CalendarDays,
+    ChevronDown,
     Edit,
     FileText,
     Home,
     ImageIcon,
     Layers,
-    Loader2,
     MapPin,
     Ruler,
     User,
@@ -25,6 +30,7 @@ import { useNavigate, useParams } from "react-router";
 import ImageLightbox from "@/components/ui/image-lightbox";
 import DOMPurify from 'dompurify';
 import { resolveImageUrl } from "@/utils/imageUtils";
+import { buildAdminUrl, toBookingsByProperty, toRoomsByProperty } from "@/utils/adminNavigation";
 
 /**
  * Property Detail Page
@@ -64,13 +70,11 @@ const PropertyDetail: React.FC = () => {
     const handleEditImages = () => navigate(`${ROUTERS.PROPERTIES_DETAIL}/${propertyId}/images`);
     const handleEditProperty = () => navigate(`${ROUTERS.PROPERTIES_EDIT}/edit-property/${propertyId}`);
     const handleBack = () => navigate(ROUTERS.PROPERTIES);
+    const handleViewRooms = () => navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByProperty(propertyId, "property-detail", property?.name)));
+    const handleViewBookings = () => navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByProperty(propertyId, "property-detail", property?.name)));
 
     if (propertyLoading) {
-        return (
-            <div className="flex items-center justify-center p-3 sm:p-6">
-                <Loader2 className="size-8 animate-spin text-blue-500" />
-            </div>
-        );
+        return <AdminContentLoader text={t("common.loading_data")} />;
     }
 
     if (propertyError || !property) {
@@ -99,8 +103,27 @@ const PropertyDetail: React.FC = () => {
                             <p className="text-sm text-gray-600">{t("properties.detail_property")}</p>
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Button onClick={handleEditProperty} className="bg-blue-600 hover:bg-blue-700">
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                                    <Calendar className="mr-2 size-4" />
+                                    {t("adminCrossNav.related_actions")}
+                                    <ChevronDown className="ml-1 size-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={handleViewRooms}>
+                                    <BedDouble className="size-4" />
+                                    {t("adminCrossNav.rooms")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleViewBookings}>
+                                    <CalendarDays className="size-4" />
+                                    {t("adminCrossNav.bookings")}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button size="sm" className="h-9 bg-blue-600 hover:bg-blue-700" onClick={handleEditProperty}>
                             <Edit className="mr-2 size-4" />
                             {t("properties.edit_property")}
                         </Button>
@@ -267,9 +290,8 @@ const PropertyDetail: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                         {imagesLoading ? (
-                            <div className="py-8 text-center">
-                                <Loader2 className="mx-auto size-8 animate-spin text-blue-500" />
-                                <p className="mt-2 text-gray-600">{t("common.loading")}</p>
+                            <div className="flex flex-col items-center justify-center gap-2 py-12">
+                                <Spinner size="md" showText text={t("common.loading_data")} />
                             </div>
                         ) : imagesError ? (
                             <div className="py-8 text-center text-red-500">{t("properties.empty_description")}</div>

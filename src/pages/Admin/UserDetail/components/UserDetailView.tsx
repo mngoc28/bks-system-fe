@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -251,7 +251,7 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
       <Card className="border-0 shadow-lg">
         <CardContent className="p-8">
           <div className="flex flex-col gap-8 lg:flex-row">
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 lg:min-w-[280px]">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 to-primary/10 p-6 lg:min-w-[280px]">
               <div
                 className="group relative flex items-center justify-center"
                 onClick={() => {

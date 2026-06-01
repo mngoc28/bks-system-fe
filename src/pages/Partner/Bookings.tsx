@@ -12,6 +12,9 @@ import {
   UserCheck,
   LogIn,
   LogOut,
+  Image as ImageIcon,
+  ExternalLink,
+  ShieldAlert
 } from 'lucide-react';
 import { Booking } from './types';
 import { Button } from "@/components/ui/button";
@@ -43,6 +46,7 @@ import {
   normalizePartnerBookingStatusCode,
   partnerBaseStatusLabel,
 } from '@/utils/partnerBookingDisplay';
+import FrontDeskPanel from './Bookings/FrontDeskPanel';
 
 type BookingStatusFilter = 'all' | 0 | 1 | 2 | 3 | 4 | 'in_stay';
 
@@ -54,6 +58,15 @@ interface BookingRow extends Booking {
   propertyId?: number;
   rawStatus?: number;
   createdAt?: string;
+  deposit_amount?: number;
+  deposit_status?: string;
+  bookingDeposit?: {
+    id: number;
+    amount: number;
+    status: string;
+    receipt_path: string | null;
+    created_at: string;
+  } | null;
 }
 
 const Bookings: React.FC = () => {
@@ -81,6 +94,10 @@ const Bookings: React.FC = () => {
   const [actionConfirmModalOpen, setActionConfirmModalOpen] = useState(false);
   const [actionTargetBooking, setActionTargetBooking] = useState<BookingRow | null>(null);
   const [actionType, setActionType] = useState<'check_in' | 'check_out' | null>(null);
+
+  // View state & Lightbox state
+  const [viewMode, setViewMode] = useState<'list' | 'front_desk'>('list');
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const prevFiltersRef = React.useRef({
@@ -138,6 +155,9 @@ const Bookings: React.FC = () => {
         propertyId: item.property_id != null ? Number(item.property_id) : item.property_id != null ? Number(item.property_id) : undefined,
         createdAt: item.createdAt ?? item.created_at ?? '',
         stay_status: item.stay_status || 'pending',
+        deposit_amount: item.deposit_amount != null ? Number(item.deposit_amount) : undefined,
+        deposit_status: item.deposit_status ?? undefined,
+        bookingDeposit: item.booking_deposit ?? item.booking_deposits ?? undefined,
       };
     });
   };
@@ -381,8 +401,9 @@ const Bookings: React.FC = () => {
 
       // Silent refresh to sync all data without showing global loader
       fetchBookings(false);
-    } catch {
-      toastError('Lỗi khi thực hiện check-in.');
+    } catch (error: any) {
+      const errMsg = error.response?.data?.message || 'Lỗi khi thực hiện check-in.';
+      toastError(errMsg);
     } finally {
       setActionLoadingId(null);
     }
@@ -505,7 +526,34 @@ const Bookings: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="flex border-b border-slate-200 gap-6">
+        <button
+          onClick={() => setViewMode('list')}
+          className={`pb-3 text-sm font-bold transition-all relative ${
+            viewMode === 'list' 
+              ? 'text-slate-900 border-b-2 border-slate-900' 
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          Danh sách đặt phòng
+        </button>
+        <button
+          onClick={() => setViewMode('front_desk')}
+          className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-1.5 ${
+            viewMode === 'front_desk' 
+              ? 'text-rose-600 border-b-2 border-rose-600' 
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          Quầy Lễ Tân (Chờ cọc)
+        </button>
+      </div>
+
+      {viewMode === 'front_desk' ? (
+        <FrontDeskPanel onRefreshStats={handleRefresh} />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Chờ duyệt</p>
           <div className="mt-3 flex items-end justify-between">
@@ -765,23 +813,49 @@ const Bookings: React.FC = () => {
                            Hoàn tác ({Math.ceil(remainingMs(booking.id) / 1000)}s)
                          </Button>
                        ) : booking.rawStatus === 1 && booking.stay_status === 'pending' ? (
-                          <Button 
-                            onClick={() => requestActionConfirm(booking, 'check_in')} 
-                            size="sm" 
-                            className={`
-                              h-8 gap-1.5 px-3 font-bold text-white shadow-sm transition-all
-                              bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700
-                              ${new Date(booking.checkIn).toDateString() === new Date().toDateString() ? 'animate-pulse ring-2 ring-indigo-500/20' : ''}
-                            `}
-                            disabled={actionLoadingId === booking.id}
-                          >
-                             {actionLoadingId === booking.id ? (
-                               <Loader2 className="h-4 w-4 animate-spin" />
-                             ) : (
-                               <LogIn size={14} />
-                             )}
-                            Check-in
-                          </Button>
+                          (() => {
+                            const isCheckInLocked = (booking.deposit_amount ?? 0) > 0 && !['confirmed_by_partner', 'held_in_escrow'].includes(booking.deposit_status || '');
+                            if (isCheckInLocked) {
+                              return (
+                                <div className="relative group inline-block">
+                                  <Button
+                                    size="sm"
+                                    className="h-8 gap-1.5 px-3 font-bold bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed shadow-none hover:bg-[#e2e8f0]"
+                                    disabled
+                                  >
+                                    <LogIn size={14} />
+                                    Check-in
+                                  </Button>
+                                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-[#fef2f2] text-[#991b1b] border border-[#fee2e2] rounded-lg shadow-lg z-50 text-xs text-left normal-case whitespace-normal">
+                                    <p className="font-bold flex items-center gap-1">
+                                      <ShieldAlert size={14} className="text-red-600 shrink-0" />
+                                      Chặn Check-in cứng!
+                                    </p>
+                                    <p className="mt-1 font-medium text-slate-700">Đơn đặt phòng chưa hoàn tất thanh toán cọc hoặc cọc chưa được Lễ tân xác thực.</p>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <Button 
+                                onClick={() => requestActionConfirm(booking, 'check_in')} 
+                                size="sm" 
+                                className={`
+                                  h-8 gap-1.5 px-3 font-bold text-white shadow-sm transition-all
+                                  bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700
+                                  ${new Date(booking.checkIn).toDateString() === new Date().toDateString() ? 'animate-pulse ring-2 ring-indigo-500/20' : ''}
+                                `}
+                                disabled={actionLoadingId === booking.id}
+                              >
+                                 {actionLoadingId === booking.id ? (
+                                   <Loader2 className="h-4 w-4 animate-spin" />
+                                 ) : (
+                                   <LogIn size={14} />
+                                 )}
+                                Check-in
+                              </Button>
+                            );
+                          })()
                        ) : booking.stay_status === 'checked_in' ? (
                           <Button 
                             onClick={() => requestActionConfirm(booking, 'check_out')} 
@@ -829,6 +903,8 @@ const Bookings: React.FC = () => {
           />
         </div>
       </div>
+        </>
+      )}
 
       <Dialog open={isBulkConfirmOpen} onOpenChange={setIsBulkConfirmOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -929,6 +1005,69 @@ const Bookings: React.FC = () => {
                 <p className="text-xs font-bold uppercase text-slate-500">Ghi chú khách hàng</p>
                 <p className="mt-1 whitespace-pre-wrap text-slate-700">{selectedBooking.note || 'Không có ghi chú.'}</p>
               </div>
+
+              {(selectedBooking.deposit_amount ?? 0) > 0 && (
+                <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+                  <p className="text-xs font-bold uppercase text-slate-500">Thông tin đặt cọc</p>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-rose-600">
+                      Tiền cọc: {selectedBooking.deposit_amount?.toLocaleString('vi-VN')} đ
+                    </span>
+                    <Badge
+                      variant="none"
+                      className={`text-xs font-bold uppercase px-2.5 py-0.5 border rounded ${
+                        selectedBooking.deposit_status === 'confirmed_by_partner' || selectedBooking.deposit_status === 'held_in_escrow'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : selectedBooking.deposit_status === 'payment_submitted'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}
+                    >
+                      {selectedBooking.deposit_status === 'confirmed_by_partner'
+                        ? 'Đã xác nhận'
+                        : selectedBooking.deposit_status === 'held_in_escrow'
+                        ? 'Đang giữ hộ (Escrow)'
+                        : selectedBooking.deposit_status === 'payment_submitted'
+                        ? 'Chờ duyệt biên lai'
+                        : 'Chưa thanh toán'}
+                    </Badge>
+                  </div>
+                  {selectedBooking.bookingDeposit?.receipt_path && (
+                    <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                      <span className="text-slate-500 font-semibold flex items-center gap-1">
+                        <ImageIcon size={14} className="text-emerald-500" />
+                        Minh chứng chuyển khoản:
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedReceipt(selectedBooking.bookingDeposit?.receipt_path || null)}
+                        className="h-auto p-0 font-bold text-blue-600 hover:text-blue-800 hover:bg-transparent"
+                      >
+                        Xem minh chứng
+                      </Button>
+                    </div>
+                  )}
+                  {selectedBooking.rawStatus === 1 && ['pending', 'payment_submitted'].includes(selectedBooking.deposit_status || '') && (
+                    <Button
+                      size="sm"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                      onClick={async () => {
+                        try {
+                          await partnerService.confirmDeposit(selectedBooking.id);
+                          toastSuccess(`Đã xác thực cọc thành công cho đơn #${selectedBooking.id}`);
+                          setSelectedBooking(null);
+                          fetchBookings(false);
+                        } catch {
+                          toastError('Xác nhận đặt cọc thất bại.');
+                        }
+                      }}
+                    >
+                      Xác nhận đã nhận cọc
+                    </Button>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                 <Badge
@@ -1031,6 +1170,38 @@ const Bookings: React.FC = () => {
               {actionType === 'check_in' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox / Receipt image view */}
+      <Dialog open={selectedReceipt !== null} onOpenChange={(open) => !open && setSelectedReceipt(null)}>
+        <DialogContent className="sm:max-w-xl p-3">
+          <DialogHeader className="pb-2 border-b border-slate-100">
+            <DialogTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <ImageIcon size={16} className="text-emerald-500" />
+              Chi tiết minh chứng chuyển khoản cọc
+            </DialogTitle>
+          </DialogHeader>
+          {selectedReceipt && (
+            <div className="flex flex-col items-center justify-center bg-slate-900 rounded-xl overflow-hidden mt-3 relative min-h-[300px]">
+              <img
+                src={selectedReceipt}
+                alt="Minh chứng chuyển khoản"
+                className="max-h-[60vh] object-contain w-full"
+              />
+              <div className="absolute bottom-2 right-2">
+                <a
+                  href={selectedReceipt}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 bg-white/90 hover:bg-white text-slate-800 text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 transition-colors"
+                >
+                  <ExternalLink size={12} />
+                  Mở ảnh gốc
+                </a>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

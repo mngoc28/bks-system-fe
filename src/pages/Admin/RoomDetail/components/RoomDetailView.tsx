@@ -1,17 +1,29 @@
-﻿import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { RoomDetailViewProps } from "@/dataHelper/room.dataHelper";
 import { RoomImage } from "@/dataHelper/roomImage.dataHelper";
 import { usePricePackagesQuery } from "@/hooks/usePricePackageQuery";
 import { useRoomImagesQuery } from "@/hooks/useRoomImageQuery";
 import { resolveImageUrl } from "@/utils/imageUtils";
-import { ArrowLeft, DollarSign, Edit, FileText, Home, ImageIcon, MapPin, Square, Users, X } from "lucide-react";
+import { ArrowLeft, Building2, CalendarDays, ChevronDown, DollarSign, Edit, FileText, Home, ImageIcon, MapPin, Square, Users, X, Compass, Plus, Trash2, Star } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { buildAdminUrl, toBookingsByRoom } from "@/utils/adminNavigation";
+import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  useRoomTouristSpotMapsQuery,
+  useCreateRoomTouristSpotMapMutation,
+  useUpdateRoomTouristSpotMapMutation,
+  useDeleteRoomTouristSpotMapMutation,
+} from "@/hooks/useRoomTouristSpotMapQuery";
+import { RoomTouristSpotDialog } from "@/pages/Partner/components/RoomTouristSpotDialog";
 
 /**
  * Room Detail View
@@ -22,6 +34,79 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { data: roomImages, isLoading: isLoadingImages } = useRoomImagesQuery(room.id);
+
+  // Room tourist spot maps query and mutations (isPartner = false for admin)
+  const { data: spotMaps = [], isLoading: isLoadingSpotMaps } = useRoomTouristSpotMapsQuery(
+    room.id,
+    false, // isPartner
+    { enabled: !!room.id }
+  );
+
+  const createMapMutation = useCreateRoomTouristSpotMapMutation(false);
+  const updateMapMutation = useUpdateRoomTouristSpotMapMutation(false);
+  const deleteMapMutation = useDeleteRoomTouristSpotMapMutation(false);
+
+  const [isSpotDialogOpen, setIsSpotDialogOpen] = useState(false);
+  const [selectedSpotMap, setSelectedSpotMap] = useState<any | null>(null);
+  const [submittingSpot, setSubmittingSpot] = useState(false);
+
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteApplyToAll, setDeleteApplyToAll] = useState(false);
+
+  const handleSpotDialogSubmit = async (formData: any) => {
+    setSubmittingSpot(true);
+    try {
+      if (selectedSpotMap) {
+        // Edit mode
+        await updateMapMutation.mutateAsync({
+          id: selectedSpotMap.id,
+          roomId: room.id,
+          data: {
+            distance_km: formData.distance_km,
+            travel_time_minutes: formData.travel_time_minutes,
+            is_primary: formData.is_primary,
+            priority_order: formData.priority_order,
+            note: formData.note,
+            apply_to_all_rooms: formData.apply_to_all_rooms,
+          },
+        });
+      } else {
+        // Create mode
+        await createMapMutation.mutateAsync({
+          room_id: room.id,
+          tourist_spot_id: formData.tourist_spot_id,
+          distance_km: formData.distance_km,
+          travel_time_minutes: formData.travel_time_minutes,
+          is_primary: formData.is_primary,
+          priority_order: formData.priority_order,
+          note: formData.note,
+          apply_to_all_rooms: formData.apply_to_all_rooms,
+        });
+      }
+      setIsSpotDialogOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingSpot(false);
+    }
+  };
+
+  const handleSpotDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setDeleteApplyToAll(false);
+    setIsConfirmDeleteOpen(true);
+  };
+
+  const executeDelete = async (id: number, applyToAllRooms: boolean) => {
+    try {
+      await deleteMapMutation.mutateAsync({ id, roomId: room.id, applyToAllRooms });
+      setIsConfirmDeleteOpen(false);
+      setDeleteTargetId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   
   // Price packages data
   const { data: pricePackagesData } = usePricePackagesQuery();
@@ -76,8 +161,34 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
             <p className="text-sm text-gray-600">{t("rooms.room_details")}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={onEdit} className="bg-blue-600 hover:bg-blue-700">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                <CalendarDays className="mr-2 size-4" />
+                {t("adminCrossNav.related_actions")}
+                <ChevronDown className="ml-1 size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {room.property_id ? (
+                <DropdownMenuItem onClick={() => navigate(`${ROUTERS.PROPERTIES_DETAIL}/${room.property_id}`)}>
+                  <Building2 className="size-4" />
+                  {t("adminCrossNav.view_property")}
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem
+                onClick={() => {
+                  const roomDisplayName = room.room_number || room.title;
+                  navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByRoom(room.id, "room-detail", roomDisplayName)));
+                }}
+              >
+                <CalendarDays className="size-4" />
+                {t("adminCrossNav.bookings")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button size="sm" className="h-9 bg-blue-600 hover:bg-blue-700" onClick={onEdit}>
             <Edit className="mr-2 size-4" />
             {t("rooms.edit_room_info")}
           </Button>
@@ -214,7 +325,7 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
             {room.prices && room.prices.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {room.prices.map((price: any, index: number) => (
-                  <div key={index} className="rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-3">
+                  <div key={index} className="rounded-lg border border-primary/10 bg-gradient-to-r from-primary/5 to-primary/10 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">{pricePackageMap.get(price.price_package_id) || price.price_package?.name || 'N/A'}</span>
                       <span className="text-xs text-gray-500">/ {price.unit || 'N/A'}</span>
@@ -338,6 +449,111 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
         </CardContent>
       </Card>
 
+      {/* Nearby Tourist Spots Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex w-full items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Compass className="size-5" />
+              Địa điểm du lịch lân cận
+            </CardTitle>
+            <Button
+              onClick={() => {
+                setSelectedSpotMap(null);
+                setIsSpotDialogOpen(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="mr-2 size-4" />
+              Gán địa điểm
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoadingSpotMaps ? (
+            <div className="flex h-20 items-center justify-center">
+              <Spinner showText text={t("loading")} />
+            </div>
+          ) : spotMaps && spotMaps.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-gray-500">
+                    <th className="pb-3 text-left font-semibold">Địa điểm du lịch</th>
+                    <th className="pb-3 text-center font-semibold">Khoảng cách</th>
+                    <th className="pb-3 text-center font-semibold">Thời gian đi</th>
+                    <th className="pb-3 text-center font-semibold">Nguồn dữ liệu</th>
+                    <th className="pb-3 text-right font-semibold">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {spotMaps.map((item: any) => (
+                    <tr key={item.id} className="hover:bg-slate-50/50">
+                      <td className="py-3 text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">{item.tourist_spot?.name}</span>
+                          {item.is_primary && (
+                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 shadow-none rounded-full text-[10px] uppercase font-bold flex items-center gap-0.5">
+                              <Star size={10} className="fill-amber-500 text-amber-500 shrink-0" />
+                              Chính
+                            </Badge>
+                          )}
+                        </div>
+                        {item.note && <p className="text-xs text-gray-400 mt-0.5 max-w-sm line-clamp-1">{item.note}</p>}
+                      </td>
+                      <td className="py-3 text-center font-medium text-gray-700">
+                        {item.distance_km != null ? `${item.distance_km} km` : "-"}
+                      </td>
+                      <td className="py-3 text-center font-medium text-gray-700">
+                        {item.travel_time_minutes} phút
+                      </td>
+                      <td className="py-3 text-center">
+                        <Badge className={cn(
+                          "px-2.5 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-widest border border-slate-200/50 shadow-none",
+                          item.source_type === "estimated"
+                            ? "bg-slate-50 text-slate-600 border-slate-200"
+                            : "bg-blue-50 text-blue-700 border-blue-200"
+                        )}>
+                          {item.source_type === "estimated" ? "Ước lượng" : "Thủ công"}
+                        </Badge>
+                      </td>
+                      <td className="py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSpotMap(item);
+                              setIsSpotDialogOpen(true);
+                            }}
+                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50/50"
+                          >
+                            <Edit className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSpotDelete(item.id)}
+                            className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-12 text-center text-gray-500">
+              <Compass className="mx-auto mb-4 size-12 text-gray-400" />
+              <p className="text-sm">Chưa gán địa điểm du lịch nào cho phòng này</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Image Modal */}
       {selectedImage && (
         <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
@@ -360,6 +576,68 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
           </DialogContent>
         </Dialog>
       )}
+
+      <RoomTouristSpotDialog
+        open={isSpotDialogOpen}
+        onOpenChange={setIsSpotDialogOpen}
+        provinceId={room.province_id}
+        existingSpotIds={spotMaps.map((item: any) => item.tourist_spot_id)}
+        mapping={selectedSpotMap}
+        onSubmit={handleSpotDialogSubmit}
+        submitting={submittingSpot}
+      />
+
+      <Dialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-900">
+              <span className="rounded-lg bg-rose-50 p-1.5 text-rose-600">
+                <Trash2 size={18} />
+              </span>
+              Xác nhận xóa liên kết
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 pt-2 text-sm leading-relaxed">
+              Bạn có chắc chắn muốn xóa liên kết với địa điểm du lịch này? Thao tác này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center space-x-2.5 py-3 border-t border-b border-slate-100 my-2">
+            <Checkbox
+              id="delete-apply-all-checkbox"
+              checked={deleteApplyToAll}
+              onCheckedChange={(checked) => setDeleteApplyToAll(!!checked)}
+            />
+            <label
+              htmlFor="delete-apply-all-checkbox"
+              className="text-xs font-bold text-slate-600 cursor-pointer select-none uppercase tracking-wider"
+            >
+              Áp dụng cho tất cả các phòng khác thuộc cùng tòa nhà
+            </label>
+          </div>
+
+          <DialogFooter className="flex flex-row items-center justify-end gap-2 pt-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsConfirmDeleteOpen(false)}
+              className="min-w-[80px]"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (deleteTargetId != null) {
+                  executeDelete(deleteTargetId, deleteApplyToAll);
+                }
+              }}
+              className="bg-rose-600 hover:bg-rose-700 text-white min-w-[100px]"
+            >
+              Xác nhận xóa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

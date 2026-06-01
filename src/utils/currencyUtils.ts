@@ -16,19 +16,22 @@
  */
 export const formatCurrencyInput = (value: string | number | undefined | null): string => {
   if (value === undefined || value === null || value === '') return '';
-  
-  // Convert to string and remove all non-digits
-  const stringValue = value.toString().replace(/\D/g, '');
-  
-  // If the string is empty after removing non-digits, return empty
-  if (!stringValue) return '';
 
-  // Add dots as thousands separators
-  // Regex explains: 
-  // \B matches a position that is NOT a word boundary.
-  // (?=(\d{3})+(?!\d)) is a positive lookahead that matches any position 
-  // followed by a multiple of 3 digits that isn't followed by another digit.
-  return stringValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  let intValue: number;
+  if (typeof value === 'number') {
+    intValue = Math.round(value);
+  } else {
+    const trimmed = value.trim();
+    if (/^\d+\.\d+$/.test(trimmed)) {
+      intValue = Math.round(parseFloat(trimmed));
+    } else {
+      intValue = parseCurrencyValue(trimmed);
+    }
+  }
+
+  if (!Number.isFinite(intValue)) return '';
+
+  return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
 /**

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,9 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
   const { t } = useTranslation();
 
   return (
-    <Card className={`glass-card hover-scale group relative flex h-full flex-col overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 animate-in ${isHighlighted ? 'shadow-xl ring-2 ring-indigo-500' : ''}`}>
+    <Card className={`glass-card hover-scale group relative flex h-full flex-col overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 animate-in ${isHighlighted ? 'shadow-xl ring-2 ring-primary' : ''}`}>
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner dark:bg-primary/20">
           <ShieldCheck className="size-5" />
         </div>
         <Badge className="border-none bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
@@ -34,17 +34,17 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
         </Badge>
       </div>
 
-      <h3 className="mb-4 line-clamp-1 text-lg font-black text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100" title={amenity.name}>
+      <h3 className="mb-4 line-clamp-1 text-lg font-black text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100" title={amenity.name}>
         {highlightText(amenity.name, searchTerm || "")}
       </h3>
 
       <div className="mb-6 flex-1 space-y-3 border-t border-slate-50 pt-4 dark:border-slate-800">
         <div className="flex items-center gap-3 text-xs text-slate-400">
-           <User2 className="size-3.5 text-indigo-500" />
+           <User2 className="size-3.5 text-primary" />
            <span className="truncate">{t("common.created_by")}: {amenity.created_by || "System"}</span>
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400">
-           <Clock className="size-3.5 text-indigo-500" />
+           <Clock className="size-3.5 text-primary" />
            <span>{t("common.last_updated")}: {safeFormatDateTime(amenity.updated_at)}</span>
         </div>
       </div>
@@ -53,7 +53,7 @@ const AmenityCard: React.FC<AmenityCardProps> = ({ amenity, onEdit, onDelete, is
         <Button 
           variant="outline" 
           size="sm"
-          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800"
+          className="h-9 rounded-lg border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-primary dark:border-slate-800"
           onClick={() => onEdit(amenity.id)}
         >
           <Edit className="mr-2 size-4" />

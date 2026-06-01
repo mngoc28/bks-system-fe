@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PublicRoomListParams, roomApi } from "@/api/EU/roomApi";
-import type { SuggestedRoomsByProvinceGroup, SuggestedRoomsByProvinceParams } from "@/dataHelper/EU/room.dataHelper";
+import type {
+  PublicRoomPageData,
+  SuggestedRoomsByProvinceGroup,
+  SuggestedRoomsByProvinceParams,
+  SuggestedRoomsByTouristSpotGroup,
+  SuggestedRoomsByTouristSpotParams,
+} from "@/dataHelper/EU/room.dataHelper";
 import { toastError } from "@/components/ui/toast";
 
 // Fetch rooms with search parameters
@@ -22,11 +28,29 @@ export const useRoomsQuery = (params: PublicRoomListParams = {}, options?: { ena
   });
 };
 
-export const useLatestRoomsQuery = () => {
+export const usePaginatedRoomsQuery = (params: PublicRoomListParams, options?: { enabled?: boolean }) => {
+  const { t } = useTranslation();
+
   return useQuery({
-    queryKey: ["home-latest-rooms"],
+    queryKey: ["rooms-paginated", params],
     queryFn: async () => {
-      const response = await roomApi.getLatestRooms();
+      try {
+        const response = await roomApi.getPaginatedRoomList(params);
+        return response.data as PublicRoomPageData;
+      } catch (error) {
+        toastError(t("rooms.error_getting_rooms"));
+        throw error;
+      }
+    },
+    enabled: options?.enabled !== false,
+  });
+};
+
+export const useTopRatedRoomsQuery = () => {
+  return useQuery({
+    queryKey: ["home-top-rated-rooms"],
+    queryFn: async () => {
+      const response = await roomApi.getTopRatedRooms();
       return response.data;
     },
   });
@@ -45,5 +69,22 @@ export const useSuggestedRoomsByProvinceQuery = (
       return response.data as SuggestedRoomsByProvinceGroup[];
     },
     enabled: (options?.enabled ?? true) && provinceIds.length > 0,
+  });
+};
+
+export const useSuggestedRoomsByTouristSpotQuery = (
+  params: SuggestedRoomsByTouristSpotParams = {},
+  options?: { enabled?: boolean },
+) => {
+  const spotSlugs = params.tourist_spot_slugs ?? [];
+  const spotIds = params.tourist_spot_ids ?? [];
+
+  return useQuery({
+    queryKey: ["home-suggested-rooms-by-spot", spotSlugs.join(","), spotIds.join(","), params.limit ?? null],
+    queryFn: async () => {
+      const response = await roomApi.getSuggestedRoomsByTouristSpot(params);
+      return response.data as SuggestedRoomsByTouristSpotGroup[];
+    },
+    enabled: (options?.enabled ?? true) && (spotSlugs.length > 0 || spotIds.length > 0),
   });
 };

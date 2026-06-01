@@ -68,7 +68,7 @@ const Contracts = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -122,7 +122,10 @@ const Contracts = () => {
                         const statusInfo = getStatusInfo(contract.status);
                         
                         // For TERMS_AND_CONDITIONS, it's usually always "Hiệu lực" (status = 1)
-                        const showSignButton = isLongTerm && contract.status === 0;
+                        const showSignButton =
+                          isLongTerm &&
+                          contract.status === 0 &&
+                          contract.booking.status === 1;
 
                         return (
                           <div key={contract.id} className="group flex flex-col justify-between gap-5 rounded-[24px] border border-slate-100 bg-white p-5 transition-all hover:border-sky-200 sm:rounded-[28px] sm:p-6 lg:flex-row lg:items-center">

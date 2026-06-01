@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Loader2, RefreshCw, Calendar, Building2, Home, FileText, AlertCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { partnerService } from "@/services/partnerService";
+import { parsePartnerPropertyNamesResponse } from "@/utils/partnerPropertyData";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -238,12 +239,11 @@ const CancellationRequests: React.FC = () => {
   const propertiesQuery = useQuery({
     queryKey: ["partner", "properties", "names-for-filter"],
     queryFn: async ({ signal }) => {
-      const res: any = await partnerService.getProperties({ per_page: 200 }, { signal });
-      const rows = res?.data?.data || res?.data || [];
-      return rows.map((p: any) => ({
+      const res: any = await partnerService.getPropertyNames({ signal });
+      return parsePartnerPropertyNamesResponse(res).map((p) => ({
         id: Number(p.id),
-        name: String(p.name ?? p.title ?? `Property #${p.id}`),
-      })) as { id: number; name: string }[];
+        name: p.name || `Property #${p.id}`,
+      }));
     },
     staleTime: 60_000,
   });

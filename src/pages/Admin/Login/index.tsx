@@ -89,18 +89,18 @@ export default function Login() {
       
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4 lg:p-8">
         {/* Dynamic Background Effects */}
-        <div className="absolute left-[-20%] top-[-20%] size-3/5 animate-pulse rounded-full bg-indigo-900/10 blur-[160px]"></div>
+        <div className="absolute left-[-20%] top-[-20%] size-3/5 animate-pulse rounded-full bg-primary/10 blur-[160px]"></div>
         <div className="absolute bottom-[-20%] right-[-20%] size-3/5 animate-pulse rounded-full bg-blue-900/10 blur-[160px]" style={{ animationDelay: '3s' }}></div>
         
         {/* Decorative elements */}
         <div className="absolute left-20 top-40 size-16 animate-bounce rounded-full border border-blue-500/10 shadow-2xl backdrop-blur-sm" style={{ animationDuration: '4s' }}></div>
-        <div className="absolute bottom-40 right-20 size-24 animate-bounce rounded-full border border-indigo-500/10 shadow-2xl backdrop-blur-sm" style={{ animationDuration: '6s', animationDelay: '1s' }}></div>
+        <div className="absolute bottom-40 right-20 size-24 animate-bounce rounded-full border border-primary/10 shadow-2xl backdrop-blur-sm" style={{ animationDuration: '6s', animationDelay: '1s' }}></div>
 
         {/* Login Container */}
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-stretch overflow-hidden rounded-[2.5rem] border border-white/5 bg-slate-900/40 shadow-[0_0_80px_rgba(30,58,138,0.15)] backdrop-blur-3xl lg:flex-row">
           
           {/* Left Panel - Hero Section */}
-          <div className="relative flex flex-1 flex-col justify-center border-r border-white/5 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 p-12 lg:p-16">
+          <div className="relative flex flex-1 flex-col justify-center border-r border-white/5 bg-gradient-to-br from-premium-navy via-slate-900 to-premium-navy p-12 lg:p-16">
             {/* Mesh Gradient Overlay */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,99,235,0.05),transparent_60%)]"></div>
             
@@ -145,7 +145,7 @@ export default function Login() {
           <div className="flex flex-1 flex-col justify-center p-8 sm:p-12 lg:p-16">
             <div className="mx-auto w-full max-w-sm">
               <div className="mb-10 text-center lg:text-left">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-400">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-primary/100/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-premium-blue">
                   <UserCog className="size-3" />
                   {t("login.portal_admin")}
                 </div>
@@ -162,15 +162,12 @@ export default function Login() {
                       <FormItem className="space-y-3">
                         <FormLabel className="ml-1 text-xs font-bold uppercase tracking-widest text-slate-500">{t("login.email")}</FormLabel>
                         <FormControl>
-                          <div className="group relative">
-                            <Input 
-                              type="email" 
-                              placeholder={t("login.email_placeholder")} 
-                              className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 text-white transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20 group-hover:bg-white/[0.04]"
-                              {...field} 
-                            />
-                            <div className="absolute bottom-0 left-0 h-px w-0 bg-indigo-500 transition-all duration-300 group-focus-within:w-full"></div>
-                          </div>
+                          <Input
+                            type="email"
+                            placeholder={t("login.email_placeholder")}
+                            className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 text-white transition-all placeholder:text-slate-600 hover:bg-white/[0.04] focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage className="text-xs font-medium text-rose-500/90" />
                       </FormItem>
@@ -184,21 +181,20 @@ export default function Login() {
                       <FormItem className="space-y-3">
                         <FormLabel className="ml-1 text-xs font-bold uppercase tracking-widest text-slate-500">{t("login.password")}</FormLabel>
                         <FormControl>
-                          <div className="group relative">
-                            <Input 
-                              type={showPassword ? "text" : "password"} 
-                              placeholder={t("login.password_placeholder")} 
-                              className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 text-white transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-indigo-500/20 group-hover:bg-white/[0.04]"
-                              {...field} 
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder={t("login.password_placeholder")}
+                              className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 pr-12 text-white transition-all placeholder:text-slate-600 hover:bg-white/[0.04] focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
+                              {...field}
                             />
-                            <button 
-                              type="button" 
-                              onClick={() => setShowPassword(!showPassword)} 
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
                               className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 transition-colors hover:text-white"
                             >
                               {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                             </button>
-                            <div className="absolute bottom-0 left-0 h-px w-0 bg-indigo-500 transition-all duration-300 group-focus-within:w-full"></div>
                           </div>
                         </FormControl>
                         <FormMessage className="text-xs font-medium text-rose-500/90" />
@@ -216,7 +212,7 @@ export default function Login() {
                             <Checkbox
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              className="border-white/20 bg-white/5 data-[state=checked]:border-indigo-600 data-[state=checked]:bg-indigo-600"
+                              className="border-white/20 bg-white/5 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                             />
                           </FormControl>
                           <FormLabel className="cursor-pointer select-none text-xs font-bold text-slate-500">
@@ -229,7 +225,7 @@ export default function Login() {
                       type="button" 
                       variant="ghost" 
                       size="sm" 
-                      className="h-auto p-0 text-xs font-bold text-slate-500 transition-colors hover:bg-transparent hover:text-indigo-400"
+                      className="h-auto p-0 text-xs font-bold text-slate-500 transition-colors hover:bg-transparent hover:text-premium-blue"
                       onClick={() => navigate(ROUTERS.FORGOT_PASSWORD)}
                     >
                       {t("login.forgot_password")}
@@ -238,7 +234,7 @@ export default function Login() {
 
                   <Button
                     type="submit"
-                    className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl bg-indigo-600 px-8 font-bold text-white shadow-[0_10px_30px_rgba(79,70,229,0.25)] transition-all duration-300 hover:bg-indigo-500 hover:shadow-[0_15px_40px_rgba(79,70,229,0.35)] active:scale-[0.98]"
+                    className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl bg-primary px-8 font-bold text-white shadow-[0_10px_30px_rgba(79,70,229,0.25)] transition-all duration-300 hover:bg-primary/100 hover:shadow-[0_15px_40px_rgba(79,70,229,0.35)] active:scale-[0.98]"
                   >
                     <span className="relative z-10 flex items-center gap-2 tracking-wide">
                       {t("login.login_button")}
@@ -252,7 +248,7 @@ export default function Login() {
                   <div className="pt-6 text-center">
                      <button 
                        type="button"
-                       className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-500/60 transition-colors hover:text-indigo-400"
+                       className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 transition-colors hover:text-premium-blue"
                        onClick={() => navigate(ROUTERS.PARTNER_LOGIN)}
                      >
                        {t("login.login_as_partner")}

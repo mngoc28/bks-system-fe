@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui/spinner";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
+import { BookingDaysRow } from "@/components/common/BookingDaysDisplay";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { ROUTERS } from "@/constant";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 import { formatPrice } from "@/utils/utils";
-import { formatDate } from "@/utils/dateUtils";
+import { computeBookingTotalAmount } from "@/utils/bookingAmount";
+import { countBookingDaysInclusive, formatDate } from "@/utils/dateUtils";
 import { useUserStore } from "@/store/useUserStore";
 import stayService, { type BookingDetail } from "@/services/stayService";
 import { bookingApi } from "@/api/EU/bookingApi";
@@ -75,7 +77,13 @@ function mapStayBooking(b: BookingDetail): UserBooking {
     address: addr,
     startDate: formatYmd(b.start_date),
     endDate: formatYmd(b.end_date),
-    totalPrice: Number(b.price?.price ?? 0),
+    totalPrice: computeBookingTotalAmount({
+      start_date: formatYmd(b.start_date),
+      end_date: formatYmd(b.end_date),
+      price: { price: b.price?.price, unit: b.price?.unit },
+      services: b.services,
+      total_amount: b.total_amount,
+    }),
     customerName: "",
     createdAt: b.created_at,
     status: mapServerStatusToTab(b.status),
@@ -188,7 +196,29 @@ const MyBookings = () => {
       <PublicHeader />
 
       <section className="relative overflow-hidden bg-slate-950 text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
+        {/* Background scenic image */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=75"
+            alt="hero background"
+            className="h-full w-full object-cover"
+            style={{ opacity: 0.35 }}
+          />
+        </div>
+        {/* Multi-layer overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
+        {/* Ambient glow orbs */}
+        <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-sky-600/15 blur-3xl" />
+        <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl" />
+        {/* Dot pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
+            backgroundSize: '16px 16px',
+          }}
+        />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <p className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
             Quản lý đặt phòng
@@ -277,7 +307,7 @@ const MyBookings = () => {
 
         {isAuthenticated && stayQuery.isLoading && (
           <div className="mb-6 flex items-center gap-2 text-sm text-slate-600">
-            <Spinner size="sm" className="inline-block" spinnerClassName="border-y-sky-600" />
+            <Spinner size="sm" className="inline-block" />
             Đang tải đơn từ BKS Stay…
           </div>
         )}
@@ -347,6 +377,7 @@ const MyBookings = () => {
                           <CalendarDays className="size-4 text-sky-500" />
                           {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                         </p>
+                        <BookingDaysRow days={countBookingDaysInclusive(booking.startDate, booking.endDate)} />
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
                           <Clock3 className="size-4" />
                           {booking.source === "stay" ? `Cập nhật: ${new Date(booking.createdAt).toLocaleString("vi-VN")}` : "Kết quả tra cứu mới nhất"}

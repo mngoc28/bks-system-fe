@@ -8,7 +8,6 @@ import { PROPERTY_IMAGE_TYPE, CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import Lottie from "lottie-react";
 import loadingImage from "@/assets/json/loading_image.json";
 import ImageLightbox from "@/components/ui/image-lightbox";
-import { ThreeDot } from "react-loading-indicators";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { SortableImageItem } from "@/components/ui/sortableItem";
@@ -16,6 +15,7 @@ import { useUpdatePropertyImageSortMutation } from "@/hooks/usePropertyImageQuer
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Spinner } from "@/components/ui/spinner";
 
 
 const PropertyEditImages = React.forwardRef<PropertyImageEditFormRef, PropertyImageEditFormProps>(
@@ -139,7 +139,7 @@ const PropertyEditImages = React.forwardRef<PropertyImageEditFormRef, PropertyIm
                 )}
                 {isLoadingData && <>
                     <div className="flex items-center justify-center">
-                        <ThreeDot variant="bounce" color="#064F80" size="small" />
+                        <Spinner size="sm" showText text={t("common.loading_data")} />
                     </div>
                 </>}
                 {updatedImages && !isErrorData && (

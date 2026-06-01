@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { partnerService } from '@/services/partnerService';
+import { parsePartnerPropertyNamesResponse } from '@/utils/partnerPropertyData';
 import { Service } from './types';
 import InlineSheet from './components/InlineSheet';
 import { toastError, toastSuccess } from '@/components/ui/toast';
@@ -38,9 +39,8 @@ const Services: React.FC = () => {
 
   const fetchProperties = async (signal?: AbortSignal) => {
     try {
-      const res: any = await partnerService.getProperties(undefined, { signal });
-      const payload = res?.data?.data || res?.data || res || [];
-      setProperties(Array.isArray(payload) ? payload : (payload?.data || []));
+      const res: any = await partnerService.getPropertyNames({ signal });
+      setProperties(parsePartnerPropertyNamesResponse(res));
     } catch (error: any) {
       if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
         return;

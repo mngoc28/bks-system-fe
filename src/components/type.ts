@@ -182,6 +182,7 @@ export interface RoomCarouselContainerProps {
   sectionId?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  loading?: boolean;
 }
 
 export interface PublicFooterProps {

@@ -31,7 +31,7 @@ const PageBar: React.FC<PageBarProps> = ({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm gap-4",
+        "admin-card flex flex-wrap items-center justify-between gap-4 px-4 py-3",
         className,
       )}
     >

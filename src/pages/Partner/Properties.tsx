@@ -12,9 +12,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PlainTextarea } from "@/components/ui/textarea";
 import { usePartnerPropertyTypesQuery } from '@/hooks/usePropertyQuery';
 import { useGetUserProfileQuery } from '@/hooks/useUserQuery';
+import {
+  fetchPartnerPropertyRoomPreview,
+  partnerPropertyRoomPreviewQueryKey,
+  useInvalidatePartnerPropertyQueries,
+  usePartnerPropertiesQuery,
+} from '@/hooks/Partner/usePartnerPropertiesQuery';
 import { partnerService } from '@/services/partnerService';
 import { AirVent, ChevronDown, Edit, Eye, Image as ImageIcon, Layers, Loader2, MapPin, Maximize, Plus, Star, Trash2, Wallet, X, Zap } from 'lucide-react';
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { Property, Room } from './types';
 
 import Pagination from '@/components/Pagination';
@@ -31,6 +38,7 @@ import { RENT_CATEGORY } from '@/constant';
 import { Filter, RotateCcw, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { normalizeStayPropertyTypeLabel } from '@/utils/stayPropertyType';
 import InlineSheet from './components/InlineSheet';
 import PartnerImageManager from './components/PartnerImageManager';
 import PropertySkeleton from './components/PropertySkeleton';
@@ -47,32 +55,103 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 const Properties: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [properties, setProperties] = useState<Property[]>([]);
   const { data: propertyTypes } = usePartnerPropertyTypesQuery();
   const { data: profileRes } = useGetUserProfileQuery();
   const userProfile = (profileRes as any)?.data || profileRes;
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
-  
+  const { invalidateList, invalidatePreview } = useInvalidatePartnerPropertyQueries();
+
   // Pagination & Filters
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchName, setSearchName] = useState('');
   const [selectedType, setSelectedType] = useState<number | string>(0);
   const [perPage, setPerPage] = useState(5);
-  const [totalItems, setTotalItems] = useState(0);
   const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set());
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [expandedPropertyIds, setExpandedPropertyIds] = useState<Set<string>>(new Set());
   const debouncedSearchName = useDebouncedValue(searchName, 500);
-  const [refetchToken, setRefetchToken] = useState(0);
   const prevFiltersRef = useRef<{ debounced: string; type: number }>({
     debounced: debouncedSearchName,
     type: Number(selectedType),
   });
 
-  const reloadPropertyList = () => setRefetchToken((n) => n + 1);
+  const typeNum = Number(selectedType);
+  const listFilters = useMemo(
+    () => ({
+      page: currentPage,
+      perPage,
+      name: debouncedSearchName || undefined,
+      propertyTypeId: typeNum && typeNum !== 0 ? typeNum : undefined,
+    }),
+    [currentPage, perPage, debouncedSearchName, typeNum],
+  );
+
+  const { data: listData, isLoading, isFetching } = usePartnerPropertiesQuery(listFilters);
+  const properties = listData?.items ?? [];
+  const totalPages = listData?.lastPage ?? 1;
+  const totalItems = listData?.total ?? 0;
+  const loading = isLoading && properties.length === 0;
+
+  useEffect(() => {
+    const filtersChanged =
+      prevFiltersRef.current.debounced !== debouncedSearchName ||
+      prevFiltersRef.current.type !== typeNum;
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
+    prevFiltersRef.current = { debounced: debouncedSearchName, type: typeNum };
+  }, [debouncedSearchName, typeNum, currentPage]);
+
+  useEffect(() => {
+    setExpandedPropertyIds(new Set());
+  }, [debouncedSearchName, typeNum, currentPage, perPage]);
+
+  const propertyNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    properties.forEach((property) => {
+      map[String(property.id)] = property.name;
+    });
+    return map;
+  }, [properties]);
+
+  const expandedArray = useMemo(() => Array.from(expandedPropertyIds), [expandedPropertyIds]);
+
+  const previewQueries = useQueries({
+    queries: expandedArray.map((propertyId) => ({
+      queryKey: partnerPropertyRoomPreviewQueryKey(propertyId),
+      queryFn: ({ signal }: { signal?: AbortSignal }) =>
+        fetchPartnerPropertyRoomPreview(propertyId, propertyNameById[propertyId] ?? '', 6, signal),
+      staleTime: 60_000,
+      enabled: !!propertyId,
+    })),
+  });
+
+  const roomsByPropertyId = useMemo(() => {
+    const map: Record<string, Room[]> = {};
+    expandedArray.forEach((propertyId, index) => {
+      map[propertyId] = previewQueries[index]?.data?.rooms ?? [];
+    });
+    return map;
+  }, [expandedArray, previewQueries]);
+
+  const loadingRoomsFor = useMemo(() => {
+    const set = new Set<string>();
+    expandedArray.forEach((propertyId, index) => {
+      const query = previewQueries[index];
+      if (query?.isLoading || (query?.isFetching && !query?.data)) {
+        set.add(propertyId);
+      }
+    });
+    return set;
+  }, [expandedArray, previewQueries]);
+
+  const reloadPropertyList = () => {
+    void invalidateList();
+  };
 
   // Modal States
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
@@ -83,183 +162,20 @@ const Properties: React.FC = () => {
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [targetPropertyId, setTargetPropertyId] = useState<string | null>(null);
 
-  const normalizeRoomStatus = (status: unknown): Room['status'] => {
-    if (typeof status === 'string') {
-      if (status === 'Trống' || status === 'Đang thuê' || status === 'Đang bảo trì') {
-        return status;
-      }
-      return 'Đang thuê';
-    }
-    if (typeof status === 'boolean') {
-      return status ? 'Trống' : 'Đang bảo trì';
-    }
-    return 'Đang thuê';
-  };
-
-  const normalizeRooms = (rawRooms: any[]): Room[] => {
-    return (rawRooms || []).map((room: any) => ({
-      id: room.id,
-      propertyId: room.property_id ?? room.property_id ?? (room as any).propertyId ?? '',
-      propertyName: room.property_name ?? room.property_name ?? (room as any).propertyName ?? '',
-      name: room.title ?? room.name ?? '',
-      area: Number(room.area ?? 0),
-      amenities: Array.isArray(room.amenities)
-        ? room.amenities.map((a: any) => (typeof a === 'string' ? a : a?.name)).filter(Boolean)
-        : [],
-      services: Array.isArray(room.services)
-        ? room.services.map((s: any) => (typeof s === 'string' ? s : s?.name)).filter(Boolean)
-        : [],
-      prices: Array.isArray(room.prices)
-        ? room.prices.map((p: any) => ({
-            id: p.id,
-            packageName: p.packageName ?? p.unit ?? `Goi ${p.price_package_id ?? ''}`,
-            price: Number(p.price ?? 0),
-            duration: p.unit === 'month' ? 2 : 1,
-          }))
-        : [],
-      status: normalizeRoomStatus(room.status),
-      reviews_count: room.reviews_count,
-      reviews_avg_rating: room.reviews_avg_rating,
-    }));
-  };
-
-  const normalizeProperties = (rawProperties: any[], normalizedRooms: Room[]): Property[] => {
-    const roomCountByPropertyId = new Map<string, number>();
-    const roomCountByPropertyName = new Map<string, number>();
-
-    normalizedRooms.forEach((room) => {
-      const key = String(room.propertyId);
-      if (key) {
-        roomCountByPropertyId.set(key, (roomCountByPropertyId.get(key) || 0) + 1);
-      }
-      if (room.propertyName) {
-        roomCountByPropertyName.set(room.propertyName, (roomCountByPropertyName.get(room.propertyName) || 0) + 1);
-      }
-    });
-
-    return (rawProperties || []).map((property: any) => ({
-      id: property.id,
-      name: property.name ?? '',
-      address: property.address_detail ?? property.address ?? '',
-      totalRooms:
-        roomCountByPropertyId.get(String(property.id)) ||
-        roomCountByPropertyName.get(String(property.name ?? '')) ||
-        0,
-      property_type_id: property.property_type_id,
-      rent_category: property.rent_category,
-      province_id: property.province_id,
-      ward_id: property.ward_id,
-      description: property.description,
-      property_type_name: property.property_type_name,
-      type: property.type,
-      rooms_count: property.rooms_count,
-      reviews_count: property.reviews_count,
-      reviews_avg_rating: property.reviews_avg_rating,
-    }));
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    const abortController = new AbortController();
-
-    const run = async () => {
-      const typeNum = Number(selectedType);
-      const filtersChanged =
-        prevFiltersRef.current.debounced !== debouncedSearchName ||
-        prevFiltersRef.current.type !== typeNum;
-
-      if (filtersChanged && currentPage !== 1) {
-        setCurrentPage(1);
-        return;
-      }
-
-      const pageForProperties = filtersChanged ? 1 : currentPage;
-
-      try {
-        setLoading(true);
-
-        const propertiesParams: Record<string, unknown> = {
-          page: pageForProperties,
-          per_page: perPage,
-          with_rooms: 1,
-        };
-        if (debouncedSearchName) propertiesParams.name = debouncedSearchName;
-        if (typeNum && typeNum !== 0) propertiesParams.property_type_id = typeNum;
-
-        const propertiesRes: any = await partnerService.getProperties(propertiesParams, {
-          signal: abortController.signal
-        });
-        if (cancelled) {
-          return;
-        }
-
-        const propertyData = propertiesRes?.data || {};
-        const rawProperties = Array.isArray(propertyData) ? propertyData : (propertyData.data || []);
-        
-        const rawRooms: any[] = [];
-        rawProperties.forEach((property: any) => {
-          if (Array.isArray(property.rooms)) {
-            property.rooms.forEach((room: any) => {
-              room.property_name = property.name; // preserve compatibility with room.propertyName
-              rawRooms.push(room);
-            });
-          }
-        });
-
-        const normalizedRooms = normalizeRooms(rawRooms);
-        const normalizedProperties = normalizeProperties(rawProperties, normalizedRooms);
-
-        if (cancelled) {
-          return;
-        }
-
-        setProperties(normalizedProperties);
-        setRooms(normalizedRooms);
-        setTotalPages((propertyData as { last_page?: number }).last_page || 1);
-        setTotalItems((propertyData as { total?: number }).total || 0);
-      } catch (error: any) {
-        if (error.name === 'CanceledError' || error.name === 'AbortError') {
-          return;
-        }
-        if (!cancelled) {
-          console.error('Error fetching properties:', error);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          prevFiltersRef.current = { debounced: debouncedSearchName, type: typeNum };
-        }
-      }
-    };
-
-    void run();
-
-    return () => {
-      cancelled = true;
-      abortController.abort();
-    };
-  }, [currentPage, selectedType, debouncedSearchName, perPage, refetchToken]);
-
   const togglePropertyExpand = (id: string) => {
-    setExpandedPropertyIds(prev => {
+    const key = String(id);
+    setExpandedPropertyIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
+      if (next.has(key)) {
+        next.delete(key);
       } else {
-        next.add(id);
+        next.add(key);
       }
       return next;
     });
   };
 
   const isPropertyExpanded = (id: string) => expandedPropertyIds.has(String(id));
-
-  useEffect(() => {
-    if (properties.length > 0 && expandedPropertyIds.size === 0) {
-      // By default, expand all properties initially
-      setExpandedPropertyIds(new Set(properties.map(p => String(p.id))));
-    }
-  }, [properties]);
 
   const toggleSelectProperty = (id: string, checked: boolean) => {
     setSelectedPropertyIds(prev => {
@@ -289,7 +205,7 @@ const Properties: React.FC = () => {
   const executeBulkDelete = async () => {
     if (deleteConfirmText !== 'XÁC NHẬN XÓA') return;
     try {
-      setLoading(true);
+      setIsBulkDeleting(true);
       await Promise.all(Array.from(selectedPropertyIds).map(id => partnerService.deleteProperty(id)));
       toastSuccess(`Đã xóa ${selectedPropertyIds.size} bất động sản.`);
       setSelectedPropertyIds(new Set());
@@ -299,7 +215,7 @@ const Properties: React.FC = () => {
       toastError('Có lỗi xảy ra khi xóa hàng loạt.');
       console.error(error);
     } finally {
-      setLoading(false);
+      setIsBulkDeleting(false);
     }
   };
 
@@ -344,10 +260,11 @@ const Properties: React.FC = () => {
     setIsRoomModalOpen(true);
   };
 
-  const handleDeleteRoom = async (id: string) => {
+  const handleDeleteRoom = async (id: string, propertyId: string) => {
     try {
       await partnerService.deleteRoom(String(id));
       toastSuccess('Đã xóa phòng.');
+      void invalidatePreview(propertyId);
       reloadPropertyList();
     } catch {
       toastError('Không thể xóa phòng này.');
@@ -433,7 +350,7 @@ const Properties: React.FC = () => {
                    <SelectItem value="0">Tất cả loại hình</SelectItem>
                    {Array.isArray(propertyTypes?.data) && propertyTypes.data.map((type: any) => (
                      <SelectItem key={type.id} value={String(type.id)}>
-                       {type.name}
+                      {normalizeStayPropertyTypeLabel(type.name)}
                      </SelectItem>
                    ))}
                  </SelectContent>
@@ -490,17 +407,17 @@ const Properties: React.FC = () => {
         </div>
       )}
 
-      {loading && properties.length > 0 && (
+      {isFetching && properties.length > 0 && (
          <div className="flex justify-start py-2">
             <Spinner size="sm" showText text="Đang cập nhật danh sách..." className="flex-row items-center gap-2" />
          </div>
       )}
 
       {properties.length > 0 ? properties.map(property => {
-        const propertyRooms = rooms.filter(
-          r => String(r.propertyId) === String(property.id) || r.propertyName === property.name
-        );
+        const propertyId = String(property.id);
+        const propertyRooms = roomsByPropertyId[propertyId] ?? [];
         const previewRooms = propertyRooms.slice(0, 6);
+        const isRoomPreviewLoading = loadingRoomsFor.has(propertyId);
         
         return (
           <div key={property.id} className="group/property overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -527,7 +444,9 @@ const Properties: React.FC = () => {
                         {property.rent_category ? t(`RENT_CATEGORY.${property.rent_category}`) : t("common.property")}
                       </span>
                       <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 ring-1 ring-indigo-100">
-                        {propertyTypes?.data?.find(type => type.id === property.property_type_id)?.name || property.property_type_id}
+                        {normalizeStayPropertyTypeLabel(
+                          propertyTypes?.data?.find(type => type.id === property.property_type_id)?.name
+                        ) || property.property_type_id}
                       </span>
                     </div>
                   </div>
@@ -616,7 +535,11 @@ const Properties: React.FC = () => {
 
             <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isPropertyExpanded(String(property.id)) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="p-6">
-              {propertyRooms.length > 0 ? (
+              {isRoomPreviewLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Spinner size="sm" showText text="Đang tải phòng..." className="flex-row items-center gap-2" />
+                </div>
+              ) : propertyRooms.length > 0 ? (
                 <>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {previewRooms.map(room => (
@@ -750,7 +673,7 @@ const Properties: React.FC = () => {
                           type="button" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteRoom(String(room.id));
+                            handleDeleteRoom(String(room.id), propertyId);
                           }} 
                           variant="ghost" 
                           size="sm" 
@@ -802,7 +725,7 @@ const Properties: React.FC = () => {
                   <Plus size={32} />
                </div>
                <h3 className="text-xl font-bold text-gray-800">Bạn chưa có tài sản nào</h3>
-               <p className="mt-2 text-gray-500">Bắt đầu bằng việc thêm khách sạn, nhà nghỉ, căn hộ dịch vụ hoặc homestay đầu tiên của bạn.</p>
+              <p className="mt-2 text-gray-500">Bắt đầu bằng việc thêm khách sạn, nhà nghỉ, căn hộ / căn hộ dịch vụ hoặc homestay đầu tiên của bạn.</p>
                <Button type="button" onClick={handleAddProperty} className="mt-6 h-10 bg-blue-600 px-6 font-bold text-white hover:bg-blue-700">Thêm ngay Bất động sản</Button>
              </>
            ) : (
@@ -875,11 +798,11 @@ const Properties: React.FC = () => {
             </Button>
             <Button 
               variant="destructive"
-              disabled={deleteConfirmText !== 'XÁC NHẬN XÓA' || loading}
+              disabled={deleteConfirmText !== 'XÁC NHẬN XÓA' || isBulkDeleting}
               onClick={executeBulkDelete}
               className="bg-rose-600 font-bold hover:bg-rose-700 disabled:opacity-30"
             >
-              {loading ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
+              {isBulkDeleting ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
               Xác nhận xóa vĩnh viễn
             </Button>
           </div>
@@ -928,6 +851,9 @@ const Properties: React.FC = () => {
                 await partnerService.updateRoom(String(editingRoom.id), data);
               } else {
                 await partnerService.createRoom(data);
+              }
+              if (targetPropertyId) {
+                void invalidatePreview(targetPropertyId);
               }
               reloadPropertyList();
               setIsRoomModalOpen(false);
@@ -1081,7 +1007,7 @@ const PropertyModal: React.FC<{
               >
                 <option value={0}>Chọn loại hình</option>
                 {propertyTypes.map(type => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
+                  <option key={type.id} value={type.id}>{normalizeStayPropertyTypeLabel(type.name)}</option>
                 ))}
               </select>
             </div>

@@ -260,7 +260,7 @@ const ChatPage: React.FC = () => {
                <div className="flex-1 space-y-6 overflow-y-auto bg-slate-50/20 p-6">
                   {loading ? (
                      <div className="flex h-full items-center justify-center">
-                        <Spinner size="sm" spinnerClassName="border-y-blue-600" />
+                        <Spinner size="sm" />
                      </div>
                   ) : (
                      messages.map((msg) => {

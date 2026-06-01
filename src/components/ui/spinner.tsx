@@ -35,7 +35,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
     >
       <div 
         className={cn(
-          "animate-spin rounded-full border-x-transparent border-y-indigo-600 dark:border-y-indigo-400", 
+          "animate-spin rounded-full border-x-transparent border-t-primary border-b-sky-600 dark:border-b-sky-400", 
           sizeMap[size],
           spinnerClassName
         )} 

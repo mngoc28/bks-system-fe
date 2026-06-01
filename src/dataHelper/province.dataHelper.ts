@@ -86,8 +86,9 @@ export interface ProvinceCarouselProps {
   className?: string;
   heading?: string;
   description?: string;
-    ctaLabel?: string;
-    ctaHref?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  loading?: boolean;
 }
 
 export interface ProvinceTableProps {

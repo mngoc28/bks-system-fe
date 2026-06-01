@@ -50,6 +50,7 @@ export interface PropertyDetail {
 }
 
 export interface SearchPropertyRequest {
+  partner_id?: number | null;
   name?: string | null;
   area_max?: number | null;
   area_min?: number | null;
@@ -87,6 +88,7 @@ export interface PropertyListDataResponse {
 export interface PropertyType {
   id: number;
   name: string;
+  slug?: string;
 }
 export interface PaginationLink {
   url: string | null;

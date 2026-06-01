@@ -1,4 +1,4 @@
-import Pagination from "@/components/Pagination";
+﻿import Pagination from "@/components/Pagination";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import type { ProvinceFilter, Provinces } from "@/dataHelper/province.dataHelper";
 import { useGetAllProvinces } from "@/hooks/useProvinceQuery";
@@ -90,7 +90,7 @@ const ProvinceManage: React.FC = () => {
           <div className="relative min-w-[280px] flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <input
-              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
               value={filters.name}
               onChange={(e) => setFilters((s) => ({ ...s, name: e.target.value }))}
               placeholder={t("province.search_placeholder")}

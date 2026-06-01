@@ -13,12 +13,12 @@ export const statusColor: Record<string, string> = {
  * @param status number
  * @returns {status: string, color: string}
  */
-export function statusNews(status: number): {status: string, color: string} {
+export function statusNews(status: number): { status: string, color: string } {
   switch (status) {
-    case 0: return {status: "news.status_draft", color: "bg-yellow-50 text-yellow-700"};
-    case 1: return {status: "news.status_published", color: "bg-primary/10 text-primary"};
-    case 2: return {status: "news.status_archived", color: "bg-red-50 text-red-700"};
-    default: return {status: "news.status_draft", color: "bg-yellow-50 text-yellow-700"};
+    case 0: return { status: "news.status_draft", color: "bg-yellow-50 text-yellow-700" };
+    case 1: return { status: "news.status_published", color: "bg-primary/10 text-primary" };
+    case 2: return { status: "news.status_archived", color: "bg-red-50 text-red-700" };
+    default: return { status: "news.status_draft", color: "bg-yellow-50 text-yellow-700" };
   }
 }
 
@@ -136,12 +136,7 @@ export const formatDateTimeLocal = (date: Date): string => {
  * @param val string value from input field (raw digits)
  * @returns formatted string with thousand separators
  */
-export function formatCurrencyInput(val: string | number | undefined | null): string {
-  if (val === undefined || val === null || val === '') return '';
-  const stringValue = val.toString().replace(/\D/g, '');
-  if (!stringValue) return '';
-  return stringValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
+export { formatCurrencyInput, parseCurrencyValue } from "@/utils/currencyUtils";
 
 /**
  * Validate and clean currency input value by removing separators.
@@ -157,18 +152,6 @@ export function validateCurrencyInput(value: string): string | null {
   }
   return null;
 };
-
-/**
- * Parse formatted currency string (with dots) to raw number.
- * Example: "1.000.000" -> 1000000
- * @param formattedValue string with separators
- * @returns number
- */
-export function parseCurrencyValue(formattedValue: string | undefined | null): number {
-  if (!formattedValue) return 0;
-  const cleaned = formattedValue.toString().replace(/\D/g, '');
-  return cleaned ? parseInt(cleaned, 10) : 0;
-}
 
 /**
  * Highlight search text within a given string.
@@ -202,4 +185,43 @@ export function appendImageField(formData: FormData, key: string, value?: File |
   } else if (value === 'delete') {
     formData.append(key, 'delete');
   }
+}
+
+/**
+ * Format a phone number to standard "0987 654 321" or "+84 987 654 321" format.
+ * @param phone string
+ * @returns string
+ */
+export function formatPhoneNumber(phone?: string | null): string {
+  if (!phone) return "-";
+  const cleaned = phone.replace(/\D/g, ""); // remove non-digits
+
+  if (cleaned.length === 10) {
+    return cleaned.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
+  } else if (cleaned.length === 11 && cleaned.startsWith("84")) {
+    return `+84 ${cleaned.slice(2).replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3")}`;
+  } else if (cleaned.length > 0) {
+    return phone;
+  }
+  return "-";
+}
+
+/**
+ * Formats a province name to include 'thành phố' prefix for municipalities.
+ * @param name string
+ * @returns string
+ */
+export function formatProvinceName(name?: string | null): string {
+  if (!name) return "";
+  const cleanName = name.trim();
+  const lower = cleanName.toLowerCase();
+
+  const cities = ["hồ chí minh", "hà nội", "đà nẵng", "hải phòng", "cần thơ"];
+  if (cities.includes(lower)) {
+    if (lower === "hồ chí minh") {
+      return "TP. Hồ Chí Minh";
+    }
+    return `thành phố ${cleanName}`;
+  }
+  return cleanName;
 }

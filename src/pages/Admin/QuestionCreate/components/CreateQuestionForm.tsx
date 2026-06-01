@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+﻿import { useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -105,7 +105,7 @@ const CreateQuestionForm = ({ defaultValues, onSubmit, isSubmitting, submitLabel
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-primary/10 shadow-sm">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg font-semibold text-slate-800">{t("questions.create.basic_information")}</CardTitle>
         </CardHeader>
@@ -182,7 +182,7 @@ const CreateQuestionForm = ({ defaultValues, onSubmit, isSubmitting, submitLabel
       </Card>
 
       {typeValue === 0 && (
-        <Card className="border-blue-100 shadow-sm">
+        <Card className="border-primary/10 shadow-sm">
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-lg font-semibold text-slate-800">{t("questions.create.answers_section")}</CardTitle>
             <Button type="button" variant="outline" size="sm" onClick={handleAddAnswer} className="flex w-full items-center justify-center gap-2 sm:w-auto">

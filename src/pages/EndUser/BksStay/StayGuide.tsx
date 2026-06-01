@@ -13,7 +13,8 @@ import {
   Lock,
   FlameKindling,
   Phone,
-  Info
+  Info,
+  Minus
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,26 @@ const categories = [
 const StayGuide = () => {
   const [activeCat, setActiveCat] = useState("rules");
   const [searchQuery, setSearchQuery] = useState("");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      q: "Làm thế nào để nhận Phiếu xác nhận lưu trú (Voucher) để check-in?",
+      a: "Sau khi đặt phòng thành công và được Partner xác nhận, bạn hãy vào mục 'Lịch sử đặt phòng' -> Chọn đơn đặt phòng tương ứng -> Nhấn nút 'Nhận phiếu xác nhận'. Tại đây, bạn có thể nhấn 'Tải ảnh (PNG)' để lưu vào thư viện ảnh điện thoại hoặc nhấn 'In phiếu / Xem trước' để xem và in trực tiếp nhằm xuất trình khi nhận phòng."
+    },
+    {
+      q: "Tôi có thể check-in sớm hoặc check-out muộn không?",
+      a: "Giờ nhận phòng tiêu chuẩn là 14:00 và trả phòng trước 12:00. Nếu có nhu cầu thay đổi, bạn có thể liên hệ trực tiếp với Partner (Chủ phòng) qua số điện thoại hiển thị trong đơn đặt phòng để thỏa thuận cụ thể tùy thuộc vào tình trạng phòng trống."
+    },
+    {
+      q: "Tôi có cần ký hợp đồng giấy khi đặt phòng ngắn hạn không?",
+      a: "Không. Hệ thống áp dụng cơ chế xác nhận điện tử tự động (Auto-signed) cho đặt phòng ngắn hạn. Bạn chỉ cần xuất trình Phiếu xác nhận lưu trú (Stay Confirmation Voucher) trên Stay Portal cho lễ tân khi check-in."
+    },
+    {
+      q: "Làm thế nào để xem lại lịch sử đặt phòng của mình?",
+      a: "Bạn đăng nhập vào Stay Portal, chọn mục 'Lịch sử đặt phòng' trên menu điều hướng để xem toàn bộ danh sách các booking sắp diễn ra, đang hoạt động hoặc đã hoàn thành."
+    }
+  ];
 
   const content = {
     rules: [
@@ -133,25 +154,35 @@ const StayGuide = () => {
               ))}
            </div>
 
-           {/* FAQ Placeholder */}
-           <div className="mt-12">
-              <div className="mb-6 flex items-center justify-between px-2">
-                 <h3 className="text-xl font-black italic text-slate-900">Câu hỏi <span className="not-italic text-sky-600">thường gặp</span></h3>
-                 <button className="text-xs font-bold text-sky-600 hover:underline">Xem thêm</button>
-              </div>
-              <div className="space-y-3">
-                 {[
-                   "Tôi có thể checkout muộn không?",
-                   "Giá tiền giặt là được tính như thế nào?",
-                   "Làm sao để gọi taxi từ hầm đỗ xe?"
-                 ].map((q, i) => (
-                   <div key={i} className="group flex cursor-pointer items-center justify-between rounded-2xl border border-slate-100 bg-white p-5 hover:border-sky-100">
-                      <p className="text-sm font-bold text-slate-700">{q}</p>
-                      <Plus className="size-4 text-slate-300 transition-colors group-hover:text-sky-600" />
-                   </div>
-                 ))}
-              </div>
-           </div>
+            {/* FAQ Accordion */}
+            <div className="mt-12">
+               <div className="mb-6 flex items-center justify-between px-2">
+                  <h3 className="text-xl font-black italic text-slate-900">Câu hỏi <span className="not-italic text-sky-600">thường gặp</span></h3>
+               </div>
+               <div className="space-y-3">
+                  {faqs.map((faq, i) => (
+                    <div 
+                      key={i} 
+                      onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                      className="group flex flex-col cursor-pointer rounded-2xl border border-slate-100 bg-white p-5 transition-all duration-300 hover:border-sky-100 hover:shadow-sm"
+                    >
+                       <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-slate-700">{faq.q}</p>
+                          {openFaq === i ? (
+                            <Minus className="size-4 text-sky-600 shrink-0" />
+                          ) : (
+                            <Plus className="size-4 text-slate-300 transition-colors group-hover:text-sky-600 shrink-0" />
+                          )}
+                       </div>
+                       {openFaq === i && (
+                          <p className="mt-3 text-xs leading-relaxed text-slate-500 border-t border-slate-50 pt-3 animate-in fade-in duration-300">
+                             {faq.a}
+                          </p>
+                       )}
+                    </div>
+                  ))}
+               </div>
+            </div>
         </div>
       </div>
     </div>

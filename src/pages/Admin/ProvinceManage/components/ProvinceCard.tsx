@@ -23,15 +23,15 @@ const ProvinceCard: React.FC<ProvinceCardProps> = ({ province, onView }) => {
       onClick={() => onView(province.id)}
     >
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner dark:bg-primary/20">
           <MapPin className="size-5" />
         </div>
-        <Badge className="border-none bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+        <Badge className="border-none bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
           #{province.id}
         </Badge>
       </div>
 
-      <h3 className="mb-1 text-lg font-black text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100">
+      <h3 className="mb-1 text-lg font-black text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100">
         {province.name}
       </h3>
       <p className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">{province.name_en}</p>

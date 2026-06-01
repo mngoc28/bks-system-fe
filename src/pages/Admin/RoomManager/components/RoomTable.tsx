@@ -7,7 +7,7 @@ import type { Room } from "@/dataHelper/room.dataHelper";
 import { RoomTableProps } from "@/dataHelper/room.dataHelper";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
-import { ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, X } from "lucide-react";
+import { Building2, CalendarDays, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, User, X } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -22,6 +22,9 @@ const RoomTable: React.FC<RoomTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  onViewProperty,
+  onViewBookings,
+  onViewPartner,
   getPropertyName,
   getRoomTypeName,
   sort,
@@ -32,7 +35,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
   const { t } = useTranslation();
   return (
     <div className="flex flex-1 flex-col">
-      <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+      <div className="admin-table-wrap admin-table">
         <Table className="min-w-max text-sm text-slate-700">
           <TableHeader className="sticky top-0 z-10 bg-slate-100">
             <tr className="border-b border-gray-300">
@@ -167,7 +170,34 @@ const RoomTable: React.FC<RoomTableProps> = ({
                   </span>
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle">
-                  <RowActions id={room.id.toString()} onView={onView} onEdit={onEdit} onDelete={() => onDelete(room)} />
+                  <RowActions
+                    id={room.id.toString()}
+                    viewLabel={t("adminCrossNav.view_room")}
+                    editLabel={t("adminCrossNav.edit")}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={() => onDelete(room)}
+                    customActions={[
+                      ...(onViewProperty ? [{
+                        key: `room-property-${room.id}`,
+                        label: t("adminCrossNav.view_property"),
+                        icon: <Building2 className="size-4" />,
+                        onClick: () => onViewProperty(room),
+                      }] : []),
+                      ...(onViewBookings ? [{
+                        key: `room-bookings-${room.id}`,
+                        label: t("adminCrossNav.bookings"),
+                        icon: <CalendarDays className="size-4" />,
+                        onClick: () => onViewBookings(room),
+                      }] : []),
+                      ...(onViewPartner && room.partner_id ? [{
+                        key: `room-partner-${room.id}`,
+                        label: t("adminCrossNav.partner_profile"),
+                        icon: <User className="size-4" />,
+                        onClick: () => onViewPartner(room),
+                      }] : []),
+                    ]}
+                  />
                 </TableCell>
               </TableRow>
             ))}

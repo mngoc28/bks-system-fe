@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { ROUTERS } from "@/constant";
@@ -33,7 +33,7 @@ const ResetPassword: React.FC = () => {
               name="password"
               type="password"
               required
-              className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
               placeholder={t("auth.new_password")}
             />
           </div>
@@ -47,7 +47,7 @@ const ResetPassword: React.FC = () => {
               name="confirmPassword"
               type="password"
               required
-              className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
               placeholder={t("auth.confirm_password")}
             />
           </div>
@@ -55,14 +55,14 @@ const ResetPassword: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="group relative flex w-full justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               {t("auth.reset_password")}
             </button>
           </div>
 
           <div className="text-center">
-            <Link to={ROUTERS.LOGIN} className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to={ROUTERS.LOGIN} className="font-medium text-primary hover:text-primary">
               {t("auth.back_to_login")}
             </Link>
           </div>

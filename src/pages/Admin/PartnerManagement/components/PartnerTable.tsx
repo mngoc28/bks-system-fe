@@ -1,11 +1,13 @@
+﻿import AdminUserProfileLink from "@/components/admin/AdminUserProfileLink";
 import RowActions from "@/components/RowActions/RowActions"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant"
 import { PartnerTableProps } from "@/dataHelper/partner.dataHelper"
+import { buildAdminUrl, toBookingsByPartner, toPropertiesByPartner, toRoomsByPartner } from "@/utils/adminNavigation";
 import { resolveImageUrl } from "@/utils/imageUtils"
 import { highlightText } from "@/utils/utils"
 import { t } from "i18next"
-import { ChevronDown, ChevronsUpDown, ChevronUp, ImageIcon } from "lucide-react"
+import { BedDouble, Building2, CalendarDays, ChevronDown, ChevronsUpDown, ChevronUp, ImageIcon, User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 /**
@@ -21,7 +23,7 @@ const PartnerTable: React.FC<PartnerTableProps> = ({
 
     return (
         <div className="flex flex-1 flex-col">
-            <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+            <div className="w-full overflow-auto rounded-xl border border-primary/10 bg-white shadow-sm">
                 <Table className="min-w-max text-sm text-slate-700">
                     <TableHeader className="sticky top-0 z-10 bg-slate-100">
                         <tr className="border-b border-gray-300">
@@ -145,7 +147,11 @@ const PartnerTable: React.FC<PartnerTableProps> = ({
                                     )}
                                 </TableCell>
                                 <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(partner.company_name || "", filters.company_name || "")}</TableCell>
-                                <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(partner.user_name || "", filters.user_name || "")}</TableCell>
+                                <TableCell className="px-4 py-3 align-middle text-slate-700">
+                                    <AdminUserProfileLink userId={partner.user_id}>
+                                        {highlightText(partner.user_name || "-", filters.user_name || "")}
+                                    </AdminUserProfileLink>
+                                </TableCell>
                                 <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(partner.province_name || "", filters.province_name || "")}</TableCell>
                                 <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(partner.ward_name || "", filters.ward_name || "")}</TableCell>
                                 <TableCell className="px-4 py-3 align-middle text-slate-700">{highlightText(partner.address || "-", filters.address || "")}</TableCell>
@@ -153,8 +159,40 @@ const PartnerTable: React.FC<PartnerTableProps> = ({
                                 <TableCell className="px-4 py-3 align-middle text-slate-700">
                                     <RowActions
                                         id={partner.id.toString()}
+                                        viewLabel={t("adminCrossNav.view_profile")}
+                                        editLabel={t("adminCrossNav.edit")}
                                         onView={(id) => navigate(`${ROUTERS.PARTNER_MANAGEMENT}/detail/${id}`)}
                                         onEdit={(id) => navigate(`${ROUTERS.PARTNER_MANAGEMENT}/edit/${id}`)}
+                                        customActions={[
+                                            {
+                                                key: "partner-properties",
+                                                label: t("adminCrossNav.properties"),
+                                                icon: <Building2 className="size-4" />,
+                                                onClick: () => navigate(buildAdminUrl(ROUTERS.PROPERTIES, toPropertiesByPartner(partner.id, "partner-management", partner.company_name || partner.user_name))),
+                                            },
+                                            {
+                                                key: "partner-rooms",
+                                                label: t("adminCrossNav.rooms"),
+                                                icon: <BedDouble className="size-4" />,
+                                                onClick: () => navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name))),
+                                            },
+                                            {
+                                                key: "partner-bookings",
+                                                label: t("adminCrossNav.bookings"),
+                                                icon: <CalendarDays className="size-4" />,
+                                                onClick: () => navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name))),
+                                            },
+                                            ...(partner.user_id
+                                                ? [
+                                                    {
+                                                        key: "partner-user-profile",
+                                                        label: t("adminCrossNav.user_account"),
+                                                        icon: <User className="size-4" />,
+                                                        onClick: () => navigate(`${ROUTERS.USER_DETAIL}/${partner.user_id}`),
+                                                    },
+                                                ]
+                                                : []),
+                                        ]}
                                     />
                                 </TableCell>
                             </TableRow>

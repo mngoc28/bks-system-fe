@@ -2,8 +2,8 @@ import Header from "@/components/Header";
 import { ROUTERS } from "@/constant";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 import { MenuItem } from "@/shared/types";
-import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench, ShieldCheck, CircleDollarSign } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router";
 import { useLocation } from "react-router-dom";
@@ -38,6 +38,7 @@ const Layout = () => {
       "service-management:view",
       "news:view",
       "partner-management:view",
+      "partner-settlement:view",
     ]));
     setIsLoading(false);
   }, []);
@@ -51,7 +52,6 @@ const Layout = () => {
       id: "header-general",
       isHeader: true,
       label: t("menu.header_general"),
-      permissionKey: "dashboard:view",
     },
     {
       id: "dashboard",
@@ -61,10 +61,9 @@ const Layout = () => {
       icon: <House />,
     },
     {
-      id: "header-system",
+      id: "header-partner",
       isHeader: true,
-      label: t("menu.header_system"),
-      permissionKey: "partner-management:view",
+      label: t("menu.header_partner"),
     },
     {
       id: "partner-information",
@@ -76,9 +75,14 @@ const Layout = () => {
     {
       id: "partner-approval",
       permissionKey: "partner-management:view",
-      label: t("menu.partner_approval", { defaultValue: "Duyệt đối tác" }),
+      label: t("menu.partner_approval"),
       path: ROUTERS.PARTNER_APPROVAL,
       icon: <ShieldCheck />,
+    },
+    {
+      id: "header-accommodation",
+      isHeader: true,
+      label: t("menu.header_accommodation"),
     },
     {
       id: "properties",
@@ -102,6 +106,11 @@ const Layout = () => {
       icon: <Calendar />,
     },
     {
+      id: "header-catalog-content",
+      isHeader: true,
+      label: t("menu.header_catalog_content"),
+    },
+    {
       id: "amenities",
       permissionKey: "amenities:view",
       label: t("menu.amenities"),
@@ -116,13 +125,6 @@ const Layout = () => {
       icon: <Cog />,
     },
     {
-      id: "news-management",
-      permissionKey: "news:view",
-      label: t("menu.news"),
-      path: ROUTERS.NEWS,
-      icon: <Newspaper />,
-    },
-    {
       id: "province-manage",
       permissionKey: "province-manage:view",
       label: t("menu.province-management"),
@@ -130,11 +132,35 @@ const Layout = () => {
       icon: <MapPinned className="size-5" />,
     },
     {
+      id: "news-management",
+      permissionKey: "news:view",
+      label: t("menu.news"),
+      path: ROUTERS.NEWS,
+      icon: <Newspaper />,
+    },
+    {
       id: "question-management",
       permissionKey: "question-management:view",
-      label: t("menu.chatbot", { defaultValue: "Chatbot" }),
+      label: t("menu.chatbot"),
       path: ROUTERS.QUESTION_MANAGEMENT,
       icon: <BotIcon className="size-5" />,
+    },
+    {
+      id: "header-finance",
+      isHeader: true,
+      label: t("menu.header_finance"),
+    },
+    {
+      id: "settlements",
+      permissionKey: "partner-settlement:view",
+      label: t("menu.settlements"),
+      path: ROUTERS.PARTNER_SETTLEMENTS,
+      icon: <CircleDollarSign />,
+    },
+    {
+      id: "header-system",
+      isHeader: true,
+      label: t("menu.header_system"),
     },
     {
       id: "user-management",
@@ -178,12 +204,43 @@ const Layout = () => {
       return t("menu.service");
     }
     if (pathName.includes(ROUTERS.PARTNER_APPROVAL)) {
-      return t("menu.partner_approval", { defaultValue: "Phê duyệt đối tác" });
+      return t("menu.partner_approval");
+    }
+    if (pathName.includes(ROUTERS.PARTNER_SETTLEMENTS)) {
+      return t("menu.settlements");
     }
     if (pathName.includes(ROUTERS.PARTNER_MANAGEMENT)  || pathName.includes(ROUTERS.PARTNER_DETAIL) || pathName.includes(ROUTERS.PARTNER_EDIT)) {
       return t("menu.partner");
     }
     return t("menu.dashboard");
+
+  };
+
+  const stripOrphanMenuHeaders = (items: MenuItem[]): MenuItem[] => {
+    const result: MenuItem[] = [];
+
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+
+      if (!item.isHeader) {
+        result.push(item);
+        continue;
+      }
+
+      const hasFollowingItem = items.slice(index + 1).some((nextItem) => {
+        if (nextItem.isHeader) {
+          return false;
+        }
+
+        return true;
+      });
+
+      if (hasFollowingItem) {
+        result.push(item);
+      }
+    }
+
+    return result;
   };
 
   /**
@@ -191,18 +248,22 @@ const Layout = () => {
    * @param menuItems The menu items to filter.
    * @param permissions The set of allowed permission keys.
    */
-  const filterMenuItemsByPermissions = (menuItems: MenuItem[], permissions: Set<string>): MenuItem[] =>
-    menuItems
-      .filter((item) => item.permissionKey && permissions.has(item.permissionKey))
+  const filterMenuItemsByPermissions = (menuItems: MenuItem[], permissions: Set<string>): MenuItem[] => {
+    const filteredItems = menuItems
+      .filter((item) => item.isHeader || (item.permissionKey && permissions.has(item.permissionKey)))
       .map((item) => ({
         ...item,
         children: item.children ? filterMenuItemsByPermissions(item.children, permissions) : undefined,
       }))
       .filter((item) => !item.children || item.children.length > 0);
+
+    return stripOrphanMenuHeaders(filteredItems);
+  };
+
   const filteredMenuItems = filterMenuItemsByPermissions(menuItems, permissions);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <div className="admin-shell flex h-screen flex-col overflow-hidden">
       <main className="flex flex-1 overflow-hidden">
         <ClassSidebar
           classInfo={classInfo}
@@ -212,9 +273,12 @@ const Layout = () => {
         />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header pageTitle={getpageTitle(location.pathname)} />
-          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6 lg:p-8">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl space-y-6">
-              <Outlet />
+              {/* fallback=null: tránh 2 spinner (suspense + trang con); trang con tự hiển thị loader */}
+              <Suspense fallback={null}>
+                <Outlet />
+              </Suspense>
             </div>
           </div>
         </div>

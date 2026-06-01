@@ -1,10 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DeleteNewsDialogProps } from "@/dataHelper/news.dataHelper";
 import { statusNews } from "@/utils/utils";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Delete News Dialog
@@ -69,7 +70,7 @@ const DeleteNewsDialog: React.FC<DeleteNewsDialogProps> = ({ news, isOpen, onClo
           <Button type="button" variant="outline" onClick={handleConfirm} disabled={isLoading} className="flex-1 border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700">
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Spinner size="sm" />
                 {t("news.delete_news_dialog.confirm_delete_loading")}
               </>
             ) : (

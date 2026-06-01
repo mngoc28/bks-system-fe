@@ -78,6 +78,7 @@ export interface Room {
   status: 'Trống' | 'Đang thuê' | 'Đang bảo trì';
   reviews_count?: number;
   reviews_avg_rating?: number;
+  province_id?: number;
 }
 
 export interface Booking {

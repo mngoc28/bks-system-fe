@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ROUTERS } from "@/constant";
 import { useGetUserByIdQuery } from "@/hooks/useUserQuery";
-import { Loader2 } from "lucide-react";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -44,13 +44,8 @@ const UserDetail: React.FC = () => {
     );
   }
 
-  // Loading state
   if (isUserLoading) {
-    return (
-      <div className="flex items-center justify-center p-3 sm:p-6">
-        <Loader2 className="size-8 animate-spin text-blue-500" />
-      </div>
-    );
+    return <AdminContentLoader text={t("common.loading_data")} />;
   }
 
   // Error state

@@ -8,12 +8,20 @@ import { Label } from "@/components/ui/label";
 import { PlainTextarea as Textarea } from "@/components/ui/textarea";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { BookingDaysRow } from "@/components/common/BookingDaysDisplay";
+import {
+  computeBookingServicesTotal,
+  formatPriceUnitLabel,
+  getPrimaryDayPackagePrice,
+  resolveStayPriceQuote,
+} from "@/utils/bookingAmount";
+import { countBookingDaysInclusive, formatBookingDaysCount, formatRoomRentalLineLabel } from "@/utils/dateUtils";
 import { formatCurrencyInput } from "@/utils/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { ServiceItem } from "@/dataHelper/EU/booking.dataHelper";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -62,14 +70,9 @@ const BookingPage = () => {
     const navigate = useNavigate();
     const { roomId } = useParams<{ roomId: string }>();
     const id = Number(roomId);
-
-    const getNumberOfNights = (startDate: string, endDate: string) => {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const diffMs = end.getTime() - start.getTime();
-        const nights = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        return nights > 0 ? nights : 1;
-    };
+    const [searchParams] = useSearchParams();
+    const queryStartDate = searchParams.get("startDate") || "";
+    const queryEndDate = searchParams.get("endDate") || "";
 
     const schema = bookingUserFormSchema(t);
     type BookingFormData = z.infer<typeof schema>;
@@ -89,8 +92,8 @@ const BookingPage = () => {
             name: "",
             email: "",
             phone: "",
-            start_date: "",
-            end_date: "",
+            start_date: queryStartDate,
+            end_date: queryEndDate,
             note: "",
             service_ids: [],
         },
@@ -117,9 +120,25 @@ const BookingPage = () => {
         },
         onSuccess: (apiBody, variables) => {
             const payload = apiBody?.data as PublicBookingSummary | undefined;
+            const quote = resolveStayPriceQuote(variables.start_date, variables.end_date, {
+                allPrices: room?.all_prices,
+                cheapestDailyPrice: room?.cheapest_daily_price,
+            });
+            const serviceTotal = computeBookingServicesTotal(
+                services.filter((s) => (variables.service_ids ?? []).includes(s.id)).map(s => ({ price: Number(s.price) })),
+            );
+            const roomStayTotal =
+                payload?.room_stay_amount != null
+                    ? Number(payload.room_stay_amount)
+                    : quote.roomStayTotal;
+            const servicesTotal =
+                payload?.services_total != null ? Number(payload.services_total) : serviceTotal;
+            const totalPrice =
+                Number(payload?.total_amount ?? 0) > 0
+                    ? Number(payload?.total_amount)
+                    : roomStayTotal + servicesTotal;
 
             if (payload?.booking_id && room) {
-                const totalPrice = Number(payload.total_amount ?? 0);
                 toastSuccess(t("booking.success"));
                 navigate(ROUTERS.BOOKING_SUCCESS, {
                     state: {
@@ -133,14 +152,16 @@ const BookingPage = () => {
                         startDate: payload.start_date,
                         endDate: payload.end_date,
                         totalPrice,
+                        roomStayTotal,
+                        servicesTotal,
+                        unitPrice: payload.unit_price ?? quote.price,
+                        priceUnit: payload.price_unit ?? quote.unit,
                     },
                 });
                 return;
             }
 
             if (room) {
-                const numberOfNights = getNumberOfNights(variables.start_date, variables.end_date);
-                const totalPrice = Number(room.cheapest_daily_price || 0) * numberOfNights;
                 toastSuccess(t("booking.success"));
                 navigate(ROUTERS.BOOKING_SUCCESS, {
                     state: {
@@ -152,6 +173,10 @@ const BookingPage = () => {
                         startDate: variables.start_date,
                         endDate: variables.end_date,
                         totalPrice,
+                        roomStayTotal,
+                        servicesTotal,
+                        unitPrice: quote.price,
+                        priceUnit: quote.unit,
                     },
                 });
                 return;
@@ -219,7 +244,7 @@ const BookingPage = () => {
     if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
-                <Spinner size="lg" spinnerClassName="border-y-sky-600" />
+                <Spinner size="lg" />
             </div>
         );
     }
@@ -232,9 +257,19 @@ const BookingPage = () => {
             ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.images[0].image_url}`
             : "");
 
-    const numberOfNights = startDate && endDate ? getNumberOfNights(startDate, endDate) : 1;
-    const roomTotal = Number(room.cheapest_daily_price || 0) * numberOfNights;
-    const serviceTotal = selectedServices.reduce((sum, service) => sum + Number(service.price || 0), 0);
+    const hasStayDates = Boolean(startDate && endDate);
+    const priceQuote = hasStayDates
+            ? resolveStayPriceQuote(startDate, endDate, {
+                  allPrices: room.all_prices,
+                  cheapestDailyPrice: room.cheapest_daily_price,
+              })
+            : null;
+    const defaultPackage = getPrimaryDayPackagePrice(room.all_prices, room.cheapest_daily_price);
+    const bookingDays = priceQuote?.days ?? 0;
+    const roomTotal = priceQuote?.roomStayTotal ?? 0;
+    const priceUnit = priceQuote?.unit ?? defaultPackage.unit;
+    const unitPrice = priceQuote?.price ?? defaultPackage.price;
+    const serviceTotal = computeBookingServicesTotal(selectedServices.map(s => ({ price: Number(s.price) })));
     const estimatedTotal = roomTotal + serviceTotal;
 
     return (
@@ -243,7 +278,29 @@ const BookingPage = () => {
 
             {/* Booking Header */}
             <div className="relative overflow-hidden bg-slate-950 text-white">
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
+                {/* Background scenic image */}
+                <div className="absolute inset-0 -z-10 overflow-hidden">
+                  <img
+                    src={roomImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=75"}
+                    alt="hero background"
+                    className="h-full w-full object-cover"
+                    style={{ opacity: 0.35 }}
+                  />
+                </div>
+                {/* Multi-layer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
+                {/* Ambient glow orbs */}
+                <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-sky-600/15 blur-3xl" />
+                <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl" />
+                {/* Dot pattern */}
+                <div
+                  className="absolute inset-0 opacity-[0.07]"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
+                    backgroundSize: '16px 16px',
+                  }}
+                />
                 <div className="relative mx-auto w-full max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
                     {/* Main Title */}
                     <h1 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
@@ -339,9 +396,31 @@ const BookingPage = () => {
                                 <div className="flex w-full flex-col justify-between p-4 pl-6 md:w-3/5">
                                     <CardHeader className="mb-2 p-0">
                                         <CardTitle className="text-2xl text-slate-900">{room.title}</CardTitle>
-                                        <p className="mt-2 text-2xl font-bold text-sky-600">
-                                            {formatCurrencyInput(room.cheapest_daily_price?.toString() ?? "0")} {t("booking.money_unit")} <span className="text-base font-normal text-slate-500">{t("booking.unit")}</span>
-                                        </p>
+                                        <div className="mt-2">
+                                            {hasStayDates ? (
+                                              <>
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tổng tạm tính</p>
+                                                <p className="text-2xl font-bold text-sky-600">
+                                                  {formatCurrencyInput(estimatedTotal.toString())}{" "}
+                                                  <span className="text-base font-bold uppercase">{t("booking.money_unit")}</span>
+                                                </p>
+                                                <BookingDaysRow days={bookingDays} className="mt-2" />
+                                                <p className="mt-1 text-sm text-slate-500">
+                                                  {formatRoomRentalLineLabel(bookingDays, priceUnit)} ·{" "}
+                                                  {formatCurrencyInput(String(unitPrice))} / {formatPriceUnitLabel(priceUnit)}
+                                                </p>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Đơn giá thuê</p>
+                                                <p className="text-2xl font-bold text-sky-600">
+                                                  {formatCurrencyInput(String(unitPrice))}{" "}
+                                                  <span className="text-base font-normal text-slate-500">/ {formatPriceUnitLabel(priceUnit)}</span>
+                                                </p>
+                                                <p className="mt-1 text-sm text-slate-500">Chọn ngày nhận/trả phòng để xem tổng tạm tính</p>
+                                              </>
+                                            )}
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="p-0">
                                         <div className="mb-3 flex items-center justify-between text-slate-600">
@@ -517,13 +596,35 @@ const BookingPage = () => {
                                     <div className="mb-8 overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/50 shadow-sm transition-all hover:shadow-md">
                                         <div className="bg-sky-600 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white flex items-center justify-between">
                                             <span>Tóm tắt đơn hàng</span>
-                                            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px]">{numberOfNights} đêm</span>
+                                            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px]">
+                                                {hasStayDates ? formatBookingDaysCount(bookingDays) : "Chưa chọn ngày"}
+                                            </span>
                                         </div>
                                         <div className="p-5 space-y-4">
+                                            {hasStayDates ? (
+                                                <BookingDaysRow days={bookingDays} />
+                                            ) : (
+                                                <p className="text-xs text-slate-500">Chọn ngày nhận và trả phòng để tính phí lưu trú.</p>
+                                            )}
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex justify-between text-slate-600">
-                                                    <span>Tiền phòng</span>
-                                                    <span className="font-semibold text-slate-900">{formatCurrencyInput(roomTotal.toString())} {t("booking.money_unit")}</span>
+                                                    <span>Đơn giá</span>
+                                                    <span className="font-medium text-slate-800">
+                                                        {formatCurrencyInput(String(unitPrice))}{" "}
+                                                        / {formatPriceUnitLabel(priceUnit)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between text-slate-600">
+                                                    <span>
+                                                        {hasStayDates
+                                                            ? formatRoomRentalLineLabel(bookingDays, priceUnit)
+                                                            : "Phí thuê phòng"}
+                                                    </span>
+                                                    <span className="font-semibold text-slate-900">
+                                                        {hasStayDates
+                                                            ? `${formatCurrencyInput(roomTotal.toString())} ${t("booking.money_unit")}`
+                                                            : "—"}
+                                                    </span>
                                                 </div>
                                                 <div className="flex justify-between text-slate-600">
                                                     <span>Dịch vụ ({selectedServices.length})</span>
@@ -535,8 +636,14 @@ const BookingPage = () => {
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">Tổng cộng tạm tính</span>
                                                     <span className="text-2xl font-black text-sky-600">
-                                                        {formatCurrencyInput(estimatedTotal.toString())}
-                                                        <span className="ml-1 text-sm font-bold uppercase">{t("booking.money_unit")}</span>
+                                                        {hasStayDates ? (
+                                                            <>
+                                                                {formatCurrencyInput(estimatedTotal.toString())}
+                                                                <span className="ml-1 text-sm font-bold uppercase">{t("booking.money_unit")}</span>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-base font-semibold text-slate-400">—</span>
+                                                        )}
                                                     </span>
                                                 </div>
                                                 <div className="flex flex-col items-end text-[10px] text-slate-400 italic">
@@ -696,6 +803,11 @@ const BookingPage = () => {
                                                 <p><span className="font-semibold">Số điện thoại:</span> {previewData?.phone}</p>
                                                 <p><span className="font-semibold">Nhận phòng:</span> {previewData?.start_date}</p>
                                                 <p><span className="font-semibold">Trả phòng:</span> {previewData?.end_date}</p>
+                                                {previewData?.start_date && previewData?.end_date ? (
+                                                    <BookingDaysRow
+                                                        days={countBookingDaysInclusive(previewData.start_date, previewData.end_date)}
+                                                    />
+                                                ) : null}
                                                 {previewData?.note ? <p><span className="font-semibold">Yêu cầu:</span> {previewData.note}</p> : null}
                                             </div>
                                         </div>
@@ -703,8 +815,14 @@ const BookingPage = () => {
                                         <div className="rounded-xl border border-slate-200 bg-white p-4">
                                             <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Tạm tính</h3>
                                             <div className="mt-3 space-y-2 text-sm text-slate-700">
+                                                <div className="flex items-center justify-between text-slate-600">
+                                                    <span>Đơn giá</span>
+                                                    <span className="font-medium">
+                                                        {formatCurrencyInput(String(unitPrice))} / {formatPriceUnitLabel(priceUnit)}
+                                                    </span>
+                                                </div>
                                                 <div className="flex items-center justify-between">
-                                                    <span>Tiền phòng ({numberOfNights} đêm)</span>
+                                                    <span>{formatRoomRentalLineLabel(bookingDays, priceUnit)}</span>
                                                     <span className="font-semibold">{formatCurrencyInput(roomTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -765,9 +883,7 @@ const BookingPage = () => {
                                                 className="flex-1 rounded-full"
                                                 disabled={createBookingMutation.isPending}
                                                 onClick={() => {
-                                                    if (previewData) {
-                                                        onSubmit(previewData);
-                                                    }
+                                                    void handleSubmit(onSubmit)();
                                                 }}
                                             >
                                                 {createBookingMutation.isPending ? t("common.processing") : t("booking.button")}

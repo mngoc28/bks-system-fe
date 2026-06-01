@@ -7,10 +7,10 @@ import { Room } from "@/dataHelper/EU/room.dataHelper";
 import { usePartnerDetailQuery } from "@/hooks/EU/usePartnerQuery";
 import { useRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { resolveImageUrl } from "@/utils/imageUtils";
-import { formatCurrencyInput } from "@/utils/utils";
-import { ArrowRight, ChevronLeft, ChevronRight, Globe, Mail, MapPin, Phone, Users, Star } from "lucide-react";
+import { formatCurrencyInput, formatProvinceName } from "@/utils/utils";
+import { ArrowRight, ChevronLeft, ChevronRight, Globe, Mail, MapPin, Phone, Users, Star, Heart, Share2, Building2, Home } from "lucide-react";
 import { usePartnerReviewsQuery } from "@/hooks/useReviewQuery";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import 'swiper/css';
@@ -18,11 +18,64 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { Spinner } from "@/components/ui/spinner";
+import { toastSuccess, toastError } from "@/components/ui/toast";
+import { getRoomFallbackImage, getPartnerFallbackImage } from "@/utils/fallbackImages";
 
 // Partner Detail Page
 const PartnerDetail = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+
+    const [wishlist, setWishlist] = useState<number[]>(() => {
+        try {
+            const stored = localStorage.getItem("bks_wishlist");
+            return stored ? JSON.parse(stored) : [];
+        } catch {
+            return [];
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem("bks_wishlist", JSON.stringify(wishlist));
+    }, [wishlist]);
+
+    const handleToggleWishlist = (e: React.MouseEvent, roomId: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setWishlist((prev) => {
+            const isAlreadyWishlisted = prev.includes(roomId);
+            if (isAlreadyWishlisted) {
+                toastSuccess("Đã xóa khỏi danh sách yêu thích");
+                return prev.filter((id) => id !== roomId);
+            } else {
+                toastSuccess("Đã thêm vào danh sách yêu thích");
+                return [...prev, roomId];
+            }
+        });
+    };
+
+    const handleShareRoom = (e: React.MouseEvent, roomId: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const url = window.location.origin + ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString());
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                toastSuccess("Đã sao chép liên kết phòng!");
+            })
+            .catch(() => {
+                const textArea = document.createElement("textarea");
+                textArea.value = url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand("copy");
+                    toastSuccess("Đã sao chép liên kết phòng!");
+                } catch {
+                    toastError("Không thể sao chép liên kết!");
+                }
+                document.body.removeChild(textArea);
+            });
+    };
 
     const { partner_id } = useParams<{ partner_id: string }>();
     const partnerId = partner_id ? Number(partner_id) : -1;
@@ -31,7 +84,7 @@ const PartnerDetail = () => {
     const { data: partnerData, isLoading, error } = usePartnerDetailQuery(partnerId);
 
     // call api to get rooms of partner
-    const { data: roomsData } = useRoomsQuery({ partner_id: partnerId }, { enabled: !!partnerId });
+    const { data: roomsData } = useRoomsQuery({ partner_id: partnerId, with_details: true }, { enabled: !!partnerId });
 
     // call api to get partner reviews
     const { data: reviewsData, isLoading: isLoadingReviews } = usePartnerReviewsQuery(partnerId, { enabled: !!partnerId });
@@ -57,6 +110,7 @@ const PartnerDetail = () => {
                     image: room.room_image || "",
                     reviews_count: (room as any).reviews_count ?? 0,
                     reviews_avg_rating: (room as any).reviews_avg_rating ?? 0,
+                    property_type_name: room.property_type_name,
                 });
                 return acc;
             }, {} as Record<string, any[]>)
@@ -75,7 +129,6 @@ const PartnerDetail = () => {
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
                 <Spinner 
                     size="lg" 
-                    spinnerClassName="border-y-sky-600" 
                     showText 
                     text={t("partnerDetail.loading")}
                     className="text-slate-600 font-bold"
@@ -103,33 +156,150 @@ const PartnerDetail = () => {
         <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
             <PublicHeader/>
 
-            {/* Partner Header */}
-            <div className="relative flex min-h-56 items-start overflow-hidden bg-slate-950 pt-12 text-white">
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900/80" />
-                <div className="relative mx-auto w-full max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-                    <div className="text-center">
-                        {/* Company Name */}
-                        <h1 className="animate-fade-in mb-4 text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-                            {partnerData?.company_name ?? ""}
-                        </h1>
+            {/* Partner Hero - 2-column premium layout */}
+            <div className="relative overflow-hidden bg-slate-950 pt-10 pb-10 text-white">
+                {/* Background scenic image */}
+                <div className="absolute inset-0 -z-10 overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1600&q=75"
+                    alt="hero background"
+                    className="h-full w-full object-cover"
+                    style={{ opacity: 0.30 }}
+                  />
+                </div>
+                {/* Multi-layer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
+                {/* Ambient glow effects */}
+                <div className="absolute -left-40 top-0 h-96 w-96 rounded-full bg-sky-600/10 blur-3xl" />
+                <div className="absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+                {/* Dot pattern */}
+                <div
+                    className="absolute inset-0 opacity-[0.07]"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
+                        backgroundSize: '16px 16px',
+                    }}
+                />
 
-                        {/* Subtitle with location */}
-                        <div className="mb-6 flex items-center justify-center gap-2">
-                            <MapPin className="size-6 text-sky-300" />
-                            <p className="text-xl font-light text-slate-200 sm:text-2xl">
-                                {partnerData?.address}, {partnerData?.province_name}
-                            </p>
+                <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-5">
+
+                        {/* LEFT — 3/5 */}
+                        <div className="lg:col-span-3">
+                            {/* Badge */}
+                            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-1.5 text-sm font-semibold text-sky-300">
+                                <Building2 className="size-4" />
+                                Đối tác BKS System
+                            </div>
+
+                            {/* Company Name */}
+                            <h1 className="mb-4 text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl leading-tight">
+                                {partnerData?.company_name ?? ""}
+                            </h1>
+
+                            {/* Location */}
+                            <div className="mb-5 flex items-center gap-2 text-slate-300">
+                                <MapPin className="size-5 shrink-0 text-sky-400" />
+                                <span className="text-base sm:text-lg">
+                                    {partnerData?.address && `${partnerData.address}, `}{formatProvinceName(partnerData?.province_name)}
+                                </span>
+                            </div>
+
+                            {/* Description */}
+                            {partnerData?.description && (
+                                <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                                    {partnerData.description.length > 180
+                                        ? `${partnerData.description.substring(0, 180)}...`
+                                        : partnerData.description}
+                                </p>
+                            )}
+
+                            {/* Stat cards */}
+                            <div className="flex flex-wrap gap-3">
+                                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+                                    <Home className="size-5 text-sky-400" />
+                                    <div>
+                                        <div className="text-lg font-bold text-white">
+                                            {roomsData
+                                                ? roomsData.length >= 1000
+                                                    ? `${Math.floor(roomsData.length / 1000)}k+`
+                                                    : roomsData.length >= 100
+                                                        ? `${Math.floor(roomsData.length / 100) * 100}+`
+                                                        : roomsData.length > 0 ? `${roomsData.length}` : "0"
+                                                : "—"}
+                                        </div>
+                                        <div className="text-xs text-slate-400">Phòng cho thuê</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+                                    <MapPin className="size-5 text-emerald-400" />
+                                    <div>
+                                        <div className="text-lg font-bold text-white">
+                                            {roomsArray.length > 0 ? `${roomsArray.length}` : "—"}
+                                        </div>
+                                        <div className="text-xs text-slate-400">Tỉnh/thành</div>
+                                    </div>
+                                </div>
+                                {reviewsData && reviewsData.total_count > 0 && (
+                                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+                                        <Star className="size-5 fill-amber-400 text-amber-400" />
+                                        <div>
+                                            <div className="text-lg font-bold text-white">{reviewsData.average_rating}</div>
+                                            <div className="text-xs text-slate-400">{reviewsData.total_count} đánh giá</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Decorative line */}
-                        <div className="mx-auto mb-8 h-1 w-24 rounded-full bg-sky-300/70"></div>
-
-                        {/* Short description if available */}
-                        {partnerData?.description && (
-                            <p className="mx-auto max-w-3xl text-lg leading-relaxed text-slate-100 sm:text-xl">
-                                {partnerData.description.length > 150 ? `${partnerData.description.substring(0, 150)}...` : partnerData.description}
-                            </p>
-                        )}
+                        {/* RIGHT — 2/5 — Contact card */}
+                        <div className="lg:col-span-2">
+                            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+                                <h2 className="mb-5 text-sm font-bold uppercase tracking-widest text-sky-300">Thông tin liên hệ</h2>
+                                <div className="space-y-4">
+                                    {partnerData?.address && (
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-500/15">
+                                                <MapPin className="size-4 text-sky-400" />
+                                            </div>
+                                            <span className="text-sm leading-relaxed text-slate-200">{partnerData.address}</span>
+                                        </div>
+                                    )}
+                                    {partnerData?.phone && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                                                <Phone className="size-4 text-emerald-400" />
+                                            </div>
+                                            <span className="text-sm text-slate-200">{partnerData.phone}</span>
+                                        </div>
+                                    )}
+                                    {partnerData?.user_email && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
+                                                <Mail className="size-4 text-violet-400" />
+                                            </div>
+                                            <span className="text-sm text-slate-200 break-all">{partnerData.user_email}</span>
+                                        </div>
+                                    )}
+                                    {partnerData?.website && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-500/15">
+                                                <Globe className="size-4 text-sky-400" />
+                                            </div>
+                                            <a
+                                                href={partnerData.website}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-sky-300 underline-offset-2 hover:underline break-all"
+                                            >
+                                                {partnerData.website}
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -140,7 +310,7 @@ const PartnerDetail = () => {
                     <Breadcrumb
                         items={[
                             { label: t("breadcrumb.home"), href: "/" },
-                            { label: partnerData?.province_name || "", href: `/${provinceNameEn}/partners` },
+                            { label: formatProvinceName(partnerData?.province_name) || "", href: `/${provinceNameEn}/partners` },
                             { label: t("endUserPartners.breadcrumb.list"), href: `/${provinceNameEn}/partners` },
                             { label: partnerData?.company_name || "" }
                         ]}
@@ -157,12 +327,11 @@ const PartnerDetail = () => {
                         {partnerImages.map((img, index) => (
                             <div key={index} className="aspect-video overflow-hidden rounded-lg shadow-lg">
                                 <img
-                                    src={resolveImageUrl(img, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "/assets/images/photo_error2.png"}
+                                    src={resolveImageUrl(img, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getPartnerFallbackImage()}
                                     alt={`Partner image ${index + 1}`}
                                     className="size-full object-cover"
                                     onError={(e) => {
-                                        e.currentTarget.src = "/assets/images/photo_error2.png";
-                                        e.currentTarget.className = "size-full object-contain p-8 bg-slate-50 opacity-60";
+                                        e.currentTarget.src = getPartnerFallbackImage();
                                     }}
                                 />
                             </div>
@@ -171,45 +340,7 @@ const PartnerDetail = () => {
                 </div>
             )}
 
-            {/* Partner Information Section */}
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <Card className="rounded-3xl border-slate-200/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-2xl font-bold text-gray-900">{t("partnerDetail.partnerInfo")}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                            <div>
-                                <h3 className="mb-4 text-lg font-semibold">{t("partnerDetail.description")}</h3>
-                                <p className="leading-relaxed text-gray-600">{partnerData?.description}</p>
-                            </div>
-                            <div>
-                                <h3 className="mb-4 text-center text-lg font-semibold">{t("partnerDetail.contactInfo")}</h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <MapPin className="size-5 text-sky-600" />
-                                        <span className="text-gray-700">{partnerData?.address}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Phone className="size-5 text-sky-600" />
-                                        <span className="text-gray-700">{partnerData?.phone}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Mail className="size-5 text-sky-600" />
-                                        <span className="text-gray-700">{partnerData?.user_email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Globe className="size-5 text-sky-600" />
-                                        <a href={partnerData?.website} className="text-sky-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                                            {partnerData?.website}
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+
 
             {/* Rooms Section */}
             {roomsArray.length > 0 && (
@@ -222,7 +353,7 @@ const PartnerDetail = () => {
                             {/* Province Title */}
                             <div className="mb-6 text-center">
                                 <h3 className="mb-2 text-2xl font-semibold text-sky-600">
-                                    {provinceData.province}
+                                    {formatProvinceName(provinceData.province)}
                                 </h3>
                                 <div className="mx-auto h-1 w-24 rounded-full bg-sky-600"></div>
                             </div>
@@ -274,7 +405,6 @@ const PartnerDetail = () => {
                                     }}
                                 >
                                     {provinceData.rooms.map((room: any) => {
-                                        const isFallback = !room.image;
                                         return (
                                             <SwiperSlide key={room.id} className="flex h-auto">
                                                 <Card
@@ -283,16 +413,27 @@ const PartnerDetail = () => {
                                                 >
                                                     <div className="relative h-48 w-full overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
                                                         <img
-                                                            src={room.image ? (room.image.startsWith('http') ? room.image : `${CLOUDINARY_HEADER_IMAGE_URL}/${room.image}`) : "/assets/images/photo_error2.png"}
+                                                            src={(room.image && room.image !== "null") ? (room.image.startsWith('http') ? room.image : `${CLOUDINARY_HEADER_IMAGE_URL}/${room.image}`) : getRoomFallbackImage(room.property_type_name, room.name)}
                                                             alt={room.name}
-                                                            className={`size-full transition-transform duration-300 ${
-                                                                isFallback ? "object-contain p-8 opacity-60" : "object-cover hover:scale-105"
-                                                            }`}
+                                                            className="size-full object-cover transition-transform duration-300 hover:scale-105"
                                                             onError={(e) => {
-                                                                e.currentTarget.src = "/assets/images/photo_error2.png";
-                                                                e.currentTarget.className = "size-full object-contain p-8 opacity-60 transition-transform duration-300";
+                                                                e.currentTarget.src = getRoomFallbackImage(room.property_type_name, room.name);
                                                             }}
                                                         />
+                                                        {/* Wishlist Button */}
+                                                        <div className="absolute right-2 top-2 z-10">
+                                                            <button
+                                                                onClick={(e) => handleToggleWishlist(e, room.id)}
+                                                                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-rose-500 hover:scale-105 active:scale-95 shadow-md"
+                                                                title="Thêm vào yêu thích"
+                                                            >
+                                                                <Heart
+                                                                    className={`h-4 w-4 transition-all duration-300 ${
+                                                                        wishlist.includes(room.id) ? "fill-rose-500 text-rose-500" : ""
+                                                                    }`}
+                                                                />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <CardHeader className="shrink-0 pb-3">
                                                         <CardTitle className="flex items-center justify-between">
@@ -336,16 +477,27 @@ const PartnerDetail = () => {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <Button
-                                                            variant="gradient"
-                                                            className="mt-auto w-full rounded-full"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`${ROUTERS.BOOKING}/${room.id}`);
-                                                            }}
-                                                        >
-                                                            {t("partnerDetail.bookNow")}
-                                                        </Button>
+                                                        <div className="mt-auto flex gap-2 w-full">
+                                                             <Button
+                                                                 variant="gradient"
+                                                                 className="flex-1 rounded-full"
+                                                                 onClick={(e) => {
+                                                                     e.stopPropagation();
+                                                                     navigate(`${ROUTERS.BOOKING}/${room.id}`);
+                                                                 }}
+                                                             >
+                                                                 {t("partnerDetail.bookNow")}
+                                                             </Button>
+                                                             <Button
+                                                                 variant="outline"
+                                                                 type="button"
+                                                                 className="shrink-0 rounded-full h-10 w-10 p-0 border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-600 hover:text-sky-600 flex items-center justify-center"
+                                                                 onClick={(e) => handleShareRoom(e, room.id)}
+                                                                 title="Chia sẻ phòng"
+                                                             >
+                                                                 <Share2 className="size-4" />
+                                                             </Button>
+                                                         </div>
                                                     </CardContent>
                                                 </Card>
                                             </SwiperSlide>
@@ -354,18 +506,55 @@ const PartnerDetail = () => {
                                 </Swiper>
 
                                 {/* Slide Indicators */}
-                                <div className="mt-6 flex justify-center gap-2">
-                                    {provinceData.rooms.map((_, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => splideRefs.current[provinceIndex]?.slideTo(index)}
-                                            className={`size-3 rounded-full transition-all duration-200 hover:scale-125 ${index === (currentSlides[provinceIndex] || 0)
-                                                ? 'scale-110 bg-sky-600'
-                                                : 'bg-gray-300'
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
+                                {provinceData.rooms.length > 1 && (
+                                    <div className="mt-6 flex justify-center gap-2">
+                                        {[...Array(provinceData.rooms.length > 3 ? 3 : provinceData.rooms.length)].map((_, index) => {
+                                            const activeIndex = currentSlides[provinceIndex] || 0;
+                                            const totalRooms = provinceData.rooms.length;
+                                            const maxActiveIndex = totalRooms - 3;
+                                            
+                                            let isActive = false;
+                                            if (totalRooms <= 3) {
+                                                isActive = index === activeIndex;
+                                            } else {
+                                                if (index === 0 && activeIndex === 0) {
+                                                    isActive = true;
+                                                } else if (index === 2 && activeIndex >= maxActiveIndex) {
+                                                    isActive = true;
+                                                } else if (index === 1 && activeIndex > 0 && activeIndex < maxActiveIndex) {
+                                                    isActive = true;
+                                                }
+                                            }
+
+                                            const handleDotClick = () => {
+                                                const swiper = splideRefs.current[provinceIndex];
+                                                if (!swiper) return;
+                                                if (totalRooms <= 3) {
+                                                    swiper.slideTo(index);
+                                                } else {
+                                                    if (index === 0) {
+                                                        swiper.slideTo(0);
+                                                    } else if (index === 2) {
+                                                        swiper.slideTo(totalRooms - 1);
+                                                    } else {
+                                                        swiper.slideTo(Math.floor((totalRooms - 1) / 2));
+                                                    }
+                                                }
+                                            };
+
+                                            return (
+                                                <button
+                                                    key={index}
+                                                    onClick={handleDotClick}
+                                                    className={`size-3 rounded-full transition-all duration-200 hover:scale-125 ${isActive
+                                                        ? 'scale-110 bg-sky-600'
+                                                        : 'bg-gray-300'
+                                                        }`}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
                             {/* View All Button */}
@@ -408,7 +597,7 @@ const PartnerDetail = () => {
                     <CardContent className="pt-6">
                         {isLoadingReviews ? (
                             <div className="py-8 text-center">
-                                <Spinner size="md" spinnerClassName="border-y-sky-600" />
+                                <Spinner size="md" />
                             </div>
                         ) : !reviewsData || reviewsData.reviews.length === 0 ? (
                             <p className="py-4 text-center text-slate-400 text-sm">

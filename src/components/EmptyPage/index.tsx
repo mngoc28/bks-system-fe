@@ -23,7 +23,7 @@ const EmptyPage: React.FC<EmptyPageProps> = ({
     <div className="flex flex-col items-center justify-center px-8 py-24 text-center animate-in">
       <div className="relative mb-10 size-72">
         {/* Decorative background glow */}
-        <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-[80px]"></div>
+        <div className="absolute inset-0 rounded-full bg-primary/10 blur-[80px]"></div>
         
         <Suspense fallback={<div className="size-full animate-pulse rounded-full bg-slate-100" />}>
            {animationData && (
@@ -44,7 +44,7 @@ const EmptyPage: React.FC<EmptyPageProps> = ({
       {!loading && (
         <button
           onClick={() => window.location.reload()}
-          className="hover-scale premium-shadow mt-12 rounded-2xl border border-slate-100 bg-white px-8 py-3.5 text-sm font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-50 dark:border-slate-800 dark:bg-slate-900"
+          className="hover-scale premium-shadow mt-12 rounded-2xl border border-slate-100 bg-white px-8 py-3.5 text-sm font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/10 dark:border-slate-800 dark:bg-slate-900"
         >
           {t("common.reload", { defaultValue: "Refresh System" })}
         </button>

@@ -27,11 +27,13 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { ROUTERS } from "@/constant";
+import { computeBookingTotalAmount } from "@/utils/bookingAmount";
 import { formatPrice } from "@/utils/utils";
 import { formatDate } from "@/utils/dateUtils";
 import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 import SignaturePad from "@/components/shared/SignaturePad";
 import stayService, { Contract } from "@/services/stayService";
+import html2canvas from "html2canvas";
 
 const ContractDetail = () => {
   const { id } = useParams();
@@ -74,6 +76,11 @@ const ContractDetail = () => {
       return;
     }
 
+    if (contract && contract.booking?.status !== 1) {
+      toastError("Đơn đặt phòng chưa được Partner xác nhận. Vui lòng đợi trước khi ký hợp đồng.");
+      return;
+    }
+
     if (!id) return;
 
     setIsSigning(true);
@@ -110,6 +117,29 @@ const ContractDetail = () => {
     }
   };
 
+  const handleDownloadImage = async () => {
+    const element = document.getElementById("voucher-card-print");
+    if (!element || !contract) return;
+    
+    toastInfo("Đang xuất ảnh phiếu xác nhận...");
+    try {
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: "#ffffff",
+      });
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = `Phieu-xac-nhan-luu-tru-${contract.id}.png`;
+      link.click();
+      toastSuccess("Đã tải ảnh phiếu xác nhận thành công!");
+    } catch (error) {
+      console.error("Error generating image", error);
+      toastError("Không thể xuất ảnh phiếu xác nhận. Vui lòng thử lại.");
+    }
+  };
+
   const getStatusLabel = (status: number) => {
     switch (status) {
       case 0: return "Chờ ký";
@@ -122,7 +152,7 @@ const ContractDetail = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -144,8 +174,20 @@ const ContractDetail = () => {
   const propertyAddress = contract.booking?.room?.property?.address ?? "theo thỏa thuận";
   const startDate = contract.booking?.start_date ? formatDate(contract.booking.start_date) : "N/A";
   const endDate = contract.booking?.end_date ? formatDate(contract.booking.end_date) : "N/A";
-  const totalPrice = contract.booking?.price?.price ?? 0;
+  const totalPrice = contract.booking
+    ? computeBookingTotalAmount({
+        start_date: contract.booking.start_date,
+        end_date: contract.booking.end_date,
+        price: {
+          price: (contract.booking.price as any)?.price,
+          unit: (contract.booking.price as any)?.unit,
+        },
+        total_amount: (contract.booking as any).total_amount,
+      })
+    : 0;
   const bookingId = contract.booking?.id ?? contract.booking_id;
+  const canSignContract = contract.booking?.status === 1;
+  const isLongTerm = contract.contract_type === 'LEASE_AGREEMENT';
 
   return (
     <div className="space-y-8 pb-20 duration-500 animate-in fade-in slide-in-from-bottom-4">
@@ -160,18 +202,44 @@ const ContractDetail = () => {
            <div className="h-4 w-px bg-slate-200" />
            <span className="text-xs font-black uppercase leading-none tracking-widest text-slate-400">ID: {contract.id}</span>
         </div>
-        <Button variant="outline" className="h-12 gap-2 rounded-2xl border-slate-200 bg-white font-bold" onClick={() => toastInfo("Đang tạo file PDF...")}>
-           <Download className="size-4" /> Tải bản PDF
-        </Button>
+        <div className="flex flex-wrap gap-3">
+           {isLongTerm ? (
+              <Button 
+                variant="outline" 
+                className="h-12 gap-2 rounded-2xl border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50" 
+                onClick={() => window.print()}
+              >
+                 <ExternalLink className="size-4 text-slate-400" /> In hợp đồng / Xem trước
+              </Button>
+           ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  className="h-12 gap-2 rounded-2xl border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50" 
+                  onClick={() => window.print()}
+                >
+                   <ExternalLink className="size-4 text-slate-400" /> In phiếu / Xem trước
+                </Button>
+                <Button 
+                  className="h-12 gap-2 rounded-2xl border-none bg-sky-600 font-bold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500" 
+                  onClick={handleDownloadImage}
+                >
+                   <Download className="size-4" /> Tải ảnh (PNG)
+                </Button>
+              </>
+           )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column: Contract Content */}
         <div className="space-y-6 lg:col-span-2">
-           <Card className="flex min-h-[800px] flex-col overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+           <Card id="voucher-card-print" className="flex min-h-[800px] flex-col overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
               <div className="border-b border-slate-100 bg-slate-50/50 p-12">
                  <div className="mb-10 flex items-start justify-between">
-                    <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="h-10 w-auto shadow-sm" />
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-[#1e3a8a] text-white font-black text-sm tracking-wider shadow-sm select-none">
+                       BKS
+                    </div>
                     <div className="text-right">
                        <h4 className="text-sm font-black uppercase tracking-wider text-slate-900">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h4>
                        <p className="mt-1 text-xs font-bold text-slate-500">Độc lập - Tự do - Hạnh phúc</p>
@@ -179,7 +247,9 @@ const ContractDetail = () => {
                  </div>
                  
                  <div className="mb-12 space-y-2 text-center">
-                    <h2 className="text-2xl font-black uppercase text-slate-900">HỢP ĐỒNG THUÊ PHÒNG NGẮN HẠN</h2>
+                    <h2 className="text-2xl font-black uppercase text-slate-900">
+                       {isLongTerm ? "HỢP ĐỒNG THUÊ CĂN HỘ DỊCH VỤ" : "PHIẾU XÁC NHẬN LƯU TRÚ"}
+                    </h2>
                     <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Số: {contract.id}</p>
                  </div>
 
@@ -205,44 +275,70 @@ const ContractDetail = () => {
                  <section className="space-y-4">
                     <h5 className="font-bold text-slate-900">ĐIỀU 1: THÔNG TIN PHÒNG THUÊ</h5>
                     <p>Bên A đồng ý cho Bên B thuê phòng <span className="font-bold text-slate-900">"{roomTitle}"</span> tọa lạc tại địa chỉ: {propertyAddress}.</p>
-                    <p>Dịch vụ bao gồm: Wifi tốc độ cao, Nước suối hàng ngày, Dọn phòng định kỳ (nếu yêu cầu).</p>
+                    <p>{isLongTerm ? "Dịch vụ bao gồm: Trang thiết bị nội thất cơ bản, hệ thống điện nước, dọn dẹp vệ sinh định kỳ theo thỏa thuận riêng." : "Dịch vụ bao gồm: Wifi tốc độ cao, Nước suối hàng ngày, Dọn phòng định kỳ (nếu yêu cầu)."}</p>
                  </section>
 
                  <section className="space-y-4">
                     <h5 className="font-bold text-slate-900">ĐIỀU 2: THỜI HẠN VÀ GIÁ THUÊ</h5>
-                    <ul className="list-disc space-y-2 pl-5">
-                       <li>Thời gian bắt đầu: {startDate} (Nhận phòng từ 14:00)</li>
-                       <li>Thời gian kết thúc: {endDate} (Trả phòng trước 12:00)</li>
-                       <li>Tổng giá giá trị hợp đồng: <span className="font-bold text-slate-900">{formatPrice(totalPrice)}</span></li>
-                    </ul>
+                    <div className="space-y-2 pl-2">
+                       <p className="flex items-start gap-2">
+                          <span className="text-slate-400 select-none">•</span>
+                          <span>Thời gian bắt đầu: {startDate} {isLongTerm ? "" : "(Nhận phòng từ 14:00)"}</span>
+                       </p>
+                       <p className="flex items-start gap-2">
+                          <span className="text-slate-400 select-none">•</span>
+                          <span>Thời gian kết thúc: {endDate} {isLongTerm ? "" : "(Trả phòng trước 12:00)"}</span>
+                       </p>
+                       <p className="flex items-start gap-2">
+                          <span className="text-slate-400 select-none">•</span>
+                          <span>Tổng giá trị hợp đồng: <span className="font-bold text-slate-900">{formatPrice(totalPrice)}</span></span>
+                       </p>
+                    </div>
                  </section>
 
                  <section className="space-y-4">
-                    <h5 className="font-bold text-slate-900">ĐIỀU 3: QUY TẮC SỬ DỤNG</h5>
-                    <p>Bên B cam kết tuân thủ mọi nội quy của tòa nhà, không gây ồn ào sau 22:00, không mang chất cấm và chất gây nổ vào phòng.</p>
+                    <h5 className="font-bold text-slate-900">ĐIỀU 3: QUY TẮC SỬ DỤNG & NGHĨA VỤ</h5>
+                    {isLongTerm ? (
+                       <p>Bên B cam kết sử dụng phòng đúng mục đích lưu trú, thanh toán đầy đủ tiền thuê và phí dịch vụ phát sinh hàng tháng đúng hạn, bảo quản nguyên vẹn tài sản được bàn giao, tuân thủ nội quy phòng chống cháy nổ và quy chế quản lý của tòa nhà.</p>
+                    ) : (
+                       <p>Bên B cam kết tuân thủ mọi nội quy của tòa nhà, không gây ồn ào sau 22:00, không mang chất cấm và chất gây nổ vào phòng.</p>
+                    )}
                  </section>
 
                  <div className="grid grid-cols-2 gap-12 pt-20 text-center italic text-slate-400">
-                    <div className="space-y-20">
+                    <div className="space-y-6">
                        <p>Đại diện Bên A (Đã ký)</p>
-                       <div className="rounded-2xl border-2 border-slate-50 p-4">
-                          <img src="/app/images/front/bks-icon.svg" alt="BKS Stamp" className="mx-auto h-16 opacity-20 brightness-0 contrast-200 grayscale" />
+                       <div className="flex h-32 items-center justify-center">
+                          <div className="relative flex size-28 select-none items-center justify-center rounded-full border-4 border-double border-red-500/80 p-2 text-red-500/80 font-black rotate-[-8deg] duration-300 hover:rotate-0">
+                             <div className="flex flex-col items-center text-center">
+                                <span className="text-[7px] font-black uppercase tracking-wider leading-none">CÔNG TY BKS</span>
+                                <span className="text-[10px] font-extrabold uppercase tracking-widest border-y border-red-500/80 my-1 py-0.5 px-1.5 leading-none">ĐÃ XÁC THỰC</span>
+                                <span className="text-[7px] font-bold uppercase tracking-wider leading-none">BKS STAY STAMP</span>
+                             </div>
+                          </div>
                        </div>
                     </div>
                     <div className="space-y-10">
                        <p>Bên B (Ký và ghi rõ họ tên)</p>
                        <div className="flex h-32 flex-col items-center justify-center">
-                          {(hasSigned || contract.status !== 0) ? (
-                             <div className="text-center duration-500 animate-in fade-in zoom-in-95">
-                                {signatureData ? (
-                                  <img src={signatureData} alt="Signature" className="mx-auto h-20 object-contain mix-blend-multiply" />
-                                ) : (
-                                  <div className="font-mono text-2xl font-bold text-sky-600">{guestName}</div>
-                                )}
-                                <p className="mt-2 font-mono text-[10px] text-slate-400">Đã xác thực điện tử</p>
-                             </div>
+                          {isLongTerm ? (
+                             (hasSigned || contract.status !== 0) ? (
+                                <div className="text-center duration-500 animate-in fade-in zoom-in-95">
+                                   {signatureData ? (
+                                     <img src={signatureData} alt="Signature" className="mx-auto h-20 object-contain mix-blend-multiply" />
+                                   ) : (
+                                     <div className="font-mono text-2xl font-bold text-sky-600">{guestName}</div>
+                                   )}
+                                   <p className="mt-2 font-mono text-[10px] text-slate-400">Đã xác thực điện tử</p>
+                                </div>
+                             ) : (
+                                <span className="text-slate-200">Chờ ký kết</span>
+                             )
                           ) : (
-                             <span className="text-slate-200">Chờ ký kết</span>
+                             <div className="text-center italic text-slate-400 duration-500 animate-in fade-in">
+                                <p className="text-xs font-bold text-emerald-600">Đã xác nhận tự động</p>
+                                <p className="mt-1 text-[10px] leading-tight opacity-75">Hệ thống khớp mã đặt phòng<br/>{contract.booking?.booking_code}</p>
+                             </div>
                           )}
                        </div>
                     </div>
@@ -266,38 +362,75 @@ const ContractDetail = () => {
                     </Badge>
                  </div>
 
-                 {(!hasSigned && contract.status === 0) ? (
-                    <div className="space-y-4">
-                       <div className="flex gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                          <Info className="mt-0.5 size-5 shrink-0 text-amber-600" />
-                          <p className="text-xs font-medium leading-relaxed text-amber-800">
-                             Vui lòng sử dụng tính năng ký tay hoặc tải ảnh chữ ký lên để hoàn tất thủ tục.
-                          </p>
-                       </div>
-                       <Button 
-                         onClick={() => setIsSignModalOpen(true)}
-                         className="flex h-16 w-full items-center justify-center gap-2 rounded-[24px] bg-amber-600 text-lg font-black text-white shadow-xl shadow-amber-600/20 transition-all hover:scale-[1.02] hover:bg-amber-500"
-                       >
-                          Ký hợp đồng ngay <ChevronRight className="size-5" />
-                       </Button>
-                    </div>
-                 ) : (
-                    <div className="space-y-4">
-                       <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800">
-                          <CheckCircle2 className="size-5 shrink-0" />
-                          <div>
-                             <p className="text-xs font-bold">Bảo mật tuyệt đối</p>
-                             <p className="text-[10px] leading-relaxed opacity-70">Hợp đồng này được bảo vệ bởi chứng chỉ số SHA-256 của BKS Systems.</p>
-                          </div>
-                       </div>
-                       <Button className="h-14 w-full rounded-2xl border-none bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(`${ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId))}?confirmed=true`)}>
-                          Xem kỳ nghỉ liên quan
-                       </Button>
-                       {hasSigned && contract.status === 0 && (
-                         <Button variant="ghost" className="w-full text-xs text-slate-400" onClick={() => { setHasSigned(false); setSignatureData(null); }}>Hủy và ký lại</Button>
-                       )}
-                    </div>
-                 )}
+                  {isLongTerm ? (
+                     (!hasSigned && contract.status === 0) ? (
+                        <div className="space-y-4">
+                           <div className={`flex gap-3 rounded-2xl border p-4 ${canSignContract ? "border-amber-100 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
+                              <Info className={`mt-0.5 size-5 shrink-0 ${canSignContract ? "text-amber-600" : "text-slate-500"}`} />
+                              <div className={`text-xs font-medium leading-relaxed ${canSignContract ? "text-amber-800" : "text-slate-600"}`}>
+                                 {canSignContract ? (
+                                    <div className="space-y-1.5">
+                                       <p>• Đơn đặt phòng dài hạn của bạn đã được đối tác xác nhận <span className="text-emerald-600 font-bold">thành công</span>.</p>
+                                       <p>• Vui lòng sử dụng tính năng ký trực tiếp hoặc tải lên ảnh chữ ký tay để hoàn tất ký hợp đồng điện tử.</p>
+                                       <p>• <strong>Khuyến nghị:</strong> Sau khi ký, hãy chọn <strong>"In hợp đồng / Xem trước"</strong> để lưu hoặc in hợp đồng làm tài liệu đối chiếu khi nhận bàn giao căn hộ lúc check-in.</p>
+                                    </div>
+                                 ) : (
+                                    <div className="space-y-1.5">
+                                       <p>• Đơn đặt phòng của bạn đang được đối tác xem xét và chưa xác nhận.</p>
+                                       <p>• Bạn chỉ có thể ký hợp đồng trực tuyến sau khi đơn đặt phòng được xác nhận <span className="text-emerald-600 font-bold">thành công</span>.</p>
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
+                           <Button 
+                             disabled={!canSignContract}
+                             onClick={() => setIsSignModalOpen(true)}
+                             className="flex h-16 w-full items-center justify-center gap-2 rounded-[24px] bg-amber-600 text-lg font-black text-white shadow-xl shadow-amber-600/20 transition-all hover:scale-[1.02] hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-amber-600"
+                           >
+                              Ký hợp đồng ngay <ChevronRight className="size-5" />
+                           </Button>
+                        </div>
+                     ) : (
+                        <div className="space-y-4">
+                           <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800">
+                              <CheckCircle2 className="size-5 shrink-0 mt-0.5" />
+                              <div className="text-xs font-medium">
+                                 <p className="font-bold text-emerald-800">Hợp đồng đã ký kết thành công</p>
+                                 <div className="mt-1.5 space-y-1 text-[10px] leading-relaxed opacity-90">
+                                    <p>• Hợp đồng thuê căn hộ dịch vụ của bạn đã được xác lập <span className="text-emerald-600 font-bold">thành công</span> và có đầy đủ hiệu lực pháp lý.</p>
+                                    <p>• <strong>Khuyến nghị:</strong> Vui lòng chọn <strong>"In hợp đồng / Xem trước"</strong> để tải bản PDF hoặc in bản sao lưu trữ ngoại tuyến.</p>
+                                    <p>• Hãy xuất trình bản hợp đồng này khi nhận bàn giao căn hộ để hoàn tất thủ tục check-in.</p>
+                                    <p>• Hồ sơ bảo mật tuyệt đối bởi chứng chỉ số SHA-256 của BKS Systems.</p>
+                                 </div>
+                              </div>
+                           </div>
+                           <Button className="h-14 w-full rounded-2xl border-none bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(`${ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId))}?confirmed=true`)}>
+                              Xem kỳ nghỉ liên quan
+                           </Button>
+                           {hasSigned && contract.status === 0 && (
+                             <Button variant="ghost" className="w-full text-xs text-slate-400" onClick={() => { setHasSigned(false); setSignatureData(null); }}>Hủy và ký lại</Button>
+                           )}
+                        </div>
+                     )
+                  ) : (
+                     // Đối với ngắn hạn (Voucher)
+                     <div className="space-y-4">
+                        <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800">
+                           <CheckCircle2 className="size-5 shrink-0 mt-0.5" />
+                           <div className="text-xs font-medium">
+                              <p className="font-bold text-emerald-800">Phiếu lưu trú đã sẵn sàng</p>
+                              <div className="mt-1.5 space-y-1 text-[10px] leading-relaxed opacity-90">
+                                 <p>• Phiếu xác nhận lưu trú của bạn đã được khởi tạo <span className="text-emerald-600 font-bold">thành công</span>.</p>
+                                 <p>• Bạn chỉ cần xuất trình phiếu xác nhận lưu trú này để làm thủ tục nhận phòng lúc check-in.</p>
+                                 <p>• <strong>Khuyến nghị:</strong> Hãy bấm nút <strong>"Tải ảnh (PNG)"</strong> bên trên để lưu phiếu về máy, đề phòng trường hợp thiết bị mất kết nối internet khi đến cơ sở lưu trú.</p>
+                              </div>
+                           </div>
+                        </div>
+                        <Button className="h-14 w-full rounded-2xl border-none bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/10" onClick={() => navigate(`${ROUTERS.BKS_STAY_DETAILS.replace(":id", String(bookingId))}?confirmed=true`)}>
+                           Xem kỳ nghỉ liên quan
+                        </Button>
+                     </div>
+                  )}
               </div>
            </Card>
 
@@ -403,4 +536,3 @@ const ContractDetail = () => {
 };
 
 export default ContractDetail;
-

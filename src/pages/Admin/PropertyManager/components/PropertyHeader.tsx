@@ -27,7 +27,7 @@ const PropertyHeader: React.FC<PropertyHeaderProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+            className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-primary"
             onClick={onOpenFilter}
           >
             <Filter className="size-4" />
@@ -36,7 +36,7 @@ const PropertyHeader: React.FC<PropertyHeaderProps> = ({
           <Button
             variant="default"
             size="sm"
-            className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+            className="flex items-center gap-2 bg-primary font-semibold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-primary/25"
             onClick={onCreateProperty}
           >
             <Plus className="size-4" />

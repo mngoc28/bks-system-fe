@@ -22,6 +22,7 @@ import { Room } from './types';
 import InlineSheet from './components/InlineSheet';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { Badge } from '@/components/ui/badge';
+import { normalizeStayPropertyTypeLabel } from '@/utils/stayPropertyType';
 import { 
   Pagination, 
   PaginationContent, 
@@ -280,7 +281,7 @@ const PropertyRooms: React.FC = () => {
         const selectedProperty = (propertiesRes?.data?.data || propertiesRes?.data || []).find((b: any) => String(b.id) === String(propertyId));
         if (selectedProperty) {
           setPropertyName(selectedProperty.name);
-          setPropertyType(selectedProperty.property_type_name || '');
+          setPropertyType(normalizeStayPropertyTypeLabel(selectedProperty.property_type_name));
         }
       }
     } catch (err: any) {

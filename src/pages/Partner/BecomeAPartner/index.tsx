@@ -47,8 +47,8 @@ export default function BecomeAPartner() {
       features: ["Xác thực hồ sơ nhanh", "Quản lý phòng trống trực quan", "Thanh toán đối soát hàng tuần"]
     },
     {
-      title: "Căn hộ dịch vụ (Apartment)",
-      description: "Dành cho các chủ căn hộ cao cấp hoặc đơn vị vận hành chuỗi căn hộ cho thuê theo phòng. Tập trung quản lý tiện ích khép kín.",
+      title: "Căn hộ / Căn hộ dịch vụ (Apartment)",
+      description: "Dành cho chủ căn hộ hoặc đơn vị vận hành chuỗi căn hộ phục vụ nhu cầu thuê ngắn và trung hạn, với vận hành tiện ích khép kín.",
       icon: <Layers className="size-8 text-emerald-400" />,
       features: ["Chứng minh quyền sở hữu", "Set-up giá theo mùa linh hoạt", "Quản lý hợp đồng dài hạn"]
     },
@@ -62,8 +62,8 @@ export default function BecomeAPartner() {
 
   const benefits = [
     {
-      title: "Chiết khấu Flat 10% cố định",
-      description: "Mức hoa hồng cạnh tranh nhất thị trường. Không có phí ẩn, không có phí duy trì tài khoản hàng tháng.",
+      title: "Phí dịch vụ nền tảng 5%",
+      description: "Không phí khởi tạo hay duy trì. Chi phí dịch vụ cố định 5% tính trên doanh thu đơn hàng hoàn thành.",
       icon: <DollarSign className="size-6 text-emerald-400" />
     },
     {
@@ -77,8 +77,8 @@ export default function BecomeAPartner() {
       icon: <FileText className="size-6 text-indigo-400" />
     },
     {
-      title: "Đối soát & Thanh toán tự động",
-      description: "Hệ thống tự động kết chuyển doanh thu và thanh toán trực tiếp vào tài khoản ngân hàng của bạn hàng tuần.",
+      title: "Đối soát & Quyết toán tự động",
+      description: "Đối soát tự động định kỳ 2 lần/tháng vào ngày 05 và ngày 20 qua hệ thống bảng kê trực quan.",
       icon: <ShieldCheck className="size-6 text-teal-400" />
     }
   ];
@@ -98,7 +98,7 @@ export default function BecomeAPartner() {
     },
     {
       question: "Làm thế nào để tôi nhận tiền thanh toán phòng từ BKS?",
-      answer: "Hệ thống sẽ đối soát tự động toàn bộ giao dịch thành công. Doanh thu của bạn (sau khi trừ đi 10% hoa hồng cố định) sẽ được tự động chuyển khoản trực tiếp vào số tài khoản ngân hàng bạn đã đăng ký tại Bước 3 vào thứ Ba hàng tuần."
+      answer: "BKS System thực hiện đối soát tự động và chốt bảng kê công nợ định kỳ vào ngày 05 (đối với các đơn hoàn thành từ ngày 16 đến cuối tháng trước) và ngày 20 (đối với các đơn hoàn thành từ ngày 01 đến ngày 15 trong tháng). Đối tác nộp phí hoa hồng dịch vụ 5% cho BKS trong vòng 5 ngày kể từ ngày chốt đối soát."
     }
   ];
 
@@ -124,7 +124,7 @@ export default function BecomeAPartner() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base text-slate-400 sm:text-lg">
-            Tham gia cộng đồng hơn 1,000+ đối tác khách sạn, homestay và căn hộ dịch vụ trên toàn quốc. Đăng ký trực tuyến, ký hợp đồng điện tử và bắt đầu đón khách chỉ trong 24 giờ.
+            Tham gia cộng đồng hơn 1,000+ đối tác khách sạn, homestay và căn hộ / căn hộ dịch vụ trên toàn quốc. Đăng ký trực tuyến, ký hợp đồng điện tử và bắt đầu đón khách chỉ trong 24 giờ.
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">

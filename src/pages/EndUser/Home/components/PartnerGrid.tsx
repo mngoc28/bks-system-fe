@@ -3,10 +3,29 @@ import { MapPin, Star, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { PartnerGridProps } from "@/dataHelper/partner.dataHelper";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaHref = ROUTERS.COMPANY_HUB }: PartnerGridProps) => {
+export const PartnerCardSkeleton = () => (
+  <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white">
+    <div className="relative h-40 w-full overflow-hidden">
+      <Skeleton className="size-full rounded-none" />
+    </div>
+    <div className="flex flex-1 flex-col gap-2.5 px-5 py-4">
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-1/2 rounded" />
+        <Skeleton className="h-4 w-1/4 rounded" />
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <Skeleton className="size-4 rounded-full" />
+        <Skeleton className="h-4 w-3/4 rounded" />
+      </div>
+    </div>
+  </div>
+);
+
+const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaHref = ROUTERS.COMPANY_HUB, loading = false }: PartnerGridProps) => {
   const { t } = useTranslation();
-  if (!partners?.length) {
+  if (!loading && !partners?.length) {
     return null;
   }
 
@@ -33,27 +52,34 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {partners.map((company) => (
-          <Link
-            key={company.id}
-            to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", company.id.toString())}
-            aria-label={t("public.home.partners.cardLabel", { name: company.name })}
-            className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          >
-            <div className="relative h-40 w-full overflow-hidden">
-              <img
-                src={company.image || DEFAULT_ROOM_IMAGE}
-                alt={company.name}
-                className="size-full object-cover transition duration-500 group-hover:scale-105"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null;
-                  target.src = DEFAULT_ROOM_IMAGE;
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/5 to-transparent" />
-            </div>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <PartnerCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {partners!.map((company) => (
+            <Link
+              key={company.id}
+              to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", company.id.toString())}
+              aria-label={t("public.home.partners.cardLabel", { name: company.name })}
+              className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <div className="relative h-40 w-full overflow-hidden">
+                <img
+                  src={company.image || DEFAULT_ROOM_IMAGE}
+                  alt={company.name}
+                  className="size-full object-cover transition duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = DEFAULT_ROOM_IMAGE;
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/5 to-transparent" />
+              </div>
               <div className="flex flex-1 flex-col gap-2.5 px-5 py-4">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-[1rem] font-semibold text-slate-900 transition group-hover:text-primary flex items-center gap-1.5">
@@ -78,9 +104,10 @@ const PartnerGrid = ({ partners, className, heading, description, ctaLabel, ctaH
                   <span>{company.address}</span>
                 </p>
               </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {ctaText && (
         <div className="mt-8 flex justify-center sm:hidden">

@@ -1,8 +1,8 @@
-﻿import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input, ReactQuillEditor } from "@/components/ui/input";
-import { LoadingScreen } from "@/components/ui/loading-screen";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RENT_CATEGORY } from "@/constant";
 import { PropertyEditFormProps, PropertyType, CreatePropertyRequest, UpdatePropertyRequest } from "@/dataHelper/property.dataHelper";
@@ -12,10 +12,11 @@ import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetWardsByProvinceId } from "@/hooks/useWardQuery";
 import { propertyFormSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2, Star } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 
 const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ property, userId, onSubmit, onCancel, isLoading = false, isError = false }) => {
     const { t } = useTranslation();
@@ -87,7 +88,7 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ property, userId, o
     return (
       <>
         {isError && <></>}
-        {isLoading && <LoadingScreen text={t("common.loading")} />}
+        {isLoading && <AdminContentLoader text={t("common.loading")} className="min-h-[320px]" />}
         {property && !isError && (
           <Card className="flex w-full flex-col gap-6 overflow-y-auto p-6">
             <div className="">
@@ -331,7 +332,7 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ property, userId, o
                       {t("common.back")}
                     </Button>
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                      {isLoading && <Spinner size="sm" />}
                       {t("common.save")}
                     </Button>
                   </div>

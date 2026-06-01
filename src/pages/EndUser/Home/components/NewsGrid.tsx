@@ -1,9 +1,29 @@
 import { Link } from "react-router-dom";
 import { Clock3, Newspaper } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
+import { ROUTERS } from "@/constant";
 import { NewsGridProps } from "@/dataHelper/news.dataHelper";
-import { Spinner } from "@/components/ui/spinner";
+import { getNewsFallbackImage } from "@/utils/fallbackImages";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const NewsCardSkeleton = () => (
+  <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white">
+    <div className="relative h-44 w-full overflow-hidden">
+      <Skeleton className="size-full rounded-none" />
+    </div>
+    <div className="flex flex-1 flex-col gap-3 p-4">
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-3/4 rounded" />
+        <Skeleton className="h-4 w-full rounded" />
+        <Skeleton className="h-4 w-5/6 rounded" />
+      </div>
+      <div className="mt-auto pt-2 flex items-center gap-2">
+        <Skeleton className="size-4 rounded-full" />
+        <Skeleton className="h-4 w-20 rounded" />
+      </div>
+    </div>
+  </div>
+);
 
 const NewsGrid = ({
   articles,
@@ -27,7 +47,6 @@ const NewsGrid = ({
   const badgeText = badgeLabel ?? t("public.home.news.badge");
   const footerText = footerLabel ?? t("public.home.news.footerCta");
   const ctaText = ctaLabel;
-  const loadingLabel = t("public.home.news.latestLoading");
   const errorLabel = t("public.home.news.latestError");
   const emptyLabel = t("public.home.news.availableSoon");
 
@@ -55,8 +74,10 @@ const NewsGrid = ({
       )}
 
       {loading ? (
-        <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-          <Spinner size="lg" spinnerClassName="border-y-sky-600" showText text={loadingLabel} className="text-slate-500 font-bold" />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <NewsCardSkeleton key={i} />
+          ))}
         </div>
       ) : error ? (
         <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-10 text-center text-sm font-semibold text-rose-500">
@@ -77,13 +98,13 @@ const NewsGrid = ({
             >
             <div className="relative h-44 w-full overflow-hidden">
               <img
-                src={article.image || DEFAULT_ROOM_IMAGE}
+                src={article.image || getNewsFallbackImage()}
                 alt={article.title}
                 className="size-full object-cover transition duration-500 group-hover:scale-105"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.onerror = null;
-                  target.src = DEFAULT_ROOM_IMAGE;
+                  target.src = getNewsFallbackImage();
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent" />

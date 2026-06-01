@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,7 +21,7 @@ const QuestionDetailSection = ({ detail, onNavigateNext }: QuestionDetailProps) 
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="border-blue-100 shadow-sm">
+      <Card className="border-primary/10 shadow-sm">
         <CardHeader className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
@@ -56,7 +56,7 @@ const QuestionDetailSection = ({ detail, onNavigateNext }: QuestionDetailProps) 
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-4 text-sm text-slate-700">
+          <div className="rounded-lg border border-primary/10 bg-blue-50/60 p-4 text-sm text-slate-700">
             <p className="whitespace-pre-wrap break-words font-medium text-slate-800">{detail.content}</p>
           </div>
           {!isAnswerType && (
@@ -99,7 +99,7 @@ const QuestionDetailSection = ({ detail, onNavigateNext }: QuestionDetailProps) 
 
               <div className="flex flex-col gap-3 lg:hidden">
                 {detail.answers.map((answer) => (
-                  <div key={answer.id} className="rounded-lg border border-blue-100 bg-slate-50/60 p-4 text-sm text-slate-700 shadow-sm">
+                  <div key={answer.id} className="rounded-lg border border-primary/10 bg-slate-50/60 p-4 text-sm text-slate-700 shadow-sm">
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-semibold text-slate-800">#{answer.id}</span>
                       {answer.next_question_id !== null ? (

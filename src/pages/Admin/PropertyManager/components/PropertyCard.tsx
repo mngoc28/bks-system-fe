@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Property, PropertyCardProps } from "@/dataHelper/property.dataHelper";
 import { Map, MapPin, Layers, Maximize2, Calendar, Edit, Trash2, ImageIcon } from "lucide-react";
 import { useGetUserProfileByIdQuery } from "@/hooks/useUserQuery";
-import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { safeFormatDateTime } from "@/utils/dateUtils";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
+import { useNavigate } from "react-router-dom";
+import { buildAdminUrl, toBookingsByProperty, toRoomsByProperty } from "@/utils/adminNavigation";
 
 /**
  * Property Card component
@@ -17,6 +19,7 @@ import { highlightText } from "@/utils/utils";
  */
 const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property) => void }> = ({ property, onEdit, onDelete, onView, isDeleting = false, highlightTerms }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: createdByData } = useGetUserProfileByIdQuery(property.created_by);
   const imageUrl = resolveImageUrl(property.cover_image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
   const fallbackImage = "/assets/images/photo_error2.png";
@@ -78,7 +81,7 @@ const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property)
       {/* Content Section */}
       <div className="p-5">
         <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="truncate text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100" title={property.name}>
+          <h3 className="truncate text-lg font-bold text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100" title={property.name}>
             {highlightText(property.name, highlightTerms?.name || "")}
           </h3>
           <Badge variant="outline" className="whitespace-nowrap border-slate-200 text-[10px] text-slate-500">
@@ -88,7 +91,7 @@ const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property)
 
         <div className="mb-4 space-y-2 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
-            <Map className="size-3.5 shrink-0 text-indigo-500" />
+            <Map className="size-3.5 shrink-0 text-primary" />
             <span className="truncate">
               {highlightText(property.province_name, highlightTerms?.province_name || "")} - {highlightText(property.ward_name, highlightTerms?.ward_name || "")}
             </span>
@@ -102,7 +105,7 @@ const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property)
         {/* Icon Grid for Specs */}
         <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-3.5 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
               <Maximize2 className="size-4" />
             </div>
             <div>
@@ -124,7 +127,7 @@ const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property)
         {/* Footer Info */}
         <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
           <div className="flex items-center gap-1.5">
-            <div className="flex size-6 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600">
+            <div className="flex size-6 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
               {(createdByData?.data?.name || property.user_name || "A")[0].toUpperCase()}
             </div>
             <span className="font-medium text-slate-500">{createdByData?.data?.name || property.user_name || "-"}</span>
@@ -133,6 +136,30 @@ const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property)
             <Calendar className="size-3 text-slate-300" />
             <span>{t("common.last_updated")}: {safeFormatDateTime(property.updated_at)}</span>
           </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByProperty(property.id, "property-management", property.name)));
+            }}
+          >
+            {t("adminCrossNav.rooms")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByProperty(property.id, "property-management", property.name)));
+            }}
+          >
+            {t("adminCrossNav.bookings")}
+          </Button>
         </div>
       </div>
     </Card>

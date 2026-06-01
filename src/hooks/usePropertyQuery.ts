@@ -34,6 +34,7 @@ export const usePropertyTypesQuery = (enabled = true) => {
       const normalized = dataArray.map((item: any) => ({
         id: Number(item?.id ?? item?.value ?? 0),
         name: String(item?.name ?? item?.label ?? ""),
+        slug: String(item?.slug ?? ""),
       }));
 
       return {

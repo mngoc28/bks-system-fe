@@ -4,7 +4,7 @@ export { default as Dashboard } from './Dashboard';
 export { default as Properties } from './Properties';
 export { default as Bookings } from './Bookings';
 export { default as Maintenances } from './Maintenances';
-export { default as Finance } from './Finance';
+export { default as Finance } from './Finance/index';
 export { default as Services } from './Services.tsx';
 export { default as News } from './News.tsx';
 export { default as Amenities } from './Amenities.tsx';

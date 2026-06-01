@@ -11,7 +11,16 @@ import "./index.css";
 import "@splidejs/splide/css";
 import "./lib/changeLanguageUtils";
 
+import { provinceApi } from "./api/provinceApi";
+
 const queryClient = new QueryClient();
+
+// Prefetch critical province data immediately on app load to prioritize it in the network waterfall
+queryClient.prefetchQuery({
+  queryKey: ["home-provinces"],
+  queryFn: () => provinceApi.getHomeProvinces(),
+  staleTime: 10 * 60 * 1000,
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

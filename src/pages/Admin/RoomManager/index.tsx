@@ -14,6 +14,10 @@ import { ViewMode } from "@/components/LayoutToggle";
 import Pagination from "@/components/Pagination";
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
+import { adminTheme } from "@/lib/adminTheme";
+import { useSearchParams } from "react-router-dom";
+import { buildAdminUrl, clearAdminContext, parseAdminContext, toBookingsByRoom } from "@/utils/adminNavigation";
+import ContextFilterChips from "@/components/admin/ContextFilterChips";
 
 // Main Room Manager Component
 /**
@@ -24,6 +28,8 @@ const RoomManager: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const context = useMemo(() => parseAdminContext(searchParams.toString()), [searchParams]);
 
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
 
@@ -76,12 +82,16 @@ const RoomManager: React.FC = () => {
   const [filter, setFilters] = useState<RoomFilters>({
     page: DEFAULT_PAGE,
     per_page: DEFAULT_CARD_LIMIT,
+    property_id: Number(searchParams.get("property_id") || "") || undefined,
+    partner_id: Number(searchParams.get("partner_id") || "") || undefined,
   });
 
   const handleResetFilters = () => {
     setFilters({
       page: DEFAULT_PAGE,
       per_page: DEFAULT_CARD_LIMIT,
+      property_id: filter.property_id,
+      partner_id: filter.partner_id,
     });
     setSortField(undefined);
     setSortDirection(undefined);
@@ -103,7 +113,17 @@ const RoomManager: React.FC = () => {
     ...(filter.max_price && { max_price: filter.max_price }),
     ...(filter.floor_number && { floor_number: filter.floor_number }),
     ...(filter.people && { people: filter.people }),
+    ...(filter.property_id && { property_id: Number(filter.property_id) }),
+    ...(filter.partner_id && { partner_id: Number(filter.partner_id) }),
   }), [filter, page, perPage, sortField, sortDirection]);
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      property_id: Number(searchParams.get("property_id") || "") || undefined,
+      partner_id: Number(searchParams.get("partner_id") || "") || undefined,
+    }));
+  }, [searchParams]);
 
   // call api to get rooms with filters
   const { data, isLoading } = useRoomsQuery(filters) as { data: RoomListData | undefined; isLoading: boolean };
@@ -215,7 +235,7 @@ const RoomManager: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              className={`flex items-center gap-2 ${adminTheme.btnOutline}`}
               onClick={() => setOpen((v) => !v)}
             >
               <Filter className="size-4" />
@@ -224,7 +244,7 @@ const RoomManager: React.FC = () => {
             <Button
               variant="default"
               size="sm"
-              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              className={`flex items-center gap-2 ${adminTheme.btnPrimary}`}
               onClick={handleCreateRoom}
             >
               <Plus className="size-4" />
@@ -241,6 +261,18 @@ const RoomManager: React.FC = () => {
         onReset={handleResetFilters}
         onClose={() => setOpen((v) => !v)}
       />}
+      <ContextFilterChips
+        context={context}
+        onClear={() => {
+          const nextQuery = clearAdminContext(searchParams.toString());
+          setSearchParams(nextQuery);
+          setFilters((prev) => ({
+            ...prev,
+            property_id: undefined,
+            partner_id: undefined,
+          }));
+        }}
+      />
 
       {isLoading ? (
         <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
@@ -280,6 +312,20 @@ const RoomManager: React.FC = () => {
                     onView={handleViewRoom}
                     onEdit={handleEditRoom}
                     onDelete={handleDeleteRoom}
+                    onViewProperty={(room) => {
+                      if (!room.property_id) return;
+                      navigate(`${ROUTERS.PROPERTIES_DETAIL}/${room.property_id}`);
+                    }}
+                    onViewBookings={(room) => {
+                      const roomDisplayName = room.room_number || room.title;
+                      navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByRoom(room.id, "room-management", roomDisplayName)));
+                    }}
+                    onViewPartner={(room) => {
+                      const partnerId = room.partner_id;
+                      if (partnerId) {
+                        navigate(`${ROUTERS.PARTNER_MANAGEMENT}/detail/${partnerId}`);
+                      }
+                    }}
                     onPageChange={(p) => setPage(p)}
                     onPerPageChange={(pp) => {
                         setPerPage(pp);

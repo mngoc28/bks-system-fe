@@ -59,5 +59,6 @@ export const useGetAllProvincesTypes = () => {
       const response = await provinceApi.getHomeProvinces({ signal });
       return response;
     },
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes to prevent duplicate/delayed background refetches
   });
 };

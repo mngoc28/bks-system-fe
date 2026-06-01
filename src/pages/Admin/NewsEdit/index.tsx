@@ -15,7 +15,7 @@ import { ArrowLeftIcon, Star, Upload } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ThreeDot } from "react-loading-indicators";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
 import { useNavigate, useParams } from "react-router";
 import { formatDateTimeLocal, statusNewsArray } from "@/utils/utils";
 import { generateSlug } from "@/utils/stringUtils";
@@ -192,11 +192,12 @@ const NewsEdit: React.FC = () => {
     }
     // get array status
     const status = statusNewsArray;
+    if (newsLoading) {
+        return <AdminContentLoader text={t("common.loading_data")} />;
+    }
+
     return (
         <>
-            {newsLoading && <div className="flex h-full items-center justify-center">
-                <ThreeDot variant="bounce" color="#064F80" size="large" />
-            </div>}
             {isError && <div>{t("news_edit.update_failed")}</div>}
             {news && <>
                 <div className="flex flex-col gap-10 p-3 pt-5 sm:p-6">

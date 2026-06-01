@@ -135,7 +135,6 @@ const Notifications: React.FC = () => {
                         <div className="flex flex-col items-center justify-center gap-4 py-20">
                             <Spinner 
                                 size="lg" 
-                                spinnerClassName="border-y-blue-600" 
                                 showText 
                                 text={t("notifications.loading")} 
                                 className="text-slate-400 italic font-bold"
