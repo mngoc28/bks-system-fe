@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ProvinceTableProps } from "@/dataHelper/province.dataHelper";
@@ -27,7 +27,7 @@ const ProvinceTable: React.FC<ProvinceTableProps> = ({
   };
 
   return (
-    <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+    <div className="w-full overflow-auto rounded-xl border border-primary/10 bg-white shadow-sm">
       <Table className="min-w-max text-sm text-slate-700">
         <TableHeader className="sticky top-0 z-10 bg-slate-100">
           <tr className="border-b border-gray-300">
@@ -77,7 +77,7 @@ const ProvinceTable: React.FC<ProvinceTableProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="font-medium text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+                  className="font-medium text-primary hover:bg-primary/10 hover:text-primary"
                   onClick={() => onView(province.id)}
                 >
                   {t("common.view_details")}

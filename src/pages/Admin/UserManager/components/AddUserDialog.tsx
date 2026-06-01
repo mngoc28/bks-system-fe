@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { AddUserDialogProps } from "@/dataHelper/user.dataHelper";
 import { createUserSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
+import { Eye, EyeOff, UserPlus } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Add User Dialog
@@ -245,7 +246,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ isOpen, isLoading = false
               <Button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover">
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <Spinner size="sm" />
                     {t("common.creating")}
                   </>
                 ) : (

@@ -24,6 +24,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { partnerService } from '@/services/partnerService';
+import { parsePartnerPropertyNamesResponse } from '@/utils/partnerPropertyData';
 import {
   Popover,
   PopoverContent,
@@ -196,9 +197,8 @@ const CalendarPage: React.FC = () => {
 
   const fetchProperties = async (signal?: AbortSignal) => {
     try {
-      const res: any = await partnerService.getProperties(undefined, { signal });
-      const list = res?.data?.data || res?.data || [];
-      setProperties(list);
+      const res: any = await partnerService.getPropertyNames({ signal });
+      setProperties(parsePartnerPropertyNamesResponse(res));
     } catch (err: any) {
       if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
         return;

@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
 import { FaFacebookF, FaGoogle, FaMap, FaPhone } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import { ThreeDot } from "react-loading-indicators";
 import { ROUTERS } from "@/constant";
 import { CheckCircle, XCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Verify Email Token Page
@@ -79,7 +79,7 @@ const VerifyEmailToken: React.FC = () => {
                                                     }}
                                                     disabled={resetTokenVerifyEmail.isPending || isClick}
                                                     className={`bg-${resultResetTokenVerifyEmail?.color} border- border px-10 py-2${resultResetTokenVerifyEmail?.color} w-full rounded-sm text-white disabled:cursor-not-allowed disabled:opacity-50`}>
-                                                    {(isClick || resetTokenVerifyEmail.isPending) ? <ThreeDot variant="bounce" color="#ffffff" size="small" /> :
+                                                    {(isClick || resetTokenVerifyEmail.isPending) ? <Spinner size="sm" spinnerClassName="border-t-white border-b-white/80" /> :
                                                         resultResetTokenVerifyEmail.value === "VET3" ?
                                                             t("verify_email.reset_token_verify_email") :
                                                             t("verify_email.back")}

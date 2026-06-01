@@ -2,6 +2,7 @@ import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
 import ImageLightbox from "@/components/ui/image-lightbox";
 import { Label } from "@/components/ui/label";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { useNewsByIdQuery } from "@/hooks/useNewsQuery";
 import { useGetUserProfileByIdQuery } from "@/hooks/useUserQuery";
@@ -10,7 +11,6 @@ import { statusNews } from "@/utils/utils";
 import { ArrowLeft, EditIcon, ImageIcon, Loader2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ThreeDot } from "react-loading-indicators";
 import { useNavigate, useParams } from "react-router";
 
 /**
@@ -36,14 +36,13 @@ const NewsDetail: React.FC = () => {
         navigate(ROUTERS.NEWS_EDIT + "/" + idNews);
     }
 
+    if (newsLoading) {
+        return <AdminContentLoader text={t("common.loading_data")} />;
+    }
+
     return (
         <>
             {newsError && <EmptyPage title="news.empty_title_news" description="news.empty_description" icon={<Loader2 className="size-10 animate-spin text-blue-500" />} loading={false} />}
-            {newsLoading && <>
-                <div className="flex h-full items-center justify-center">
-                    <ThreeDot variant="bounce" color="#064F80" size="large" />
-                </div>
-            </>}
             {newsData && !newsError &&
                 <div className="flex flex-col gap-2 px-3 pt-5 sm:px-6">
                     <div className="flex flex-row items-center justify-between">

@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QuestionDeleteDialogProps } from "@/dataHelper/chatbot.dataHelper";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Question Delete Dialog
@@ -60,7 +61,7 @@ const QuestionDeleteDialog = ({ isOpen, onClose, onConfirm, target, isLoading }:
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Spinner size="sm" />
                 {t("common.deleting")}
               </>
             ) : (

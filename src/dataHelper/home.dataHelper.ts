@@ -16,4 +16,5 @@ export interface RoomCard {
   reviews_avg_rating?: number | string;
   room_type?: number | string;
   property_type_name?: string;
+  partner_company_name?: string;
 }

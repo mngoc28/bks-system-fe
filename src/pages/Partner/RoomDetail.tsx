@@ -4,7 +4,7 @@ import {
   ArrowLeft, Home, Square, Users, MapPin, 
   Wallet, Shield, Wrench, History as HistoryIcon, Image as ImageIcon,
   Calendar, Phone, Mail, CheckCircle, Clock, AlertCircle,
-  ChevronRight, Star
+  ChevronRight, Star, Plus, Trash2, Edit, Compass
 } from 'lucide-react';
 import { partnerService } from '@/services/partnerService';
 import { useRoomReviewsQuery } from '@/hooks/useReviewQuery';
@@ -16,6 +16,22 @@ import { CLOUDINARY_HEADER_IMAGE_URL } from '@/constant';
 import { resolveImageUrl } from '@/utils/imageUtils';
 import { Room, Booking, MaintenanceRequest } from './types';
 import { cn } from '@/lib/utils';
+import {
+  useRoomTouristSpotMapsQuery,
+  useCreateRoomTouristSpotMapMutation,
+  useUpdateRoomTouristSpotMapMutation,
+  useDeleteRoomTouristSpotMapMutation
+} from '@/hooks/useRoomTouristSpotMapQuery';
+import { RoomTouristSpotDialog } from './components/RoomTouristSpotDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const RoomDetail: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -33,6 +49,79 @@ const RoomDetail: React.FC = () => {
     enabled: !!roomId,
   });
   const [showAllReviews, setShowAllReviews] = useState(false);
+
+  // Room tourist spot maps query and mutations
+  const { data: spotMaps = [], isLoading: isLoadingSpotMaps } = useRoomTouristSpotMapsQuery(
+    Number(roomId || 0),
+    true, // isPartner
+    { enabled: activeTab === 'tourist_spots' }
+  );
+
+  const createMapMutation = useCreateRoomTouristSpotMapMutation(true);
+  const updateMapMutation = useUpdateRoomTouristSpotMapMutation(true);
+  const deleteMapMutation = useDeleteRoomTouristSpotMapMutation(true);
+
+  const [isSpotDialogOpen, setIsSpotDialogOpen] = useState(false);
+  const [selectedSpotMap, setSelectedSpotMap] = useState<any | null>(null);
+  const [submittingSpot, setSubmittingSpot] = useState(false);
+
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteApplyToAll, setDeleteApplyToAll] = useState(false);
+
+  const handleSpotDialogSubmit = async (formData: any) => {
+    setSubmittingSpot(true);
+    try {
+      if (selectedSpotMap) {
+        // Edit mode
+        await updateMapMutation.mutateAsync({
+          id: selectedSpotMap.id,
+          roomId: Number(roomId),
+          data: {
+            distance_km: formData.distance_km,
+            travel_time_minutes: formData.travel_time_minutes,
+            is_primary: formData.is_primary,
+            priority_order: formData.priority_order,
+            note: formData.note,
+            apply_to_all_rooms: formData.apply_to_all_rooms,
+          },
+        });
+      } else {
+        // Create mode
+        await createMapMutation.mutateAsync({
+          room_id: Number(roomId),
+          tourist_spot_id: formData.tourist_spot_id,
+          distance_km: formData.distance_km,
+          travel_time_minutes: formData.travel_time_minutes,
+          is_primary: formData.is_primary,
+          priority_order: formData.priority_order,
+          note: formData.note,
+          apply_to_all_rooms: formData.apply_to_all_rooms,
+        });
+      }
+      setIsSpotDialogOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingSpot(false);
+    }
+  };
+
+  const handleSpotDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setDeleteApplyToAll(false);
+    setIsConfirmDeleteOpen(true);
+  };
+
+  const executeDelete = async (id: number, applyToAllRooms: boolean) => {
+    try {
+      await deleteMapMutation.mutateAsync({ id, roomId: Number(roomId), applyToAllRooms });
+      setIsConfirmDeleteOpen(false);
+      setDeleteTargetId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (roomId) {
@@ -72,7 +161,8 @@ const RoomDetail: React.FC = () => {
         services: rawRoom.services || [],
         prices: rawRoom.prices || [],
         reviews_count: rawRoom.reviews_count,
-        reviews_avg_rating: rawRoom.reviews_avg_rating
+        reviews_avg_rating: rawRoom.reviews_avg_rating,
+        province_id: rawRoom.province_id
       });
 
       const rawBookings = bookingsRes?.data?.data || bookingsRes?.data || (Array.isArray(bookingsRes) ? bookingsRes : []);
@@ -117,6 +207,7 @@ const RoomDetail: React.FC = () => {
     { id: 'tenants', label: 'Lịch sử đặt phòng' },
     { id: 'maintenance', label: 'Bảo trì' },
     { id: 'gallery', label: 'Hình ảnh' },
+    { id: 'tourist_spots', label: 'Địa điểm du lịch' },
     { id: 'reviews', label: 'Đánh giá khách hàng' },
   ];
 
@@ -450,6 +541,129 @@ const RoomDetail: React.FC = () => {
             </div>
          )}
 
+         {activeTab === 'tourist_spots' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+               <div className="flex items-center justify-between">
+                  <div>
+                     <h3 className="text-xl font-bold uppercase tracking-tighter text-slate-900">
+                        Địa điểm du lịch lân cận
+                     </h3>
+                     <p className="text-xs text-slate-500 mt-1">
+                        Quản lý danh sách các địa điểm du lịch xung quanh phòng này và thông tin di chuyển.
+                     </p>
+                  </div>
+                  <Button
+                     onClick={() => {
+                        setSelectedSpotMap(null);
+                        setIsSpotDialogOpen(true);
+                     }}
+                     className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm"
+                  >
+                     <Plus size={16} /> Gán địa điểm mới
+                  </Button>
+               </div>
+
+               {isLoadingSpotMaps ? (
+                  <div className="py-12 text-center">
+                     <Spinner size="lg" showText text="Đang tải danh sách địa điểm..." />
+                  </div>
+               ) : spotMaps.length === 0 ? (
+                  <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-20 text-center animate-in fade-in">
+                     <Compass className="mx-auto mb-6 text-slate-200" size={64} />
+                     <p className="text-xs font-bold uppercase italic tracking-[0.2em] text-slate-400">
+                        Chưa gán địa điểm du lịch nào cho phòng này
+                     </p>
+                  </div>
+               ) : (
+                  <Card className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
+                     <div className="overflow-x-auto">
+                        <table className="w-full">
+                           <thead>
+                              <tr className="bg-slate-900 text-white text-xs uppercase tracking-wider">
+                                 <th className="px-6 py-4 text-left font-bold opacity-80">Địa điểm du lịch</th>
+                                 <th className="px-6 py-4 text-center font-bold opacity-80">Khoảng cách</th>
+                                 <th className="px-6 py-4 text-center font-bold opacity-80">Thời gian đi</th>
+                                 <th className="px-6 py-4 text-center font-bold opacity-80">Nguồn dữ liệu</th>
+                                 <th className="px-6 py-4 text-right font-bold opacity-80">Thao tác</th>
+                              </tr>
+                           </thead>
+                           <tbody className="divide-y divide-slate-100 text-sm">
+                              {spotMaps.map((item: any) => (
+                                 <tr key={item.id} className="transition-colors hover:bg-slate-50">
+                                    <td className="px-6 py-5">
+                                       <div className="flex items-center gap-3">
+                                          <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-sm">
+                                             <MapPin size={18} />
+                                          </div>
+                                          <div>
+                                             <div className="flex items-center gap-2">
+                                                <span className="font-bold text-slate-800">
+                                                   {item.tourist_spot?.name}
+                                                </span>
+                                                {item.is_primary && (
+                                                   <Badge className="bg-amber-50 text-amber-700 border-amber-200 rounded-full font-bold text-[9px] uppercase tracking-wider flex items-center gap-1">
+                                                      <Star size={10} className="fill-amber-500 text-amber-500 shrink-0" />
+                                                      Chính
+                                                   </Badge>
+                                                )}
+                                             </div>
+                                             {item.note && (
+                                                <p className="text-xs text-slate-400 mt-0.5 max-w-sm line-clamp-1">
+                                                   {item.note}
+                                                </p>
+                                             )}
+                                          </div>
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-5 text-center font-semibold text-slate-700">
+                                       {item.distance_km != null ? `${item.distance_km} km` : '-'}
+                                    </td>
+                                    <td className="px-6 py-5 text-center font-semibold text-slate-700">
+                                       {item.travel_time_minutes} phút
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
+                                       <Badge className={cn(
+                                          "px-2.5 py-1 rounded-full font-bold text-[9px] uppercase tracking-widest border border-slate-200/50 shadow-none",
+                                          item.source_type === 'estimated'
+                                             ? "bg-slate-50 text-slate-600 border-slate-200"
+                                             : "bg-blue-50 text-blue-700 border-blue-200"
+                                       )}>
+                                          {item.source_type === 'estimated' ? 'Ước lượng' : 'Thủ công'}
+                                       </Badge>
+                                    </td>
+                                    <td className="px-6 py-5 text-right">
+                                       <div className="flex justify-end gap-2">
+                                          <Button
+                                             variant="outline"
+                                             size="sm"
+                                             onClick={() => {
+                                                setSelectedSpotMap(item);
+                                                setIsSpotDialogOpen(true);
+                                             }}
+                                             className="h-8 border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 rounded-lg text-xs"
+                                          >
+                                             <Edit size={14} className="mr-1" /> Sửa
+                                          </Button>
+                                          <Button
+                                             variant="outline"
+                                             size="sm"
+                                             onClick={() => handleSpotDelete(item.id)}
+                                             className="h-8 border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-lg text-xs"
+                                          >
+                                             <Trash2 size={14} className="mr-1" /> Xóa
+                                          </Button>
+                                       </div>
+                                    </td>
+                                 </tr>
+                              ))}
+                           </tbody>
+                        </table>
+                     </div>
+                  </Card>
+               )}
+            </div>
+         )}
+
          {activeTab === 'reviews' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                <Card className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
@@ -474,7 +688,7 @@ const RoomDetail: React.FC = () => {
 
                      {isLoadingReviews ? (
                         <div className="py-12 text-center">
-                           <Spinner size="lg" spinnerClassName="border-y-blue-600" showText text="Đang tải danh sách đánh giá..." />
+                           <Spinner size="lg" showText text="Đang tải danh sách đánh giá..." />
                         </div>
                      ) : !reviewsData || reviewsData.reviews.length === 0 ? (
                         <div className="py-16 text-center text-slate-400 text-sm italic">
@@ -541,6 +755,68 @@ const RoomDetail: React.FC = () => {
             </div>
          )}
       </div>
+
+      <RoomTouristSpotDialog
+         open={isSpotDialogOpen}
+         onOpenChange={setIsSpotDialogOpen}
+         provinceId={room.province_id}
+         existingSpotIds={spotMaps.map((item: any) => item.tourist_spot_id)}
+         mapping={selectedSpotMap}
+         onSubmit={handleSpotDialogSubmit}
+         submitting={submittingSpot}
+      />
+
+      <Dialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-900">
+              <span className="rounded-lg bg-rose-50 p-1.5 text-rose-600">
+                <Trash2 size={18} />
+              </span>
+              Xác nhận xóa liên kết
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 pt-2 text-sm leading-relaxed">
+              Bạn có chắc chắn muốn xóa liên kết với địa điểm du lịch này? Thao tác này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center space-x-2.5 py-3 border-t border-b border-slate-100 my-2">
+            <Checkbox
+              id="delete-apply-all-checkbox"
+              checked={deleteApplyToAll}
+              onCheckedChange={(checked) => setDeleteApplyToAll(!!checked)}
+            />
+            <label
+              htmlFor="delete-apply-all-checkbox"
+              className="text-xs font-bold text-slate-600 cursor-pointer select-none uppercase tracking-wider"
+            >
+              Áp dụng cho tất cả các phòng khác thuộc cùng tòa nhà
+            </label>
+          </div>
+
+          <DialogFooter className="flex flex-row items-center justify-end gap-2 pt-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsConfirmDeleteOpen(false)}
+              className="min-w-[80px]"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (deleteTargetId != null) {
+                  executeDelete(deleteTargetId, deleteApplyToAll);
+                }
+              }}
+              className="bg-rose-600 hover:bg-rose-700 text-white min-w-[100px]"
+            >
+              Xác nhận xóa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

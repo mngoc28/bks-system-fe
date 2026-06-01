@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { UserEditFormData, UserEditFormProps } from "@/dataHelper/user.dataHelper";
 import { userFormSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Save, Star } from "lucide-react";
+import { Save, Star } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * User Edit Form
@@ -138,7 +139,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSubmit, onCancel, i
               <Button type="submit" disabled={isLoading} className="flex-1">
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <Spinner size="sm" />
                     {t("common.saving")}
                   </>
                 ) : (

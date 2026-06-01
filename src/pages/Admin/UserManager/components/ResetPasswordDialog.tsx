@@ -4,11 +4,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { ResetPasswordDialogProps } from "@/dataHelper/user.dataHelper";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, KeyRound, Loader2 } from "lucide-react";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Reset Password Dialog
@@ -144,7 +145,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ user, isOpen,
               <Button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover">
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <Spinner size="sm" />
                     {t("common.processing")}
                   </>
                 ) : (

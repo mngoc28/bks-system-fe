@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+﻿import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { News, NewsTableProps } from "@/dataHelper/news.dataHelper";
 import { useTranslation } from "react-i18next";
 import NewsTableHeader from "./NewsTableHeader";
@@ -14,7 +14,7 @@ const NewsTable: React.FC<NewsTableProps> = ({ news, onDelete, onEdit, onView, o
     // const navigate = useNavigate();
     return (
         <div className="flex flex-1 flex-col">
-            <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+            <div className="w-full overflow-auto rounded-xl border border-primary/10 bg-white shadow-sm">
                 <Table className="min-w-max text-sm text-slate-700">
                     <NewsTableHeader onSort={onSort} sortField={sortField} sortDirection={sortDirection} />
                 <TableBody>

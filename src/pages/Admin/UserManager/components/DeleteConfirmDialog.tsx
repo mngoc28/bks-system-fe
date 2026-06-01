@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { DeleteConfirmDialogProps } from "@/dataHelper/user.dataHelper";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Delete Confirm Dialog
@@ -60,7 +61,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ user, isOpen,
           <Button type="button" variant="outline" onClick={onConfirm} disabled={isLoading} className="flex-1 border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700">
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Spinner size="sm" />
                 {t("user.delete_deleting")}
               </>
             ) : (

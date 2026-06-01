@@ -5,7 +5,8 @@ import { RoomFormData } from "@/dataHelper/room.dataHelper";
 import { useRoomQuery, useUpdateRoomMutation } from "@/hooks/useRoomQuery";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2 } from "lucide-react";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
+import { ArrowLeft } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -87,42 +88,43 @@ const RoomUpdate: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-3 sm:p-6">
-        <Loader2 className="size-8 animate-spin text-blue-500" />
-      </div>
-    );
-  }
-
-  if (isError || !room) {
-    const errorMessage = error ? (error as any)?.response?.data?.message || t("rooms.error_getting_room") : t("rooms.error_getting_room");
-    return (
-      <div className="flex flex-col gap-6 p-3 sm:p-6">
-        <div className="text-red-500">{errorMessage}</div>
-        <button onClick={() => navigate(ROUTERS.ROOMS)} className="text-blue-500 hover:underline">
-          {t("common.back")}
-        </button>
-      </div>
-    );
-  }
+  const pageHeader = (
+    <div className="flex items-center gap-4">
+      <Button variant="outline" className="w-fit" onClick={handleBack}>
+        <ArrowLeft className="size-4" />
+        {t("common.back")}
+      </Button>
+      <h2 className="text-2xl font-bold">{t("rooms.edit_room")}</h2>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6 overflow-hidden p-3 sm:p-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" className="w-fit" onClick={handleBack}>
-          <ArrowLeft className="size-4" />
-          {t("common.back")}
-        </Button>
-        <h2 className="text-2xl font-bold">{t("rooms.edit_room")}</h2>
-      </div>
-      <RoomEditForm
-        room={room}
-        onSubmit={handleSubmit}
-        onCancel={handleBack}
-        isLoading={updateRoomMutation.isPending}
-        currentUser={currentUser}
-      />
+      {pageHeader}
+
+      {isLoading ? (
+        <AdminContentLoader text={t("common.loading_data")} className="min-h-[360px]" />
+      ) : isError || !room ? (
+        <div className="flex flex-col gap-4">
+          <div className="text-red-500">
+            {error
+              ? (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+                t("rooms.error_getting_room")
+              : t("rooms.error_getting_room")}
+          </div>
+          <button type="button" onClick={() => navigate(ROUTERS.ROOMS)} className="text-primary hover:underline">
+            {t("common.back")}
+          </button>
+        </div>
+      ) : (
+        <RoomEditForm
+          room={room}
+          onSubmit={handleSubmit}
+          onCancel={handleBack}
+          isLoading={updateRoomMutation.isPending}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 };

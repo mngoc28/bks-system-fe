@@ -1,14 +1,17 @@
 import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ImageLightbox from "@/components/ui/image-lightbox";
+import AdminContentLoader from "@/components/admin/AdminContentLoader";
+import AdminUserProfileLink from "@/components/admin/AdminUserProfileLink";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant"
 import { usePartnerQuery } from "@/hooks/usePartnerQuery";
 import { safeFormatDateTime } from "@/utils/dateUtils";
 import { resolveImageUrl } from "@/utils/imageUtils";
+import { buildAdminUrl, toBookingsByPartner, toPropertiesByPartner, toRoomsByPartner } from "@/utils/adminNavigation";
 import { useTranslation } from "react-i18next";
-import { ArrowLeftIcon, EditIcon, ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeftIcon, BedDouble, Building2, CalendarDays, ChevronDown, EditIcon, ImageIcon, Loader2, User } from "lucide-react";
 import React from "react";
-import { ThreeDot } from "react-loading-indicators";
 import { useNavigate, useParams } from "react-router";
 
 /**
@@ -40,39 +43,83 @@ const PartnerDetail: React.FC = () => {
         navigate(`${ROUTERS.PARTNER_MANAGEMENT}/edit/${id}`)
     }
 
+    const handleViewProperties = () => {
+        navigate(buildAdminUrl(ROUTERS.PROPERTIES, toPropertiesByPartner(partnerId, "partner-detail", partner?.company_name || partner?.user_name)));
+    };
+
+    const handleViewRooms = () => {
+        navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByPartner(partnerId, "partner-detail", partner?.company_name || partner?.user_name)));
+    };
+
+    const handleViewBookings = () => {
+        navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByPartner(partnerId, "partner-detail", partner?.company_name || partner?.user_name)));
+    };
+
+    if (partnerLoading) {
+        return <AdminContentLoader text={t("common.loading_data")} />;
+    }
+
     return (
         <>
             {<div className="flex flex-col gap-y-10 px-3 pt-5 sm:px-6">
-                <div className="flex flex-row items-center justify-between">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <h2 className="whitespace-nowrap py-3 text-2xl font-bold text-gray-900">{t('partner.detail_partner')}</h2>
-                    <div className="flex flex-row items-start justify-center gap-3">
-                        <Button variant="outline" className="h-11 w-4/5 bg-blue-500 text-[14px] text-white hover:bg-blue-600 xl:w-full xl:text-[16px]" onClick={handleEditPartner}>
-                            <EditIcon className="size-5" />
-                            <span className="hidden lg:block">
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
+                                    <CalendarDays className="mr-1 size-4" />
+                                    {t("adminCrossNav.related_actions")}
+                                    <ChevronDown className="ml-1 size-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={handleViewProperties}>
+                                    <Building2 className="size-4" />
+                                    {t("adminCrossNav.properties")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleViewRooms}>
+                                    <BedDouble className="size-4" />
+                                    {t("adminCrossNav.rooms")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleViewBookings}>
+                                    <CalendarDays className="size-4" />
+                                    {t("adminCrossNav.bookings")}
+                                </DropdownMenuItem>
+                                {partner?.user_id ? (
+                                    <DropdownMenuItem onClick={() => navigate(`${ROUTERS.USER_DETAIL}/${partner.user_id}`)}>
+                                        <User className="size-4" />
+                                        {t("adminCrossNav.user_account")}
+                                    </DropdownMenuItem>
+                                ) : null}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button size="sm" className="h-9 bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditPartner}>
+                            <EditIcon className="mr-1 size-4" />
+                            <span>
                                 {t('partner.edit_partner')}
                             </span>
                         </Button>
-                        <Button variant="outline" className="h-11 w-4/5 bg-gray-600 text-[14px] text-white hover:bg-gray-700 xl:w-full xl:text-[16px]" onClick={handlePartners}>
-                            <ArrowLeftIcon className="size-5" />
-                            <span className="hidden lg:block">
+                        <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white text-slate-700 hover:bg-slate-100" onClick={handlePartners}>
+                            <ArrowLeftIcon className="mr-1 size-4" />
+                            <span>
                                 {t('common.back')}
                             </span>
                         </Button>
                     </div>
                 </div>
                 {partnerError && <EmptyPage title="partner.empty_title_partner" description="partner.empty_description" icon={<Loader2 className="size-10 animate-spin text-blue-500" />} loading={false} />}
-                {partnerLoading && <>
-                    <div className="flex items-center justify-center">
-                        <ThreeDot variant="bounce" color="#064F80" size="small" />
-                    </div>
-                </>}
                 {partner && !partnerError && <div className="flex flex-col gap-2 md:gap-1">
                     <div className="grid grid-cols-1 gap-2 md:gap-1 lg:grid-cols-2">
                         <div className="grid grid-cols-10 overflow-hidden rounded-md border border-gray-200">
                             <div className="col-span-3 flex items-center border-r border-slate-200 bg-slate-100 px-3 font-medium">
                                 {t("partner.user_name")}
                             </div>
-                            <div className="col-span-7 min-h-[52px] p-3">{partner?.user_name || ""}</div>
+                            <div className="col-span-7 flex min-h-[52px] items-center p-3">
+                                <AdminUserProfileLink userId={partner?.user_id}>
+                                    {partner?.user_name || "-"}
+                                </AdminUserProfileLink>
+                            </div>
                         </div>
                         <div className="grid grid-cols-10 overflow-hidden rounded-md border border-gray-200">
                             <div className="col-span-3 flex items-center border-r border-slate-200 bg-slate-100 px-3 font-medium">

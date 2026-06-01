@@ -153,6 +153,9 @@
     --premium-navy: 222 47% 11%;
     --premium-blue: 217 91% 60%;
     --premium-indigo: 239 84% 67%;
+    --admin-canvas: 220 20% 97%;
+    --admin-surface: 0 0% 100%;
+    --admin-border: 220 13% 91%;
     --glass-bg: 0 0% 100% / 0.7;
     --glass-border: 0 0% 100% / 0.3;
   }
@@ -247,6 +250,73 @@
 
   .premium-shadow {
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Admin shell — premium navy surfaces */
+  .admin-shell {
+    background-color: hsl(var(--admin-canvas));
+    color: hsl(var(--foreground));
+  }
+
+  .admin-card {
+    @apply rounded-xl border bg-white shadow-sm;
+    border-color: hsl(var(--primary) / 0.12);
+  }
+
+  .admin-table-wrap {
+    @apply w-full overflow-auto rounded-xl border bg-white shadow-sm;
+    border-color: hsl(var(--primary) / 0.12);
+  }
+
+  .admin-btn-primary {
+    @apply bg-primary font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary-hover;
+  }
+
+  .admin-btn-primary:hover {
+    box-shadow: 0 4px 14px hsl(var(--primary) / 0.25);
+  }
+
+  .admin-btn-outline {
+    @apply border border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-primary;
+  }
+
+  .admin-chip-bar {
+    @apply flex flex-wrap items-center gap-2 rounded-xl border p-3;
+    border-color: hsl(var(--primary) / 0.15);
+    background-color: hsl(var(--primary) / 0.05);
+  }
+
+  /* Premium admin sidebar */
+  .admin-sidebar {
+    background: linear-gradient(
+      175deg,
+      hsl(var(--premium-navy)) 0%,
+      hsl(var(--primary)) 42%,
+      hsl(225 73% 32%) 100%
+    );
+    box-shadow: 4px 0 28px hsl(var(--premium-navy) / 0.18);
+  }
+
+  .admin-sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 80% 50% at 0% 0%, hsl(var(--premium-blue) / 0.12), transparent 55%);
+  }
+
+  .admin-sidebar > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .admin-shell input:focus-visible,
+  .admin-shell select:focus-visible,
+  .admin-shell textarea:focus-visible,
+  .admin-shell [role="combobox"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+    border-color: hsl(var(--primary) / 0.4);
   }
 
   .animate-in {
@@ -431,4 +501,51 @@
 .custom-modal-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Print styles for stay confirmation voucher & contracts */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 15mm;
+  }
+  
+  body {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+  }
+  
+  /* Hide all other elements in print */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  /* Make voucher card and its children visible */
+  #voucher-card-print,
+  #voucher-card-print * {
+    visibility: visible !important;
+  }
+  
+  /* Reset voucher card positions and shadow for printing */
+  #voucher-card-print {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* Force background colors and colors to render in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 

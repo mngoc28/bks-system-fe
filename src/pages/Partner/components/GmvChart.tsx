@@ -57,7 +57,7 @@ const GmvChart: React.FC<GmvChartProps> = ({ data = [], isLoading = false }) => 
         <div className="h-[320px] w-full">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
-              <Spinner size="md" spinnerClassName="border-y-indigo-600" />
+              <Spinner size="md" />
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">

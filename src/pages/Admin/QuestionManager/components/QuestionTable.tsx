@@ -1,4 +1,4 @@
-import Pagination from "@/components/Pagination";
+﻿import Pagination from "@/components/Pagination";
 import RowActions from "@/components/RowActions/RowActions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { QuestionSortKey, QuestionsProps } from "@/dataHelper/chatbot.dataHelper";
@@ -39,7 +39,7 @@ const QuestionTable = ({ rows, filters, onToggleSort, page, perPage, totalItems,
   const showInitialLoading = rows.length === 0 && isLoading;
   return (
     <div className="flex flex-1 flex-col">
-      <div className="relative w-full overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
+      <div className="relative w-full overflow-hidden rounded-xl border border-primary/10 bg-white shadow-sm">
         <div className="w-full overflow-x-auto">
           <Table className="min-w-max text-sm text-slate-700">
             <TableHeader className="sticky top-0 z-10 bg-slate-100">

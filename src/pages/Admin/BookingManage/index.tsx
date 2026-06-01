@@ -1,19 +1,21 @@
 ﻿import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE } from "@/constant";
+import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import type { Booking, BookingFilters, SearchBookingRequest } from "@/dataHelper/booking.dataHelper";
 import { useBookingsQuery, useDeleteBookingMutation } from "@/hooks/useBookingQuery";
 import { mapBookingStatus } from "@/utils/utils";
 import { Filter, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { BookingDetailDialog, BookingEditDialog, BookingSearchSection, BookingsEmptyState, DeleteConfirmDialog, BookingCard } from "./components";
 import BookingCreateDialog from "./components/BookingCreateDialog";
 import { Spinner } from "@/components/ui/spinner";
 import PageBar from "@/components/PageBar";
 import { ViewMode } from "@/components/LayoutToggle";
 import BookingTable from "./components/BookingTable";
+import ContextFilterChips from "@/components/admin/ContextFilterChips";
+import { clearAdminContext, parseAdminContext } from "@/utils/adminNavigation";
 
 /**
  * Booking Management Page
@@ -21,7 +23,12 @@ import BookingTable from "./components/BookingTable";
  */
 export default function BookingManagePage() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const context = useMemo(() => parseAdminContext(searchParams.toString()), [searchParams]);
+  const roomIdContext = Number(searchParams.get("room_id") || "") || undefined;
+  const propertyIdContext = Number(searchParams.get("property_id") || "") || undefined;
+  const partnerIdContext = Number(searchParams.get("partner_id") || "") || undefined;
   const [open, setOpen] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -80,6 +87,9 @@ export default function BookingManagePage() {
     start_date: filters.start_date || undefined,
     end_date: filters.end_date || undefined,
     room_name: filters.room || undefined,
+    room_id: roomIdContext,
+    property_id: propertyIdContext,
+    partner_id: partnerIdContext,
   };
 
   const { data: apiData, isLoading } = useBookingsQuery(queryParams);
@@ -89,8 +99,12 @@ export default function BookingManagePage() {
     const list: any[] = apiData?.data?.data ?? [];
     return list.map((item: any, idx: number) => ({
       id: String(item.id ?? idx + 1),
-      user: { name: item.user_name ?? "" },
-      room: { room_number: item.room_name ?? "", property: { name: item.property_name ?? "" } },
+      user: { id: item.user_id ?? undefined, name: item.user_name ?? "" },
+      room: {
+        room_id: item.room_id ?? undefined,
+        room_number: item.room_name ?? "",
+        property: { id: item.property_id ?? undefined, name: item.property_name ?? "" },
+      },
       start_date: item.start_date ?? "",
       end_date: item.end_date ?? "",
       price: (() => {
@@ -209,7 +223,7 @@ export default function BookingManagePage() {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-primary"
               onClick={() => setOpen((v) => !v)}
             >
               <Filter className="size-4" />
@@ -218,7 +232,7 @@ export default function BookingManagePage() {
             <Button
               variant="default"
               size="sm"
-              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              className="flex items-center gap-2 bg-primary font-semibold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-primary/25"
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="size-4" />
@@ -243,6 +257,13 @@ export default function BookingManagePage() {
         setFilters={setFilters}
         onReset={handleReset}
         onClose={() => setOpen(false)}
+      />
+      <ContextFilterChips
+        context={context}
+        onClear={() => {
+          const nextQuery = clearAdminContext(searchParams.toString());
+          setSearchParams(nextQuery);
+        }}
       />
 
       {isLoading ? (
@@ -324,6 +345,18 @@ export default function BookingManagePage() {
                     }}
                     onDelete={askDelete}
                     filters={filters}
+                    onNavigateUser={(booking) => {
+                      if (!booking.user.id) return;
+                      navigate(`${ROUTERS.USER_DETAIL}/${booking.user.id}`);
+                    }}
+                    onNavigateRoom={(booking) => {
+                      if (!booking.room.room_id) return;
+                      navigate(`${ROUTERS.ROOMS_DETAIL}/${booking.room.room_id}`);
+                    }}
+                    onNavigateProperty={(booking) => {
+                      if (!booking.room.property.id) return;
+                      navigate(`${ROUTERS.PROPERTIES_DETAIL}/${booking.room.property.id}`);
+                    }}
                 />
                 {totalItems > 0 && (
                 <div className="border-t border-slate-100 p-4">

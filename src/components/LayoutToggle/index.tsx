@@ -28,8 +28,8 @@ const LayoutToggle: React.FC<LayoutToggleProps> = ({ viewMode, onViewModeChange,
         className={cn(
           "h-8 w-8 p-0 transition-all duration-300 rounded-lg",
           viewMode === "grid" 
-            ? "bg-white text-indigo-600 shadow-sm hover:bg-white" 
-            : "text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+            ? "bg-white text-primary shadow-sm hover:bg-white" 
+            : "text-slate-500 hover:bg-primary/10 hover:text-primary"
         )}
         onClick={() => onViewModeChange("grid")}
       >
@@ -43,8 +43,8 @@ const LayoutToggle: React.FC<LayoutToggleProps> = ({ viewMode, onViewModeChange,
         className={cn(
           "h-8 w-8 p-0 transition-all duration-300 rounded-lg",
           viewMode === "table" 
-            ? "bg-white text-indigo-600 shadow-sm hover:bg-white" 
-            : "text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+            ? "bg-white text-primary shadow-sm hover:bg-white" 
+            : "text-slate-500 hover:bg-primary/10 hover:text-primary"
         )}
         onClick={() => onViewModeChange("table")}
       >

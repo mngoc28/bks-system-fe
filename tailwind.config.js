@@ -162,6 +162,12 @@ module.exports = {
         notifyInfoText: {
           DEFAULT: "hsl(var(--notify-info-text))",
         },
+
+        premium: {
+          navy: "hsl(var(--premium-navy))",
+          blue: "hsl(var(--premium-blue))",
+          indigo: "hsl(var(--premium-indigo))",
+        },
       },
     },
   },

@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,7 +31,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
   // Amenities, Services
   const { data: amenitiesData, isLoading: isAmenitiesLoading } = useAllAmenitiesQuery();
   const { data: servicesData, isLoading: isServicesLoading } = useAllServicesQuery();
-  const { data: pricePackagesData, isLoading: isPricePackagesLoading } = usePricePackagesQuery({ enabled: true });
+  const { data: pricePackagesData } = usePricePackagesQuery({ enabled: true });
 
   const propertyOptions = useMemo(() => {
     const allProperties = propertiesData ?? [];
@@ -82,15 +82,8 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
       name: "prices",
     });
 
-  const watchedPrices = form.watch("prices");
 
-  if (isAmenitiesLoading || isServicesLoading || isPricePackagesLoading) {
-    return (
-      <div className="flex items-center justify-center p-4">
-        <Loader2 className="size-8 animate-spin text-blue-500" />
-      </div>
-    );
-  }
+  const watchedPrices = form.watch("prices");
 
   const handleSubmit = (data: z.infer<typeof schema>) => {
       onSubmit({

@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { EditUserDialogProps } from "@/dataHelper/user.dataHelper";
 import { userFormSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Loader2 } from "lucide-react";
+import { Edit } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Edit User Dialog
@@ -167,7 +168,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ user, isOpen, isLoading
               <Button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover">
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <Spinner size="sm" />
                     {t("common.updating")}
                   </>
                 ) : (

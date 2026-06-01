@@ -1,4 +1,4 @@
-﻿import { Amenity } from "@/dataHelper/amenity.dataHelper";
+import { Amenity } from "@/dataHelper/amenity.dataHelper";
 import { Property } from "@/dataHelper/property.dataHelper";
 import { PricePackage } from "@/dataHelper/pricePackage.dataHelper";
 import { RoomImage } from "@/dataHelper/roomImage.dataHelper";
@@ -9,6 +9,7 @@ export type RoomSortKey = "id" | "title" | "room_number" | "property" | "area" |
 // Main Room interface
 export interface Room {
   id: number;
+  partner_id?: number;
   property_id?: number;
   property_name?: string;
   title: string;
@@ -29,6 +30,7 @@ export interface Room {
   services?: RoomService[];
   prices?: RoomPrice[];
   images?: RoomImage[];
+  province_id?: number;
 }
 
 // Related interfaces
@@ -74,6 +76,7 @@ export interface SearchRoomRequest {
   page?: number;
   per_page?: number;
   property_id?: number;
+  partner_id?: number;
   title?: string;
   room_number?: string;
   room_type?: number;
@@ -132,6 +135,9 @@ export interface RoomTableProps {
   onView: (id: string | number) => void;
   onEdit: (id: string | number) => void;
   onDelete: (room: Room) => void;
+  onViewProperty?: (room: Room) => void;
+  onViewBookings?: (room: Room) => void;
+  onViewPartner?: (room: Room) => void;
   // canModifyRoom: (room: Room) => boolean;
   getPropertyName: (room: Room) => string;
   getRoomTypeName: (type: number) => string;

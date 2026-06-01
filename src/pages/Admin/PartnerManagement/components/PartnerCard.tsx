@@ -1,11 +1,14 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PartnerInfor } from "@/dataHelper/partner.dataHelper";
+import AdminUserProfileLink from "@/components/admin/AdminUserProfileLink";
 import { Map, MapPin, Phone, Edit, Globe, ImageIcon } from "lucide-react";
-import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
+import { useNavigate } from "react-router-dom";
+import { buildAdminUrl, toBookingsByPartner, toPropertiesByPartner, toRoomsByPartner } from "@/utils/adminNavigation";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
 
@@ -30,6 +33,7 @@ interface PartnerCardProps {
  */
 const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit, highlightTerms }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const imageUrl = resolveImageUrl(partner.image_1, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
   const fallbackImage = "/assets/images/photo_error2.png";
 
@@ -74,7 +78,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit, high
       <div className="p-6">
         <div className="mb-4 flex items-start justify-between gap-2">
           <h3
-            className="truncate text-xl font-black text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100"
+            className="truncate text-xl font-black text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100"
             title={partner.company_name || partner.user_name}
           >
             {highlightText(partner.company_name || partner.user_name || "", highlightTerms?.company_name || "")}
@@ -88,13 +92,20 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit, high
 
         {partner.company_name && partner.user_name && (
           <p className="mb-3 mt-[-12px] text-xs font-semibold text-slate-400">
-            {t("partner.representative")}: {highlightText(partner.user_name || "", highlightTerms?.user_name || "")}
+            {t("partner.representative")}:{" "}
+            <AdminUserProfileLink
+              userId={partner.user_id}
+              className="text-xs font-semibold"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {highlightText(partner.user_name || "", highlightTerms?.user_name || "")}
+            </AdminUserProfileLink>
           </p>
         )}
 
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm text-slate-500">
-            <Map className="size-4 shrink-0 text-indigo-500" />
+            <Map className="size-4 shrink-0 text-primary" />
             <span className="truncate">{highlightText(partner.province_name || "", highlightTerms?.province_name || "")} - {highlightText(partner.ward_name || "", highlightTerms?.ward_name || "")}</span>
           </div>
           <div className="flex items-center gap-3 text-sm text-slate-500">
@@ -104,13 +115,62 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit, high
           {partner.website && (
             <div className="flex items-center gap-3 text-sm text-slate-500">
               <Globe className="size-4 shrink-0 text-emerald-500" />
-              <span className="truncate italic text-indigo-400">{highlightText(partner.website, highlightTerms?.website || "")}</span>
+              <span className="truncate italic text-premium-blue">{highlightText(partner.website, highlightTerms?.website || "")}</span>
             </div>
           )}
           <div className="flex items-center gap-3 text-sm text-slate-500 opacity-80">
             <MapPin className="size-4 shrink-0 text-slate-400" />
             <span className="truncate text-xs">{highlightText(partner.address || t("partner.no_address_provided"), highlightTerms?.address || "")}</span>
           </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(buildAdminUrl(ROUTERS.PROPERTIES, toPropertiesByPartner(partner.id, "partner-management", partner.company_name || partner.user_name)));
+            }}
+          >
+            {t("adminCrossNav.properties")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name)));
+            }}
+          >
+            {t("adminCrossNav.rooms")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name)));
+            }}
+          >
+            {t("adminCrossNav.bookings")}
+          </Button>
+          {partner.user_id ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`${ROUTERS.USER_DETAIL}/${partner.user_id}`);
+              }}
+            >
+              {t("adminCrossNav.user_account")}
+            </Button>
+          ) : null}
         </div>
       </div>
     </Card>

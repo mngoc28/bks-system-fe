@@ -32,6 +32,10 @@ export interface PublicBookingSummary {
     /** `room_prices.id` when BE includes it (T6 sync). */
     price_id?: number;
     total_amount: number;
+    room_stay_amount?: number;
+    services_total?: number;
+    unit_price?: number;
+    price_unit?: string;
     room_title: string;
     property_address: string;
 }

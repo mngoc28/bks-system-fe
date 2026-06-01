@@ -48,7 +48,10 @@ export const enum ROUTERS {
   NEWS_DETAIL = "/admin/news/detail",
   PARTNER_MANAGEMENT = "/admin/partner-information",
   PARTNER_APPROVAL = "/admin/partner-approval",
-  
+  PARTNER_SETTLEMENTS = "/admin/settlements",
+  PARTNER_SETTLEMENT_DETAIL = "/admin/settlements/:id",
+  PARTNER_FINANCE = "/partner/finance",
+
   // Partner Routes
   PARTNER_LOGIN = "/partner/login",
   PARTNER_DASHBOARD = "/partner/dashboard",
@@ -93,6 +96,7 @@ export const enum ROUTERS {
   BKS_STAY_SERVICES = "/bks-stay/services",
   BKS_STAY_CONTRACTS = "/bks-stay/contracts",
   BKS_STAY_CONTRACT_DETAIL = "/bks-stay/contracts/:id",
+  BKS_STAY_VOUCHER = "/bks-stay/bookings/:id/voucher",
   BKS_STAY_LOGIN = "/bks-stay/login",
   BKS_STAY_FORCE_CHANGE_PASSWORD = "/bks-stay/force-change-password",
   BKS_STAY_GUIDE = "/bks-stay/guide",
@@ -222,6 +226,12 @@ export const PROPERTY_IMAGE_TYPE = {
 
 export const HEADER_PROPERTY_CLOUDINARY = "properties/"
 export const CLOUDINARY_HEADER_IMAGE_URL = import.meta.env.VITE_CLOUDINARY_URL || "https://res.cloudinary.com/dyragzjcd/image/upload"
+export const CLOUDINARY_VIDEO_URL = import.meta.env.VITE_CLOUDINARY_VIDEO_URL || "https://res.cloudinary.com/dc2ivo5ez/video/upload"
+export const HERO_BANNER_VIDEOS = {
+  HOTEL: "v1779865486/fy5qz9e9jo7cxboybr9e.mp4",
+  APARTMENT: "v1779865510/iryohnr136v6gdocvw9a.mp4",
+  APARTMENT_3: "v1779865529/vaz3hb5fwer8rpezvdlm.mp4",
+} as const;
 export const DEFAULT_ROOM_IMAGE = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop"
 
 export const FEATURED_CITY_PRIORITY = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng"];
@@ -239,6 +249,42 @@ export const FEATURED_DESTINATION_PRIORITY = [
 ];
 
 export const SUGGESTED_ROOM_CITY_PRIORITY = ["Đà Nẵng", "Khánh Hòa", "Quảng Ninh"];
+
+/** Homepage tabs: room suggestions by tourist spot (PLAN-RTM-HP-007) */
+export const SUGGESTED_ROOM_SPOT_PRIORITY = [
+  "Hồ Hoàn Kiếm",
+  "Chợ Bến Thành",
+  "Sa Pa",
+  "Cát Bà",
+  "Lý Sơn",
+  "Bà Nà Hill",
+  "Bãi biển Mỹ Khê",
+  "Vịnh Hạ Long",
+  "VinWonders Nha Trang",
+  "Hồ Xuân Hương",
+  "Đại Nội Huế",
+  "Tràng An",
+] as const;
+
+export const SUGGESTED_ROOM_SPOT_SLUGS = [
+  "ho-hoan-kiem",
+  "cho-ben-thanh",
+  "sa-pa",
+  "cat-ba",
+  "ly-son",
+  "ba-na-hill",
+  "bai-bien-my-khe",
+  "vinh-ha-long",
+  "vinwonders-nha-trang",
+  "ho-xuan-huong",
+  "dai-noi-hue",
+  "trang-an",
+] as const;
+
+export const HOMEPAGE_SUGGESTIONS_BY_SPOT =
+  import.meta.env.VITE_HOMEPAGE_SUGGESTIONS_BY_SPOT !== "false";
+
+export const HOMEPAGE_SPOT_MIN_ROOMS = Number(import.meta.env.VITE_HOMEPAGE_SPOT_MIN_ROOMS) || 4;
 
 // Lightbox configuration
 export const LIGHTBOX_MAX_ZOOM_PIXEL_RATIO = 5;

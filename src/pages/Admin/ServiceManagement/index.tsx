@@ -1,4 +1,4 @@
-import EmptyPage from "@/components/EmptyPage";
+﻿import EmptyPage from "@/components/EmptyPage";
 import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE } from "@/constant";
@@ -179,7 +179,7 @@ const ServiceManagement: React.FC = () => {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+                            className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-primary"
                             onClick={() => setOpen(true)}
                         >
                             <Filter className="size-4" />
@@ -188,7 +188,7 @@ const ServiceManagement: React.FC = () => {
                         <Button
                             variant="default"
                             size="sm"
-                            className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+                            className="flex items-center gap-2 bg-primary font-semibold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-primary/25"
                             onClick={() => setAddServiceOpen(true)}
                         >
                             <Plus className="size-4" />

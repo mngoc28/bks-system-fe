@@ -78,7 +78,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
+        <Spinner size="lg" />
       </div>
     );
   }

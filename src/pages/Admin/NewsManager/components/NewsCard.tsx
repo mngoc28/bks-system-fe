@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,7 +85,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
 
       {/* Content Section */}
       <div className="flex flex-1 flex-col p-6">
-        <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
+        <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-primary">
           <div className="flex items-center gap-1">
             <Calendar className="size-3" />
             {publishedDate}
@@ -97,7 +97,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onView, onEdit, onDelete, hig
         </div>
 
         <h3
-          className="mb-3 line-clamp-2 text-xl font-black leading-tight text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100"
+          className="mb-3 line-clamp-2 text-xl font-black leading-tight text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100"
           title={news.title}
         >
           {highlightText(news.title, highlightTerms?.title || "")}

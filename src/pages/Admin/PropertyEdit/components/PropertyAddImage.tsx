@@ -15,8 +15,8 @@ import { useDeleteImageMutation, useUploadImageMutation } from "@/hooks/useCloud
 import { useCreatePropertyImageMutation } from "@/hooks/usePropertyImageQuery";
 import { ApiResponse } from "@/api/types";
 import { CloudinaryImage } from "@/dataHelper/cloudinary.dataHelper";
-import { ThreeDot } from "react-loading-indicators";
 import { X } from "lucide-react"; 
+import { Spinner } from "@/components/ui/spinner";
 
 const PropertyAddImage: React.FC<PropertyAddImageProps> = ({ userId, propertyId, open, onClose }) => {
     const { t } = useTranslation();
@@ -473,7 +473,7 @@ const PropertyAddImage: React.FC<PropertyAddImageProps> = ({ userId, propertyId,
                             {uploadImageMutation.isPending || createPropertyImageMutation.isPending
                                 ? (
                                     <>
-                                        <ThreeDot variant="bounce" color="#1683FF" size="small" />
+                                        <Spinner size="sm" spinnerClassName="border-t-white border-b-white/80" />
                                         <span>{t("common.uploading")}...</span>
                                     </>
                                 )

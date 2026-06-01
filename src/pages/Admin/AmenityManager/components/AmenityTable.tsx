@@ -1,4 +1,4 @@
-import Pagination from "@/components/Pagination";
+﻿import Pagination from "@/components/Pagination";
 import RowActions from "@/components/RowActions/RowActions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AmenityTableProps } from "@/dataHelper/amenity.dataHelper";
@@ -29,7 +29,7 @@ const AmenityTable: React.FC<AmenityTableProps> = ({
   const { t } = useTranslation();
   return (
     <div className="flex flex-1 flex-col">
-      <div className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm">
+      <div className="w-full overflow-auto rounded-xl border border-primary/10 bg-white shadow-sm">
         <Table className="min-w-max text-sm text-slate-700">
           <TableHeader className="sticky top-0 z-10 bg-slate-100">
             <tr className="border-b border-gray-300">

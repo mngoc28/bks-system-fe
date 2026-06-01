@@ -31,6 +31,9 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { ROUTERS } from "@/constant";
+import { BookingDaysInline } from "@/components/common/BookingDaysDisplay";
+import { computeBookingTotalAmount } from "@/utils/bookingAmount";
+import { countBookingDaysInclusive } from "@/utils/dateUtils";
 import { formatPrice } from "@/utils/utils";
 import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
 
@@ -110,7 +113,13 @@ const History = () => {
       b.room?.property?.name,
       b.start_date,
       b.end_date,
-      b.price?.price,
+      computeBookingTotalAmount({
+        start_date: b.start_date,
+        end_date: b.end_date,
+        price: { price: b.price?.price, unit: b.price?.unit },
+        services: b.services,
+        total_amount: b.total_amount,
+      }),
       getStatusInfo(b.status).label,
       b.created_at
     ]);
@@ -151,7 +160,7 @@ const History = () => {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Spinner size="lg" spinnerClassName="border-y-sky-600" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -251,6 +260,7 @@ const History = () => {
                                     <span className="hidden text-slate-200 sm:inline">|</span>
                                     <span className="whitespace-nowrap font-bold text-slate-600">{new Date(booking.start_date).toLocaleDateString("vi-VN")} - {new Date(booking.end_date).toLocaleDateString("vi-VN")}</span>
                                  </div>
+                                 <BookingDaysInline days={countBookingDaysInclusive(booking.start_date, booking.end_date)} />
                                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                                     <Clock className="size-3" />
                                     <span>Thời điểm đặt: <span className="font-bold">{new Date(booking.created_at).toLocaleString("vi-VN")}</span></span>
@@ -265,7 +275,17 @@ const History = () => {
                         >
                            <div className="text-left lg:text-right">
                               <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Giá trị đơn</p>
-                              <p className="text-lg font-black text-slate-900 sm:text-xl">{formatPrice(booking.price?.price || 0)}</p>
+                              <p className="text-lg font-black text-slate-900 sm:text-xl">
+                                {formatPrice(
+                                  computeBookingTotalAmount({
+                                    start_date: booking.start_date,
+                                    end_date: booking.end_date,
+                                    price: { price: booking.price?.price, unit: booking.price?.unit },
+                                    services: booking.services,
+                                    total_amount: booking.total_amount,
+                                  }),
+                                )}
+                              </p>
                            </div>
                            <div className="flex items-center gap-2">
                               {statusInfo.label === "Completed" && (

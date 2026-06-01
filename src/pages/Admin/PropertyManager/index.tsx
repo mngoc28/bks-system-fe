@@ -5,11 +5,13 @@ import { Property, SearchPropertyRequest } from "@/dataHelper/property.dataHelpe
 import { usePropertiesQuery, useDeletePropertyMutation } from "@/hooks/usePropertyQuery";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PropertyHeader, PropertySearchSection, PropertyCard, DeleteConfirmDialog, PropertyTable } from "./components";
 import { usePropertySort } from "./hooks";
 import { Spinner } from "@/components/ui/spinner";
 import { ViewMode } from "@/components/LayoutToggle";
+import ContextFilterChips from "@/components/admin/ContextFilterChips";
+import { clearAdminContext, parseAdminContext } from "@/utils/adminNavigation";
 
 /**
  * Properties Management Page
@@ -18,6 +20,9 @@ import { ViewMode } from "@/components/LayoutToggle";
 const Properties: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [urlSearchParams, setUrlSearchParams] = useSearchParams();
+  const context = parseAdminContext(urlSearchParams.toString());
+  const partnerIdContext = Number(urlSearchParams.get("partner_id") || "") || undefined;
 
   // Sort logic
   const { sort, clearSort, toggleSort, getSortDirection } = usePropertySort();
@@ -44,6 +49,7 @@ const Properties: React.FC = () => {
     ward_name: "",
     year_built: "",
     property_type_id: undefined,
+    partner_id: partnerIdContext,
     sort: null,
   });
 
@@ -69,6 +75,7 @@ const Properties: React.FC = () => {
     ward_name: "",
     year_built: "",
     property_type_id: undefined,
+    partner_id: partnerIdContext,
   });
 
   const handleResetFilters = () => {
@@ -82,6 +89,7 @@ const Properties: React.FC = () => {
       ward_name: "",
       year_built: "",
       property_type_id: undefined,
+      partner_id: partnerIdContext,
       sort: null,
     };
     setFilters(resetFilters);
@@ -90,6 +98,12 @@ const Properties: React.FC = () => {
   };
 
   // Realtime search với debounce cho filters
+  useEffect(() => {
+    const partnerId = Number(urlSearchParams.get("partner_id") || "") || undefined;
+    setFilters((prev) => ({ ...prev, partner_id: partnerId }));
+    setSearchParams((prev) => ({ ...prev, partner_id: partnerId }));
+  }, [urlSearchParams]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchParams((prev) => ({
@@ -149,6 +163,15 @@ const Properties: React.FC = () => {
         setFilters={setFilters}
         onReset={handleResetFilters}
         onClose={() => setOpen(false)}
+      />
+      <ContextFilterChips
+        context={context}
+        onClear={() => {
+          const nextQuery = clearAdminContext(urlSearchParams.toString());
+          setUrlSearchParams(nextQuery);
+          setFilters((prev) => ({ ...prev, partner_id: undefined }));
+          setSearchParams((prev) => ({ ...prev, partner_id: undefined }));
+        }}
       />
       <DeleteConfirmDialog
         property={deleteTarget}

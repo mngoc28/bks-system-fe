@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onR
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "admin": return <Badge className="border-none bg-rose-500 px-3 py-0.5 text-[10px] font-bold uppercase hover:bg-rose-600">Admin</Badge>;
-      case "partner": return <Badge className="border-none bg-indigo-500 px-3 py-0.5 text-[10px] font-bold uppercase hover:bg-indigo-600">Partner</Badge>;
+      case "partner": return <Badge className="border-none bg-primary/100 px-3 py-0.5 text-[10px] font-bold uppercase hover:bg-primary">Partner</Badge>;
       default: return <Badge className="border-none bg-slate-500 px-3 py-0.5 text-[10px] font-bold uppercase hover:bg-slate-600">User</Badge>;
     }
   };
@@ -48,13 +48,13 @@ const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onR
       {/* Top Right Badges */}
       <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
         {getRoleBadge(user.role)}
-        {isCurrentUser && <Badge variant="outline" className="border-indigo-200 bg-indigo-50 px-2 py-0 text-[10px] text-indigo-500">You</Badge>}
+        {isCurrentUser && <Badge variant="outline" className="border-primary/20 bg-primary/10 px-2 py-0 text-[10px] text-primary">You</Badge>}
       </div>
 
       {/* Large Avatar */}
       <div className="relative mb-4 mt-2">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-400 opacity-20 blur-lg transition-opacity group-hover:opacity-40"></div>
-        <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-indigo-50 text-2xl font-black text-indigo-600 shadow-xl dark:border-slate-800">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary to-cyan-400 opacity-20 blur-lg transition-opacity group-hover:opacity-40"></div>
+        <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-primary/10 text-2xl font-black text-primary shadow-xl dark:border-slate-800">
           {avatarUrl ? (
             <img 
               src={avatarUrl} 
@@ -76,7 +76,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onR
       </div>
 
       <div className="mb-6 text-center">
-        <h3 className="mb-1 text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100">{highlightText(user.name || "Anonymous", highlightTerms?.q || "")}</h3>
+        <h3 className="mb-1 text-lg font-bold text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100">{highlightText(user.name || "Anonymous", highlightTerms?.q || "")}</h3>
         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">ID: {user.id}</p>
       </div>
 
@@ -101,7 +101,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onView, onEdit, onDelete, onR
         <Button
           variant="outline"
           size="icon"
-          className="h-10 w-full rounded-xl border-slate-100 bg-white/50 hover:bg-white hover:text-indigo-600 dark:bg-slate-800/50"
+          className="h-10 w-full rounded-xl border-slate-100 bg-white/50 hover:bg-white hover:text-primary dark:bg-slate-800/50"
           onClick={(e) => { e.stopPropagation(); onEdit(user.id); }}
           title={t("common.edit")}
         >

@@ -71,7 +71,17 @@
         "districtPrompt": "Chọn tỉnh/thành để xem phường/xã",
         "cta": "TÌM KIẾM",
         "provinceRequired": "Vui lòng chọn tỉnh/thành trước khi tìm kiếm.",
-        "districtRequiresProvince": "Vui lòng chọn tỉnh/thành phố trước khi chọn phường/xã."
+        "districtRequiresProvince": "Vui lòng chọn tỉnh/thành phố trước khi chọn phường/xã.",
+        "tabDaily": "Đặt phòng theo ngày",
+        "tabMonthly": "Thuê dài hạn",
+        "checkIn": "Nhận phòng",
+        "checkOut": "Trả phòng",
+        "guests": "khách",
+        "adults": "Người lớn",
+        "children": "Trẻ em",
+        "adultsLabel": "Người lớn (12+ tuổi)",
+        "childrenLabel": "Trẻ em (2-11 tuổi)",
+        "selectGuests": "Số lượng khách"
       },
       "provinceCarousel": {
         "heading": "Khám phá các tỉnh/thành",
@@ -407,6 +417,19 @@
     "show_password": "Hiện mật khẩu",
     "hide_password": "Ẩn mật khẩu",
     "viewAll": "Xem tất cả"
+  },
+  "adminCrossNav": {
+    "view_profile": "Chi tiết hồ sơ",
+    "edit": "Cập nhật thông tin",
+    "properties": "Danh sách tài sản",
+    "view_property": "Chi tiết tài sản",
+    "view_room": "Chi tiết phòng",
+    "rooms": "Danh sách phòng",
+    "bookings": "Quản lý đặt phòng",
+    "partner_profile": "Hồ sơ đối tác",
+    "user_account": "Tài khoản người dùng",
+    "representative_account": "Tài khoản đại diện",
+    "related_actions": "Tác vụ liên quan"
   },
   "auth": {
     "reset_password_sent": "Đã gửi liên kết khôi phục",
@@ -979,12 +1002,15 @@
   },
   "menu": {
     "header_general": "TỔNG QUAN",
-    "header_system": "QUẢN LÝ HỆ THỐNG",
-    "header_property": "QUẢN LÝ TÀI SẢN",
-    "header_services": "DỊCH VỤ & TIN TỨC",
+    "header_partner": "ĐỐI TÁC",
+    "header_accommodation": "LƯU TRÚ & VẬN HÀNH",
+    "header_finance": "QUẢN LÝ TÀI CHÍNH",
+    "settlements": "Đối soát đối tác",
+    "header_catalog_content": "DANH MỤC & NỘI DUNG",
+    "header_system": "HỆ THỐNG",
+
     "user-management": "Người dùng",
     "dashboard": "Bảng điều khiển",
-    "properties": "Tòa nhà",
     "properties": "Tài sản",
     "rooms": "Phòng",
     "bookings": "Đặt phòng",
@@ -995,6 +1021,7 @@
     "news": "Tin tức",
     "users": "Người dùng",
     "partner": "Đối tác",
+    "partner_approval": "Duyệt đối tác",
     "maintenances": "Bảo trì",
     "notifications": "Thông báo"
   },

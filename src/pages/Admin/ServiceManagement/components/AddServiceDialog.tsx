@@ -7,10 +7,11 @@ import { AddServiceDialogProps } from "@/dataHelper/service.dataHelper"
 import { addServiceSchema } from "@/shared/shema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { t } from "i18next"
-import { Loader2, Plus, Star } from "lucide-react"
+import { Plus, Star } from "lucide-react"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import z from "zod"
+import { Spinner } from "@/components/ui/spinner"
 
 /**
  * Add Service Dialog
@@ -111,7 +112,7 @@ const AddServiceDialog: React.FC<AddServiceDialogProps> = ({ isOpen, isLoading =
                                 {t("common.cancel")}
                             </Button>
                             <Button type="submit" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                                {isLoading && <Spinner size="sm" />}
                                 {t("common.add")}
                             </Button>
                         </DialogFooter>

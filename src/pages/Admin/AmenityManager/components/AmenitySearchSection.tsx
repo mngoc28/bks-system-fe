@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FilterPortal from "@/components/common/FilterPortal";
 import { AmenitySearchSectionProps } from "@/dataHelper/amenity.dataHelper";
@@ -25,7 +25,7 @@ const AmenitySearchSection: React.FC<AmenitySearchSectionProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+          <div className="rounded-lg bg-primary/100 p-1.5 text-white">
             <Search className="size-4" />
           </div>
           <h3 className="text-sm font-bold tracking-tight text-slate-800">
@@ -52,7 +52,7 @@ const AmenitySearchSection: React.FC<AmenitySearchSectionProps> = ({
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder={t("amenities.search_name_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -62,7 +62,7 @@ const AmenitySearchSection: React.FC<AmenitySearchSectionProps> = ({
           <Button
             variant="ghost"
             onClick={onReset}
-            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-primary"
           >
             <RotateCcw className="size-4" />
             {t("common.reset")}

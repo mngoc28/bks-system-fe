@@ -6,10 +6,11 @@ import { useCheckTokenStore } from "./store/useCheckTokenStore";
 import { useUserStore } from "./store/useUserStore";
 import { getAccessToken } from "./utils/storage";
 import { isTokenExpired } from "./utils/tokenUtils";
+import { LoadingScreen } from "./components/ui/loading-screen";
 
 const Layout = React.lazy(() => import("./components/layout"));
 const AuthLayout = React.lazy(() => import("./components/layout/AuthLayout"));
-const Home = React.lazy(() => import("./pages/Admin/Home"));
+const Home = React.lazy(() => import("./pages/EndUser/Home"));
 const PublicLayout = React.lazy(() => import("./components/layout/PublicLayout/PublicLayout"));
 const PartnerList = React.lazy(() => import("./pages/EndUser/PartnerList"));
 const PartnerDetail = React.lazy(() => import("./pages/EndUser/PartnerDetail"));
@@ -23,7 +24,7 @@ const PublicNewsList = React.lazy(() => import("./pages/EndUser/NewsList"));
 const Login = React.lazy(() => import("./pages/Admin/Login"));
 const Register = React.lazy(() => import("./pages/Partner/Register"));
 const BecomeAPartner = React.lazy(() => import("./pages/Partner/BecomeAPartner"));
-const CompanyHub = React.lazy(() => import("./pages/Admin/CompanyHub"));
+const CompanyHub = React.lazy(() => import("./pages/EndUser/CompanyHub"));
 const Dashboard = React.lazy(() => import("./pages/Admin/Dashboard"));
 const Properties = React.lazy(() => import("./pages/Admin/PropertyManager"));
 const BookingManage = React.lazy(() => import("./pages/Admin/BookingManage"));
@@ -63,12 +64,16 @@ const PartnerApproval = React.lazy(() => import("./pages/Admin/PartnerApproval")
 const PartnerDetailManager = React.lazy(() => import("./pages/Admin/PartnerDetail"));
 const PartnerEditManager = React.lazy(() => import("./pages/Admin/PartnerEdit"));
 const Booking = React.lazy(() => import("./pages/EndUser/Booking/BookingPage"));
+const SettlementManage = React.lazy(() => import("./pages/Admin/SettlementManage"));
+const SettlementDetail = React.lazy(() => import("./pages/Admin/SettlementManage/SettlementDetail"));
+
 
 // BKS Stay Portal
 const BksStayLayout = React.lazy(() => import("./pages/EndUser/BksStay/BksStayLayout"));
 const BksStayDashboard = React.lazy(() => import("./pages/EndUser/BksStay/Dashboard"));
 const BksStayHistory = React.lazy(() => import("./pages/EndUser/BksStay/History"));
 const BksStayDetail = React.lazy(() => import("./pages/EndUser/BksStay/BookingDetail"));
+const StayVoucher = React.lazy(() => import("./pages/EndUser/StayVoucher"));
 const BksStayAccount = React.lazy(() => import("./pages/EndUser/BksStay/Account"));
 const BksStaySupport = React.lazy(() => import("./pages/EndUser/BksStay/Support"));
 const BksStayServices = React.lazy(() => import("./pages/EndUser/BksStay/InStayServices.tsx"));
@@ -87,7 +92,7 @@ const PartnerServices = React.lazy(() => import("./pages/Partner/Services.tsx"))
 const PartnerAmenities = React.lazy(() => import("./pages/Partner/Amenities.tsx"));
 const PartnerNews = React.lazy(() => import("./pages/Partner/News.tsx"));
 const PartnerMaintenances = React.lazy(() => import("./pages/Partner/Maintenances"));
-const PartnerFinance = React.lazy(() => import("./pages/Partner/Finance"));
+const PartnerFinance = React.lazy(() => import("./pages/Partner/Finance/index.tsx"));
 const PartnerPropertyRooms = React.lazy(() => import("./pages/Partner/PropertyRooms"));
 const PartnerContracts = React.lazy(() => import("./pages/Partner/Contracts"));
 const PartnerContractDetail = React.lazy(() => import("./pages/Partner/ContractDetail"));
@@ -104,9 +109,7 @@ const PartnerProfile = React.lazy(() => import("./pages/Partner/Profile"));
 const PartnerOnboardingWrapper = React.lazy(() => import("./pages/Partner/PartnerOnboardingWizardWrapper"));
 
 const LoadingFallback = () => (
-  <div className="flex h-screen w-full items-center justify-center">
-    <div className="size-12 animate-spin rounded-full border-y-2 border-blue-500"></div>
-  </div>
+  <LoadingScreen />
 );
 
 /** Role from zustand or persisted `user` (hydration-safe). */
@@ -217,11 +220,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   if (isAuthenticated) {
     const role = getEffectiveRole(userRole);
 
-    if (
-      role === PERMISSIONS.PARTNER &&
-      (location.pathname === ROUTERS.PARTNER_LOGIN ||
-        location.pathname === ROUTERS.LOGIN)
-    ) {
+    if (role === PERMISSIONS.PARTNER && location.pathname === ROUTERS.PARTNER_LOGIN) {
       return <Navigate to="/partner/dashboard" replace />;
     }
     if (
@@ -229,12 +228,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       location.pathname === ROUTERS.LOGIN
     ) {
       return <Navigate to={ROUTERS.CONTROL} replace />;
-    }
-    if (
-      role === PERMISSIONS.USER &&
-      location.pathname === ROUTERS.LOGIN
-    ) {
-      return <Navigate to={ROUTERS.BKS_STAY_DASHBOARD} replace />;
     }
   }
 
@@ -282,6 +275,7 @@ export default function Router() {
           <Route path="dashboard" element={<BksStayDashboard />} />
           <Route path="bookings" element={<BksStayHistory />} />
           <Route path="bookings/:id" element={<BksStayDetail />} />
+          <Route path="bookings/:id/voucher" element={<StayVoucher />} />
           <Route path="account" element={<BksStayAccount />} />
           <Route path="support" element={<BksStaySupport />} />
           <Route path="services" element={<BksStayServices />} />
@@ -412,7 +406,10 @@ export default function Router() {
           <Route path={ROUTERS.PARTNER_APPROVAL} element={<PartnerApproval />} />
           <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/detail/:id`} element={<PartnerDetailManager />} />
           <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/edit/:id`} element={<PartnerEditManager />} />
+          <Route path={ROUTERS.PARTNER_SETTLEMENTS} element={<SettlementManage />} />
+          <Route path={ROUTERS.PARTNER_SETTLEMENT_DETAIL} element={<SettlementDetail />} />
         </Route>
+
 
         {/* Partner Onboarding - Standalone (for status 3: pending approval, 4: rejected) */}
         <Route

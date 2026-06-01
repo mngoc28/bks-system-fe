@@ -9,7 +9,7 @@ Hệ thống tập trung tối ưu hóa quy trình đăng ký cho **4 loại hì
 
 1. **Khách sạn (Hotel):** Doanh nghiệp có Giấy phép đăng ký kinh doanh (GPKD), mã số thuế, sơ đồ phòng lớn, nhiều dịch vụ đi kèm. Đòi hỏi xác thực pháp nhân kỹ lưỡng.
 2. **Nhà nghỉ / Guesthouse:** Hộ kinh doanh cá thể hoặc doanh nghiệp nhỏ. Quy trình xác thực tương đương Khách sạn nhưng quy mô phòng và tiện ích đơn giản hơn.
-3. **Căn hộ dịch vụ cho thuê theo phòng (Serviced Apartment):** Tổ chức hoặc cá nhân sở hữu/ủy quyền vận hành các căn hộ dịch vụ cao cấp, cho thuê phòng riêng lẻ. Yêu cầu chứng minh quyền sở hữu hoặc ủy quyền khai thác.
+3. **Căn hộ / Căn hộ dịch vụ (Serviced Apartment):** Tổ chức hoặc cá nhân sở hữu/ủy quyền vận hành căn hộ hoặc chuỗi căn hộ dịch vụ phục vụ nhu cầu lưu trú ngắn và trung hạn. Yêu cầu chứng minh quyền sở hữu hoặc ủy quyền khai thác.
 4. **Homestay có chia phòng (Shared Homestay):** Cá nhân tự vận hành kinh doanh lưu trú nhỏ lẻ tại nhà hoặc chuỗi phòng nghỉ phong cách địa phương. Yêu cầu xác thực danh tính cá nhân (CCCD) và thông tin tài khoản ngân hàng chính chủ để đối soát dòng tiền.
 
 ---
@@ -57,7 +57,7 @@ flowchart TD
 * **Mục tiêu:** Thu thập hồ sơ chứng thực độ uy tín và thông tin đối soát tài chính doanh thu.
 * **Giao diện:**
   * **Trường hợp Doanh nghiệp/Hộ kinh doanh (Hotel, Guesthouse):** Yêu cầu tải lên ảnh chụp **Giấy phép đăng ký kinh doanh** và **CCCD của người đại diện pháp luật**.
-  * **Trường hợp Cá nhân (Homestay, Căn hộ dịch vụ):** Yêu cầu tải ảnh chụp **CCCD mặt trước và mặt sau**, kèm ảnh chụp **Giấy tờ chứng minh quyền sở hữu căn hộ/Giấy ủy quyền khai thác**.
+* **Trường hợp Cá nhân (Homestay, Căn hộ / Căn hộ dịch vụ):** Yêu cầu tải ảnh chụp **CCCD mặt trước và mặt sau**, kèm ảnh chụp **Giấy tờ chứng minh quyền sở hữu căn hộ/Giấy ủy quyền khai thác**.
   * **Thông tin tài khoản ngân hàng:** Nhập số tài khoản, tên chủ tài khoản, ngân hàng, chi nhánh, và tải lên **Ảnh chụp mặt trước thẻ ngân hàng hoặc sao kê tài khoản** để đối soát doanh thu (yêu cầu trùng khớp với tên đăng ký).
 
 #### Bước 4: Thỏa thuận & Ký Hợp đồng Hợp tác Điện tử (E-Contract)

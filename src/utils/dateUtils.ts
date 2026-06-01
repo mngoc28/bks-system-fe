@@ -107,6 +107,46 @@ export const mapDayOfWeek = (dayOfWeek: number) => {
   }
 };
 
+/** Nhãn chuẩn hiển thị số ngày đặt trên toàn bộ luồng EU. */
+export const BOOKING_DAYS_LABEL = "Tổng số ngày đặt";
+
+/**
+ * Số ngày đặt (bao gồm cả ngày nhận và ngày trả), khớp BE: diffInDays + 1.
+ */
+export function countBookingDaysInclusive(
+  startDate: string | undefined | null,
+  endDate: string | undefined | null,
+): number {
+  if (!startDate || !endDate) {
+    return 1;
+  }
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return 1;
+  }
+  const d0 = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const d1 = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  const diff = Math.round((d1 - d0) / 86_400_000);
+  const days = diff + 1;
+
+  return days > 0 ? days : 1;
+}
+
+export function formatBookingDaysCount(days: number): string {
+  return `${days} ngày`;
+}
+
+/** Nhãn dòng phí phòng trong bảng tạm tính / email xác nhận. */
+export function formatRoomRentalLineLabel(days: number, unit?: string | null): string {
+  const normalized = (unit ?? "day").toLowerCase();
+  if (normalized === "month") {
+    return `Phí thuê phòng (${days} ngày · gói tháng)`;
+  }
+
+  return `Phí thuê phòng (${days} ngày)`;
+}
+
 export const safeFormatDateTime = (date: string | Date | undefined): string => {
   if (!date) return "-";
   const d = new Date(date);

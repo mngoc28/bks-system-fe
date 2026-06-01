@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
+﻿import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -808,7 +808,7 @@ const QuestionFlowPage: React.FC = () => {
         <h1 className="text-lg font-semibold text-slate-800">{t("questions.flow.title")}</h1>
       </div>
 
-      <div className="flex-1 overflow-hidden rounded-xl border border-blue-100 bg-white">
+      <div className="flex-1 overflow-hidden rounded-xl border border-primary/10 bg-white">
         <ReactFlow
           nodes={nodes}
           edges={edges}

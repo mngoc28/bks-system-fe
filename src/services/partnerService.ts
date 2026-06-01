@@ -12,6 +12,12 @@ export const partnerService = {
 
   // --- PROPERTIES (partner) ---
   getProperties: (params?: any, config?: any) => apiService.get(`${BASE_URL}/properties/searchAll`, { params, ...config }),
+  getPropertyNames: (config?: any) => apiService.get(`${BASE_URL}/properties/all`, config),
+  getPropertyRoomPreview: (propertyId: number | string, limit = 6, config?: any) =>
+    apiService.get(`${BASE_URL}/properties/${propertyId}/rooms/preview`, {
+      params: { limit, ...(config?.params ?? {}) },
+      ...config,
+    }),
   getPropertyTypes: () => apiService.get(`${BASE_URL}/properties/types`),
   createProperty: (data: any) => apiService.post(`${BASE_URL}/properties`, data),
   updateProperty: (id: number | string, data: any) => apiService.put(`${BASE_URL}/properties/${id}`, data),
@@ -91,6 +97,8 @@ export const partnerService = {
     apiService.post(`${BASE_URL}/bookings/bulk-confirm`, { ids }),
   bulkCancelBookings: (ids: Array<number | string>, reason: string) =>
     apiService.post(`${BASE_URL}/bookings/bulk-cancel`, { ids, reason }),
+  confirmDeposit: (id: number | string) =>
+    apiService.post(`${BASE_URL}/bookings/${id}/confirm-deposit`),
 
   /** BCP — guest cancellation requests (requires `BCP_CANCELLATION_V1` on API). */
   getCancellationRequests: (params?: {

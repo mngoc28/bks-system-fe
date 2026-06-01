@@ -9,7 +9,14 @@ interface ExtendedRowActionsProps extends RowActionsProps {
   isDisabledEdit?: boolean;
   isDisabledDelete?: boolean;
   viewLabel?: string;
+  editLabel?: string;
   hideEdit?: boolean;
+  customActions?: Array<{
+    key: string;
+    label: string;
+    onClick: (id: string | number) => void;
+    icon?: React.ReactNode;
+  }>;
 }
 
 export const RowActions: React.FC<ExtendedRowActionsProps> = ({
@@ -21,7 +28,9 @@ export const RowActions: React.FC<ExtendedRowActionsProps> = ({
   isDisabledEdit = false,
   isDisabledDelete = false,
   viewLabel,
+  editLabel,
   hideEdit = false,
+  customActions = [],
 }) => {
   const { t } = useTranslation();
   return (
@@ -51,7 +60,7 @@ export const RowActions: React.FC<ExtendedRowActionsProps> = ({
             }}
           >
             <PencilLine className="size-4" />
-            <span className="ml-2">{t("common.edit")}</span>
+            <span className="ml-2">{editLabel || t("common.edit")}</span>
           </DropdownMenuItem>
         )}
 
@@ -66,9 +75,21 @@ export const RowActions: React.FC<ExtendedRowActionsProps> = ({
           </DropdownMenuItem>
         )}
 
+        {customActions.map((action) => (
+          <DropdownMenuItem
+            key={action.key}
+            onClick={() => {
+              action.onClick(id);
+            }}
+          >
+            {action.icon}
+            <span className="ml-2">{action.label}</span>
+          </DropdownMenuItem>
+        ))}
+
         {onDelete && !isDisabledDelete && (
           <>
-            {(onView || onEdit || onResetPassword) && <DropdownMenuSeparator />}
+            {(onView || onEdit || onResetPassword || customActions.length > 0) && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onClick={() => {
                 onDelete(id);

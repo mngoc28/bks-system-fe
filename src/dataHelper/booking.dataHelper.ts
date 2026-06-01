@@ -40,8 +40,10 @@ export interface BookingDetailDialogProps {
 
 // Room information nested in Booking
 export interface RoomInfo {
+	room_id?: number;
 	room_number: string;
 	property: {
+		id?: number;
 		name: string;
 	};
 }
@@ -49,7 +51,7 @@ export interface RoomInfo {
 // Main Booking type
 export type Booking = {
 	id: string;
-	user: { name: string };
+	user: { id?: number; name: string };
 	room: RoomInfo;
 	start_date: string;
 	end_date: string;
@@ -94,6 +96,7 @@ export type BookingFilters = {
 export interface SearchBookingRequest {
 	page?: number;
 	per_page?: number;
+	partner_id?: number;
 	room_id?: number;
 	property_id?: number;
 	start_date?: string;
@@ -204,5 +207,8 @@ export interface BookingTableProps {
 	onEdit: (id: string) => void;
 	onDelete: (id: string) => void;
 	filters: BookingFilters;
+	onNavigateUser?: (booking: Booking) => void;
+	onNavigateRoom?: (booking: Booking) => void;
+	onNavigateProperty?: (booking: Booking) => void;
 }
 

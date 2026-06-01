@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 import PartnerOnboardingWizard from "./components/PartnerOnboardingWizard";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Wrapper component for the Partner Onboarding Wizard.
@@ -24,7 +25,7 @@ const PartnerOnboardingWizardWrapper: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#0b0f19]">
-        <div className="size-12 animate-spin rounded-full border-y-2 border-blue-400"></div>
+        <Spinner size="lg" />
       </div>
     );
   }

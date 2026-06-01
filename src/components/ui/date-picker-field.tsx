@@ -32,6 +32,10 @@ export interface DatePickerFieldProps {
   /** Disable dates after this date (yyyy-MM-dd) */
   maxDate?: string;
   invalid?: boolean;
+  /** Extra classes applied to the trigger Button (overrides defaults) */
+  triggerClassName?: string;
+  /** Placeholder when no date is selected */
+  placeholder?: string;
 }
 
 /**
@@ -48,6 +52,8 @@ export function DatePickerField({
   minDate,
   maxDate,
   invalid,
+  triggerClassName,
+  placeholder,
 }: DatePickerFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const selected = parseYmdToLocalDate(value);
@@ -82,15 +88,16 @@ export function DatePickerField({
             disabled={disabled}
             className={cn(
               'h-11 w-full justify-start rounded-lg border-slate-200 bg-white px-3 text-left font-normal text-slate-900 shadow-sm hover:bg-slate-50',
-              !value && 'text-slate-400',
+              triggerClassName,
+              !value && 'text-gray-500 font-normal',
               invalid && 'border-red-500',
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-slate-500" />
+            <CalendarIcon className="mr-2 h-5 w-5 shrink-0 text-slate-500" />
             {selected ? (
               format(selected, 'd MMMM yyyy', { locale: vi })
             ) : (
-              <span>Chọn ngày</span>
+              <span>{placeholder || 'Chọn ngày'}</span>
             )}
           </Button>
         </PopoverTrigger>

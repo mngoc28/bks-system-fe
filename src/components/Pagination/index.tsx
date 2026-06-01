@@ -24,6 +24,7 @@ interface PaginationProps {
   maxVisiblePages?: number;
   perPageOptions?: number[];
   resultsText?: string;
+  hideTotalItems?: boolean;
 }
 
 const Pagination = ({ 
@@ -35,7 +36,8 @@ const Pagination = ({
   totalItems, 
   maxVisiblePages = 5, 
   perPageOptions = [10, 20, 50, 100], 
-  resultsText 
+  resultsText,
+  hideTotalItems = false
 }: PaginationProps) => {
 
   const handlePageClick = (e: React.MouseEvent, page: number) => {
@@ -82,7 +84,7 @@ const Pagination = ({
                 value={String(perPage)} 
                 onValueChange={(val) => onPerPageChange?.(Number(val))}
               >
-                <SelectTrigger className="h-9 min-h-0 w-[120px] border-slate-200 bg-white px-2.5 font-bold text-slate-700 shadow-sm transition-all hover:border-blue-400">
+                <SelectTrigger className="h-9 min-h-0 w-[120px] border-slate-200 bg-white px-2.5 font-bold text-slate-700 shadow-sm transition-all hover:border-primary/30">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -95,12 +97,14 @@ const Pagination = ({
               </Select>
             </div>
             
-            <div className="flex items-center gap-2 rounded-lg border border-blue-50 bg-blue-50/50 px-3 py-1.5 shadow-sm">
-              <Layers size={14} className="text-blue-500" />
-              <span className="whitespace-nowrap text-xs font-bold text-blue-700">
-                {(totalItems ?? 0).toLocaleString('vi-VN')} {resultsText || "kết quả"}
-              </span>
-            </div>
+            {!hideTotalItems && (
+              <div className="flex items-center gap-2 rounded-lg border border-primary/10 bg-primary/5 px-3 py-1.5 shadow-sm">
+                <Layers size={14} className="text-primary" />
+                <span className="whitespace-nowrap text-xs font-bold text-primary">
+                  {(totalItems ?? 0).toLocaleString('vi-VN')} {resultsText || "kết quả"}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -118,7 +122,7 @@ const Pagination = ({
             <PaginationItem>
               <button
                 disabled={currentPage === 1}
-                className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:pointer-events-none disabled:opacity-40`}
+                className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40`}
                 onClick={() => onPageChange(currentPage - 1)}
                 title="Trang trước"
               >
@@ -143,8 +147,8 @@ const Pagination = ({
                     href="#"
                     className={`size-9 rounded-lg border text-sm font-bold shadow-sm transition-all duration-200 active:scale-95 ${
                       isActive 
-                        ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:text-white" 
-                        : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                        ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary-hover hover:text-primary-foreground" 
+                        : "border-slate-200 bg-white text-slate-600 hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
                     }`}
                     isActive={isActive}
                     onClick={(e: React.MouseEvent) => handlePageClick(e, pageNumber)}
@@ -158,7 +162,7 @@ const Pagination = ({
             <PaginationItem>
               <button
                 disabled={currentPage === totalPages}
-                className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:pointer-events-none disabled:opacity-40`}
+                className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40`}
                 onClick={() => onPageChange(currentPage + 1)}
                 title="Trang tiếp"
               >

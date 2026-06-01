@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/dataHelper/room.dataHelper";
 import { Edit, Trash2, MapPin, Maximize2, Users, ImageIcon } from "lucide-react";
-import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
+import { useNavigate } from "react-router-dom";
+import { buildAdminUrl, toBookingsByRoom, toRoomsByProperty } from "@/utils/adminNavigation";
 
 interface RoomCardProps {
   room: Room;
@@ -28,6 +30,7 @@ interface RoomCardProps {
  */
 const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isDeleting = false, highlighted = false, highlightTerms }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const mainImage = room.images?.find(img => img.sort === 1)?.image_url || room.images?.[0]?.image_url;
   const imageUrl = resolveImageUrl(mainImage, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
@@ -39,7 +42,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
   return (
     <Card
       id={`room-${room.id}`}
-      className={`glass-card hover-scale group relative cursor-pointer overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 animate-in ${highlighted ? 'scale-[1.03] shadow-xl shadow-indigo-200 ring-2 ring-indigo-500' : ''}`}
+      className={`glass-card hover-scale group relative cursor-pointer overflow-hidden rounded-2xl border-none p-0 transition-all duration-300 animate-in ${highlighted ? 'scale-[1.03] shadow-xl shadow-primary/20 ring-2 ring-primary' : ''}`}
       onClick={() => onView(room.id)}
     >
       {/* 16/9 Image Section */}
@@ -94,7 +97,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
       {/* Content Section */}
       <div className="p-5">
         <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="truncate text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100" title={room.title}>
+          <h3 className="truncate text-lg font-bold text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100" title={room.title}>
             {highlightText(room.title, highlightTerms?.title || "")}
           </h3>
           <Badge variant="outline" className="whitespace-nowrap border-slate-200 text-[10px] text-slate-500">
@@ -103,14 +106,14 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
         </div>
 
         <div className="mb-4 flex items-center gap-1.5 text-xs text-slate-500">
-          <MapPin className="size-3.5 text-indigo-500" />
+          <MapPin className="size-3.5 text-primary" />
           <span className="truncate">{room.property_name || room.property_name || "-"}</span>
         </div>
 
         {/* Specs Grid */}
         <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-3.5 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
               <Maximize2 className="size-4" />
             </div>
             <div>
@@ -133,10 +136,42 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
         <div className="mt-4 flex items-center justify-between">
           <div className="flex flex-col">
             <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400">{t("rooms.price")}</p>
-            <p className="text-base font-black leading-none text-indigo-600 dark:text-indigo-400">
+            <p className="text-base font-black leading-none text-primary dark:text-premium-blue">
               {price > 0 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price) : t("rooms.contact_price")}
             </p>
           </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {room.property_id ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(
+                  buildAdminUrl(
+                    ROUTERS.ROOMS,
+                    toRoomsByProperty(room.property_id as number, "room-management", room.property_name || room.property?.name || undefined),
+                  ),
+                );
+              }}
+            >
+              {t("adminCrossNav.rooms")}
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              const roomDisplayName = room.room_number || room.title;
+              navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByRoom(room.id, "room-management", roomDisplayName)));
+            }}
+          >
+            {t("adminCrossNav.bookings")}
+          </Button>
         </div>
       </div>
     </Card>

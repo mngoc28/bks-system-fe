@@ -25,7 +25,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+          <div className="rounded-lg bg-primary/100 p-1.5 text-white">
             <Search className="size-4" />
           </div>
           <h3 className="text-sm font-bold tracking-tight text-slate-800">
@@ -53,7 +53,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
               value={filters.name || ""}
               onChange={(e) => setFilters({ ...filters, name: e.target.value })}
               placeholder={t("properties.filter_name_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -66,7 +66,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
               value={filters.province_name || ""}
               onChange={(e) => setFilters({ ...filters, province_name: e.target.value })}
               placeholder={t("properties.filter_province_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -79,7 +79,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
               value={filters.ward_name || ""}
               onChange={(e) => setFilters({ ...filters, ward_name: e.target.value })}
               placeholder={t("properties.filter_ward_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -92,7 +92,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
               value={filters.year_built || ""}
               onChange={(e) => setFilters({ ...filters, year_built: e.target.value })}
               placeholder={t("properties.filter_year_built_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -105,7 +105,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
               value={filters.property_type_id ? String(filters.property_type_id) : ""}
               onValueChange={(value) => setFilters({ ...filters, property_type_id: value ? Number(value) : null })}
             >
-              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-indigo-100">
+              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-primary/20">
                 <SelectValue placeholder={t("properties.filter_property_type_placeholder")} />
               </SelectTrigger>
               <SelectContent>
@@ -127,7 +127,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
               value={filters.rent_category ? String(filters.rent_category) : ""}
               onValueChange={(value) => setFilters({ ...filters, rent_category: value ? Number(value) : null })}
             >
-              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-indigo-100">
+              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-primary/20">
                 <SelectValue placeholder={t("properties.filter_rent_category_placeholder")} />
               </SelectTrigger>
               <SelectContent>
@@ -157,20 +157,20 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
                   }
                 }}
                 placeholder={areaMode === "max" ? t("properties.area_max_placeholder") : t("properties.area_min_placeholder")}
-                className="h-10 flex-1 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="h-10 flex-1 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex flex-col gap-0.5">
                 <button
                   type="button"
                   onClick={() => setAreaMode("max")}
-                  className={`flex size-5 items-center justify-center rounded border transition-colors ${areaMode === "max" ? "border-indigo-400 bg-indigo-50 text-indigo-500" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400"}`}
+                  className={`flex size-5 items-center justify-center rounded border transition-colors ${areaMode === "max" ? "border-primary bg-primary/10 text-primary" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400"}`}
                 >
                   <ChevronUp size={14} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setAreaMode("min")}
-                  className={`flex size-5 items-center justify-center rounded border transition-colors ${areaMode === "min" ? "border-indigo-400 bg-indigo-50 text-indigo-500" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400"}`}
+                  className={`flex size-5 items-center justify-center rounded border transition-colors ${areaMode === "min" ? "border-primary bg-primary/10 text-primary" : "border-gray-300 bg-white text-gray-400 hover:border-gray-400"}`}
                 >
                   <ChevronDown size={14} />
                 </button>
@@ -184,7 +184,7 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
           <Button
             variant="ghost"
             onClick={onReset}
-            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-primary"
           >
             <RotateCcw className="size-4" />
             {t("common.reset")}

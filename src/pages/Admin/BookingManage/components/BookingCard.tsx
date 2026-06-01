@@ -52,11 +52,11 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
 
       {/* User Info */}
       <div className="mb-6 flex items-center gap-4">
-        <div className="flex size-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/30">
+        <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner dark:bg-primary/20">
           <User className="size-6" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100">{highlightText(booking.user.name, highlightTerms?.q || "")}</h3>
+          <h3 className="text-lg font-black text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100">{highlightText(booking.user.name, highlightTerms?.q || "")}</h3>
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <Clock className="size-3" />
             {safeFormatDateTime(booking.created_at)}
@@ -81,7 +81,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
 
         {/* Duration Info */}
         <div className="flex items-start gap-4">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/20">
             <Calendar className="size-4" />
           </div>
           <div>
@@ -89,8 +89,8 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
             <div className="flex flex-col text-sm font-bold leading-tight text-slate-700 dark:text-slate-200">
               <span>{formatDateVietnam(booking.start_date)}</span>
               <div className="my-0.5 flex h-4 items-center gap-2">
-                <ArrowDown className="size-3 text-indigo-400/50" />
-                <div className="h-px w-8 bg-indigo-100 dark:bg-indigo-900/30" />
+                <ArrowDown className="size-3 text-premium-blue/50" />
+                <div className="h-px w-8 bg-primary/15 dark:bg-primary/20" />
               </div>
               <span>{formatDateVietnam(booking.end_date)}</span>
             </div>
@@ -124,7 +124,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
       <div className="mt-auto grid grid-cols-2 gap-2">
         <Button
           variant="outline"
-          className="h-10 rounded-xl border-slate-100 font-bold text-slate-500 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:hover:bg-slate-800"
+          className="h-10 rounded-xl border-slate-100 font-bold text-slate-500 hover:bg-slate-50 hover:text-primary dark:border-slate-800 dark:hover:bg-slate-800"
           onClick={(e) => { e.stopPropagation(); onEdit(booking.id); }}
         >
           <Edit className="mr-2 size-4" />

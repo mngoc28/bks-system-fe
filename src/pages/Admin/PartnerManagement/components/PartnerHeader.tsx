@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageBar from "@/components/PageBar";
@@ -32,7 +32,7 @@ const PartnerHeader: React.FC<PartnerHeaderProps> = ({ onOpenFilter, viewMode, o
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              className="flex items-center gap-2 border-slate-200 bg-white font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               onClick={onOpenFilter}
             >
               <Filter className="size-4" />
@@ -42,7 +42,7 @@ const PartnerHeader: React.FC<PartnerHeaderProps> = ({ onOpenFilter, viewMode, o
             <Button
               variant="default"
               size="sm"
-              className="flex items-center gap-2 bg-indigo-600 font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
+              className="flex items-center gap-2 bg-primary font-semibold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-primary/25"
               onClick={() => {}}
             >
               <Plus className="size-4" />

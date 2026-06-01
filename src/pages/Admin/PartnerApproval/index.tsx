@@ -3,12 +3,13 @@ import { createPortal } from "react-dom";
 import { 
   ShieldCheck, FileText, CheckCircle2, XCircle, Eye, 
   ExternalLink, User, Building, CreditCard, Phone, 
-  Mail, Globe, Loader2, AlertCircle
+  Mail, Globe, AlertCircle, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import axiosClient from "@/api/axiosClient";
+import { Spinner } from "@/components/ui/spinner";
 
 interface PendingPartner {
   id: number;
@@ -176,12 +177,13 @@ export default function PartnerApproval() {
             <p className="text-xs font-semibold text-slate-500">Thẩm định thông tin pháp lý, tài khoản đối soát và hợp đồng của đối tác lưu trú mới</p>
           </div>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={fetchPendingPartners}
-          className="h-10 rounded-xl font-bold text-slate-700"
+          className="h-10 gap-2 rounded-xl font-bold text-slate-700"
         >
-          Làm mới danh sách
+          <RefreshCw className="size-4" />
+          Làm mới
         </Button>
       </div>
 
@@ -189,7 +191,7 @@ export default function PartnerApproval() {
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="size-8 text-blue-600 animate-spin" />
+            <Spinner size="md" />
             <span className="text-sm font-bold text-slate-500">Đang tải hồ sơ chờ duyệt...</span>
           </div>
         ) : pendingList.length === 0 ? (
@@ -239,7 +241,7 @@ export default function PartnerApproval() {
                           Bị từ chối
                         </span>
                       ) : (
-                        <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-black text-blue-600 uppercase border border-blue-100/50">
+                        <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-black text-blue-600 uppercase border border-primary/10/50">
                           Chờ duyệt
                         </span>
                       )}
@@ -414,7 +416,7 @@ export default function PartnerApproval() {
                             className="h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold"
                           >
                             {docLoading[doc.field] ? (
-                              <Loader2 className="size-3 animate-spin" />
+                              <Spinner size="sm" />
                             ) : (
                               <>
                                 <Eye className="mr-1 size-3" />

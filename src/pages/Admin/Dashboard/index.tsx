@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import {
   useBookingsByPropertyQuery,
   useBookingsPerMonthQuery,
-  useRevenueByMonthQuery,
   useSystemRoom,
   useTotalPartner,
   useTotalUser,
 } from "@/hooks/useDashboardQuery";
+import { useAdminSettlementDailyReportQuery } from "@/hooks/useSettlementQuery";
 import { useCheckPermissionQuery } from "@/hooks/useAuthQuery";
 import { useBookingsQuery } from "@/hooks/useBookingQuery";
 import { PERMISSIONS, ROUTERS } from "@/constant";
@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
   const { data: roomsData } = useSystemRoom();
   const { data: bookingsByPropertyData, isLoading: isBookingsByPropertyLoading } = useBookingsByPropertyQuery();
   const { data: bookingsPerMonthData, isLoading: isBookingsPerMonthLoading } = useBookingsPerMonthQuery(startDate, endDate);
-  const { data: revenueByMonthData, isLoading: isRevenueByMonthLoading } = useRevenueByMonthQuery(startDate, endDate);
+  const { data: settlementDailyReportData, isLoading: isSettlementDailyReportLoading } = useAdminSettlementDailyReportQuery(startDate, endDate);
   const { data: pendingBookingsData } = useBookingsQuery({ page: 1, per_page: 1, status: 0 });
   const { data: totalBookingsData } = useBookingsQuery({ page: 1, per_page: 1 });
 
@@ -133,26 +133,16 @@ const Dashboard: React.FC = () => {
 
   const revenueTrend = React.useMemo(
     () =>
-      (revenueByMonthData?.data?.revenueByMonth ?? []).map((item) => ({
-        month: item.month,
-        revenue: item.revenue ?? 0,
+      (settlementDailyReportData?.data ?? []).map((item) => ({
+        date: item.date ? new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }) : "",
+        total_gmv: item.total_gmv ?? 0,
+        total_commission: item.total_commission ?? 0,
       })),
-    [revenueByMonthData],
+    [settlementDailyReportData],
   );
 
-  const revenueComposedData = React.useMemo(
-    () =>
-      revenueTrend.map((item, index, arr) => {
-        const from = Math.max(0, index - 2);
-        const slice = arr.slice(from, index + 1);
-        const avg = slice.reduce((sum, row) => sum + row.revenue, 0) / (slice.length || 1);
-        return {
-          ...item,
-          avg,
-        };
-      }),
-    [revenueTrend],
-  );
+  const totalGmv = React.useMemo(() => revenueTrend.reduce((sum, row) => sum + row.total_gmv, 0), [revenueTrend]);
+  const totalCommission = React.useMemo(() => revenueTrend.reduce((sum, row) => sum + row.total_commission, 0), [revenueTrend]);
 
   const propertyTrend = React.useMemo(
     () =>
@@ -474,43 +464,33 @@ const Dashboard: React.FC = () => {
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-600">
-              {t("dashboard.revenue_by_month", { defaultValue: "Doanh thu theo tháng" })}
+              {t("dashboard.revenue_reconciliation_trend", { defaultValue: "Xu hướng Doanh thu & Phí dịch vụ" })}
             </h2>
-            <p className="text-xs font-semibold text-emerald-700">
-              {formatCurrency(revenueByMonthData?.data?.totalRevenue ?? 0)}
-            </p>
+            <div className="text-xs font-semibold text-slate-700">
+              <span className="mr-3 text-sky-600">GMV: {formatCurrency(totalGmv)}</span>
+              <span className="text-emerald-600">Phí dịch vụ: {formatCurrency(totalCommission)}</span>
+            </div>
           </div>
-          {isRevenueByMonthLoading ? (
+          {isSettlementDailyReportLoading ? (
             <div className="flex h-72 items-center justify-center">
               <Spinner size="md" showText text={t("common.loading_data")} />
             </div>
           ) : (
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={revenueComposedData} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="revenueAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
+                <ComposedChart data={revenueTrend} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => formatCompact(Number(value))} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(value) => formatCompact(Number(value))} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(value) => formatCompact(Number(value))} />
                   <Tooltip
-                    formatter={(value: any, name: any) => {
-                      if (name === t("dashboard.moving_avg", { defaultValue: "Trung bình 3 tháng" })) {
-                        return [formatCurrency(Number(value)), name];
-                      }
-                      return [formatCurrency(Number(value)), name];
-                    }}
+                    formatter={(value: any, name: any) => [formatCurrency(Number(value)), name]}
                   />
                   <Legend />
-                  <Area type="monotone" dataKey="revenue" fill="url(#revenueAreaGradient)" stroke="none" />
-                  <Bar dataKey="revenue" name={t("dashboard.revenue", { defaultValue: "Doanh thu" })} fill="#0ea5e9" radius={[6, 6, 0, 0]} />
-                  <Line dataKey="avg" name={t("dashboard.moving_avg", { defaultValue: "Trung bình 3 tháng" })} stroke="#0f766e" strokeWidth={2.2} dot={false} />
+                  <Bar yAxisId="left" dataKey="total_gmv" name="Tổng GMV hệ thống" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="total_commission" name="Phí hoa hồng (5%)" stroke="#10b981" strokeWidth={2.5} activeDot={{ r: 6 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>

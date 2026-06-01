@@ -139,6 +139,7 @@ export interface PartnerTableProps {
 
 export interface Partner {
     id: number;
+    user_id: number;
     company_name: string;
     user_name: string;
     province_name: string;
@@ -164,4 +165,5 @@ export interface PartnerGridProps {
   description?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  loading?: boolean;
 }

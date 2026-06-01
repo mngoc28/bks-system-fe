@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeleteConfirmDialogProps } from "@/dataHelper/service.dataHelper";
 import { t } from "i18next";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 /**
  * Delete Confirm Dialog
@@ -56,7 +57,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ service, isOp
                         disabled={isLoading}
                         className="bg-red-600 text-white hover:bg-red-700"
                     >
-                        {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                        {isLoading && <Spinner size="sm" />}
                         {t('common.delete')}
                     </Button>
                 </DialogFooter>

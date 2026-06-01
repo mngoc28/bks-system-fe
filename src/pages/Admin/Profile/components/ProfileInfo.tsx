@@ -8,9 +8,9 @@ import { useMemo, useRef } from "react";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { FaPlus } from "react-icons/fa";
 import { useUpdateUserProfileMutation} from "@/hooks/useUserQuery";
-import { ThreeDot } from "react-loading-indicators";
 import { useDeleteImageMutation, useUploadImageMutation } from "@/hooks/useCloudinariQuery";
 import { resolveImageUrl } from "@/utils/imageUtils";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Profile Info Component
@@ -112,7 +112,7 @@ const ProfileInfo = ({
         <div className="relative size-24 overflow-hidden rounded-full border-4 border-blue-900 bg-blue-100">
           {uploadAvatarMutation.isPending ? (
             <div className="flex size-full items-center justify-center bg-blue-50">
-              <ThreeDot variant="bounce" color="#064F80" size="small" />
+              <Spinner size="sm" />
             </div>
           ) : (
             <img

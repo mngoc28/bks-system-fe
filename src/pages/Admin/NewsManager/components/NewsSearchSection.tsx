@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import FilterPortal from "@/components/common/FilterPortal";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,7 +43,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+          <div className="rounded-lg bg-primary/100 p-1.5 text-white">
             <Search className="size-4" />
           </div>
           <h3 className="text-sm font-bold tracking-tight text-slate-800">
@@ -71,7 +71,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
               value={filters.user_name || ""}
               onChange={(e) => setFilters({ ...filters, user_name: e.target.value })}
               placeholder={t("news.filter_user_name_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -84,7 +84,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
               value={filters.title || ""}
               onChange={(e) => setFilters({ ...filters, title: e.target.value })}
               placeholder={t("news.filter_title_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -97,7 +97,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
               value={filters.status?.toString() || ""}
               onValueChange={(value) => setFilters({ ...filters, status: value ? Number(value) : undefined })}
             >
-              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-indigo-100">
+              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-primary/20">
                 <SelectValue placeholder={t("news.filter_status_placeholder")} />
               </SelectTrigger>
               <SelectContent>
@@ -117,7 +117,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
               type="date"
               value={filters.published_at_start || ""}
               onChange={(e) => handleStartDateChange(e.target.value)}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -130,7 +130,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
               type="date"
               value={filters.published_at_end || ""}
               onChange={(e) => handleEndDateChange(e.target.value)}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -140,7 +140,7 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
           <Button
             variant="ghost"
             onClick={onReset}
-            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-primary"
           >
             <RotateCcw className="size-4" />
             {t("common.reset")}

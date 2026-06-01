@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,14 +94,7 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
   });
 
   const watchedPrices = form.watch("prices");
-
-  if (isAmenitiesLoading || isServicesLoading || isPricePackagesLoading) {
-    return (
-      <div className="flex items-center justify-center p-4">
-        <Loader2 className="size-8 animate-spin text-blue-500" />
-      </div>
-    );
-  }
+  const isFormOptionsLoading = isAmenitiesLoading || isServicesLoading || isPricePackagesLoading;
 
   const handleSubmit = (data: z.infer<typeof schema>) => {
     onSubmit({
@@ -140,8 +133,14 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
                   options={propertyOptions.map((property: any) => ({ value: property.id, label: property.name }))}
                   value={propertyOptions.find((b: any) => field.value === b.id) ? { value: field.value, label: propertyOptions.find((b: any) => b.id === field.value)?.name } : null}
                   onChange={selected => field.onChange(selected?.value ?? null)}
-                  isDisabled={isLoading || isPropertiesLoading || propertyOptions.length === 0}
-                  placeholder={isPropertiesLoading ? t("common.loading") : propertyOptions.length === 0 ? t("rooms.no_properties_found") : t("rooms.property_placeholder")}
+                  isDisabled={isLoading || isPropertiesLoading || isFormOptionsLoading || propertyOptions.length === 0}
+                  placeholder={
+                    isPropertiesLoading || isFormOptionsLoading
+                      ? t("common.loading")
+                      : propertyOptions.length === 0
+                        ? t("rooms.no_properties_found")
+                        : t("rooms.property_placeholder")
+                  }
                   classNamePrefix="react-select"
                   isSearchable
                   isClearable
@@ -322,8 +321,8 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
                 options={amenities.map((amenity: any) => ({value: amenity.id, label: amenity.name}))}
                 value={amenities.filter((amenity: any) => field.value?.includes(amenity.id)).map((amenity: any) => ({ value: amenity.id, label: amenity.name }))}
                 onChange={(selected) => field.onChange(selected?.map(a => a.value) || [])}
-                isDisabled={isLoading || isAmenitiesLoading}
-                placeholder={isAmenitiesLoading ? t("common.loading") : t("rooms.amenities_placeholder")}
+                isDisabled={isLoading || isFormOptionsLoading}
+                placeholder={isFormOptionsLoading ? t("common.loading") : t("rooms.amenities_placeholder")}
                 classNamePrefix="react-select"
               />
               <FormMessage />
@@ -343,8 +342,8 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
                 options={services.map((service: any) => ({ value: service.id, label: service.name }))}
                 value={services.filter((service: any) => field.value?.includes(service.id)).map((service: any) => ({ value: service.id, label: service.name }))}
                 onChange={(selected) => field.onChange(selected?.map(s => s.value) || [])}
-                isDisabled={isLoading || isServicesLoading}
-                placeholder={isServicesLoading ? t("common.loading") : t("rooms.services_placeholder")}
+                isDisabled={isLoading || isFormOptionsLoading}
+                placeholder={isFormOptionsLoading ? t("common.loading") : t("rooms.services_placeholder")}
                 classNamePrefix="react-select"
               />
               <FormMessage />

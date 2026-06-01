@@ -42,7 +42,7 @@ const PropertyTable: React.FC<PropertyTableProps> = ({
       )}
       <div
         ref={tableScrollRef}
-        className="w-full overflow-auto rounded-xl border border-blue-100 bg-white shadow-sm"
+        className="w-full overflow-auto rounded-xl border border-primary/10 bg-white shadow-sm"
       >
         <Table className="min-w-max text-sm text-slate-700">
           <PropertyTableHeader

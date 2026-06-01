@@ -38,7 +38,7 @@ const OccupancyChart: React.FC<OccupancyChartProps> = ({ data = [], isLoading = 
         <div className="h-[320px] w-full">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
-              <Spinner size="md" spinnerClassName="border-y-purple-600" />
+              <Spinner size="md" />
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">

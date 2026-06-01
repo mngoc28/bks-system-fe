@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { EditAmenityDialogProps } from "@/dataHelper/amenity.dataHelper";
 import { amenityFormSchema } from "@/shared/shema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Loader2 } from "lucide-react";
+import { Edit } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Edit Amenity Dialog
@@ -85,7 +86,7 @@ const EditAmenityDialog: React.FC<EditAmenityDialogProps> = ({ amenity, isOpen, 
                 {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {isLoading && <Spinner size="sm" />}
                 {t("common.save")}
               </Button>
             </DialogFooter>

@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeleteConfirmDialogProps } from "@/dataHelper/amenity.dataHelper";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Delete Amenity Confirmation Dialog
@@ -59,7 +60,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ amenity, isOp
             disabled={isLoading}
             className="bg-red-600 text-white hover:bg-red-700"
             >
-            {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+            {isLoading && <Spinner size="sm" />}
             {t("common.delete")}
             </Button>
         </DialogFooter>

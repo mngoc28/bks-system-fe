@@ -246,7 +246,7 @@ const Dashboard: React.FC = () => {
             <div className="h-[400px] w-full mt-auto">
               {revenueLoading ? (
                 <div className="flex h-full items-center justify-center">
-                  <Spinner size="md" spinnerClassName="border-y-blue-600" />
+                  <Spinner size="md" />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">

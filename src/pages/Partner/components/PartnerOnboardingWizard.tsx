@@ -554,7 +554,7 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
               {[
                 { id: "hotel", name: "Khách sạn", icon: Building, desc: "Cơ sở lưu trú lớn, buồng phòng chuyên nghiệp, có lễ tân phục vụ." },
                 { id: "guesthouse", name: "Nhà nghỉ", icon: Home, desc: "Quy mô lưu trú vừa và nhỏ, quy trình check-in đơn giản, chi phí tối ưu." },
-                { id: "apartment", name: "Căn hộ dịch vụ", icon: Building2, desc: "Căn hộ chung cư, căn hộ dịch vụ cao cấp cho thuê ngắn hoặc dài hạn." },
+                { id: "apartment", name: "Căn hộ / Căn hộ dịch vụ", icon: Building2, desc: "Căn hộ chung cư hoặc căn hộ dịch vụ vận hành theo nhu cầu thuê ngắn và trung hạn." },
                 { id: "homestay", name: "Homestay chia phòng", icon: Home, desc: "Lưu trú gia đình, trải nghiệm bản địa, phân chia quản lý theo phòng." }
               ].map((card) => {
                 const IconComponent = card.icon;
@@ -1213,14 +1213,14 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                 </ul>
 
                 <p className="mb-4 font-bold text-white">ĐIỀU 1: PHẠM VI HỢP TÁC LIÊN KẾT</p>
-                <p className="mb-4 text-xs font-sans">Bên B đồng ý chuyển giao quyền phân phối, bán phòng trực tuyến cho cơ sở lưu trú của mình lên nền tảng BKS Stay. Bên A có trách nhiệm duy trì máy chủ vận hành, hỗ trợ đối soát tự động doanh thu phòng của đối tác thụ hưởng dựa theo chính sách chiết khấu 12% trên giá trị mỗi đơn phòng thành công.</p>
+                <p className="mb-4 text-xs font-sans">Bên B đồng ý liên kết bán phòng và dịch vụ trên nền tảng BKS Stay. Bên B có trách nhiệm nộp phí dịch vụ nền tảng (phí hoa hồng) cố định là 5% tính trên tổng giá trị (GMV) phòng và dịch vụ phát sinh từ các đơn đặt phòng thành công thực tế.</p>
 
                 <p className="mb-4 font-bold text-white">ĐIỀU 2: PHƯƠNG THỨC THANH TOÁN VÀ ĐỐI SOÁT DOANH THU</p>
-                <p className="mb-4 text-xs font-sans">Doanh thu thu hộ phòng của khách hàng đặt trước sẽ được Bên A tổng hợp và đối soát, quyết toán tự động 100% vào tài khoản ngân hàng thụ hưởng của Bên B định kỳ vào ngày 05 và ngày 20 hàng tháng:</p>
+                <p className="mb-4 text-xs font-sans">Khoản phí dịch vụ nền tảng 5% sẽ được Bên A tổng hợp, đối soát công nợ định kỳ vào ngày 05 và ngày 20 hàng tháng. Bên B có trách nhiệm thanh toán số tiền nợ phí dịch vụ (Net Commission) cho Bên A trong vòng 5 ngày làm việc kể từ ngày phát hành bảng kê đối soát.</p>
                 <ul className="list-none pl-4 space-y-1 mb-4 text-xs font-sans">
-                  <li>- Ngân hàng thụ hưởng đối soát: <strong className="text-cyan-400">{formValues.bank_name || partnerInfo?.bank_name || "[Tên Ngân hàng]"}</strong></li>
-                  <li>- Số tài khoản nhận quyết toán: <strong className="text-cyan-400">{formValues.bank_account_number || partnerInfo?.bank_account_number || "[Số tài khoản]"}</strong></li>
-                  <li>- Chủ tài khoản nhận quyết toán: <strong className="text-cyan-400">{formValues.bank_account_holder || partnerInfo?.bank_account_holder || "[Tên Chủ thẻ]"}</strong></li>
+                  <li>- Ngân hàng thụ hưởng đối soát của Bên B: <strong className="text-cyan-400">{formValues.bank_name || partnerInfo?.bank_name || "[Tên Ngân hàng]"}</strong></li>
+                  <li>- Số tài khoản ngân hàng Bên B: <strong className="text-cyan-400">{formValues.bank_account_number || partnerInfo?.bank_account_number || "[Số tài khoản]"}</strong></li>
+                  <li>- Chủ tài khoản ngân hàng Bên B: <strong className="text-cyan-400">{formValues.bank_account_holder || partnerInfo?.bank_account_holder || "[Tên Chủ thẻ]"}</strong></li>
                 </ul>
 
                 <p className="mb-4 font-bold text-white">ĐIỀU 3: CHỮ KÝ ĐIỆN TỬ VÀ HIỆU LỰC HỢP ĐỒNG</p>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import { partnerService } from "@/services/partnerService";
+import { parsePartnerPropertyNamesResponse } from "@/utils/partnerPropertyData";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,16 +50,8 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
   const fetchProperties = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res: any = await partnerService.getProperties(undefined, { signal });
-      const payload = res?.data?.data || res?.data || res || [];
-      const list = Array.isArray(payload) ? payload : payload?.data || [];
-
-      setProperties(
-        list.map((b: any) => ({
-          id: b.id,
-          name: b.name || b.title,
-        })),
-      );
+      const res: any = await partnerService.getPropertyNames({ signal });
+      setProperties(parsePartnerPropertyNamesResponse(res));
     } catch (error: any) {
       if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
         return;

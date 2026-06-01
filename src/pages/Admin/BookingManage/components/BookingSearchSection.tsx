@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FilterPortal from "@/components/common/FilterPortal";
 import { SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
@@ -49,7 +49,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-indigo-500 p-1.5 text-white">
+          <div className="rounded-lg bg-primary/100 p-1.5 text-white">
             <Search className="size-4" />
           </div>
           <h3 className="text-sm font-bold tracking-tight text-slate-800">
@@ -77,7 +77,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               value={localQ}
               onChange={(e) => setLocalQ(e.target.value)}
               placeholder={t("bookings.search.user_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -90,7 +90,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               value={localRoom}
               onChange={(e) => setLocalRoom(e.target.value)}
               placeholder={t("bookings.search.room_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -100,7 +100,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               {t("bookings.search.status_label")}
             </label>
             <select
-              className="flex h-10 w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 text-sm text-slate-600 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className="flex h-10 w-full rounded-xl border border-slate-100 bg-slate-50/50 px-3 text-sm text-slate-600 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
               value={filters.status}
               onChange={(e) => setFilters((s) => ({ ...s, status: e.target.value }))}
             >
@@ -122,7 +122,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
                 value={localAssignee}
                 onChange={(e) => setLocalAssignee(e.target.value)}
                 placeholder={t("bookings.search.assignee_placeholder", { defaultValue: "Tên người phụ trách" }) as string}
-                className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
               />
             </div>
           )}
@@ -136,7 +136,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               type="date"
               value={filters.start_date}
               onChange={(e) => setFilters((s) => ({ ...s, start_date: e.target.value }))}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -149,7 +149,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               type="date"
               value={filters.end_date}
               onChange={(e) => setFilters((s) => ({ ...s, end_date: e.target.value }))}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -163,7 +163,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               value={filters.price_min}
               onChange={(e) => setFilters((s) => ({ ...s, price_min: e.target.value }))}
               placeholder="0"
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -177,7 +177,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
               value={filters.price_max}
               onChange={(e) => setFilters((s) => ({ ...s, price_max: e.target.value }))}
               placeholder="0"
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -187,7 +187,7 @@ const BookingSearchSection: React.FC<BookingSearchSectionProps> = ({ open, filte
           <Button
             variant="ghost"
             onClick={onReset}
-            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-primary"
           >
             <RotateCcw className="size-4" />
             {t("common.reset")}
