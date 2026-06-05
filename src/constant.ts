@@ -225,7 +225,7 @@ export const PROPERTY_IMAGE_TYPE = {
 };
 
 export const HEADER_PROPERTY_CLOUDINARY = "properties/"
-export const CLOUDINARY_HEADER_IMAGE_URL = import.meta.env.VITE_CLOUDINARY_URL || "https://res.cloudinary.com/dyragzjcd/image/upload"
+export const CLOUDINARY_HEADER_IMAGE_URL = import.meta.env.VITE_CLOUDINARY_URL || "https://res.cloudinary.com/dc2ivo5ez/image/upload"
 export const CLOUDINARY_VIDEO_URL = import.meta.env.VITE_CLOUDINARY_VIDEO_URL || "https://res.cloudinary.com/dc2ivo5ez/video/upload"
 export const HERO_BANNER_VIDEOS = {
   HOTEL: "v1779865486/fy5qz9e9jo7cxboybr9e.mp4",

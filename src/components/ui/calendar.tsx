@@ -33,7 +33,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         row: 'flex w-full mt-2',
         cell: cn(
           'relative h-9 w-9 p-0 text-center text-sm focus-within:relative focus-within:z-20',
-          '[&:has([aria-selected])]:bg-slate-100 [&:has([aria-selected].day-outside)]:bg-slate-100/50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md',
+          '[&:has([aria-selected])]:bg-slate-100 [&:has([aria-selected].day-outside)]:bg-slate-100/50 [&:has([disabled])]:bg-transparent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md',
         ),
         day: cn(
           buttonVariants({ variant: 'ghost' }),
@@ -42,7 +42,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         day_range_end: 'day-range-end',
         day_selected:
           'bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white',
-        day_today: 'bg-slate-100 font-semibold text-slate-900',
+        day_today: 'bg-slate-200/80 font-bold text-slate-900 border border-slate-300',
         day_outside: 'text-slate-400 opacity-50 aria-selected:bg-slate-100/60 aria-selected:text-slate-500 aria-selected:opacity-30',
         day_disabled: 'text-slate-300 line-through opacity-40',
         day_range_middle: 'aria-selected:bg-slate-100 aria-selected:text-slate-900',

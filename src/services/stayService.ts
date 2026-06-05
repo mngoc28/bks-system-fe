@@ -129,6 +129,7 @@ export interface BookingDetail {
     status: string;
     receipt_path?: string;
   };
+  payment_method?: string;
 }
 
 export interface NotificationData {

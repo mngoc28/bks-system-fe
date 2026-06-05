@@ -18,6 +18,7 @@ export interface CreateBookingUserRequest {
     end_date: string;
     note?: string;
     service_ids?: number[];
+    payment_method: string;
 }
 
 /** Payload returned after POST bookings/:roomId/user-create (and public lookup). */

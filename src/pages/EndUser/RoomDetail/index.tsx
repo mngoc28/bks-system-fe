@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus } from "lucide-react";
+import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus, RotateCcw } from "lucide-react";
 import { useRoomReviewsQuery } from "@/hooks/useReviewQuery";
+import { resolveImageUrl } from "@/utils/imageUtils";
 
 import { roomApi } from "@/api/EU/roomApi";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -11,6 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DatePickerField } from "@/components/ui/date-picker-field";
+import ImageLightbox from "@/components/ui/image-lightbox";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import type { Matcher } from "react-day-picker";
 import { ReviewsModal } from "@/components/rooms/ReviewsModal";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { normalizeStayPropertyTypeLabel, supportsElectronicContractByPropertyType, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
@@ -18,11 +25,23 @@ import { formatPrice, formatPhoneNumber } from "@/utils/utils";
 import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { RoomTouristSpotsSection } from "@/components/rooms/RoomTouristSpotsSection";
 
+function parseYmdToLocalDate(value: string): Date | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+  const [y, m, d] = value.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return Number.isNaN(dt.getTime()) ? undefined : dt;
+}
+
 const PublicRoomDetail = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const id = Number(roomId || 0);
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const { data: room, isLoading, isError } = useQuery({
     queryKey: ["public-room-detail", id],
@@ -33,6 +52,116 @@ const PublicRoomDetail = () => {
     enabled: !!id,
   });
 
+  // Fetch booked dates list
+  const { data: bookedDatesResponse } = useQuery({
+    queryKey: ["room-booked-dates", id],
+    queryFn: async () => {
+      const response = await roomApi.getBookedDates(id);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+  const bookedDates = bookedDatesResponse || [];
+
+  const checkin = searchParams.get("startDate") || "";
+  const checkout = searchParams.get("endDate") || "";
+
+  const handleStartDateChange = (dateStr: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("startDate", dateStr);
+    if (checkout && checkout <= dateStr) {
+      newParams.delete("endDate");
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleEndDateChange = (dateStr: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("endDate", dateStr);
+    setSearchParams(newParams);
+  };
+
+  const selectedRange = useMemo(() => {
+    return {
+      from: checkin ? new Date(checkin) : undefined,
+      to: checkout ? new Date(checkout) : undefined,
+    };
+  }, [checkin, checkout]);
+
+  const handleRangeSelect = (range: any) => {
+    if (!range) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("startDate");
+      newParams.delete("endDate");
+      setSearchParams(newParams);
+      return;
+    }
+
+    const { from, to } = range;
+
+    if (from && to && bookedDates.length > 0) {
+      const startStr = format(from, 'yyyy-MM-dd');
+      const endStr = format(to, 'yyyy-MM-dd');
+      const hasConflict = bookedDates.some(dateStr => {
+        return dateStr > startStr && dateStr < endStr;
+      });
+
+      if (hasConflict) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("startDate", format(to, 'yyyy-MM-dd'));
+        newParams.delete("endDate");
+        setSearchParams(newParams);
+        return;
+      }
+    }
+
+    const newParams = new URLSearchParams(searchParams);
+    if (from) {
+      newParams.set("startDate", format(from, 'yyyy-MM-dd'));
+    } else {
+      newParams.delete("startDate");
+    }
+    if (to) {
+      newParams.set("endDate", format(to, 'yyyy-MM-dd'));
+    } else {
+      newParams.delete("endDate");
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleClearDates = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("startDate");
+    newParams.delete("endDate");
+    setSearchParams(newParams);
+  };
+
+  const scrollToCalendar = () => {
+    const el = document.getElementById("booking-calendar-card");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const inlineCalendarDisabledMatchers = useMemo((): Matcher[] => {
+    const matchers: Matcher[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    matchers.push({ before: today });
+
+    if (bookedDates && bookedDates.length > 0) {
+      bookedDates.forEach((dStr) => {
+        const dObj = parseYmdToLocalDate(dStr);
+        if (dObj) {
+          matchers.push(dObj);
+        }
+      });
+    }
+    return matchers;
+  }, [bookedDates]);
+
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+
   const { data: reviewsData, isLoading: isLoadingReviews } = useRoomReviewsQuery(id, {
     enabled: !!id,
   });
@@ -42,17 +171,30 @@ const PublicRoomDetail = () => {
       return [] as string[];
     }
 
-    const galleryFromImages = Array.isArray(room.images)
-      ? room.images
+    let rawImages = room.images;
+    if (typeof rawImages === 'string') {
+      try {
+        rawImages = JSON.parse(rawImages);
+      } catch {
+        rawImages = [];
+      }
+    }
+
+    const galleryFromImages = Array.isArray(rawImages)
+      ? rawImages
         .map((image: any) => image?.image_url)
         .filter(Boolean)
-        .map((url: string) => `${CLOUDINARY_HEADER_IMAGE_URL}${url}`)
+        .map((url: string) => resolveImageUrl(url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }))
       : [];
 
-    const cover = room.room_image ? `${CLOUDINARY_HEADER_IMAGE_URL}/${room.room_image}` : null;
+    const cover = room.room_image ? resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) : null;
 
-    return [cover, ...galleryFromImages].filter(Boolean) as string[];
+    return Array.from(new Set([cover, ...galleryFromImages].filter(Boolean))) as string[];
   }, [room]);
+
+  const lightboxSlides = useMemo(() => {
+    return roomImages.map((src) => ({ src }));
+  }, [roomImages]);
 
   const amenities = useMemo(() => {
     if (!room?.amenities) {
@@ -132,7 +274,7 @@ const PublicRoomDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900 pb-20 lg:pb-0">
       <PublicHeader />
 
       <section className="relative overflow-hidden bg-slate-950 text-white">
@@ -252,19 +394,55 @@ const PublicRoomDetail = () => {
           ) : (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white sm:col-span-2">
+                <div 
+                  className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white sm:col-span-2 cursor-pointer group"
+                  onClick={() => {
+                    setLightboxIndex(0);
+                    setLightboxOpen(true);
+                  }}
+                >
                   <img
                     src={roomImages[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1400&q=80"}
                     alt={room.title}
-                    className="h-[320px] w-full object-cover sm:h-[420px]"
+                    className="h-[320px] w-full object-cover sm:h-[420px] transition-transform duration-300 group-hover:scale-[1.02]"
                   />
+                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm shadow-md">
+                      Xem tất cả ảnh
+                    </span>
+                  </div>
                 </div>
                 {roomImages.slice(1, 5).map((image, index) => (
-                  <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                    <img src={image} alt={`${room.title}-${index + 2}`} className="h-40 w-full object-cover" />
+                  <div 
+                    key={`${image}-${index}`} 
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white cursor-pointer group relative"
+                    onClick={() => {
+                      setLightboxIndex(index + 1);
+                      setLightboxOpen(true);
+                    }}
+                  >
+                    <img 
+                      src={image} 
+                      alt={`${room.title}-${index + 2}`} 
+                      className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                        Phóng to
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {lightboxOpen && (
+                <ImageLightbox
+                  open={lightboxOpen}
+                  onClose={() => setLightboxOpen(false)}
+                  index={lightboxIndex}
+                  slides={lightboxSlides}
+                />
+              )}
 
               <Card className="rounded-3xl border-slate-200 shadow-sm">
                 <CardContent className="space-y-5 p-6">
@@ -425,6 +603,75 @@ const PublicRoomDetail = () => {
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Lịch trống & Đặt phòng Inline Card */}
+              <Card id="booking-calendar-card" className="rounded-3xl border-slate-200 shadow-sm bg-white overflow-hidden transition-all hover:shadow-md">
+                <CardContent className="p-6 space-y-6">
+                  <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <CalendarDays className="size-5 text-primary" />
+                        Lịch trống & Đặt phòng
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1">Chọn ngày nhận và trả phòng trực tiếp trên lịch</p>
+                    </div>
+                    {(checkin || checkout) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearDates}
+                        className="text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-700 border border-rose-100 hover:border-rose-200 transition-all duration-200 h-8 font-semibold px-3 rounded-full flex items-center gap-1.5 shadow-sm"
+                      >
+                        <RotateCcw className="size-3.5" />
+                        Xóa ngày chọn
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex border border-slate-100 bg-slate-50/50 rounded-2xl p-4 md:p-6 overflow-x-auto w-full">
+                    <Calendar
+                      mode="range"
+                      locale={vi}
+                      selected={selectedRange}
+                      onSelect={handleRangeSelect}
+                      disabled={inlineCalendarDisabledMatchers}
+                      numberOfMonths={2}
+                      showOutsideDays={false}
+                      className="p-0 w-full"
+                      classNames={{
+                        months: "flex flex-col sm:flex-row space-y-4 sm:space-y-0 justify-between w-full gap-x-6",
+                        month: "space-y-4 flex-1",
+                        head_row: "flex w-full",
+                        head_cell: "text-slate-500 w-full font-medium text-[0.8rem] text-center",
+                        row: "flex w-full mt-2",
+                        cell: "relative h-10 w-full p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-slate-100 [&:has([aria-selected].day-outside)]:bg-slate-100/50 [&:has([disabled])]:bg-transparent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+                        day: "h-10 w-full p-0 font-normal text-slate-900 aria-selected:opacity-100 hover:bg-slate-100 rounded-lg",
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-600 justify-center sm:justify-start pt-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 rounded bg-blue-600 block"></span>
+                      <span>Ngày chọn của bạn</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 rounded bg-slate-200/80 border border-slate-300 block"></span>
+                      <span>Hôm nay</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 rounded bg-white border border-slate-200 block"></span>
+                      <span>Còn trống</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-3.5 rounded bg-slate-50 border border-slate-200 relative overflow-hidden block">
+                        <span className="absolute inset-0 bg-slate-300 h-[1px] top-1/2 -translate-y-1/2 rotate-45 block text-slate-300"></span>
+                      </span>
+                      <span className="line-through text-slate-400">Đã được đặt / Khóa</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -668,30 +915,87 @@ const PublicRoomDetail = () => {
                 )}
               </div>
 
-              <div className="space-y-3 rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] text-slate-600">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                  <p>Cam kết giá tốt nhất khi đặt trực tiếp.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                  <p>Hỗ trợ pháp lý & hợp đồng điện tử 24/7.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                  <p>Hệ thống an ninh & quản lý chuyên nghiệp.</p>
+              {/* Widget Chọn Ngày */}
+              <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                <h4 className="text-sm font-bold text-slate-800">Thời gian lưu trú</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <DatePickerField
+                    label="Nhận phòng"
+                    value={checkin}
+                    onChange={handleStartDateChange}
+                    minDate={todayStr}
+                    excludeDates={bookedDates}
+                    triggerClassName="h-9 px-2 text-xs rounded-md"
+                    labelClassName="text-[10px] font-bold text-slate-500"
+                    placeholder="Chọn ngày"
+                  />
+                  <DatePickerField
+                    label="Trả phòng"
+                    value={checkout}
+                    onChange={handleEndDateChange}
+                    minDate={checkin || todayStr}
+                    excludeDates={bookedDates}
+                    triggerClassName="h-9 px-2 text-xs rounded-md"
+                    labelClassName="text-[10px] font-bold text-slate-500"
+                    placeholder="Chọn ngày"
+                    disabled={!checkin}
+                  />
                 </div>
               </div>
 
-              <Button asChild variant="gradient" className="w-full rounded-full">
-                <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
-              </Button>
+              <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 border-t border-slate-100 pt-4 text-[10px] text-slate-400 font-medium">
+                <span>✓ Giá tốt nhất</span>
+                <span>✓ Hỗ trợ 24/7</span>
+                <span>✓ An ninh & Hợp đồng</span>
+              </div>
+
+              {checkin && checkout ? (
+                <Button asChild variant="gradient" className="w-full rounded-full">
+                  <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
+                </Button>
+              ) : (
+                <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 cursor-not-allowed">
+                  Vui lòng chọn ngày để đặt
+                </Button>
+              )}
             </CardContent>
           </Card>
         </aside>
       </main>
 
       <PublicFooter />
+
+      {/* Sticky Bottom Bar for Mobile & Tablet */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Giá từ</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-black text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</span>
+              <span className="text-xs text-slate-500">/đêm</span>
+            </div>
+            {checkin && checkout ? (
+              <span className="text-[10px] font-bold text-emerald-600 mt-0.5">
+                Đã chọn {checkin.split('-').slice(1).reverse().join('/')} - {checkout.split('-').slice(1).reverse().join('/')}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 mt-0.5">Chưa chọn ngày</span>
+            )}
+          </div>
+
+          {checkin && checkout ? (
+            <Button asChild variant="gradient" className="rounded-full px-6 text-xs font-bold h-10 shadow-md">
+              <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>
+                Đặt ngay
+              </Link>
+            </Button>
+          ) : (
+            <Button onClick={scrollToCalendar} className="rounded-full bg-primary hover:bg-primary/90 text-white text-xs font-bold px-6 h-10 shadow-md">
+              Chọn ngày
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

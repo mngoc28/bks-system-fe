@@ -31,6 +31,8 @@ export interface DatePickerFieldProps {
   minDate?: string;
   /** Disable dates after this date (yyyy-MM-dd) */
   maxDate?: string;
+  /** Specific dates to disable (yyyy-MM-dd format) */
+  excludeDates?: string[];
   invalid?: boolean;
   /** Extra classes applied to the trigger Button (overrides defaults) */
   triggerClassName?: string;
@@ -51,6 +53,7 @@ export function DatePickerField({
   className,
   minDate,
   maxDate,
+  excludeDates,
   invalid,
   triggerClassName,
   placeholder,
@@ -68,8 +71,16 @@ export function DatePickerField({
     if (maxD) {
       matchers.push({ after: maxD });
     }
+    if (excludeDates && excludeDates.length > 0) {
+      excludeDates.forEach((dStr) => {
+        const dObj = parseYmdToLocalDate(dStr);
+        if (dObj) {
+          matchers.push(dObj);
+        }
+      });
+    }
     return matchers.length === 0 ? undefined : matchers.length === 1 ? matchers[0]! : matchers;
-  }, [minD, maxD]);
+  }, [minD, maxD, excludeDates]);
 
   return (
     <div className={cn('space-y-1.5', className)}>
@@ -93,12 +104,14 @@ export function DatePickerField({
               invalid && 'border-red-500',
             )}
           >
-            <CalendarIcon className="mr-2 h-5 w-5 shrink-0 text-slate-500" />
-            {selected ? (
-              format(selected, 'd MMMM yyyy', { locale: vi })
-            ) : (
-              <span>{placeholder || 'Chọn ngày'}</span>
-            )}
+            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-slate-500" />
+            <span className="truncate">
+              {selected ? (
+                format(selected, 'dd/MM/yyyy', { locale: vi })
+              ) : (
+                placeholder || 'Chọn ngày'
+              )}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto overflow-hidden p-0" align="start">

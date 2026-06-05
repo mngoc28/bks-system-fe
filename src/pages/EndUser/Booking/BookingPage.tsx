@@ -1,4 +1,4 @@
-import { bookingApi, type CreateBookingUserRequest, type PublicBookingSummary } from "@/api/EU/bookingApi";
+import { bookingApi, type CreateBookingUserRequest } from "@/api/EU/bookingApi";
 import { roomApi } from "@/api/EU/roomApi";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +18,7 @@ import {
 import { countBookingDaysInclusive, formatBookingDaysCount, formatRoomRentalLineLabel } from "@/utils/dateUtils";
 import { formatCurrencyInput } from "@/utils/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -30,7 +31,7 @@ import { DatePickerField } from "@/components/ui/date-picker-field";
 import { bookingUserFormSchema } from "@/shared/shema";
 import type { z } from "zod";
 import { ROUTERS } from "@/constant";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { 
     Wifi, Tv, Refrigerator, WashingMachine, Utensils, Mountain, Shield, 
     AirVent, Coffee, Sparkles, Eraser, Zap, Stethoscope, Printer, 
@@ -96,6 +97,7 @@ const BookingPage = () => {
             end_date: queryEndDate,
             note: "",
             service_ids: [],
+            payment_method: "online",
         },
     });
 
@@ -105,7 +107,7 @@ const BookingPage = () => {
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
     const [previewData, setPreviewData] = useState<BookingFormData | null>(null);
 
-    const { data: room, isLoading } = useQuery({
+    const { data: rawRoom, isLoading } = useQuery({
         queryKey: ["room", id],
         queryFn: async () => {
             const res = await roomApi.getRoomDetail(id);
@@ -113,13 +115,29 @@ const BookingPage = () => {
         },
         enabled: !!id,
     });
+
+    const room = useMemo(() => {
+        if (!rawRoom) return null;
+        let images = [];
+        if (rawRoom.images) {
+            try {
+                images = typeof rawRoom.images === "string" ? JSON.parse(rawRoom.images) : rawRoom.images;
+            } catch {
+                images = [];
+            }
+        }
+        return {
+            ...rawRoom,
+            images: Array.isArray(images) ? images : [],
+        };
+    }, [rawRoom]);
     // create booking mutation
     const createBookingMutation = useMutation({
         mutationFn: async (data: CreateBookingUserRequest) => {
             return await bookingApi.createBookingUser(id, data);
         },
         onSuccess: (apiBody, variables) => {
-            const payload = apiBody?.data as PublicBookingSummary | undefined;
+            const payload = apiBody?.data as any;
             const quote = resolveStayPriceQuote(variables.start_date, variables.end_date, {
                 allPrices: room?.all_prices,
                 cheapestDailyPrice: room?.cheapest_daily_price,
@@ -156,6 +174,10 @@ const BookingPage = () => {
                         servicesTotal,
                         unitPrice: payload.unit_price ?? quote.price,
                         priceUnit: payload.price_unit ?? quote.unit,
+                        paymentMethod: variables.payment_method,
+                        createdAt: new Date().toISOString(),
+                        status: payload.status,
+                        paymentUrl: payload.payment_url,
                     },
                 });
                 return;
@@ -177,6 +199,8 @@ const BookingPage = () => {
                         servicesTotal,
                         unitPrice: quote.price,
                         priceUnit: quote.unit,
+                        paymentMethod: variables.payment_method,
+                        createdAt: new Date().toISOString(),
                     },
                 });
                 return;
@@ -241,6 +265,51 @@ const BookingPage = () => {
         return services.filter((service) => serviceIds.includes(service.id));
     }, [services, serviceIds]);
 
+    const isDepositRequired = useMemo(() => {
+        if (!startDate || !endDate || !room) return false;
+
+        const hasStayDates = Boolean(startDate && endDate);
+        const priceQuote = hasStayDates
+                ? resolveStayPriceQuote(startDate, endDate, {
+                      allPrices: room.all_prices,
+                      cheapestDailyPrice: room.cheapest_daily_price,
+                  })
+                : null;
+        const defaultPackage = getPrimaryDayPackagePrice(room.all_prices, room.cheapest_daily_price);
+        const pUnit = priceQuote?.unit ?? defaultPackage.unit;
+
+        // 1. Long term checking
+        const isLongTerm = pUnit === 'month' || room.property_type_id === 2 || room.property_type_id === 3;
+        if (isLongTerm) return true;
+
+        // 2. Check last-minute (< 24h)
+        const checkInDate = new Date(startDate);
+        const today = new Date();
+        const diffTime = checkInDate.getTime() - today.getTime();
+        const diffHours = diffTime / (1000 * 60 * 60);
+        if (diffHours <= 24) return true;
+
+        // 3. Check weekend (Saturday = 6, Sunday = 0)
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const current = new Date(start);
+        while (current <= end) {
+            const day = current.getDay();
+            if (day === 0 || day === 6) {
+                return true;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        return false;
+    }, [startDate, endDate, room]);
+
+    useEffect(() => {
+        if (isDepositRequired) {
+            setValue("payment_method", "online");
+        }
+    }, [isDepositRequired, setValue]);
+
     if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
@@ -251,11 +320,11 @@ const BookingPage = () => {
 
     if (!room) return <div className="p-8 text-center text-slate-600">{t("booking.room_not_found")}</div>;
 
-    const roomImage = room.room_image
-        ? `${CLOUDINARY_HEADER_IMAGE_URL}/${room.room_image}`
-        : (room.images && room.images.length > 0
-            ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.images[0].image_url}`
-            : "");
+    const roomImage = resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL })
+        || (room.images && room.images.length > 0
+            ? resolveImageUrl(room.images[0].image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL })
+            : "")
+        || "";
 
     const hasStayDates = Boolean(startDate && endDate);
     const priceQuote = hasStayDates
@@ -379,7 +448,7 @@ const BookingPage = () => {
                                                 {room.images.slice(0, 4).map((img: any, idx: number) => (
                                                     <div key={idx} className="size-16 shrink-0 overflow-hidden rounded-lg border-2 border-transparent transition-all hover:border-sky-500">
                                                         <img
-                                                            src={`${CLOUDINARY_HEADER_IMAGE_URL}${img.image_url}`}
+                                                            src={resolveImageUrl(img.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || ""}
                                                             className="size-full object-cover"
                                                             alt={`Room view ${idx + 1}`}
                                                         />
@@ -737,6 +806,7 @@ const BookingPage = () => {
                                                                 }}
                                                                 minDate={today}
                                                                 invalid={!!errors.start_date}
+                                                                disabled={true}
                                                             />
                                                         )}
                                                     />
@@ -762,6 +832,7 @@ const BookingPage = () => {
                                                                 onChange={field.onChange}
                                                                 minDate={startDate || today}
                                                                 invalid={!!errors.end_date}
+                                                                disabled={true}
                                                             />
                                                         )}
                                                     />
@@ -779,6 +850,70 @@ const BookingPage = () => {
                                                     {...register("note")}
                                                     className="min-h-[120px] resize-none text-sm"
                                                 />
+                                            </div>
+
+                                            {/* Phương thức thanh toán */}
+                                            <div className="space-y-4 border-t border-slate-200 pt-6">
+                                                <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">
+                                                    Phương thức thanh toán <span className="text-red-500">*</span>
+                                                </h4>
+                                                
+                                                {isDepositRequired && (
+                                                    <div className="rounded-xl border border-orange-200 bg-orange-50/50 p-4 flex items-start gap-3">
+                                                        <AlertCircle className="size-5 text-orange-600 shrink-0 mt-0.5" />
+                                                        <p className="text-xs text-orange-800 leading-relaxed">
+                                                            Khoảng thời gian hoặc loại phòng bạn chọn (Cuối tuần, Ngày lễ, Đặt sát giờ hoặc Thuê dài hạn) yêu cầu đặt cọc giữ chỗ. 
+                                                            <strong> Tùy chọn thanh toán tại quầy không khả dụng.</strong>
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {/* Option 1: Online */}
+                                                    <div 
+                                                        onClick={() => setValue("payment_method", "online")}
+                                                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200 ${
+                                                            watch("payment_method") === "online" 
+                                                                ? "border-sky-500 bg-sky-50/50 shadow-sm" 
+                                                                : "border-slate-200 bg-white hover:border-sky-200 hover:shadow-sm"
+                                                        }`}
+                                                    >
+                                                        <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300">
+                                                            <div className={`size-2 rounded-full bg-sky-600 ${watch("payment_method") === "online" ? "opacity-100" : "opacity-0"}`} />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-bold text-slate-900">Thanh toán trực tuyến</p>
+                                                            <p className="text-xs text-slate-500 leading-relaxed">Thanh toán cọc hoặc toàn bộ tiền phòng qua Thẻ, Ví điện tử (VNPay/GMO) để được xác nhận phòng ngay.</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Option 2: Counter */}
+                                                    <div 
+                                                        onClick={() => {
+                                                            if (!isDepositRequired) {
+                                                                setValue("payment_method", "pay_at_counter");
+                                                            }
+                                                        }}
+                                                        className={`flex items-start gap-4 rounded-2xl border p-4 transition-all duration-200 ${
+                                                            isDepositRequired 
+                                                                ? "opacity-50 cursor-not-allowed border-slate-200 bg-slate-50" 
+                                                                : watch("payment_method") === "pay_at_counter"
+                                                                    ? "border-sky-500 bg-sky-50/50 shadow-sm cursor-pointer" 
+                                                                    : "border-slate-200 bg-white hover:border-sky-200 hover:shadow-sm cursor-pointer"
+                                                        }`}
+                                                    >
+                                                        <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300">
+                                                            <div className={`size-2 rounded-full bg-sky-600 ${watch("payment_method") === "pay_at_counter" && !isDepositRequired ? "opacity-100" : "opacity-0"}`} />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-bold text-slate-700">Thanh toán tại quầy</p>
+                                                            <p className="text-xs text-slate-500 leading-relaxed">Xác nhận giữ phòng tạm thời và thanh toán bằng tiền mặt/thẻ khi check-in tại quầy lễ tân.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {errors.payment_method && (
+                                                    <p className="text-sm text-red-500">{errors.payment_method.message}</p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="mt-auto pt-6">
@@ -803,6 +938,7 @@ const BookingPage = () => {
                                                 <p><span className="font-semibold">Số điện thoại:</span> {previewData?.phone}</p>
                                                 <p><span className="font-semibold">Nhận phòng:</span> {previewData?.start_date}</p>
                                                 <p><span className="font-semibold">Trả phòng:</span> {previewData?.end_date}</p>
+                                                <p><span className="font-semibold">Hình thức thanh toán:</span> {previewData?.payment_method === 'online' ? 'Thanh toán trực tuyến' : 'Thanh toán tại quầy'}</p>
                                                 {previewData?.start_date && previewData?.end_date ? (
                                                     <BookingDaysRow
                                                         days={countBookingDaysInclusive(previewData.start_date, previewData.end_date)}

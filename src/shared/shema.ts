@@ -1,4 +1,4 @@
-﻿import { IMAGE_ALLOWED_TYPES, IMAGE_MAX_FILES, IMAGE_MAX_SIZE, MAX_LENGTH_INPUT as MAX_LENGTH, NODE_OPTION_MARGIN as MIN_LENGTH, regexEmail, regexPassword } from "@/constant";
+import { IMAGE_ALLOWED_TYPES, IMAGE_MAX_FILES, IMAGE_MAX_SIZE, MAX_LENGTH_INPUT as MAX_LENGTH, NODE_OPTION_MARGIN as MIN_LENGTH, regexEmail, regexPassword } from "@/constant";
 import { z } from "zod";
 
 // Schema validation cho form
@@ -493,6 +493,7 @@ export const bookingUserFormSchema = (t: (key: string) => string) =>
     end_date: z.string().min(1, { message: t("booking.validation.endDate.required") }),
     note: z.string().max(500, { message: t("booking.validation.note.maxLength") }).optional(),
     service_ids: z.array(z.number()).optional(),
+    payment_method: z.string().min(1, { message: "Vui lòng chọn phương thức thanh toán" }),
   }).refine((data) => {
     if (data.start_date && data.end_date) {
       return new Date(data.start_date) < new Date(data.end_date);

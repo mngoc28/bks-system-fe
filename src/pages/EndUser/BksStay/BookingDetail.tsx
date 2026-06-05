@@ -396,6 +396,34 @@ const BookingDetail = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Polling for booking status when it is PENDING (0)
+  useEffect(() => {
+    if (!booking || booking.status !== 0) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res: any = await stayService.getBookingDetail(id!);
+        if (res.status === "success") {
+          const resData = res.data as IBookingDetail;
+          if (resData.status === 1) {
+            clearInterval(interval);
+            void reloadBookingDetail();
+            setShowCelebration(true);
+            toastSuccess("Tuyệt vời! Kỳ nghỉ của bạn đã chính thức được xác nhận.");
+            setTimeout(() => setShowCelebration(false), 8000);
+          } else if (resData.status !== 0) {
+            clearInterval(interval);
+            void reloadBookingDetail();
+          }
+        }
+      } catch (error) {
+        console.error("Failed to poll booking status", error);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [booking?.status, id, reloadBookingDetail]);
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -533,10 +561,9 @@ const BookingDetail = () => {
 
   const isPartnerConfirmed = booking.status === 1;
   const hasPendingContract = booking.contracts?.some((c) => c.status === 0) ?? false;
-  const activeContract = booking.contracts?.[0];
   const showContractSignCard =
     booking.status === 0 ||
-    (isPartnerConfirmed && (isLongTerm ? hasPendingContract : activeContract !== undefined));
+    (isPartnerConfirmed && (isLongTerm ? hasPendingContract : true));
 
   const steps = [
     { label: "Đã đặt", active: booking.status === 0, completed: booking.status >= 0 && booking.status !== 2 && booking.status !== 4 },
@@ -767,7 +794,7 @@ const BookingDetail = () => {
                     <div className="flex flex-col items-center justify-center border border-slate-100 bg-slate-50/50 rounded-2xl p-6 space-y-3">
                       <div className="relative p-2 bg-white border border-slate-200 rounded-2xl shadow-inner">
                         <img
-                          src={`https://img.vietqr.io/image/bidv-1234567890-compact2.png?amount=${booking.deposit_amount}&addInfo=BKS%20DEPOSIT%20${booking.id}&accountName=BKS%20Systems`}
+                          src={`https://img.vietqr.io/image/mb-0333494850-compact2.png?amount=${booking.deposit_amount}&addInfo=BKS%20DEPOSIT%20${booking.id}&accountName=HO%20MINH%20NGOC`}
                           alt="VietQR code"
                           className="w-44 h-44 object-contain"
                         />
@@ -783,14 +810,14 @@ const BookingDetail = () => {
                       <div className="space-y-2 text-xs font-semibold text-slate-500">
                         <div className="flex justify-between border-b border-slate-100 pb-2">
                           <span>Ngân hàng</span>
-                          <span className="text-slate-900 font-bold">BIDV</span>
+                          <span className="text-slate-900 font-bold">Ngân hàng TMCP Quân Đội (MB)</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                           <span>Số tài khoản</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-slate-900 font-bold">1234567890</span>
+                            <span className="text-slate-900 font-bold">0333494850</span>
                             <button
-                              onClick={() => handleCopyText("1234567890", "Số tài khoản")}
+                              onClick={() => handleCopyText("0333494850", "Số tài khoản")}
                               className="text-sky-600 hover:text-sky-500"
                             >
                               <Copy className="size-3.5" />
@@ -799,7 +826,7 @@ const BookingDetail = () => {
                         </div>
                         <div className="flex justify-between border-b border-slate-100 pb-2">
                           <span>Chủ tài khoản</span>
-                          <span className="text-slate-900 font-bold">BKS Systems</span>
+                          <span className="text-slate-900 font-bold">HO MINH NGOC</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-100 pb-2">
                           <span>Số tiền cọc</span>
@@ -818,6 +845,15 @@ const BookingDetail = () => {
                           </div>
                         </div>
                       </div>
+                      {booking.payment_method === "online" && (
+                        <div className="mt-4 pt-3 border-t border-slate-100">
+                          <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 font-bold text-white shadow-md hover:from-rose-600 hover:to-red-700 transition-all h-10">
+                            <a href={`${import.meta.env.VITE_URL}/payments/checkout?booking_id=${booking.id}`}>
+                              Thanh toán trực tuyến
+                            </a>
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

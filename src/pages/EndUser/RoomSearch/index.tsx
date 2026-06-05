@@ -28,6 +28,7 @@ import { normalizeStayPropertyTypeLabel, isApartmentSegmentPropertyType } from "
 import { formatPrice } from "@/utils/utils";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { toastSuccess, toastError } from "@/components/ui/toast";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import {
   Select,
   SelectContent,
@@ -633,7 +634,7 @@ const RoomSearch = () => {
         <Card className="flex h-full flex-col overflow-hidden border-slate-200 transition-all duration-300 hover:translate-y-[-4px] hover:border-sky-200 hover:shadow-xl hover:shadow-sky-500/10">
           <div className="relative aspect-[4/3] shrink-0 overflow-hidden">
             <img
-              src={(room.room_image && room.room_image !== "null") ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.room_image}` : getRoomFallbackImage(room.property_type_name, room.title)}
+              src={resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getRoomFallbackImage(room.property_type_name, room.title)}
               alt={room.title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
               onError={(e) => {

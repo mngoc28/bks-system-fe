@@ -15,6 +15,7 @@ import type { Room } from "@/dataHelper/EU/room.dataHelper";
 import { usePaginatedRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { formatPrice, formatProvinceName } from "@/utils/utils";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 
@@ -401,9 +402,8 @@ const RoomByProvince = () => {
 
             <div className="flex flex-col gap-6">
               {roomsFromApi.map((room) => {
-                const roomImage = room.room_image
-                  ? `${CLOUDINARY_HEADER_IMAGE_URL}/${room.room_image}`
-                  : "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80";
+                const roomImage = resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL })
+                  || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80";
 
                 const statusValue = (room as RoomWithOptionalStatus).status;
                 const isAvailable = statusValue === undefined || statusValue === null || statusValue === 1 || statusValue === "1";
