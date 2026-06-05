@@ -52,4 +52,8 @@ export const roomApi = {
     ): Promise<ApiResponse<any>> => {
         return axiosClient.get("home/rooms/rooms-by-tourist-spot", { params });
     },
+
+    getBookedDates: (id: number, params?: { start_date?: string; end_date?: string }): Promise<ApiResponse<string[]>> => {
+        return axiosClient.get(`rooms/${id}/booked-dates`, { params });
+    },
 }

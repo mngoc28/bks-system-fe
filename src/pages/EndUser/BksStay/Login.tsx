@@ -78,7 +78,7 @@ const GuestLogin = () => {
       {/* Cinematic Background */}
       <div className="absolute inset-0">
         <img 
-          src="/images/bks_stay_login_bg.png" 
+          src="/assets/images/labs/bks_stay_login_bg.png" 
           alt="BKS Stay Luxury Background" 
           className="animate-slow-zoom size-full scale-105 object-cover opacity-60"
         />

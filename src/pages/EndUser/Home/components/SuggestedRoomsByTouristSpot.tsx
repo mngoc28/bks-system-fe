@@ -5,6 +5,7 @@ import RoomCarouselContainer, { RoomCardSkeleton } from "@/components/rooms/Room
 import type { RoomCard } from "@/dataHelper/home.dataHelper";
 import type { SuggestedRoomsByTouristSpotGroup } from "@/dataHelper/EU/room.dataHelper";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface SuggestedRoomsByTouristSpotProps {
@@ -28,7 +29,7 @@ function toRoomCard(room: SuggestedRoomsByTouristSpotGroup["rooms"][number]): Ro
     name: room.title,
     address: room.property_address || "Đang cập nhật",
     price: priceLabel,
-    image: (room.room_image && room.room_image !== "null") ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.room_image}` : getRoomFallbackImage(room.property_type_name, room.title),
+    image: resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getRoomFallbackImage(room.property_type_name, room.title),
     area: `${room.area ?? 0} m²`,
     beds: room.people ?? 0,
     tourist_summary: room.tourist_summary ?? null,

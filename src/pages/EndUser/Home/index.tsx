@@ -41,6 +41,7 @@ import { getRoomFallbackImage, getPartnerFallbackImage } from "@/utils/fallbackI
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { normalizeStayPropertyTypeLabel } from "@/utils/stayPropertyType";
+import { resolveImageUrl } from "@/utils/imageUtils";
 
 export const ReviewCardSkeleton = () => (
   <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col justify-between relative">
@@ -192,7 +193,7 @@ const PublicHome = () => {
         name: room.title,
         address: room.property_address || "Đang cập nhật",
         price: priceLabel,
-        image: (room.room_image && room.room_image !== "null") ? `${CLOUDINARY_HEADER_IMAGE_URL}${room.room_image}` : getRoomFallbackImage(room.property_type_name, room.title),
+        image: resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getRoomFallbackImage(room.property_type_name, room.title),
         area: `${room.area} m²`,
         beds: room.people ?? 0,
         tourist_summary: (room as any).tourist_summary ?? null,
@@ -379,7 +380,7 @@ const PublicHome = () => {
       id: partner.id,
       name: partner.company_name || [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || "Đối tác BKS",
       address: [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || partner.address || "Đang cập nhật",
-      image: (partner.image_1 && partner.image_1 !== "null") ? `${CLOUDINARY_HEADER_IMAGE_URL}${partner.image_1}` : getPartnerFallbackImage(),
+      image: resolveImageUrl(partner.image_1, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getPartnerFallbackImage(),
       reviews_count: partner.reviews_count ?? 0,
       reviews_avg_rating: partner.reviews_avg_rating ?? 0,
     }));
@@ -393,7 +394,7 @@ const PublicHome = () => {
       title: item.title,
       slug: item.slug,
       excerpt: item.summary,
-      image: (item.image_url && item.image_url !== "null") ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : "",
+      image: resolveImageUrl(item.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || "",
       category: item.slug,
       publishedAt: new Date(item.published_at).toLocaleDateString(undefined, {
         year: "numeric",
