@@ -39,6 +39,7 @@ const BookingSuccess = () => {
   const [bookingData, setBookingData] = useState<BookingSuccessState | null>(stateRef);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const { userEmail } = useUserStore();
 
   // Tính grace period đồng bộ với BookingDetail.tsx:
   // Nếu check-in trong vòng 48h kể từ lúc đặt → grace 2h, còn lại → 12h
@@ -148,7 +149,6 @@ const BookingSuccess = () => {
   }
 
   const codeLabel = bookingData.bookingCode?.trim() || (bookingData.bookingId != null ? `Mã đặt phòng #${bookingData.bookingId}` : "—");
-  const { userEmail } = useUserStore();
   const isLoggedIn = !!getAccessToken() && !!userEmail && userEmail.toLowerCase() === bookingData.guestEmail?.toLowerCase();
 
   return (
