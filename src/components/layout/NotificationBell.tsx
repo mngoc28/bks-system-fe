@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import stayService, { NotificationData } from "@/services/stayService";
 import partnerService from "@/services/partnerService";
-import { toast } from "sonner";
+import { toastSuccess } from "@/components/ui/toast";
 import { formatDistanceToNow } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
@@ -21,9 +21,11 @@ import { ROUTERS } from "@/constant";
 
 interface NotificationBellProps {
     portalType?: 'stay' | 'partner';
+    /** Partner header: nút lớn hơn, màu đậm hơn để đồng bộ với avatar. */
+    triggerSize?: 'default' | 'partner';
 }
 
-const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
+const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: NotificationBellProps) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -84,7 +86,7 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
         mutationFn: () => service.markAllAsRead(),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKey });
-            toast.success(t("notifications.mark_all_read_success"));
+            toastSuccess(t("notifications.mark_all_read_success"));
         }
     });
 
@@ -101,10 +103,22 @@ const NotificationBell = ({ portalType = 'stay' }: NotificationBellProps) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative size-10 rounded-xl text-slate-400 hover:text-slate-900">
-                    <Bell className="size-5" />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className={
+                        triggerSize === 'partner'
+                            ? 'relative size-11 rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-600'
+                            : 'relative size-10 rounded-xl text-slate-400 hover:text-slate-900'
+                    }
+                >
+                    <Bell className={triggerSize === 'partner' ? 'size-6 stroke-[2px]' : 'size-5'} />
                     {unreadCount > 0 && (
-                        <span className="absolute right-2 top-2 size-2.5 animate-pulse rounded-full bg-rose-500 ring-2 ring-white"></span>
+                        <span
+                            className={`absolute animate-pulse rounded-full bg-rose-500 ring-2 ring-white ${
+                                triggerSize === 'partner' ? 'right-2.5 top-2 size-3' : 'right-2 top-2 size-2.5'
+                            }`}
+                        />
                     )}
                 </Button>
             </DropdownMenuTrigger>

@@ -19,7 +19,7 @@ import { NotificationData } from "@/services/stayService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toastSuccess } from "@/components/ui/toast";
 import Pagination from "@/components/Pagination";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -51,7 +51,7 @@ const Notifications: React.FC = () => {
         mutationFn: () => partnerService.markAllAsRead(),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["notifications", "partner"] });
-            toast.success(t("notifications.mark_all_read_success"));
+            toastSuccess(t("notifications.mark_all_read_success"));
         }
     });
 
@@ -74,7 +74,7 @@ const Notifications: React.FC = () => {
             {/* Header section with glassmorphism */}
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h1 className="flex items-center gap-3 text-2xl font-black text-slate-900">
+                    <h1 className="flex items-center gap-3 text-xl font-black text-slate-900 sm:text-2xl">
                         <div className="flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200">
                             <Bell size={22} />
                         </div>
@@ -83,12 +83,12 @@ const Notifications: React.FC = () => {
                     <p className="mt-1 font-medium text-slate-500">{t("notifications.subtitle")}</p>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center gap-2 sm:w-auto">
                     <Button 
                         variant="outline" 
                         onClick={() => markAllReadMutation.mutate()}
                         disabled={unreadCount === 0}
-                        className="rounded-xl border-slate-200 font-bold transition-all hover:bg-slate-50 active:scale-95"
+                        className="w-full rounded-xl border-slate-200 font-bold transition-all hover:bg-slate-50 active:scale-95 sm:w-auto"
                     >
                         <Check size={16} className="mr-2" />
                         {t("notifications.mark_all_read")}
@@ -97,9 +97,9 @@ const Notifications: React.FC = () => {
             </div>
 
             <Card className="overflow-hidden rounded-[32px] border-none bg-white/70 shadow-2xl shadow-slate-200/50 backdrop-blur-sm">
-                <CardHeader className="border-b border-slate-50 bg-slate-50/30 p-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white p-1 shadow-sm">
+                <CardHeader className="border-b border-slate-50 bg-slate-50/30 p-4 sm:p-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex w-full items-center gap-2 overflow-x-auto rounded-2xl border border-slate-100 bg-white p-1 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
                             <Button 
                                 variant={filter === 'all' ? 'default' : 'ghost'} 
                                 size="sm" 
@@ -123,7 +123,7 @@ const Notifications: React.FC = () => {
                             </Button>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-slate-400">
+                        <div className="hidden items-center gap-2 text-slate-400 sm:flex">
                             <Filter size={16} />
                             <span className="text-xs font-bold uppercase tracking-wider">{t("notifications.filter_notifications")}</span>
                         </div>

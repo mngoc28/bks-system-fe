@@ -1,6 +1,9 @@
 import { getAccessToken } from "@/utils/storage";
 import axios, { AxiosRequestConfig } from "axios";
 
+import { useUserStore } from "@/store/useUserStore";
+import { ROUTERS } from "@/constant";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // Tạo instance Axios với các cấu hình mặc định
@@ -34,9 +37,22 @@ axiosInstance.interceptors.response.use(
   (error) => {
     // Xử lý lỗi: 401 Unauthorized, 403 Forbidden, v.v.
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // Redirect đến trang đăng nhập hoặc xử lý lỗi xác thực
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      const isLoginRequest = error.config?.url && (
+        error.config.url.includes("login") ||
+        error.config.url.includes("register") ||
+        error.config.url.includes("set-password")
+      );
+      if (!isLoginRequest) {
+        useUserStore.getState().logout();
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith("/partner")) {
+          window.location.href = ROUTERS.PARTNER_LOGIN;
+        } else if (currentPath.startsWith("/bks-stay")) {
+          window.location.href = "/bks-stay/login";
+        } else {
+          window.location.href = ROUTERS.LOGIN;
+        }
+      }
     }
     return Promise.reject(error);
   },

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus, RotateCcw } from "lucide-react";
@@ -35,6 +36,7 @@ function parseYmdToLocalDate(value: string): Date | undefined {
 }
 
 const PublicRoomDetail = () => {
+  const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -257,6 +259,103 @@ const PublicRoomDetail = () => {
   }, [room, allPrices]);
 
   const propertyTypeLabel = normalizeStayPropertyTypeLabel(room?.property_type_name);
+
+  const renderBookingCard = () => {
+    return (
+      <Card className="rounded-3xl border-slate-200 shadow-sm bg-white">
+        <CardContent className="space-y-6 p-6">
+          <div className="space-y-4">
+            {allPrices.map((price: any, index: number) => {
+              const isMonth = price.unit === 'month';
+              const isDay = price.unit === 'day';
+
+              let unitTitle = "Thuê theo đêm";
+              let unitLabel = "đêm";
+              if (isMonth) {
+                unitTitle = "Thuê dài hạn";
+                unitLabel = "tháng";
+              } else if (isDay) {
+                unitTitle = "Thuê ngắn hạn";
+                unitLabel = "ngày";
+              } else if (price.unit) {
+                unitTitle = `Thuê theo ${price.unit}`;
+                unitLabel = price.unit;
+              }
+
+              return (
+                <div key={index} className={`p-4 rounded-2xl border ${isMonth ? 'border-sky-200 bg-sky-50/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
+                    {unitTitle}
+                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-primary">{formatPrice(price.price)}</span>
+                    <span className="text-sm text-slate-500">/{unitLabel}</span>
+                  </div>
+                  {price.minimum_stay > 0 && (
+                    <p className="text-[10px] text-amber-600 mt-2 font-medium flex items-center gap-1 bg-amber-50/50 p-1.5 rounded-lg border border-amber-100/50">
+                      <Info className="size-3.5 text-amber-500 shrink-0" />
+                      <span>Yêu cầu thuê tối thiểu {price.minimum_stay} {unitLabel}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+            {!allPrices.length && (
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
+                <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
+                <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
+              </div>
+            )}
+          </div>
+
+          {/* Widget Chọn Ngày */}
+          <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+            <h4 className="text-sm font-bold text-slate-800">Thời gian lưu trú</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <DatePickerField
+                label="Nhận phòng"
+                value={checkin}
+                onChange={handleStartDateChange}
+                minDate={todayStr}
+                excludeDates={bookedDates}
+                triggerClassName="h-9 px-2 text-xs rounded-md"
+                labelClassName="text-[10px] font-bold text-slate-500"
+                placeholder="Chọn ngày"
+              />
+              <DatePickerField
+                label="Trả phòng"
+                value={checkout}
+                onChange={handleEndDateChange}
+                minDate={checkin || todayStr}
+                excludeDates={bookedDates}
+                triggerClassName="h-9 px-2 text-xs rounded-md"
+                labelClassName="text-[10px] font-bold text-slate-500"
+                placeholder="Chọn ngày"
+                disabled={!checkin}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 border-t border-slate-100 pt-4 text-[10px] text-slate-400 font-medium">
+            <span>✓ Giá tốt nhất</span>
+            <span>✓ Hỗ trợ 24/7</span>
+            <span>✓ An ninh & Hợp đồng</span>
+          </div>
+
+          {checkin && checkout ? (
+            <Button asChild variant="gradient" className="w-full rounded-full">
+              <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
+            </Button>
+          ) : (
+            <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 cursor-not-allowed">
+              Vui lòng chọn ngày để đặt
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (!id) {
     return (
@@ -637,7 +736,7 @@ const PublicRoomDetail = () => {
                       selected={selectedRange}
                       onSelect={handleRangeSelect}
                       disabled={inlineCalendarDisabledMatchers}
-                      numberOfMonths={2}
+                      numberOfMonths={isMobileViewport ? 1 : 2}
                       showOutsideDays={false}
                       className="p-0 w-full"
                       classNames={{
@@ -674,6 +773,11 @@ const PublicRoomDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Mobile Booking Card (shown only on mobile/tablet) */}
+              <div className="block lg:hidden">
+                {renderBookingCard()}
+              </div>
 
               {/* Partner Information Card */}
               {room && (room.partner_name || room.partner_company_name) && (
@@ -867,99 +971,8 @@ const PublicRoomDetail = () => {
           )}
         </section>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardContent className="space-y-6 p-6">
-              <div className="space-y-4">
-                {allPrices.map((price: any, index: number) => {
-                  const isMonth = price.unit === 'month';
-                  const isDay = price.unit === 'day';
-
-                  let unitTitle = "Thuê theo đêm";
-                  let unitLabel = "đêm";
-                  if (isMonth) {
-                    unitTitle = "Thuê dài hạn";
-                    unitLabel = "tháng";
-                  } else if (isDay) {
-                    unitTitle = "Thuê ngắn hạn";
-                    unitLabel = "ngày";
-                  } else if (price.unit) {
-                    unitTitle = `Thuê theo ${price.unit}`;
-                    unitLabel = price.unit;
-                  }
-
-                  return (
-                    <div key={index} className={`p-4 rounded-2xl border ${isMonth ? 'border-sky-200 bg-sky-50/50' : 'border-slate-100 bg-slate-50/50'}`}>
-                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
-                        {unitTitle}
-                      </p>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-primary">{formatPrice(price.price)}</span>
-                        <span className="text-sm text-slate-500">/{unitLabel}</span>
-                      </div>
-                      {price.minimum_stay > 0 && (
-                        <p className="text-[10px] text-amber-600 mt-2 font-medium flex items-center gap-1 bg-amber-50/50 p-1.5 rounded-lg border border-amber-100/50">
-                          <Info className="size-3.5 text-amber-500 shrink-0" />
-                          <span>Yêu cầu thuê tối thiểu {price.minimum_stay} {unitLabel}</span>
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-                {!allPrices.length && (
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
-                    <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
-                    <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Widget Chọn Ngày */}
-              <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-                <h4 className="text-sm font-bold text-slate-800">Thời gian lưu trú</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <DatePickerField
-                    label="Nhận phòng"
-                    value={checkin}
-                    onChange={handleStartDateChange}
-                    minDate={todayStr}
-                    excludeDates={bookedDates}
-                    triggerClassName="h-9 px-2 text-xs rounded-md"
-                    labelClassName="text-[10px] font-bold text-slate-500"
-                    placeholder="Chọn ngày"
-                  />
-                  <DatePickerField
-                    label="Trả phòng"
-                    value={checkout}
-                    onChange={handleEndDateChange}
-                    minDate={checkin || todayStr}
-                    excludeDates={bookedDates}
-                    triggerClassName="h-9 px-2 text-xs rounded-md"
-                    labelClassName="text-[10px] font-bold text-slate-500"
-                    placeholder="Chọn ngày"
-                    disabled={!checkin}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 border-t border-slate-100 pt-4 text-[10px] text-slate-400 font-medium">
-                <span>✓ Giá tốt nhất</span>
-                <span>✓ Hỗ trợ 24/7</span>
-                <span>✓ An ninh & Hợp đồng</span>
-              </div>
-
-              {checkin && checkout ? (
-                <Button asChild variant="gradient" className="w-full rounded-full">
-                  <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
-                </Button>
-              ) : (
-                <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 cursor-not-allowed">
-                  Vui lòng chọn ngày để đặt
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+        <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+          {renderBookingCard()}
         </aside>
       </main>
 

@@ -5,8 +5,8 @@ import { BookingTableProps } from "@/dataHelper/booking.dataHelper";
 import { safeFormatDateTime } from "@/utils/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import RowActions from "@/components/RowActions/RowActions";
-import { formatPrice } from "@/utils/utils";
-import { highlightText } from "@/utils/utils";
+import { formatPrice, highlightText } from "@/utils/utils";
+import { getAdminBookingBadgeClass, getAdminBookingDisplayKey } from "@/utils/bookingDisplay";
 
 /**
  * Booking Table Component
@@ -24,19 +24,16 @@ const BookingTable: React.FC<BookingTableProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">{t("bookings.status_pending") || "Đang chờ"}</Badge>;
-      case "confirmed":
-        return <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">{t("bookings.status_confirmed") || "Đã xác nhận"}</Badge>;
-      case "cancelled":
-        return <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">{t("bookings.status_cancelled") || "Đã hủy"}</Badge>;
-      case "completed":
-        return <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">{t("bookings.status_completed") || "Hoàn thành"}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+  const getStatusBadge = (booking: BookingTableProps["filtered"][number]) => {
+    const displayKey = getAdminBookingDisplayKey(booking.status, booking.stay_status);
+    const className = getAdminBookingBadgeClass(booking.status, booking.stay_status);
+    return (
+      <Badge variant="outline" className={className}>
+        {t(`bookings.display.${displayKey}`, {
+          defaultValue: t(`bookings.search.status_${booking.status}`, { defaultValue: booking.status }),
+        })}
+      </Badge>
+    );
   };
 
   return (
@@ -91,7 +88,7 @@ const BookingTable: React.FC<BookingTableProps> = ({
                   {safeFormatDateTime(booking.start_date)} - {safeFormatDateTime(booking.end_date)}
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">{formatPrice(booking.price)}</TableCell>
-                <TableCell className="px-4 py-3 align-middle">{getStatusBadge(booking.status)}</TableCell>
+                <TableCell className="px-4 py-3 align-middle">{getStatusBadge(booking)}</TableCell>
                 <TableCell className="px-4 py-3 text-center align-middle">
                   <RowActions
                     id={booking.id}

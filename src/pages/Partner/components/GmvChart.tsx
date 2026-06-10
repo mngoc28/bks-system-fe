@@ -39,17 +39,17 @@ const formatCurrency = (value: number) => (
 const GmvChart: React.FC<GmvChartProps> = ({ data = [], isLoading = false }) => {
   return (
     <Card className="border-slate-200 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <CardTitle className="text-xl font-bold">GMV & Net Revenue 30 ngày</CardTitle>
-          <CardDescription>Doanh thu gross và net theo ngày nhận phòng.</CardDescription>
+          <CardTitle className="text-lg font-bold sm:text-xl">Doanh thu gross & thực nhận 30 ngày</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">GMV và doanh thu sau hoa hồng 5% theo ngày nhận phòng.</CardDescription>
         </div>
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex flex-wrap items-center gap-3 text-xs sm:gap-4">
           <span className="flex items-center gap-1.5 font-medium text-slate-600">
-            <span className="h-2 w-2 rounded-full bg-blue-600" /> GMV
+            <span className="h-2 w-2 rounded-full bg-blue-600" /> Gross
           </span>
           <span className="flex items-center gap-1.5 font-medium text-slate-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Net
+            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Thực nhận
           </span>
         </div>
       </CardHeader>
@@ -90,7 +90,7 @@ const GmvChart: React.FC<GmvChartProps> = ({ data = [], isLoading = false }) => 
                   labelFormatter={formatDate}
                   formatter={(value, name) => [
                     formatCurrency(Number(value ?? 0)),
-                    name === 'gmv' ? 'GMV' : 'Net Revenue',
+                    name === 'gmv' ? 'Doanh thu gross' : 'Thực nhận',
                   ]}
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
                 />

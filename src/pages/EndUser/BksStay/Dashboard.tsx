@@ -31,6 +31,7 @@ import { formatPrice } from "@/utils/utils";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 
 import stayService, { StayDashboardData } from "@/services/stayService";
+import { isBksStayRouteEnabled } from "@/lib/featureFlags";
 
 const Dashboard = () => {
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
@@ -136,10 +137,13 @@ const Dashboard = () => {
             Hệ thống BKS Stay luôn sẵn sàng hỗ trợ bạn quản lý mọi kỳ nghỉ tại Việt Nam. 
             Bạn đang có <span className="font-bold text-sky-400">{activeBooking ? "1 đơn đặt phòng" : "0 đơn đặt phòng"} sắp tới</span> cần chú ý.
           </p>
-          <div className="flex gap-4">
-             <Button className="h-12 rounded-2xl bg-white px-8 font-bold text-slate-900 shadow-lg shadow-white/10 transition-all hover:bg-slate-100">Đặt thêm phòng mới</Button>
-             <Button variant="outline" className="h-12 rounded-2xl border-none border-white/10 bg-white/5 px-8 text-white hover:bg-white/10">Xem khuyến mãi</Button>
-          </div>
+          {isBksStayRouteEnabled(ROUTERS.BKS_STAY_HISTORY) && (
+            <div className="flex gap-4">
+              <Button asChild className="h-12 rounded-2xl bg-white px-8 font-bold text-slate-900 shadow-lg shadow-white/10 transition-all hover:bg-slate-100">
+                <Link to={ROUTERS.BKS_STAY_HISTORY}>Xem lịch sử đặt phòng</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -163,11 +167,13 @@ const Dashboard = () => {
         <h3 className="px-2 text-xl font-black text-slate-900">Phím tắt thông minh</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
            {[
-             { label: "Đặt dịch vụ", icon: <Zap className="size-6" />, color: "bg-slate-900 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
-             { label: "Hướng dẫn lưu trú", icon: <BookOpen className="size-6" />, color: "bg-slate-800 shadow-slate-900/10", path: ROUTERS.BKS_STAY_GUIDE, type: "link" },
-             { label: "Gia hạn ở", icon: <CalendarDays className="size-6" />, color: "bg-slate-700 shadow-slate-900/10", onClick: () => setIsExtendDialogOpen(true), type: "button" },
-             { label: "Báo cáo sự cố", icon: <Wrench className="size-6" />, color: "bg-slate-600 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" },
-           ].map((action, i) => (
+             { label: "Đặt dịch vụ", icon: <Zap className="size-6" />, color: "bg-slate-900 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SERVICES, type: "link" as const },
+             { label: "Hướng dẫn lưu trú", icon: <BookOpen className="size-6" />, color: "bg-slate-800 shadow-slate-900/10", path: ROUTERS.BKS_STAY_GUIDE, type: "link" as const },
+             { label: "Gia hạn ở", icon: <CalendarDays className="size-6" />, color: "bg-slate-700 shadow-slate-900/10", onClick: () => setIsExtendDialogOpen(true), type: "button" as const },
+             { label: "Báo cáo sự cố", icon: <Wrench className="size-6" />, color: "bg-slate-600 shadow-slate-900/10", path: ROUTERS.BKS_STAY_SUPPORT, type: "link" as const },
+           ]
+             .filter((action) => action.type !== "link" || !action.path || isBksStayRouteEnabled(action.path))
+             .map((action, i) => (
              action.type === "link" ? (
                <Link key={i} to={action.path || "#"} className={`group relative rounded-[32px] p-6 ${action.color} overflow-hidden text-white shadow-xl transition-all hover:scale-105 active:scale-95`}>
                   <div className="absolute right-0 top-0 p-4 opacity-10 transition-transform group-hover:scale-125">{action.icon}</div>

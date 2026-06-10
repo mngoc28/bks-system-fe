@@ -245,8 +245,8 @@ const NewsList = () => {
         </section>
 
         {/* 3. Categories Chips Section */}
-        <section id="categories" className="overflow-x-auto border-y border-slate-100 py-6">
-          <div className="flex min-w-max items-center gap-4">
+        <section id="categories" className="overflow-x-auto border-y border-slate-100 py-6 scrollbar-hide snap-x snap-mandatory">
+          <div className="flex min-w-max items-center gap-4 px-4 sm:px-0">
             <span className="mr-4 text-sm font-black uppercase tracking-widest text-slate-400">
               {t("public.newsList.categories", "Loại")}:
             </span>

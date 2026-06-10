@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useChangePasswordMutation } from "@/hooks/useUserQuery";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/components/ui/toast";
 import { ChangePasswordDialogProps } from "@/dataHelper/user.dataHelper";
 
 /**
@@ -37,10 +37,7 @@ const ChangePasswordDialog = ({ open, onClose }: ChangePasswordDialogProps) => {
     const confirm_password = formData.get("confirmPassword") as string;
 
     if (new_password !== confirm_password) {
-      toast.error(t("validation.password.confirmPassword"), {
-        style: { background: "#EF4444", color: "#FFFFFF" },
-        className: "border-red-500",
-      });
+      toastError(t("validation.password.confirmPassword"));
       return;
     }
 
@@ -50,10 +47,7 @@ const ChangePasswordDialog = ({ open, onClose }: ChangePasswordDialogProps) => {
         new_password,
         new_password_confirmation: confirm_password,
       });
-      toast.success(t("user.change_password_success"), {
-        style: { background: "#10B981", color: "#FFFFFF" },
-        className: "border-green-500",
-      });
+      toastSuccess(t("user.change_password_success"));
       form.reset();
       onClose();
     } catch {

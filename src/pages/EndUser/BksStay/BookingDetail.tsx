@@ -41,7 +41,6 @@ import {
   Plane,
   X,
   History,
-  Calendar,
   FileText,
   ArrowRight,
   Clock,
@@ -63,7 +62,7 @@ import {
   DialogClose,
   DialogDescription
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Label } from "@/components/ui/label";
 import { PlainTextarea as Textarea } from "@/components/ui/textarea";
 import {
@@ -163,13 +162,21 @@ const BookingDetail = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get("confirmed") === "true") {
-      setShowCelebration(true);
-      toastSuccess("Tuyệt vời! Kỳ nghỉ của bạn đã chính thức được xác nhận.");
+    const hasConfirmedParam = searchParams.get("confirmed") === "true";
+    if (!hasConfirmedParam || !id) return;
+
+    const sessionKey = `confirmed_toast_shown_${id}`;
+    if (sessionStorage.getItem(sessionKey)) {
       setSearchParams({}, { replace: true });
-      setTimeout(() => setShowCelebration(false), 8000);
+      return;
     }
-  }, [searchParams, setSearchParams]);
+
+    sessionStorage.setItem(sessionKey, "true");
+    setShowCelebration(true);
+    toastSuccess("Tuyệt vời! Kỳ nghỉ của bạn đã chính thức được xác nhận.");
+    setSearchParams({}, { replace: true });
+    setTimeout(() => setShowCelebration(false), 8000);
+  }, [searchParams, setSearchParams, id]);
 
   const [showCelebration, setShowCelebration] = useState(false);
   const { userName } = useUserStore();
@@ -195,6 +202,8 @@ const BookingDetail = () => {
   const [reasonNote, setReasonNote] = useState("");
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
+  const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
+  const [paymentMethodSubmitting, setPaymentMethodSubmitting] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
@@ -408,9 +417,14 @@ const BookingDetail = () => {
           if (resData.status === 1) {
             clearInterval(interval);
             void reloadBookingDetail();
-            setShowCelebration(true);
-            toastSuccess("Tuyệt vời! Kỳ nghỉ của bạn đã chính thức được xác nhận.");
-            setTimeout(() => setShowCelebration(false), 8000);
+            
+            const sessionKey = `confirmed_toast_shown_${id}`;
+            if (!sessionStorage.getItem(sessionKey)) {
+              sessionStorage.setItem(sessionKey, "true");
+              setShowCelebration(true);
+              toastSuccess("Tuyệt vời! Kỳ nghỉ của bạn đã chính thức được xác nhận.");
+              setTimeout(() => setShowCelebration(false), 8000);
+            }
           } else if (resData.status !== 0) {
             clearInterval(interval);
             void reloadBookingDetail();
@@ -510,6 +524,26 @@ const BookingDetail = () => {
       toastError("Không thể rút yêu cầu hủy phòng. Vui lòng thử lại sau.");
     } finally {
       setWithdrawSubmitting(false);
+    }
+  };
+
+  const handleChangePaymentMethod = async () => {
+    if (!booking) return;
+    const newMethod = booking.payment_method === "online" ? "pay_at_counter" : "online";
+    setPaymentMethodSubmitting(true);
+    try {
+      await stayService.changePaymentMethod(booking.id, newMethod);
+      const label = newMethod === "online" ? "Thanh toán trực tuyến" : "Thanh toán tại quầy";
+      toastSuccess(`Đã đổi sang ${label} thành công!`);
+      setIsPaymentMethodDialogOpen(false);
+      await reloadBookingDetail();
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Không thể đổi phương thức thanh toán. Vui lòng thử lại.";
+      toastError(msg);
+    } finally {
+      setPaymentMethodSubmitting(false);
     }
   };
 
@@ -848,7 +882,7 @@ const BookingDetail = () => {
                       {booking.payment_method === "online" && (
                         <div className="mt-4 pt-3 border-t border-slate-100">
                           <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 font-bold text-white shadow-md hover:from-rose-600 hover:to-red-700 transition-all h-10">
-                            <a href={`${import.meta.env.VITE_URL}/payments/checkout?booking_id=${booking.id}`}>
+                            <a href={`${import.meta.env.VITE_URL}/payments/checkout?booking_id=${booking.id}&redirect_to=${encodeURIComponent(window.location.origin + "/bks-stay/bookings/" + booking.id)}`}>
                               Thanh toán trực tuyến
                             </a>
                           </Button>
@@ -897,6 +931,94 @@ const BookingDetail = () => {
             </Card>
           ) : null}
 
+          {/* Online Payment Card (No Deposit) */}
+          {booking.payment_method === "online" && 
+           (booking.payment_status === "unpaid" || (!booking.payment_status && booking.status === 0)) && 
+           (!booking.deposit_amount || booking.deposit_amount <= 0) ? (
+            <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+              <CardContent className="p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <CreditCard className="size-5 text-sky-600 animate-pulse" />
+                      Thanh toán trực tuyến đơn hàng
+                    </h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Phương thức chuyển khoản VietQR hoặc Thanh toán trực tuyến
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* VietQR QR Block */}
+                  <div className="flex flex-col items-center justify-center border border-slate-100 bg-slate-50/50 rounded-2xl p-6 space-y-3">
+                    <div className="relative p-2 bg-white border border-slate-200 rounded-2xl shadow-inner">
+                      <img
+                        src={`https://img.vietqr.io/image/mb-0333494850-compact2.png?amount=${totalAmount}&addInfo=${booking.booking_code || `BKS_${booking.id}`}&accountName=HO%20MINH%20NGOC`}
+                        alt="VietQR code"
+                        className="w-44 h-44 object-contain"
+                      />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <QrCode className="size-3.5" />
+                      Quét mã VietQR để thanh toán nhanh
+                    </span>
+                  </div>
+
+                  {/* Bank Transfer Details & Copy actions */}
+                  <div className="space-y-4 flex flex-col justify-center">
+                    <div className="space-y-2 text-xs font-semibold text-slate-500">
+                      <div className="flex justify-between border-b border-slate-100 pb-2">
+                        <span>Ngân hàng</span>
+                        <span className="text-slate-900 font-bold">Ngân hàng TMCP Quân Đội (MB)</span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <span>Số tài khoản</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-900 font-bold">0333494850</span>
+                          <button
+                            onClick={() => handleCopyText("0333494850", "Số tài khoản")}
+                            className="text-sky-600 hover:text-sky-500"
+                          >
+                            <Copy className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-100 pb-2">
+                        <span>Chủ tài khoản</span>
+                        <span className="text-slate-900 font-bold">HO MINH NGOC</span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-100 pb-2">
+                        <span>Tổng tiền phòng</span>
+                        <span className="text-rose-600 font-bold text-sm">{formatPrice(totalAmount)} VNĐ</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2">
+                        <span>Nội dung chuyển khoản</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-900 font-bold">{booking.booking_code || `BKS_${booking.id}`}</span>
+                          <button
+                            onClick={() => handleCopyText(booking.booking_code || `BKS_${booking.id}`, "Nội dung chuyển khoản")}
+                            className="text-sky-600 hover:text-sky-500"
+                          >
+                            <Copy className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-100">
+                      <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 font-bold text-white shadow-md hover:from-sky-700 hover:to-indigo-700 transition-all h-10">
+                        <a href={`${import.meta.env.VITE_URL}/payments/checkout?booking_id=${booking.id}&redirect_to=${encodeURIComponent(window.location.origin + "/bks-stay/bookings/" + booking.id)}`}>
+                          Thanh toán trực tuyến
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           {/* Main Details */}
           <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
             <CardContent className="p-8">
@@ -905,21 +1027,43 @@ const BookingDetail = () => {
                    <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
                       Mã đơn hàng <span className="text-sky-600">#{booking.id}</span>
                    </h2>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Đặt ngày: {new Date(booking.created_at).toLocaleDateString("vi-VN")}</p>
+                   <div className="flex flex-wrap gap-2">
+                  <Badge className={`rounded-full border-none px-4 py-1.5 font-bold ${
+                     booking.status === 1 ? "bg-emerald-100 text-emerald-700" : 
+                     booking.status === 2 ? "bg-rose-100 text-rose-700" : 
+                     booking.status === 3 ? "bg-sky-100 text-sky-700" : 
+                     booking.status === 4 ? "bg-orange-100 text-orange-700" : 
+                     "bg-amber-100 text-amber-700"
+                  }`}>
+                     {booking.status === 1 ? "ĐÃ XÁC NHẬN" : 
+                      booking.status === 2 ? "ĐÃ HỦY" : 
+                      booking.status === 3 ? "HOÀN THÀNH" : 
+                      booking.status === 4 ? "CHỜ DUYỆT HỦY" : 
+                      "CHỜ XÁC NHẬN"}
+                  </Badge>
+
+                  {(() => {
+                    const payStatus = booking.payment_status || (
+                      booking.status === 1 && booking.payment_method === "online" ? "paid" :
+                      booking.deposit_status === "confirmed_by_partner" ? "partially_paid" : "unpaid"
+                    );
+                    return (
+                      <Badge className={`rounded-full border-none px-4 py-1.5 font-bold ${
+                         payStatus === "paid" ? "bg-emerald-100 text-emerald-700" :
+                         payStatus === "partially_paid" ? "bg-sky-100 text-sky-700" :
+                         payStatus === "refunded" ? "bg-slate-100 text-slate-700" :
+                         "bg-amber-100 text-amber-700"
+                      }`}>
+                         {payStatus === "paid" ? "ĐÃ THANH TOÁN" :
+                          payStatus === "partially_paid" ? "ĐÃ ĐẶT CỌC" :
+                          payStatus === "refunded" ? "ĐÃ HOÀN TIỀN" :
+                          "CHƯA THANH TOÁN"}
+                      </Badge>
+                    );
+                  })()}
                 </div>
-                <Badge className={`rounded-full border-none px-4 py-1.5 font-bold ${
-                   booking.status === 1 ? "bg-emerald-100 text-emerald-700" : 
-                   booking.status === 2 ? "bg-rose-100 text-rose-700" : 
-                   booking.status === 3 ? "bg-sky-100 text-sky-700" : 
-                   booking.status === 4 ? "bg-orange-100 text-orange-700" : 
-                   "bg-amber-100 text-amber-700"
-                }`}>
-                   {booking.status === 1 ? "ĐÃ XÁC NHẬN" : 
-                    booking.status === 2 ? "ĐÃ HỦY" : 
-                    booking.status === 3 ? "HOÀN THÀNH" : 
-                    booking.status === 4 ? "CHỜ DUYỆT HỦY" : 
-                    "CHỜ XÁC NHẬN"}
-                </Badge>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Đặt ngày: {new Date(booking.created_at).toLocaleDateString("vi-VN")}</p>
+                 </div>
               </div>
 
               {/* Cancellation Details */}
@@ -1432,6 +1576,70 @@ const BookingDetail = () => {
                     <span className="text-sm font-bold text-slate-900">Tổng cộng</span>
                     <span className="text-xl font-black text-sky-600">{formatPrice(totalAmount)}</span>
                  </div>
+                 {booking.payment_method && (
+                   <div className="border-t border-slate-100 pt-3 flex justify-between items-center">
+                     <span className="text-xs font-semibold text-slate-400">Phương thức thanh toán</span>
+                     <div className="flex items-center gap-2">
+                       <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                         booking.payment_method === "online"
+                           ? "bg-sky-50 text-sky-700 border border-sky-100"
+                           : "bg-slate-100 text-slate-700 border border-slate-200"
+                       }`}>
+                         <CreditCard className="size-3" />
+                         {booking.payment_method === "online" ? "Thanh toán trực tuyến" : "Thanh toán tại quầy"}
+                       </span>
+                       {!booking.payment_method_changed_at &&
+                         (booking.status === 0 || booking.status === 1) &&
+                         (() => {
+                           const hoursLeft = (new Date(booking.start_date).getTime() - Date.now()) / 3600000;
+                           const blocked = booking.payment_method === "online" && (booking.payment_status === "paid" || booking.status === 1);
+                           return hoursLeft > 12 && !blocked ? (
+                             <Dialog open={isPaymentMethodDialogOpen} onOpenChange={setIsPaymentMethodDialogOpen}>
+                               <DialogTrigger asChild>
+                                 <button className="text-[10px] font-black uppercase tracking-wider text-sky-600 hover:underline">
+                                   Đổi
+                                 </button>
+                               </DialogTrigger>
+                               <DialogContent className="max-w-sm overflow-hidden rounded-[32px] border-none p-0">
+                                 <DialogHeader className="bg-slate-900 p-8 text-white">
+                                   <div className="flex items-center gap-3">
+                                     <div className="rounded-full bg-white/20 p-2"><CreditCard className="size-5" /></div>
+                                     <DialogTitle className="text-lg font-black">Đổi phương thức thanh toán</DialogTitle>
+                                   </div>
+                                   <DialogDescription className="mt-2 text-slate-400 text-sm">
+                                     Bạn chỉ được đổi một lần duy nhất.
+                                   </DialogDescription>
+                                 </DialogHeader>
+                                 <div className="p-8 space-y-4">
+                                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 space-y-1">
+                                     <p><span className="text-slate-400 font-medium">Hiện tại:</span> <span className="font-bold">{booking.payment_method === "online" ? "Thanh toán trực tuyến" : "Thanh toán tại quầy"}</span></p>
+                                     <p><span className="text-slate-400 font-medium">Đổi sang:</span> <span className="font-bold text-sky-700">{booking.payment_method === "online" ? "Thanh toán tại quầy" : "Thanh toán trực tuyến"}</span></p>
+                                   </div>
+                                   <p className="text-xs text-slate-500 leading-relaxed">
+                                     Sau khi đổi, bạn không thể thay đổi lại. Nếu cần hỗ trợ thêm, vui lòng liên hệ lễ tân.
+                                   </p>
+                                 </div>
+                                 <DialogFooter className="bg-slate-50 px-8 pb-8 gap-2">
+                                   <DialogClose asChild>
+                                     <Button type="button" variant="ghost" className="rounded-xl flex-1">Hủy bỏ</Button>
+                                   </DialogClose>
+                                   <Button
+                                     type="button"
+                                     disabled={paymentMethodSubmitting}
+                                     onClick={() => void handleChangePaymentMethod()}
+                                     className="rounded-xl flex-1 bg-sky-600 hover:bg-sky-700 text-white font-bold"
+                                   >
+                                     {paymentMethodSubmitting ? "Đang đổi..." : "Xác nhận đổi"}
+                                   </Button>
+                                 </DialogFooter>
+                               </DialogContent>
+                             </Dialog>
+                           ) : null;
+                         })()
+                       }
+                     </div>
+                   </div>
+                 )}
               </div>
            </Card>
 
@@ -1649,30 +1857,26 @@ const BookingDetail = () => {
                              </DialogHeader>
                              <div className="p-8">
                                 <div className="grid grid-cols-2 gap-4">
-                                   <div className="space-y-2">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nhận phòng</Label>
-                                      <div className="relative">
-                                         <Calendar className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                                         <Input 
-                                           type="date" 
-                                           className="rounded-xl pl-10" 
-                                           value={newStartDate}
-                                           onChange={(e) => setNewStartDate(e.target.value)}
-                                         />
-                                      </div>
-                                   </div>
-                                   <div className="space-y-2">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Trả phòng</Label>
-                                      <div className="relative">
-                                         <Calendar className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                                         <Input 
-                                           type="date" 
-                                           className="rounded-xl pl-10" 
-                                           value={newEndDate}
-                                           onChange={(e) => setNewEndDate(e.target.value)}
-                                         />
-                                      </div>
-                                   </div>
+                                   <DatePickerField
+                                      id="booking-detail-new-start-date"
+                                      label="Nhận phòng"
+                                      labelClassName="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                                      value={newStartDate}
+                                      onChange={setNewStartDate}
+                                      maxDate={newEndDate || undefined}
+                                      className="space-y-2"
+                                      triggerClassName="h-10 min-h-0 rounded-xl text-sm font-normal shadow-none hover:shadow-none"
+                                   />
+                                   <DatePickerField
+                                      id="booking-detail-new-end-date"
+                                      label="Trả phòng"
+                                      labelClassName="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                                      value={newEndDate}
+                                      onChange={setNewEndDate}
+                                      minDate={newStartDate || undefined}
+                                      className="space-y-2"
+                                      triggerClassName="h-10 min-h-0 rounded-xl text-sm font-normal shadow-none hover:shadow-none"
+                                   />
                                 </div>
                                 <div className="mt-6 rounded-2xl border border-sky-100 bg-sky-50/50 p-4">
                                    <div className="flex gap-3">

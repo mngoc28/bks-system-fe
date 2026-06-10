@@ -45,8 +45,7 @@ import {
   Scale,
   Info
 } from "lucide-react";
-import { toast } from "sonner";
-import { toastSuccess, toastError } from "@/components/ui/toast";
+import { toastDismiss, toastError, toastLoading, toastSuccess } from "@/components/ui/toast";
 
 const SettlementDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -90,14 +89,14 @@ const SettlementDetail: React.FC = () => {
   };
 
   const handleIssue = async () => {
-    const toastId = toast.loading("Đang phát hành kỳ đối soát...");
+    const toastId = toastLoading("Đang phát hành kỳ đối soát...");
     try {
       await issueMutation.mutateAsync(periodId);
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastSuccess("Phát hành kỳ đối soát thành công và gửi email thông báo!");
       refetchDetail();
     } catch (e) {
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastError("Có lỗi xảy ra khi phát hành.");
       console.error(e);
     }
@@ -115,7 +114,7 @@ const SettlementDetail: React.FC = () => {
       return;
     }
 
-    const toastId = toast.loading("Đang xác nhận thanh toán...");
+    const toastId = toastLoading("Đang xác nhận thanh toán...");
     try {
       await confirmPaymentMutation.mutateAsync({
         id: periodId,
@@ -124,12 +123,12 @@ const SettlementDetail: React.FC = () => {
           note: paymentNote,
         },
       });
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastSuccess("Xác nhận thanh toán thành công, kỳ đối soát đã đóng và khóa bookings!");
       setIsPayDialogOpen(false);
       refetchDetail();
     } catch (e) {
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastError("Lỗi xác nhận thanh toán.");
       console.error(e);
     }
@@ -172,12 +171,12 @@ const SettlementDetail: React.FC = () => {
   const handleExportExcel = async () => {
     if (isExportingExcel) return;
     setIsExportingExcel(true);
-    const toastId = toast.loading("Đang tạo file Excel bảng kê...");
+    const toastId = toastLoading("Đang tạo file Excel bảng kê...");
     try {
       const response = await axiosClient.get(`admin/settlements/${periodId}/export/excel`, {
         responseType: "blob"
       });
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastSuccess("Tải file Excel thành công!");
       const blob = new Blob([response as any], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
       const link = document.createElement("a");
@@ -186,7 +185,7 @@ const SettlementDetail: React.FC = () => {
       link.click();
       window.URL.revokeObjectURL(link.href);
     } catch (e) {
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastError("Không thể xuất file Excel.");
       console.error(e);
     } finally {
@@ -197,12 +196,12 @@ const SettlementDetail: React.FC = () => {
   const handleExportPdf = async () => {
     if (isExportingPdf) return;
     setIsExportingPdf(true);
-    const toastId = toast.loading("Đang tạo file PDF bảng kê...");
+    const toastId = toastLoading("Đang tạo file PDF bảng kê...");
     try {
       const response = await axiosClient.get(`admin/settlements/${periodId}/export/pdf`, {
         responseType: "blob"
       });
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastSuccess("Tải file PDF thành công!");
       const blob = new Blob([response as any], { type: "application/pdf" });
       const link = document.createElement("a");
@@ -211,7 +210,7 @@ const SettlementDetail: React.FC = () => {
       link.click();
       window.URL.revokeObjectURL(link.href);
     } catch (e) {
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastError("Không thể xuất file PDF.");
       console.error(e);
     } finally {

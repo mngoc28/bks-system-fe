@@ -39,7 +39,44 @@ const BookingSuccess = () => {
   const [bookingData, setBookingData] = useState<BookingSuccessState | null>(stateRef);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [hasSynced, setHasSynced] = useState(false);
   const { userEmail } = useUserStore();
+
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState("");
+  const [updateSuccess, setUpdateSuccess] = useState("");
+
+  const handleUpdateEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      setUpdateError("Vui lòng nhập email hợp lệ.");
+      return;
+    }
+    setUpdateError("");
+    setUpdateSuccess("");
+    setIsUpdating(true);
+    try {
+      const res = await bookingApi.updateBookingEmail({
+        booking_code: bookingData?.bookingCode,
+        old_email: bookingData?.guestEmail,
+        new_email: newEmail.trim()
+      }) as any;
+      if (res?.success || res?.status === "success") {
+        setUpdateSuccess("Cập nhật email thành công! Một email kích hoạt mới đã được gửi đi.");
+        setBookingData((prev: any) => prev ? { ...prev, guestEmail: newEmail.trim() } : null);
+        setIsEditingEmail(false);
+        setNewEmail("");
+      } else {
+        setUpdateError(res?.message || "Cập nhật email thất bại.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setUpdateError(err?.response?.data?.message || "Cập nhật email thất bại.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   // Tính grace period đồng bộ với BookingDetail.tsx:
   // Nếu check-in trong vòng 48h kể từ lúc đặt → grace 2h, còn lại → 12h
@@ -51,34 +88,44 @@ const BookingSuccess = () => {
   };
 
   useEffect(() => {
-    if (!bookingData && qBookingCode && qEmail) {
+    const code = qBookingCode || bookingData?.bookingCode;
+    const email = qEmail || bookingData?.guestEmail;
+
+    if (!code || !email || hasSynced) return;
+
+    const shouldShowSpinner = !bookingData;
+    if (shouldShowSpinner) {
       setLoading(true);
-      bookingApi.lookupBooking({ email: qEmail, booking_code: qBookingCode })
-        .then((res) => {
-          if ((res?.success || res?.status === "success") && res?.data) {
-            const d = res.data;
-            setBookingData({
-              bookingCode: d.booking_code,
-              bookingId: d.booking_id,
-              roomId: d.room_id,
-              guestEmail: qEmail,
-              roomTitle: d.room_title,
-              startDate: d.start_date,
-              endDate: d.end_date,
-              createdAt: d.created_at,
-              paymentMethod: d.payment_method,
-              status: d.status,
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to lookup booking:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
     }
-  }, [bookingData, qBookingCode, qEmail]);
+
+    bookingApi.lookupBooking({ email, booking_code: code })
+      .then((res) => {
+        if ((res?.success || res?.status === "success") && res?.data) {
+          const d = res.data;
+          setBookingData({
+            bookingCode: d.booking_code,
+            bookingId: d.booking_id,
+            roomId: d.room_id,
+            guestEmail: email,
+            roomTitle: d.room_title,
+            startDate: d.start_date,
+            endDate: d.end_date,
+            createdAt: d.created_at,
+            paymentMethod: d.payment_method,
+            status: d.status,
+          });
+          setHasSynced(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to lookup booking:", err);
+      })
+      .finally(() => {
+        if (shouldShowSpinner) {
+          setLoading(false);
+        }
+      });
+  }, [bookingData?.bookingCode, bookingData?.guestEmail, qBookingCode, qEmail, hasSynced]);
 
   useEffect(() => {
     if (bookingData) {
@@ -215,9 +262,60 @@ const BookingSuccess = () => {
                 {codeLabel}
               </span>
               {bookingData.guestEmail && (
-                <p className="text-xs font-semibold text-slate-500">
-                  Thông tin chi tiết đã được gửi tới: <span className="text-sky-600 font-bold">{bookingData.guestEmail}</span>
-                </p>
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-xs font-semibold text-slate-500">
+                    Thông tin chi tiết đã được gửi tới: <span className="text-sky-600 font-bold">{bookingData.guestEmail}</span>
+                  </p>
+                  
+                  {!isLoggedIn && (
+                    <div className="flex flex-col items-center gap-1.5 mt-1">
+                      {isEditingEmail ? (
+                        <div className="flex flex-col sm:flex-row items-center gap-2 max-w-sm w-full">
+                          <input
+                            type="email"
+                            placeholder="Nhập lại email đúng..."
+                            value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)}
+                            className="h-8 text-xs px-3 border border-slate-300 rounded-lg focus:outline-none focus:border-sky-500 w-full"
+                          />
+                          <div className="flex gap-1.5 shrink-0">
+                            <Button 
+                              onClick={handleUpdateEmail} 
+                              disabled={isUpdating}
+                              className="h-8 text-[10px] px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-bold"
+                            >
+                              {isUpdating ? "Đang lưu..." : "Xác nhận"}
+                            </Button>
+                            <Button 
+                              onClick={() => {
+                                setIsEditingEmail(false);
+                                setUpdateError("");
+                              }} 
+                              variant="secondary"
+                              className="h-8 text-[10px] px-3 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 rounded-lg"
+                            >
+                              Hủy
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setIsEditingEmail(true)} 
+                          className="text-[11px] text-amber-600 hover:text-amber-700 font-bold underline underline-offset-2 transition-colors"
+                        >
+                          Bạn không nhận được email? Nhấp để sửa lại email nhận tin
+                        </button>
+                      )}
+                      
+                      {updateError && (
+                        <p className="text-[10px] font-semibold text-rose-500">{updateError}</p>
+                      )}
+                      {updateSuccess && (
+                        <p className="text-[10px] font-semibold text-emerald-600">{updateSuccess}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -257,34 +355,52 @@ const BookingSuccess = () => {
               // Default: Pending deposit (online payment but not confirmed)
               return (
                 <div className="rounded-2xl border border-rose-100 bg-[#fef2f2] p-6 text-center space-y-4 shadow-sm">
-                  <div className="flex items-center justify-center gap-2 text-[#dc2626] font-bold">
-                    <Clock className="size-5 animate-pulse" />
-                    <span>Trạng thái: Chờ đặt cọc giữ phòng</span>
-                  </div>
-                  {qPaymentStatus === "failed" && (
-                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
-                      <AlertCircle className="size-4" />
-                      <span>Thanh toán trực tuyến thất bại hoặc bị hủy</span>
-                    </div>
+                  {isLoggedIn ? (
+                    <>
+                      <div className="flex items-center justify-center gap-2 text-rose-600 font-bold">
+                        <Clock className="size-5 animate-pulse" />
+                        <span>Trạng thái: Chờ thanh toán đặt cọc</span>
+                      </div>
+                      {qPaymentStatus === "failed" && (
+                        <div className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
+                          <AlertCircle className="size-4" />
+                          <span>Thanh toán trực tuyến thất bại hoặc bị hủy</span>
+                        </div>
+                      )}
+                      <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+                        Đơn đặt phòng của bạn đang chờ đặt cọc để hoàn tất giữ chỗ. Vui lòng truy cập trang quản lý Stay Portal để tiến hành thanh toán cọc.
+                      </p>
+                      <div className="py-1 max-w-xs mx-auto">
+                        <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-sky-600 font-bold text-white shadow-md hover:from-sky-600 hover:to-sky-700 transition-all h-10">
+                          <Link to={`/bks-stay/bookings/${bookingData.bookingId}`}>
+                            Thanh toán đặt cọc trên Stay Portal
+                          </Link>
+                        </Button>
+                      </div>
+                      <div className="inline-block bg-slate-900 text-white font-mono text-2xl font-black px-6 py-2 rounded-xl tracking-wider shadow-inner">
+                        {formatTime(timeLeft)}
+                      </div>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
+                        Thời gian thanh toán còn lại (Grace Period)
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-center gap-2 text-amber-600 font-bold">
+                        <AlertCircle className="size-5 animate-pulse" />
+                        <span>Trạng thái: Chờ xác thực email để cọc phòng</span>
+                      </div>
+                      <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+                        Để đảm bảo tính xác thực và an toàn tài chính, hệ thống yêu cầu xác thực email trước khi thanh toán cọc. Vui lòng mở email kích hoạt gửi tới <strong className="text-slate-900 font-bold">{bookingData.guestEmail}</strong> để truy cập Stay Portal và tiến hành cọc giữ phòng.
+                      </p>
+                      <div className="inline-block bg-slate-900 text-white font-mono text-2xl font-black px-6 py-2 rounded-xl tracking-wider shadow-inner">
+                        {formatTime(timeLeft)}
+                      </div>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
+                        Thời gian cọc còn lại (Grace Period)
+                      </p>
+                    </>
                   )}
-                  <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-                    Để hoàn tất giữ chỗ, vui lòng thanh toán đặt cọc trực tuyến hoặc đăng nhập BKS Stay Portal để quản lý trước khi thời gian chờ hết hạn.
-                  </p>
-                  {bookingData.paymentMethod === "online" && (
-                    <div className="py-1 max-w-xs mx-auto">
-                      <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 font-bold text-white shadow-md hover:from-rose-600 hover:to-red-700 transition-all h-10">
-                        <a href={bookingData.paymentUrl || `${import.meta.env.VITE_URL}/payments/checkout?booking_id=${bookingData.bookingId}`}>
-                          Thanh toán trực tuyến
-                        </a>
-                      </Button>
-                    </div>
-                  )}
-                  <div className="inline-block bg-slate-900 text-white font-mono text-2xl font-black px-6 py-2 rounded-xl tracking-wider shadow-inner">
-                    {formatTime(timeLeft)}
-                  </div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
-                    Thời gian thanh toán còn lại (Grace Period)
-                  </p>
                 </div>
               );
             })()}

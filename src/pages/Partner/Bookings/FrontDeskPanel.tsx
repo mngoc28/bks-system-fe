@@ -203,9 +203,10 @@ const FrontDeskPanel: React.FC<FrontDeskPanelProps> = ({ onRefreshStats }) => {
             <ShieldAlert size={20} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-rose-950">Góc Lễ Tân - Xác Minh Đặt Cọc</h2>
+            <h2 className="text-lg font-bold text-rose-950">Duyệt đặt cọc</h2>
             <p className="mt-1 text-sm text-rose-700">
-              Quản lý danh sách khách hàng đang chờ đóng cọc. Kiểm tra biên lai chuyển tiền và duyệt cọc thủ công để kích hoạt trạng thái Check-in.
+              Chỉ các đơn có yêu cầu cọc và chưa được xác minh. Kiểm tra biên lai, duyệt cọc để mở khóa Check-in.
+              Check-in/out và no-show nằm ở tab <strong>Vận hành hôm nay</strong>.
             </p>
           </div>
         </div>

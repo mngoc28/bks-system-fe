@@ -163,12 +163,12 @@ const Maintenances: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 md:flex-row md:items-center">
+        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           <PropertySelector 
             selectedId={filterPropertyId} 
             onSelect={setFilterPropertyId} 
-            className="w-64"
+            className="w-full sm:w-64"
           />
           <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
           <div>
@@ -179,7 +179,39 @@ const Maintenances: React.FC = () => {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {requests.length > 0 ? requests.map((request) => (
+            <div key={`mobile-maint-${request.id}`} className="rounded-xl border border-slate-200 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-800">{request.type || 'Sửa chữa'}</h3>
+                  {request.propertyName && (
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-blue-600">{request.propertyName}</p>
+                  )}
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500">
+                    <MapPin size={12} /> {request.roomName || 'N/A'}
+                  </p>
+                </div>
+                <span className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[10px] font-bold ${getStatusStyle(request.status)}`}>
+                  {request.status}
+                </span>
+              </div>
+              <p className="mt-3 line-clamp-3 text-xs text-gray-600">{request.description}</p>
+              <p className="mt-2 text-[10px] text-gray-400">Yêu cầu: {new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(request.status === 'Đang chờ' || request.status === 'Chờ xử lý') && (
+                  <Button onClick={() => safeHandleUpdate(request.id, 'Đang xử lý')} size="sm" className="h-8 flex-1 bg-amber-500 font-bold text-white hover:bg-amber-600 sm:flex-none">Tiếp nhận</Button>
+                )}
+                {(request.status === 'Đang xử lý' || request.status === 'Đang sửa') && (
+                  <Button onClick={() => safeHandleUpdate(request.id, 'Đã hoàn thành')} size="sm" className="h-8 flex-1 bg-emerald-600 font-bold text-white hover:bg-emerald-700 sm:flex-none">Xong</Button>
+                )}
+              </div>
+            </div>
+          )) : (
+            <div className="py-12 text-center italic text-gray-400">Chưa có yêu cầu bảo trì nào.</div>
+          )}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-100 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">

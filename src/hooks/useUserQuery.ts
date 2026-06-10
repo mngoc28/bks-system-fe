@@ -118,6 +118,53 @@ export const useDeleteUserMutation = () => {
   });
 };
 
+export const useUpdateUserStatusMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: 1 | 2 }) => userApi.updateUserStatus(id, status),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["users", "pending-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["users", "blocked-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "total-user"] });
+      toastSuccess(response.message || t("user.status_update_success", { defaultValue: "Cập nhật trạng thái thành công." }));
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toastError(error?.response?.data?.message || t("user.update_user_failed"));
+    },
+  });
+};
+
+export const usePendingUsersQuery = (enabled = true) => {
+  return useQuery({
+    queryKey: ["users", "pending-queue"],
+    queryFn: async () => {
+      const response = await userApi.getAllUsers({ status: "0", role: "user", page: 1, per_page: 5 });
+      return response.data?.data ?? [];
+    },
+    enabled,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useBlockedUsersQuery = (enabled = true) => {
+  return useQuery({
+    queryKey: ["users", "blocked-queue"],
+    queryFn: async () => {
+      const response = await userApi.getAllUsers({ status: "2", role: "user", page: 1, per_page: 3 });
+      return response.data?.data ?? [];
+    },
+    enabled,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+};
+
 // reset password mutation
 export const useUpdateUserMutation = () => {
   const { t } = useTranslation();

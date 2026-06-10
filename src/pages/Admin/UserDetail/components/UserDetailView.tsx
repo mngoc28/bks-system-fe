@@ -6,15 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import { UpdateUserProfileRequest, UserDetailViewProps } from "@/dataHelper/user.dataHelper";
-import { useUpdateUserMutation, useUploadAvatarMutation } from "@/hooks/useUserQuery";
+import { useUpdateUserMutation, useUpdateUserStatusMutation, useUploadAvatarMutation } from "@/hooks/useUserQuery";
 import { avatarSchema } from "@/shared/shema";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { statusNumberToText } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Edit3, FileText, RotateCcw, Save, Upload, User, X } from "lucide-react";
+import { ArrowLeft, Edit3, FileText, Lock, RotateCcw, Save, Unlock, Upload, User, X } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/components/ui/toast";
 
 type EditableField = "name" | "email" | "phone" | "role";
 
@@ -64,6 +64,10 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
 
   const uploadAvatarMutation = useUploadAvatarMutation();
   const updateUserMutation = useUpdateUserMutation();
+  const updateUserStatusMutation = useUpdateUserStatusMutation();
+
+  const statusNum = typeof user.status === "string" ? parseInt(user.status, 10) : (user.status ?? 1);
+  const canManageStatus = user.role !== "admin" && statusNum !== 3;
 
   useEffect(() => {
     const nextValue: EditableUserForm = {
@@ -167,7 +171,7 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
 
     const result = avatarSchema(t).safeParse({ file });
     if (!result.success) {
-      toast.error(result.error.issues[0].message);
+      toastError(result.error.issues[0].message);
       return;
     }
 
@@ -193,12 +197,7 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
       });
 
       if (uploadResponse.data?.url) {
-        toast.success(t("user.avatar_updated_success"), {
-          style: {
-            background: "#10B981",
-            color: "#FFFFFF",
-          },
-        });
+        toastSuccess(t("user.avatar_updated_success"));
 
         queryClient.invalidateQueries({ queryKey: ["user", user.id] });
         queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -207,15 +206,10 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
         setSelectedFile(null);
         setPreviewUrl(null);
       } else {
-        toast.error(t("user.avatar_update_failed"));
+        toastError(t("user.avatar_update_failed"));
       }
     } catch {
-      toast.error(t("user.avatar_update_failed"), {
-        style: {
-          background: "#EF4444",
-          color: "#FFFFFF",
-        },
-      });
+      toastError(t("user.avatar_update_failed"));
     }
   };
 
@@ -403,9 +397,54 @@ export const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onBack }) 
                   )}
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4 md:col-span-2">
                   <label className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("user.table_status")}</label>
-                  <div className="mt-1">{getStatusBadge(user.status)}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    {getStatusBadge(user.status)}
+                    {canManageStatus && statusNum === 0 && (
+                      <Button
+                        size="sm"
+                        className="h-8 bg-emerald-600 hover:bg-emerald-700"
+                        disabled={updateUserStatusMutation.isPending}
+                        onClick={() => updateUserStatusMutation.mutate({ id: user.id, status: 1 })}
+                      >
+                        {t("dashboard.activate_user", { defaultValue: "Kích hoạt" })}
+                      </Button>
+                    )}
+                    {canManageStatus && statusNum === 1 && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-8"
+                        disabled={updateUserStatusMutation.isPending}
+                        onClick={() => {
+                          if (window.confirm(t("user.confirm_block", { defaultValue: "Khóa tài khoản này?" }))) {
+                            updateUserStatusMutation.mutate({ id: user.id, status: 2 });
+                          }
+                        }}
+                      >
+                        <Lock className="mr-1 size-3.5" />
+                        {t("user.block_account", { defaultValue: "Khóa tài khoản" })}
+                      </Button>
+                    )}
+                    {canManageStatus && statusNum === 2 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                        disabled={updateUserStatusMutation.isPending}
+                        onClick={() => updateUserStatusMutation.mutate({ id: user.id, status: 1 })}
+                      >
+                        <Unlock className="mr-1 size-3.5" />
+                        {t("dashboard.unblock_user", { defaultValue: "Mở khóa" })}
+                      </Button>
+                    )}
+                    {statusNum === 3 && user.role === "partner" && (
+                      <p className="text-xs text-amber-700">
+                        {t("user.partner_approval_hint", { defaultValue: "Đối tác chờ duyệt hồ sơ — xử lý tại Phê duyệt đối tác." })}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col rounded-xl border border-gray-100 bg-gray-50 p-4">

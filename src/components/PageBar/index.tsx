@@ -31,17 +31,15 @@ const PageBar: React.FC<PageBarProps> = ({
   return (
     <div
       className={cn(
-        "admin-card flex flex-wrap items-center justify-between gap-4 px-4 py-3",
+        "flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3",
         className,
       )}
     >
-      <div className="flex flex-col gap-0.5">
-        {subtitle && (
-          <p className="text-sm font-medium text-slate-500">
-            {subtitle}
-          </p>
-        )}
-      </div>
+      {subtitle && (
+        <p className="min-w-0 flex-1 text-sm text-slate-500">
+          {subtitle}
+        </p>
+      )}
       
       <div className="flex flex-wrap items-center gap-3">
         {showLayoutToggle && viewMode && onViewModeChange && (

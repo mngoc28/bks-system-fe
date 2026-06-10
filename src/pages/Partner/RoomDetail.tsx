@@ -235,9 +235,9 @@ const RoomDetail: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-20 duration-500 animate-in fade-in">
+    <div className="space-y-6 pb-20 duration-500 animate-in fade-in sm:space-y-8">
       {/* Header Section */}
-      <div className="relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-sm md:flex-row md:items-end">
+      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-6 lg:p-8">
         <div className="absolute right-0 top-0 -mr-32 -mt-32 size-64 rounded-full bg-slate-50 opacity-50 blur-3xl" />
         
         <div className="z-10 space-y-4">
@@ -246,7 +246,7 @@ const RoomDetail: React.FC = () => {
            </Button>
            <div>
               <div className="mb-1 flex flex-wrap items-center gap-3">
-                 <h1 className="text-4xl font-bold tracking-tight text-slate-900">Phòng {room.name}</h1>
+                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">Phòng {room.name}</h1>
                  <div className="flex gap-2">
                     <Badge className={cn(
                       "px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider",
@@ -270,11 +270,11 @@ const RoomDetail: React.FC = () => {
            </div>
         </div>
 
-         <div className="z-10 flex gap-3">
-           <Button size="default" variant="outline" className="rounded-2xl border-2 border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50">
+         <div className="z-10 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
+           <Button size="default" variant="outline" className="w-full rounded-2xl border-2 border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto">
               <Shield size={18} className="mr-2 text-indigo-500" /> Hợp đồng
            </Button>
-           <Button size="default" className="rounded-2xl bg-blue-600 text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95">
+           <Button size="default" className="w-full rounded-2xl bg-blue-600 text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto">
               <Wrench size={18} className="mr-2" /> Bảo trì
            </Button>
         </div>
@@ -289,7 +289,7 @@ const RoomDetail: React.FC = () => {
            { icon: <Wallet size={20} />, label: "Giá thuê từ", value: `${Number(room.prices[0]?.price || 0).toLocaleString()}đ`, color: "bg-emerald-50 text-emerald-600" },
          ].map((card, i) => (
            <Card key={i} className="overflow-hidden rounded-2xl border-none shadow-sm transition-transform duration-300 hover:scale-105">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                  <div className={`mb-4 w-fit rounded-2xl p-3 ${card.color}`}>{card.icon}</div>
                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{card.label}</p>
                  <p className="mt-1 text-xl font-bold text-slate-900">{card.value}</p>
@@ -299,13 +299,14 @@ const RoomDetail: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex w-fit flex-wrap gap-2 rounded-xl border border-slate-200/50 bg-slate-100/50 p-1.5">
+      <div className="overflow-x-auto rounded-xl border border-slate-200/50 bg-slate-100/50 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+         <div className="flex w-max min-w-full gap-2">
          {tabs.map((tab) => (
             <button
                key={tab.id}
                onClick={() => setActiveTab(tab.id)}
                className={cn(
-                  "px-6 py-3 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all duration-200",
+                  "shrink-0 px-4 py-2.5 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all duration-200 sm:px-6 sm:py-3",
                   activeTab === tab.id 
                      ? "bg-white text-blue-600 shadow-md shadow-slate-200/50 scale-105" 
                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
@@ -314,6 +315,7 @@ const RoomDetail: React.FC = () => {
                {tab.label}
             </button>
          ))}
+         </div>
       </div>
 
       {/* Tab Content */}
@@ -321,12 +323,12 @@ const RoomDetail: React.FC = () => {
          {activeTab === 'overview' && (
             <div className="grid grid-cols-1 gap-6 animate-in fade-in slide-in-from-bottom-4 lg:grid-cols-2">
                <Card className="overflow-hidden rounded-2xl border-2 border-slate-100 shadow-sm">
-                  <CardHeader className="border-b border-white bg-slate-50/50 p-8">
+                  <CardHeader className="border-b border-white bg-slate-50/50 p-4 sm:p-6 lg:p-8">
                      <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900">
                         <Wallet className="text-blue-500" size={20} /> Biểu giá thuê hiện tại
                      </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4 p-8">
+                  <CardContent className="space-y-4 p-4 sm:p-6 lg:p-8">
                      {room.prices.length > 0 ? room.prices.map((p, i) => (
                         <div key={i} className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-6 transition-all duration-300 hover:border-blue-200 hover:bg-white hover:shadow-lg hover:shadow-blue-50">
                            <div className="space-y-1">
@@ -347,12 +349,12 @@ const RoomDetail: React.FC = () => {
                </Card>
 
                <Card className="overflow-hidden rounded-2xl border-2 border-slate-100 shadow-sm">
-                  <CardHeader className="border-b border-white bg-slate-50/50 p-8">
+                  <CardHeader className="border-b border-white bg-slate-50/50 p-4 sm:p-6 lg:p-8">
                      <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900">
                         <Phone className="text-indigo-500" size={20} /> Hỗ trợ & Thông tin liên lạc
                      </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6 p-8">
+                  <CardContent className="space-y-6 p-4 sm:p-6 lg:p-8">
                      <div className="space-y-4">
                         <div className="flex items-center gap-6 rounded-xl border border-indigo-50 bg-indigo-50/30 p-6 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-50">
                            <div className="rounded-2xl bg-indigo-500 p-4 text-white shadow-lg shadow-indigo-100"><Phone size={24} /></div>
@@ -417,7 +419,22 @@ const RoomDetail: React.FC = () => {
 
          {activeTab === 'tenants' && (
             <Card className="overflow-hidden rounded-2xl border-2 border-slate-100 shadow-xl shadow-slate-200/20 animate-in fade-in slide-in-from-bottom-4">
-               <div className="overflow-x-auto">
+               <div className="space-y-3 p-3 md:hidden">
+                  {bookings.length > 0 ? bookings.map((b) => (
+                    <div key={`mobile-booking-${b.id}`} className="rounded-xl border border-slate-200 bg-white p-4">
+                      <p className="font-bold text-slate-900">{b.guestName}</p>
+                      <p className="text-xs text-slate-500">{b.phone || 'N/A'}</p>
+                      <p className="mt-2 text-xs text-slate-600">
+                        {b.checkIn ? new Date(b.checkIn).toLocaleDateString('vi-VN') : '-'} → {b.checkOut ? new Date(b.checkOut).toLocaleDateString('vi-VN') : '-'}
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-slate-900">{Number(b.totalAmount || 0).toLocaleString()} đ</p>
+                      <Badge className="mt-2">{b.status}</Badge>
+                    </div>
+                  )) : (
+                    <div className="py-10 text-center text-sm text-slate-400">Phòng này chưa có lịch sử cư dân</div>
+                  )}
+               </div>
+               <div className="hidden overflow-x-auto md:block">
                   <table className="w-full">
                      <thead>
                         <tr className="bg-slate-900 text-white">
@@ -482,8 +499,8 @@ const RoomDetail: React.FC = () => {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                {maintenances.length > 0 ? maintenances.map((m) => (
                   <Card key={m.id} className="overflow-hidden rounded-2xl border-2 border-none border-slate-50 shadow-xl shadow-slate-200/30 transition-all duration-500 hover:shadow-blue-100/50">
-                     <CardContent className="flex flex-col items-start justify-between gap-8 p-8 md:flex-row md:items-center">
-                        <div className="flex gap-8">
+                     <CardContent className="flex flex-col items-start justify-between gap-4 p-4 sm:p-6 md:flex-row md:items-center md:gap-8 lg:p-8">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
                            <div className={cn(
                               "p-6 rounded-[1.75rem] shadow-lg",
                               m.status === 'Đã hoàn thành' ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-amber-500 text-white shadow-amber-100'
@@ -543,12 +560,12 @@ const RoomDetail: React.FC = () => {
 
          {activeTab === 'tourist_spots' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-               <div className="flex items-center justify-between">
+               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                     <h3 className="text-xl font-bold uppercase tracking-tighter text-slate-900">
+                     <h3 className="text-lg font-bold uppercase tracking-tighter text-slate-900 sm:text-xl">
                         Địa điểm du lịch lân cận
                      </h3>
-                     <p className="text-xs text-slate-500 mt-1">
+                     <p className="mt-1 text-xs text-slate-500">
                         Quản lý danh sách các địa điểm du lịch xung quanh phòng này và thông tin di chuyển.
                      </p>
                   </div>
@@ -557,7 +574,7 @@ const RoomDetail: React.FC = () => {
                         setSelectedSpotMap(null);
                         setIsSpotDialogOpen(true);
                      }}
-                     className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm"
+                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-xs font-bold uppercase tracking-wider text-white shadow-sm hover:bg-blue-700 sm:w-auto"
                   >
                      <Plus size={16} /> Gán địa điểm mới
                   </Button>
@@ -575,8 +592,41 @@ const RoomDetail: React.FC = () => {
                      </p>
                   </div>
                ) : (
-                  <Card className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
-                     <div className="overflow-x-auto">
+                  <Card className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                     <div className="space-y-3 p-3 md:hidden">
+                        {spotMaps.map((item: any) => (
+                          <div key={`mobile-spot-${item.id}`} className="rounded-xl border border-slate-200 p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-900">{item.tourist_spot?.name}</p>
+                                {item.note && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{item.note}</p>}
+                              </div>
+                              {item.is_primary && (
+                                <Badge className="shrink-0 rounded-full border-amber-200 bg-amber-50 text-[9px] font-bold uppercase text-amber-700">Chính</Badge>
+                              )}
+                            </div>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                              <div className="rounded-lg bg-slate-50 p-2 text-center">
+                                <p className="text-slate-400">Khoảng cách</p>
+                                <p className="font-bold text-slate-700">{item.distance_km != null ? `${item.distance_km} km` : '-'}</p>
+                              </div>
+                              <div className="rounded-lg bg-slate-50 p-2 text-center">
+                                <p className="text-slate-400">Thời gian</p>
+                                <p className="font-bold text-slate-700">{item.travel_time_minutes} phút</p>
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <Button variant="outline" size="sm" onClick={() => { setSelectedSpotMap(item); setIsSpotDialogOpen(true); }} className="h-8 flex-1 text-xs sm:flex-none">
+                                <Edit size={14} className="mr-1" /> Sửa
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => handleSpotDelete(item.id)} className="h-8 flex-1 text-xs text-rose-600 sm:flex-none">
+                                <Trash2 size={14} className="mr-1" /> Xóa
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                     </div>
+                     <div className="hidden overflow-x-auto md:block">
                         <table className="w-full">
                            <thead>
                               <tr className="bg-slate-900 text-white text-xs uppercase tracking-wider">
@@ -667,7 +717,7 @@ const RoomDetail: React.FC = () => {
          {activeTab === 'reviews' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                <Card className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
-                  <CardContent className="p-8 space-y-8">
+                  <CardContent className="space-y-6 p-4 sm:space-y-8 sm:p-6 lg:p-8">
                      <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-100 pb-6">
                         <div>
                            <h2 className="text-2xl font-bold text-slate-900">Nhận xét từ khách hàng</h2>

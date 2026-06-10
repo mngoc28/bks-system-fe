@@ -3,6 +3,7 @@ import { CalendarDays, Phone, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTERS } from "@/constant";
 import LanguageSwitcher from "./LanguageSwitcher";
+import PublicMobileNav from "./PublicMobileNav";
 import { PublicHeaderProps } from "@/components/type";
 import { useUserStore } from "@/store/useUserStore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -101,14 +102,15 @@ const PublicHeader = ({
 
   return (
     <header className="relative z-[80] border-b border-slate-200/70 bg-white/90 shadow-sm shadow-slate-200/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
-        <Link to={ROUTERS.HOME} className="flex items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2">
-          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-11" />
-          <div className="leading-tight">
-            <p className="text-xl font-bold tracking-tight text-slate-900">{t("public.header.brand.title")}</p>
+      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4 sm:gap-6 sm:px-6">
+        <Link to={ROUTERS.HOME} className="flex min-w-0 items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 sm:gap-3">
+          <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-10 shrink-0 sm:size-11" />
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">{t("public.header.brand.title")}</p>
           </div>
         </Link>
-        <div className="ml-auto hidden items-center gap-6 md:flex">
+        <PublicMobileNav favoritesHref={favoritesHref} onContactClick={handleContactClick} />
+        <div className="hidden items-center gap-6 md:flex md:ml-auto">
           <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
             <a
               href="#contact"
@@ -140,7 +142,7 @@ const PublicHeader = ({
             )}
           </nav>
 
-          <LanguageSwitcher className="hidden lg:inline-flex" />
+          <LanguageSwitcher className="inline-flex" />
         </div>
       </div>
     </header>

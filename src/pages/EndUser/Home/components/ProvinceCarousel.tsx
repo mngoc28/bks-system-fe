@@ -13,7 +13,7 @@ const sliderOptions = {
     1280: { perPage: 4 },
     1024: { perPage: 3 },
     768: { perPage: 2 },
-    480: { perPage: 1.5 },
+    480: { perPage: 1.2, padding: { left: "1rem", right: "1rem" } },
   },
 } as const;
 
@@ -41,7 +41,7 @@ const ProvinceCarousel = ({ provinces, className, heading, description, ctaLabel
           {ctaLabel && ctaHref && (
             <Link
               to={ctaHref}
-              className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+              className="hidden sm:inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
             >
               {ctaLabel}
             </Link>
@@ -93,6 +93,17 @@ const ProvinceCarousel = ({ provinces, className, heading, description, ctaLabel
             </SplideSlide>
           ))}
         </Splide>
+      )}
+
+      {ctaLabel && ctaHref && !loading && (
+        <div className="mt-6 flex justify-center sm:hidden">
+          <Link
+            to={ctaHref}
+            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95"
+          >
+            {ctaLabel}
+          </Link>
+        </div>
       )}
     </section>
   );

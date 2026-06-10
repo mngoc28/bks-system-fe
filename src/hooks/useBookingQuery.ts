@@ -4,7 +4,7 @@ import type { BookingDetailResponse, CreateBookingRequest, SearchBookingRequest,
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/components/ui/toast";
 
 // Helper to extract error message from AxiosError
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -23,17 +23,24 @@ export const useCreateBookingMutation = () => {
   });
 };
 
+type BookingsQueryOptions = {
+  staleTime?: number;
+  refetchOnWindowFocus?: boolean;
+};
+
 // Hook to fetch bookings with search parameters
-export const useBookingsQuery = (params: SearchBookingRequest) => {
+export const useBookingsQuery = (params: SearchBookingRequest, options?: BookingsQueryOptions) => {
   const { t } = useTranslation();
   return useQuery<SearchBookingResponse, Error>({
     queryKey: ["bookings", params],
+    staleTime: options?.staleTime,
+    refetchOnWindowFocus: options?.refetchOnWindowFocus,
     queryFn: async () => {
       try {
         const res = await bookingApi.searchBookings(params);
         return res;
       } catch (error) {
-        toast.error(getErrorMessage(error, t("bookings.error_getting_bookings")), { style: { background: "#EF4444", color: "#FFFFFF" }, className: "border-red-500" });
+        toastError(getErrorMessage(error, t("bookings.error_getting_bookings")));
         throw error as Error;
       }
     },
@@ -48,13 +55,10 @@ export const useDeleteBookingMutation = () => {
     mutationFn: async (id: number) => bookingApi.deleteBooking(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(t("bookings.deleted_successfully"), {
-        style: { background: "#10B981", color: "#FFFFFF" },
-        className: "border-green-500",
-      });
+      toastSuccess(t("bookings.deleted_successfully"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t("error_deleting_booking")), { style: { background: "#EF4444", color: "#FFFFFF" }, className: "border-red-500" });
+      toastError(getErrorMessage(error, t("error_deleting_booking")));
     },
   });
 };
@@ -67,13 +71,10 @@ export const useConfirmBookingMutation = () => {
     mutationFn: async (id: number) => bookingApi.confirmBooking(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(t("bookings.confirmed_successfully"), {
-        style: { background: "#10B981", color: "#FFFFFF" },
-        className: "border-green-500",
-      });
+      toastSuccess(t("bookings.confirmed_successfully"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t("bookings.error_confirming_booking")), { style: { background: "#EF4444", color: "#FFFFFF" }, className: "border-red-500" });
+      toastError(getErrorMessage(error, t("bookings.error_confirming_booking")));
     },
   });
 };
@@ -89,7 +90,7 @@ export const useBookingDetailQuery = (id: number | null, enabled: boolean = true
         const res = await bookingApi.getBookingDetail(id as number);
         return res;
       } catch (error) {
-        toast.error(getErrorMessage(error, t("bookings.error_getting_details")), { style: { background: "#EF4444", color: "#FFFFFF" }, className: "border-red-500" });
+        toastError(getErrorMessage(error, t("bookings.error_getting_details")));
         throw error as Error;
       }
     },
@@ -104,13 +105,10 @@ export const useUpdateBookingMutation = () => {
     mutationFn: async ({ id, payload }: { id: number; payload: UpdateBookingRequest }) => bookingApi.updateBooking(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(t("bookings.updated_successfully"), {
-        style: { background: "#10B981", color: "#FFFFFF" },
-        className: "border-green-500",
-      });
+      toastSuccess(t("bookings.updated_successfully"));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t("bookings.error_updating_booking")), { style: { background: "#EF4444", color: "#FFFFFF" }, className: "border-red-500" });
+      toastError(getErrorMessage(error, t("bookings.error_updating_booking")));
     },
   });
 };

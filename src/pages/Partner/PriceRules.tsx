@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePickerField } from '@/components/ui/date-picker-field';
 import { Badge } from '@/components/ui/badge';
 import { partnerService } from '@/services/partnerService';
 import { toastError, toastSuccess } from '@/components/ui/toast';
@@ -145,7 +146,7 @@ const PriceRulesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center">
+      <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
             <TrendingUp className="text-emerald-600" />
@@ -153,7 +154,7 @@ const PriceRulesPage: React.FC = () => {
           </h1>
           <p className="text-sm text-slate-500">Tự động điều chỉnh giá theo mùa, ngày lễ hoặc nhu cầu thị trường.</p>
         </div>
-        <Button onClick={handleOpenCreate} className="h-11 gap-2 rounded-xl bg-blue-600 px-6 font-semibold shadow-lg shadow-blue-200 hover:bg-blue-700">
+        <Button onClick={handleOpenCreate} className="h-11 w-full gap-2 rounded-xl bg-blue-600 px-6 font-semibold shadow-lg shadow-blue-200 hover:bg-blue-700 sm:w-auto">
            <Plus size={20} /> Thêm quy tắc mới
         </Button>
       </div>
@@ -240,7 +241,7 @@ const PriceRulesPage: React.FC = () => {
                />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Loại quy tắc</Label>
                   <Select value={formData.rule_type} onValueChange={v => setFormData({...formData, rule_type: v})}>
@@ -263,7 +264,7 @@ const PriceRulesPage: React.FC = () => {
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Dạng điều chỉnh</Label>
                   <Select value={formData.adjustment_type} onValueChange={v => setFormData({...formData, adjustment_type: v})}>
@@ -287,15 +288,33 @@ const PriceRulesPage: React.FC = () => {
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
-               <div className="space-y-2">
-                  <Label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400"><Clock size={12} /> Ngày bắt đầu</Label>
-                  <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} className="h-12 rounded-xl" />
-               </div>
-               <div className="space-y-2">
-                  <Label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400"><Clock size={12} /> Ngày kết thúc</Label>
-                  <Input type="date" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className="h-12 rounded-xl" />
-               </div>
+            <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-2">
+               <DatePickerField
+                  id="price-rule-start-date"
+                  label={
+                    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      <Clock size={12} /> Ngày bắt đầu
+                    </span>
+                  }
+                  value={formData.start_date}
+                  onChange={(ymd) => setFormData({ ...formData, start_date: ymd })}
+                  maxDate={formData.end_date || undefined}
+                  className="space-y-2"
+                  triggerClassName="h-12 min-h-0 rounded-xl text-sm font-normal shadow-none hover:shadow-none"
+               />
+               <DatePickerField
+                  id="price-rule-end-date"
+                  label={
+                    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      <Clock size={12} /> Ngày kết thúc
+                    </span>
+                  }
+                  value={formData.end_date}
+                  onChange={(ymd) => setFormData({ ...formData, end_date: ymd })}
+                  minDate={formData.start_date || undefined}
+                  className="space-y-2"
+                  triggerClassName="h-12 min-h-0 rounded-xl text-sm font-normal shadow-none hover:shadow-none"
+               />
                <p className="col-span-2 text-[10px] italic text-slate-400">Để trống ngày kết thúc nếu muốn quy tắc áp dụng vĩnh viễn.</p>
             </div>
           </div>

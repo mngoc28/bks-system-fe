@@ -7,6 +7,7 @@ import { useUserStore } from "./store/useUserStore";
 import { getAccessToken } from "./utils/storage";
 import { isTokenExpired } from "./utils/tokenUtils";
 import { LoadingScreen } from "./components/ui/loading-screen";
+import { isBksStayRouteEnabled, isPartnerCalendarEnabled } from "./lib/featureFlags";
 
 const Layout = React.lazy(() => import("./components/layout"));
 const AuthLayout = React.lazy(() => import("./components/layout/AuthLayout"));
@@ -21,6 +22,7 @@ const MyBookings = React.lazy(() => import("./pages/EndUser/MyBookings"));
 const BookingSuccess = React.lazy(() => import("./pages/EndUser/BookingSuccess"));
 const PublicNewsDetail = React.lazy(() => import("./pages/EndUser/NewsDetail"));
 const PublicNewsList = React.lazy(() => import("./pages/EndUser/NewsList"));
+const PublicFaq = React.lazy(() => import("./pages/EndUser/PublicFaq"));
 const Login = React.lazy(() => import("./pages/Admin/Login"));
 const Register = React.lazy(() => import("./pages/Partner/Register"));
 const BecomeAPartner = React.lazy(() => import("./pages/Partner/BecomeAPartner"));
@@ -59,6 +61,7 @@ const News = React.lazy(() => import("./pages/Admin/NewsManager"));
 const NewsDetail = React.lazy(() => import("./pages/Admin/NewsDetail"));
 const NewsEdit = React.lazy(() => import("./pages/Admin/NewsEdit"));
 const NewsAdd = React.lazy(() => import("./pages/Admin/NewsAdd"));
+const NewsletterManagement = React.lazy(() => import("./pages/Admin/NewsletterManagement"));
 const PartnerManagement = React.lazy(() => import("./pages/Admin/PartnerManagement"));
 const PartnerApproval = React.lazy(() => import("./pages/Admin/PartnerApproval"));
 const PartnerDetailManager = React.lazy(() => import("./pages/Admin/PartnerDetail"));
@@ -111,6 +114,19 @@ const PartnerOnboardingWrapper = React.lazy(() => import("./pages/Partner/Partne
 const LoadingFallback = () => (
   <LoadingScreen />
 );
+
+const BksStayRouteGuard = ({
+  path,
+  children,
+}: {
+  path: string;
+  children: React.ReactNode;
+}) => {
+  if (!isBksStayRouteEnabled(path)) {
+    return <Navigate to={ROUTERS.BKS_STAY_DASHBOARD} replace />;
+  }
+  return <>{children}</>;
+};
 
 /** Role from zustand or persisted `user` (hydration-safe). */
 function getEffectiveRole(userRole: string): string {
@@ -258,6 +274,7 @@ export default function Router() {
           <Route path={ROUTERS.COMPANY_HUB} element={<CompanyHub />} />
           <Route path={ROUTERS.PUBLIC_NEWS_DETAIL} element={<PublicNewsDetail />} />
           <Route path={ROUTERS.PUBLIC_NEWS_LIST} element={<PublicNewsList />} />
+          <Route path={ROUTERS.PUBLIC_FAQ} element={<PublicFaq />} />
         </Route>
 
         {/* BKS Stay Standalone Portal */}
@@ -277,11 +294,11 @@ export default function Router() {
           <Route path="bookings/:id" element={<BksStayDetail />} />
           <Route path="bookings/:id/voucher" element={<StayVoucher />} />
           <Route path="account" element={<BksStayAccount />} />
-          <Route path="support" element={<BksStaySupport />} />
-          <Route path="services" element={<BksStayServices />} />
-          <Route path="contracts" element={<BksStayContracts />} />
-          <Route path="contracts/:id" element={<BksStayContractDetail />} />
-          <Route path="guide" element={<BksStayGuide />} />
+          <Route path="support" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_SUPPORT}><BksStaySupport /></BksStayRouteGuard>} />
+          <Route path="services" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_SERVICES}><BksStayServices /></BksStayRouteGuard>} />
+          <Route path="contracts" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_CONTRACTS}><BksStayContracts /></BksStayRouteGuard>} />
+          <Route path="contracts/:id" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_CONTRACTS}><BksStayContractDetail /></BksStayRouteGuard>} />
+          <Route path="guide" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_GUIDE}><BksStayGuide /></BksStayRouteGuard>} />
         </Route>
 
         {/* Guest Auth Routes - Standalone */}
@@ -402,6 +419,7 @@ export default function Router() {
           <Route path={`${ROUTERS.NEWS_DETAIL}/:id`} element={<NewsDetail />} />
           <Route path={ROUTERS.NEWS_EDIT + "/:id"} element={<NewsEdit />} />
           <Route path={ROUTERS.NEWS_ADD} element={<NewsAdd />} />
+          <Route path={ROUTERS.NEWSLETTER_MANAGEMENT} element={<NewsletterManagement />} />
           <Route path={ROUTERS.PARTNER_MANAGEMENT} element={<PartnerManagement />} />
           <Route path={ROUTERS.PARTNER_APPROVAL} element={<PartnerApproval />} />
           <Route path={`${ROUTERS.PARTNER_MANAGEMENT}/detail/:id`} element={<PartnerDetailManager />} />
@@ -457,7 +475,16 @@ export default function Router() {
           <Route path="contracts" element={<PartnerContracts />} />
           <Route path="contracts/:id" element={<PartnerContractDetail />} />
           <Route path="stay-services" element={<PartnerStayServices />} />
-          <Route path="calendar" element={<PartnerCalendar />} />
+          <Route
+            path="calendar"
+            element={
+              isPartnerCalendarEnabled() ? (
+                <PartnerCalendar />
+              ) : (
+                <Navigate to={ROUTERS.PARTNER_BOOKINGS} replace />
+              )
+            }
+          />
           <Route path="price-rules" element={<PartnerPriceRules />} />
           <Route path="chat" element={<PartnerChat />} />
           <Route path="reports" element={<PartnerReports />} />

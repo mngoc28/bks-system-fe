@@ -1,43 +1,52 @@
-import { toast } from "sonner";
+import { toast, type ExternalToast } from "sonner";
 
-const toastSuccess = (message: string) => {
-  toast.success(message, {
-    style: {
-      background: "#10B981",
-      color: "#FFFFFF",
-    },
+type ToastExtraOptions = Pick<ExternalToast, "action" | "duration" | "id">;
+
+const TOAST_STYLES = {
+  success: {
+    style: { background: "#10B981", color: "#FFFFFF" },
     className: "border-green-500",
-  });
-};
-
-const toastError = (message: string) => {
-  toast.error(message, {
-    style: {
-      background: "#EF4444",
-      color: "#FFFFFF",
-    },
+  },
+  error: {
+    style: { background: "#EF4444", color: "#FFFFFF" },
     className: "border-red-500",
-  });
-};
-
-const toastWarning = (message: string) => {
-  toast.warning(message, {
-    style: {
-      background: "#F59E0B",
-      color: "#FFFFFF",
-    },
+  },
+  warning: {
+    style: { background: "#F59E0B", color: "#FFFFFF" },
     className: "border-yellow-500",
-  });
-};
-
-const toastInfo = (message: string) => {
-  toast.info(message, {
-    style: {
-      background: "#007BFF",
-      color: "#FFFFFF",
-    },
+  },
+  info: {
+    style: { background: "#007BFF", color: "#FFFFFF" },
     className: "border-blue-500",
-  });
+  },
+  loading: {
+    style: { background: "#64748B", color: "#FFFFFF" },
+    className: "border-slate-500",
+  },
+} as const;
+
+const toastSuccess = (message: string, options?: ToastExtraOptions) => {
+  toast.success(message, { ...TOAST_STYLES.success, ...options });
 };
 
-export { toastSuccess, toastError, toastWarning, toastInfo };
+const toastError = (message: string, options?: ToastExtraOptions) => {
+  toast.error(message, { ...TOAST_STYLES.error, ...options });
+};
+
+const toastWarning = (message: string, options?: ToastExtraOptions) => {
+  toast.warning(message, { ...TOAST_STYLES.warning, ...options });
+};
+
+const toastInfo = (message: string, options?: ToastExtraOptions) => {
+  toast.info(message, { ...TOAST_STYLES.info, ...options });
+};
+
+const toastLoading = (message: string, options?: ToastExtraOptions) => {
+  return toast.loading(message, { ...TOAST_STYLES.loading, ...options });
+};
+
+const toastDismiss = (id?: string | number) => {
+  toast.dismiss(id);
+};
+
+export { toastSuccess, toastError, toastWarning, toastInfo, toastLoading, toastDismiss };

@@ -1,5 +1,5 @@
 import { NavigateFunction } from "react-router-dom";
-import { toast } from "sonner";
+import { toastError } from "@/components/ui/toast";
 import { ROUTERS } from "../constant";
 
 /**
@@ -30,11 +30,11 @@ export const handleError = (message: string | Record<string, string[]>) => {
     Object.values(message).forEach(messages => {
       if (Array.isArray(messages)) {
         messages.forEach(msg => {
-          toast.error(msg);
+          toastError(msg);
         });
       }
     });
     return;
   }
-  toast.error(message);
+  toastError(message);
 };

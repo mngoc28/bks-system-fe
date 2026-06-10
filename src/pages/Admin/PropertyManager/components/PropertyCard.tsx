@@ -4,13 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Property, PropertyCardProps } from "@/dataHelper/property.dataHelper";
-import { Map, MapPin, Layers, Maximize2, Calendar, Edit, Trash2, ImageIcon } from "lucide-react";
+import { BedDouble, CalendarDays, Map, MapPin, Layers, Maximize2, Calendar, Edit, Trash2, ImageIcon } from "lucide-react";
 import { useGetUserProfileByIdQuery } from "@/hooks/useUserQuery";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { safeFormatDateTime } from "@/utils/dateUtils";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
 import { useNavigate } from "react-router-dom";
+import AdminCardCrossNavMenu from "@/components/admin/AdminCardCrossNavMenu";
 import { buildAdminUrl, toBookingsByProperty, toRoomsByProperty } from "@/utils/adminNavigation";
 
 /**
@@ -137,30 +138,26 @@ const PropertyCard: React.FC<PropertyCardProps & { onView?: (property: Property)
             <span>{t("common.last_updated")}: {safeFormatDateTime(property.updated_at)}</span>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByProperty(property.id, "property-management", property.name)));
-            }}
-          >
-            {t("adminCrossNav.rooms")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByProperty(property.id, "property-management", property.name)));
-            }}
-          >
-            {t("adminCrossNav.bookings")}
-          </Button>
-        </div>
+        <AdminCardCrossNavMenu
+          actions={[
+            {
+              key: "rooms",
+              label: t("adminCrossNav.rooms"),
+              icon: <BedDouble className="size-4" />,
+              onClick: () =>
+                navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByProperty(property.id, "property-management", property.name))),
+            },
+            {
+              key: "bookings",
+              label: t("adminCrossNav.bookings"),
+              icon: <CalendarDays className="size-4" />,
+              onClick: () =>
+                navigate(
+                  buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByProperty(property.id, "property-management", property.name)),
+                ),
+            },
+          ]}
+        />
       </div>
     </Card>
   );

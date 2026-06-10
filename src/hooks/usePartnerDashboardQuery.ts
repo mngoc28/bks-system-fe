@@ -1,45 +1,62 @@
 import { useQuery } from "@tanstack/react-query";
 import { partnerDashboardApi } from "@/api/partnerDashboardApi";
 
+export type PartnerDashboardPropertyScope = number | null | undefined;
+
+const scopeKey = (propertyId: PartnerDashboardPropertyScope) =>
+  propertyId != null ? String(propertyId) : "all";
+
 /**
  * Hook to fetch summary statistics for the partner dashboard
  */
-export const usePartnerStatsQuery = () => {
+export const usePartnerStatsQuery = (propertyId?: PartnerDashboardPropertyScope) => {
   return useQuery({
-    queryKey: ["partner-stats"],
+    queryKey: ["partner-stats", scopeKey(propertyId)],
     queryFn: async ({ signal }) => {
-      const response = await partnerDashboardApi.getStats({ signal });
+      const response = await partnerDashboardApi.getStats({
+        signal,
+        ...(propertyId != null ? { property_id: propertyId } : {}),
+      });
       return response.data;
     },
   });
 };
 
-export const usePartnerHeadlineKpisQuery = () => {
+export const usePartnerHeadlineKpisQuery = (propertyId?: PartnerDashboardPropertyScope) => {
   return useQuery({
-    queryKey: ["partner", "dashboard", "kpis"],
+    queryKey: ["partner", "dashboard", "kpis", scopeKey(propertyId)],
     queryFn: async ({ signal }) => {
-      const response = await partnerDashboardApi.getHeadlineKpis({ signal });
+      const response = await partnerDashboardApi.getHeadlineKpis({
+        signal,
+        ...(propertyId != null ? { property_id: propertyId } : {}),
+      });
       return response.data;
     },
   });
 };
 
-export const usePartnerOccupancyChartQuery = () => {
+export const usePartnerOccupancyChartQuery = (propertyId?: PartnerDashboardPropertyScope) => {
   return useQuery({
-    queryKey: ["partner", "dashboard", "charts", "occupancy"],
+    queryKey: ["partner", "dashboard", "charts", "occupancy", scopeKey(propertyId)],
     queryFn: async ({ signal }) => {
-      const response = await partnerDashboardApi.getOccupancyChart({ signal });
+      const response = await partnerDashboardApi.getOccupancyChart({
+        signal,
+        ...(propertyId != null ? { property_id: propertyId } : {}),
+      });
       return response.data;
     },
     staleTime: 60_000,
   });
 };
 
-export const usePartnerGmvChartQuery = () => {
+export const usePartnerGmvChartQuery = (propertyId?: PartnerDashboardPropertyScope) => {
   return useQuery({
-    queryKey: ["partner", "dashboard", "charts", "gmv"],
+    queryKey: ["partner", "dashboard", "charts", "gmv", scopeKey(propertyId)],
     queryFn: async ({ signal }) => {
-      const response = await partnerDashboardApi.getGmvChart({ signal });
+      const response = await partnerDashboardApi.getGmvChart({
+        signal,
+        ...(propertyId != null ? { property_id: propertyId } : {}),
+      });
       return response.data;
     },
     staleTime: 60_000,
@@ -49,11 +66,15 @@ export const usePartnerGmvChartQuery = () => {
 /**
  * Hook to fetch bookings awaiting approval
  */
-export const usePartnerPendingBookingsQuery = () => {
+export const usePartnerPendingBookingsQuery = (propertyId?: PartnerDashboardPropertyScope) => {
   return useQuery({
-    queryKey: ["partner-pending-bookings"],
+    queryKey: ["partner-pending-bookings", scopeKey(propertyId)],
     queryFn: async ({ signal }) => {
-      const response = await partnerDashboardApi.getPendingBookings({ signal });
+      const response = await partnerDashboardApi.getPendingBookings({
+        signal,
+        limit: 10,
+        ...(propertyId != null ? { property_id: propertyId } : {}),
+      });
       return response.data;
     },
   });

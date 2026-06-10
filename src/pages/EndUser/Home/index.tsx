@@ -1,6 +1,6 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin, Search, Quote, Star, Building2, Home, Users, Calendar, Minus, Plus } from "lucide-react";
+import { Quote, Star, Building2, Home } from "lucide-react";
 import {
   ROUTERS,
   CLOUDINARY_HEADER_IMAGE_URL,
@@ -15,32 +15,25 @@ import {
 } from "@/constant";
 import { useLandingReviewsQuery } from "@/hooks/useReviewQuery";
 import { Skeleton } from "@/components/ui/skeleton";
-import SearchableSelect from "@/components/ui/searchable-select";
 import FeaturedRoomCarousel from "@/components/rooms/FeaturedRoomCarousel";
 import ContactCard from "@/components/common/ContactCard";
-import { toastError } from "@/components/ui/toast";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
-import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
-import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { useTopRatedRoomsQuery, useSuggestedRoomsByProvinceQuery, useSuggestedRoomsByTouristSpotQuery } from "@/hooks/EU/useRoomQuery";
 import { useRandomPartnersQuery } from "@/hooks/EU/usePartnerQuery";
 import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
-import type { Ward } from "@/dataHelper/ward.dataHelper";
 import type { RoomCard } from "@/dataHelper/home.dataHelper";
 import ProvinceCarousel from "./components/ProvinceCarousel";
+import HeroSearchForm from "./components/HeroSearchForm";
+import MobileSearchSheet from "./components/MobileSearchSheet";
+import { useHeroSearch } from "./hooks/useHeroSearch";
+import { PUBLIC_PAGE_SECTION_CLASS } from "@/components/layout/Public/publicLayoutClasses";
 import SuggestedRoomsByProvince from "./components/SuggestedRoomsByProvince";
 import SuggestedRoomsByTouristSpot from "./components/SuggestedRoomsByTouristSpot";
 import PartnerGrid from "./components/PartnerGrid";
 import NewsGrid from "./components/NewsGrid";
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import { useLatestNewsQuery } from "@/hooks/useNewsQuery";
-import { useNavigate } from "react-router-dom";
-import { DatePickerField } from "@/components/ui/date-picker-field";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { getRoomFallbackImage, getPartnerFallbackImage } from "@/utils/fallbackImages";
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { normalizeStayPropertyTypeLabel } from "@/utils/stayPropertyType";
 import { resolveImageUrl } from "@/utils/imageUtils";
 
 export const ReviewCardSkeleton = () => (
@@ -126,7 +119,8 @@ function getAvatarColors(name: string): string {
  */
 const PublicHome = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false);
+  const heroSearch = useHeroSearch(() => setSearchSheetOpen(false));
   const videoRef1 = useRef<HTMLVideoElement>(null);
   const videoRef2 = useRef<HTMLVideoElement>(null);
   const videoRef3 = useRef<HTMLVideoElement>(null);
@@ -159,18 +153,7 @@ const PublicHome = () => {
     setActiveVideo(1);
   };
 
-  const [provinceId, setProvinceId] = useState<number | null>(null);
-  const [wardId, setWardId] = useState<number | null>(null);
-  const [propertyTypeId, setPropertyTypeId] = useState<number | null>(null);
-  const [searchTab, setSearchTab] = useState<"daily" | "monthly">("daily");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [adults, setAdults] = useState<number>(1);
-  const [children, setChildren] = useState<number>(0);
-
   const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
-  const { data: wardsData, isLoading: isLoadingWards } = useGetHomeWardsByProvinceId(provinceId ?? 0);
-  const { data: propertyTypesData, isLoading: isLoadingPropertyTypes } = usePropertyTypesQuery();
   const { data: latestNewsData, isLoading: isLoadingNews, isError: isErrorNews } = useLatestNewsQuery(6);
 
   const { data: topRatedRoomsData, isLoading: isLoadingRooms } = useTopRatedRoomsQuery();
@@ -404,133 +387,14 @@ const PublicHome = () => {
     }));
   }, [latestNewsData]);
 
-  const provinceOptions = useMemo(() => {
-    const options =
-      provincesData?.data?.map((province: ProvinceTypes) => ({
-        value: province.id.toString(),
-        label: province.name,
-      })) ?? [];
-
-    const priorityNames = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Khánh Hòa", "Quảng Ninh"];
-
-    return [...options].sort((a, b) => {
-      const aPriorityIndex = priorityNames.findIndex((name) =>
-        a.label
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .includes(name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
-      );
-      const bPriorityIndex = priorityNames.findIndex((name) =>
-        b.label
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .includes(name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
-      );
-
-      const aHasPriority = aPriorityIndex !== -1;
-      const bHasPriority = bPriorityIndex !== -1;
-
-      if (aHasPriority && bHasPriority) {
-        return aPriorityIndex - bPriorityIndex;
-      }
-      if (aHasPriority) return -1;
-      if (bHasPriority) return 1;
-
-      return a.label.localeCompare(b.label, "vi");
-    });
-  }, [provincesData]);
-
-  const wardOptions = useMemo(() => {
-    return (
-      wardsData?.data?.map((ward: Ward) => ({
-        value: ward.id.toString(),
-        label: ward.name,
-      })) ?? []
-    );
-  }, [wardsData]);
-
-  const selectedProvinceName = useMemo(() => {
-    return provincesData?.data?.find((p: ProvinceTypes) => p.id === provinceId)?.name;
-  }, [provincesData, provinceId]);
-
-  const propertyTypeOptions = useMemo(() => {
-    const allOptions = propertyTypesData?.data?.map((type: any) => ({
-      value: type.id.toString(),
-      label: normalizeStayPropertyTypeLabel(type.name),
-      slug: type.slug,
-    })) ?? [];
-
-    if (searchTab === "monthly") {
-      return allOptions.filter((opt: any) => opt.slug === "can-ho-dich-vu-theo-phong");
-    }
-    return allOptions;
-  }, [propertyTypesData, searchTab]);
-
-  const resetWard = (nextProvince: number | null) => {
-    setProvinceId(nextProvince);
-    setWardId(null);
-  };
-
-  const performSearch = (selectedProvinceId: number | null, selectedWardId: number | null, selectedPropertyTypeId: number | null) => {
-    if (!selectedProvinceId) {
-      toastError(t("public.home.search.provinceRequired"));
-      return;
-    }
-
-    const params = new URLSearchParams({ provinceId: selectedProvinceId.toString() });
-    if (selectedWardId) {
-      params.set("wardId", selectedWardId.toString());
-    }
-    if (selectedPropertyTypeId) {
-      params.set("propertyTypeId", selectedPropertyTypeId.toString());
-    }
-    navigate(`${ROUTERS.SEARCH_ROOMS}?${params.toString()}`);
-  };
-
-  const handleProvinceChange = (value: string) => {
-    const nextProvince = value ? Number(value) : null;
-    resetWard(nextProvince);
-  };
-
-  const handleWardChange = (value: string) => {
-    if (!provinceId) {
-      toastError("Vui lòng chọn Tỉnh/Thành trước khi chọn Phường/Xã");
-      return;
-    }
-
-    const nextWard = value ? Number(value) : null;
-    setWardId(nextWard);
-  };
-
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (searchTab === "daily") {
-      if (!provinceId) {
-        toastError(t("public.home.search.provinceRequired"));
-        return;
-      }
-      const params = new URLSearchParams({
-        provinceId: provinceId.toString(),
-      });
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
-      params.set("guests", (adults + children).toString());
-      navigate(`${ROUTERS.SEARCH_ROOMS}?${params.toString()}`);
-    } else {
-      performSearch(provinceId, wardId, propertyTypeId);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-slate-100 text-slate-900">
       <PublicHeader />
 
-      <main className="flex flex-col gap-14 pb-14 text-[15px]">
+      <main className="flex flex-col gap-10 pb-14 text-[15px] md:gap-14">
         <section
           id="hero"
-          className="relative isolate z-[60] min-h-[520px] bg-slate-950 text-white md:h-[560px] lg:h-[600px]"
+          className="relative isolate z-[60] min-h-[480px] bg-slate-950 text-white md:h-[560px] lg:h-[600px]"
         >
           <div className="absolute inset-0 -z-10 overflow-hidden">
             {/* Video 1 */}
@@ -592,12 +456,12 @@ const PublicHome = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 md:bg-gradient-to-r md:from-slate-950/80 md:via-slate-900/30 md:to-transparent" />
           </div>
 
-          <div className="relative z-20 mx-auto flex size-full max-w-6xl flex-col justify-center gap-10 px-6 py-16">
+          <div className="relative z-20 mx-auto flex size-full max-w-6xl flex-col justify-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16">
             <div className="max-w-2xl space-y-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-primary-10">
                 {t("public.home.hero.badge")}
               </span>
-              <h1 className="text-[2.5rem] font-bold leading-tight sm:text-[3rem]">
+              <h1 className="text-3xl font-bold leading-tight sm:text-4xl md:text-[3rem]">
                 {t("public.home.hero.title")}
               </h1>
               <p className="text-base text-slate-200">
@@ -605,212 +469,17 @@ const PublicHome = () => {
               </p>
             </div>
 
-            <div className="flex gap-2 p-1.5 bg-white/10 backdrop-blur-md rounded-2xl w-fit border border-white/20 relative z-30">
-              <button
-                type="button"
-                onClick={() => setSearchTab("daily")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${searchTab === "daily"
-                  ? "bg-white text-slate-900 shadow-md scale-105"
-                  : "text-white hover:bg-white/10"
-                  }`}
-              >
-                <Calendar className="size-4" />
-                {t("public.home.search.tabDaily")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSearchTab("monthly")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${searchTab === "monthly"
-                  ? "bg-white text-slate-900 shadow-md scale-105"
-                  : "text-white hover:bg-white/10"
-                  }`}
-              >
-                <Building2 className="size-4" />
-                {t("public.home.search.tabMonthly")}
-              </button>
-            </div>
-
-            <form
-              className={`relative z-[200] grid gap-4 rounded-[32px] border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl transition-all duration-500 hover:bg-white/15 ${searchTab === "daily"
-                ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
-                : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
-                }`}
-              onSubmit={handleSearchSubmit}
-            >
-              {/* Province field - Shared in both tabs */}
-              <SearchableSelect
-                value={provinceId ? provinceId.toString() : ""}
-                onValueChange={handleProvinceChange}
-                options={provinceOptions}
-                placeholder={t("public.home.search.provincePlaceholder")}
-                searchPlaceholder={t("public.home.search.provinceSearch")}
-                emptyMessage={t("public.home.search.provinceEmpty")}
-                disabled={isLoadingProvinces}
-                loading={isLoadingProvinces}
-                icon={<MapPin className="size-5" />}
-                showSearch
-                triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50"
-                contentClassName="bg-white text-slate-900"
-              />
-
-              {searchTab === "daily" ? (
-                <>
-                  {/* Daily Tab Specific Fields */}
-                  <DatePickerField
-                    label="Nhận phòng"
-                    labelClassName="hidden"
-                    placeholder="Nhận phòng"
-                    value={startDate}
-                    onChange={(val) => {
-                      setStartDate(val);
-                      if (endDate && val > endDate) {
-                        setEndDate("");
-                      }
-                    }}
-                    minDate={format(new Date(), "yyyy-MM-dd")}
-                    className="space-y-0"
-                    triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-base font-semibold text-slate-900 shadow-lg backdrop-blur hover:bg-white/95 focus-visible:ring-2 focus-visible:ring-primary/50"
-                  />
-
-                  <DatePickerField
-                    label="Trả phòng"
-                    labelClassName="hidden"
-                    placeholder="Trả phòng"
-                    value={endDate}
-                    onChange={setEndDate}
-                    minDate={startDate || format(new Date(), "yyyy-MM-dd")}
-                    className="space-y-0"
-                    triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-base font-semibold text-slate-900 shadow-lg backdrop-blur hover:bg-white/95 focus-visible:ring-2 focus-visible:ring-primary/50"
-                  />
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-14 w-full items-center justify-start rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur hover:bg-white focus-visible:ring-2 focus-visible:ring-primary/50"
-                      >
-                        <Users className="mr-2 size-5 shrink-0 text-slate-500" />
-                        <span className="truncate">
-                          {children > 0
-                            ? `${adults} ${t("public.home.search.adults").toLowerCase()}, ${children} ${t("public.home.search.children").toLowerCase()}`
-                            : `${adults} ${t("public.home.search.guests")}`}
-                        </span>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900" align="start">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-sm">{t("public.home.search.adults")}</span>
-                            <span className="text-xs text-slate-400">{t("public.home.search.adultsLabel")}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="size-8 rounded-full border-slate-300"
-                              disabled={adults <= 1}
-                              onClick={() => setAdults(adults - 1)}
-                            >
-                              <Minus className="size-4" />
-                            </Button>
-                            <span className="w-6 text-center font-bold">{adults}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="size-8 rounded-full border-slate-300"
-                              disabled={adults >= 10}
-                              onClick={() => setAdults(adults + 1)}
-                            >
-                              <Plus className="size-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-sm">{t("public.home.search.children")}</span>
-                            <span className="text-xs text-slate-400">{t("public.home.search.childrenLabel")}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="size-8 rounded-full border-slate-300"
-                              disabled={children <= 0}
-                              onClick={() => setChildren(children - 1)}
-                            >
-                              <Minus className="size-4" />
-                            </Button>
-                            <span className="w-6 text-center font-bold">{children}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="size-8 rounded-full border-slate-300"
-                              disabled={children >= 10}
-                              onClick={() => setChildren(children + 1)}
-                            >
-                              <Plus className="size-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </>
-              ) : (
-                <>
-                  {/* Monthly Tab Specific Fields */}
-                  <SearchableSelect
-                    value={wardId ? wardId.toString() : ""}
-                    onValueChange={handleWardChange}
-                    options={wardOptions}
-                    placeholder={provinceId ? `Chọn Phường/Xã tại ${selectedProvinceName}` : t("public.home.search.provinceFirstPlaceholder")}
-                    searchPlaceholder="Tìm kiếm Phường/Xã..."
-                    emptyMessage={provinceId ? "Không tìm thấy Phường/Xã" : "Vui lòng chọn Tỉnh/Thành trước"}
-                    disabled={!provinceId || isLoadingWards}
-                    loading={isLoadingWards}
-                    icon={<MapPin className="size-5" />}
-                    showSearch
-                    triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60"
-                    contentClassName="bg-white text-slate-900"
-                  />
-
-                  <SearchableSelect
-                    value={propertyTypeId ? propertyTypeId.toString() : ""}
-                    onValueChange={(val) => setPropertyTypeId(val ? Number(val) : null)}
-                    options={propertyTypeOptions}
-                    placeholder="Loại hình"
-                    searchPlaceholder="Tìm loại hình..."
-                    emptyMessage="Không tìm thấy loại hình"
-                    disabled={isLoadingPropertyTypes}
-                    loading={isLoadingPropertyTypes}
-                    icon={<Search className="size-5" />}
-                    showSearch
-                    triggerClassName="h-14 rounded-2xl border-none bg-white/85 px-5 text-left text-base font-semibold text-slate-900 shadow-lg backdrop-blur focus-visible:ring-2 focus-visible:ring-primary/50"
-                    contentClassName="bg-white text-slate-900"
-                  />
-                </>
-              )}
-
-              <button
-                type="submit"
-                className="flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-primary via-sky-600 to-sky-700 px-8 text-base font-semibold text-white shadow-lg shadow-sky-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={!provinceId}
-              >
-                <Search className="mr-2 size-5" />
-                {t("public.home.search.cta")}
-              </button>
-            </form>
+            <MobileSearchSheet
+              search={heroSearch}
+              open={searchSheetOpen}
+              onOpenChange={setSearchSheetOpen}
+            />
+            <HeroSearchForm search={heroSearch} variant="inline" />
           </div>
         </section>
 
         <ProvinceCarousel
-          className="mx-auto w-full max-w-6xl"
+          className={PUBLIC_PAGE_SECTION_CLASS}
           heading="Khám phá thành phố đáng đi nhất"
           description="Ưu tiên các thành phố lớn và điểm đến du lịch nổi bật để bạn chọn nhanh hơn ngay từ trang chủ."
           provinces={featuredProvinces}
@@ -820,7 +489,7 @@ const PublicHome = () => {
         />
 
         <FeaturedRoomCarousel
-          className="mx-auto w-full max-w-6xl"
+          className={PUBLIC_PAGE_SECTION_CLASS}
           heading="Phòng nổi bật dành cho chuyến đi tiếp theo"
           description="Bộ sưu tập phòng được chọn lọc từ dữ liệu hiện có, ưu tiên trải nghiệm đặt phòng rõ ràng và dễ theo dõi."
           rooms={featuredRooms}
@@ -831,14 +500,14 @@ const PublicHome = () => {
 
         {HOMEPAGE_SUGGESTIONS_BY_SPOT ? (
           <SuggestedRoomsByTouristSpot
-            className="mx-auto w-full max-w-6xl"
+            className={PUBLIC_PAGE_SECTION_CLASS}
             groups={orderedSuggestedRoomsBySpotData}
             prioritySpotNames={SUGGESTED_ROOM_SPOT_PRIORITY}
             loading={isLoadingSuggestedSpotRooms || isLoadingRooms}
           />
         ) : (
           <SuggestedRoomsByProvince
-            className="mx-auto w-full max-w-6xl"
+            className={PUBLIC_PAGE_SECTION_CLASS}
             groups={mergedSuggestedRoomsByProvinceData}
             priorityProvinceNames={SUGGESTED_ROOM_CITY_PRIORITY}
             loading={isLoadingSuggestedRooms || isLoadingProvinces || isLoadingRooms}
@@ -846,7 +515,7 @@ const PublicHome = () => {
         )}
 
         <PartnerGrid
-          className="mx-auto w-full max-w-6xl"
+          className={PUBLIC_PAGE_SECTION_CLASS}
           heading={t("public.home.partners.heading")}
           description={t("public.home.partners.description")}
           partners={partnerCompanies}
@@ -855,12 +524,12 @@ const PublicHome = () => {
 
         {/* Testimonials / Reviews Showcase */}
         {(isLoadingReviews || (landingReviewsData && landingReviewsData.length > 0)) && (
-          <section className="mx-auto w-full max-w-6xl px-6 py-8">
+          <section className={`${PUBLIC_PAGE_SECTION_CLASS} py-8`}>
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
                 Trải nghiệm khách hàng
               </span>
-              <h2 className="text-3xl font-bold mt-2 text-slate-900">
+              <h2 className="text-2xl font-bold mt-2 text-slate-900 md:text-3xl">
                 Khách hàng nói gì về BKS Stay
               </h2>
               <p className="text-slate-500 text-sm mt-2">
@@ -879,7 +548,7 @@ const PublicHome = () => {
                 {landingReviewsData!.slice(0, 3).map((review: any) => (
                   <div
                     key={review.id}
-                    className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col justify-between relative group"
+                    className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col justify-between relative group"
                   >
                     <div className="absolute top-6 right-8 text-sky-500/10 group-hover:text-sky-500/20 transition-colors duration-300">
                       <Quote className="size-10 fill-current" />
@@ -944,10 +613,10 @@ const PublicHome = () => {
           </section>
         )}
 
-        <ContactCard className="mx-auto w-full max-w-6xl" />
+        <ContactCard className={PUBLIC_PAGE_SECTION_CLASS} />
 
         <NewsGrid
-          className="mx-auto w-full max-w-6xl"
+          className={PUBLIC_PAGE_SECTION_CLASS}
           heading={t("public.home.news.heading")}
           description={t("public.home.news.description")}
           articles={latestNews}

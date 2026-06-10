@@ -1,4 +1,4 @@
-﻿import EmptyPage from "@/components/EmptyPage";
+import EmptyPage from "@/components/EmptyPage";
 import Pagination from "@/components/Pagination";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS, SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
 import { Property, SearchPropertyRequest } from "@/dataHelper/property.dataHelper";
@@ -8,7 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PropertyHeader, PropertySearchSection, PropertyCard, DeleteConfirmDialog, PropertyTable } from "./components";
 import { usePropertySort } from "./hooks";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import { ViewMode } from "@/components/LayoutToggle";
 import ContextFilterChips from "@/components/admin/ContextFilterChips";
 import { clearAdminContext, parseAdminContext } from "@/utils/adminNavigation";
@@ -97,7 +98,7 @@ const Properties: React.FC = () => {
     clearSort();
   };
 
-  // Realtime search với debounce cho filters
+  // Realtime search v?i debounce cho filters
   useEffect(() => {
     const partnerId = Number(urlSearchParams.get("partner_id") || "") || undefined;
     setFilters((prev) => ({ ...prev, partner_id: partnerId }));
@@ -150,7 +151,7 @@ const Properties: React.FC = () => {
   };
 
   return (
-    <div className="flex w-full flex-col gap-6 p-[12px_24px]">
+    <AdminPageShell>
       <PropertyHeader 
         onCreateProperty={handleCreateProperty} 
         onOpenFilter={() => setOpen(true)} 
@@ -181,17 +182,15 @@ const Properties: React.FC = () => {
         onConfirm={confirmDelete}
       />
       {isLoadingProperty ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-          <Spinner size="lg" showText text={t("common.loading_data")} />
-        </div>
+        <AdminListLoading mode={viewMode} />
       ) : errorProperty ? (
         <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.error")}</div>
       ) : totalItems === 0 ? (
         <EmptyPage />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {properties.map((property: Property) => (
                 <PropertyCard
                   key={property.id}
@@ -240,7 +239,7 @@ const Properties: React.FC = () => {
           )}
         </div>
       )}
-    </div>
+    </AdminPageShell>
   );
 };
 

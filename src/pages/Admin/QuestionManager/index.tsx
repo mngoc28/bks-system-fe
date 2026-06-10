@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Filter, GitBranch, Plus } from "lucide-react";
@@ -10,7 +10,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTERS } from "@/constant";
 import Pagination from "@/components/Pagination";
 import EmptyPage from "@/components/EmptyPage";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import PageBar from "@/components/PageBar";
 import { ViewMode } from "@/components/LayoutToggle";
 import { QuestionTable } from "./components";
@@ -105,9 +106,9 @@ const QuestionManagerPage = () => {
   };
 
   return (
-    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+    <AdminPageShell>
       <PageBar
-        subtitle={t("questions.subtitle") || "Quản lý luồng câu hỏi và kịch bản chatbot tự động."}
+        subtitle={t("questions.subtitle") || "Qu?n l� lu?ng c�u h?i v� k?ch b?n chatbot t? d?ng."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -161,16 +162,14 @@ const QuestionManagerPage = () => {
       />
 
       {isLoading ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-          <Spinner size="lg" showText text={t("common.loading_data")} />
-        </div>
+        <AdminListLoading mode={viewMode} />
       ) : totalItems === 0 ? (
         <EmptyPage />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
            {viewMode === "grid" ? (
              <>
-               <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {rows.map((row) => (
                     <QuestionCard
                       key={row.id}
@@ -228,7 +227,7 @@ const QuestionManagerPage = () => {
         target={deleteTarget}
         isLoading={deleteMutation.isPending}
       />
-    </div>
+    </AdminPageShell>
   );
 };
 

@@ -21,7 +21,9 @@ import {
 import { partnerService } from '@/services/partnerService';
 import { AirVent, ChevronDown, Edit, Eye, Image as ImageIcon, Layers, Loader2, MapPin, Maximize, Plus, Star, Trash2, Wallet, X, Zap } from 'lucide-react';
 import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import SearchableSelect from '@/components/ui/searchable-select';
+import { formatCurrencyInput, parseCurrencyValue, validateCurrencyInput } from '@/utils/utils';
 import { Property, Room } from './types';
 
 import Pagination from '@/components/Pagination';
@@ -42,6 +44,18 @@ import { normalizeStayPropertyTypeLabel } from '@/utils/stayPropertyType';
 import InlineSheet from './components/InlineSheet';
 import PartnerImageManager from './components/PartnerImageManager';
 import PropertySkeleton from './components/PropertySkeleton';
+import { PartnerSectionCard, PartnerSectionHeader } from './components/ResponsiveBlocks';
+
+const PRICE_PACKAGE_LABEL_VI: Record<string, string> = {
+  'super small': 'Siêu nhỏ',
+  small: 'Nhỏ',
+  medium: 'Trung bình',
+  large: 'Lớn',
+};
+
+function formatPricePackageLabel(name: string): string {
+  return PRICE_PACKAGE_LABEL_VI[name] ?? name;
+}
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -294,23 +308,21 @@ const Properties: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-             Quản lý Dữ liệu Tài sản
-          </h1>
-          <p className="mt-1 text-gray-500">Quản lý cơ sở lưu trú, căn hộ và phòng dịch vụ của bạn.</p>
-        </div>
-        <div className="flex gap-3">
-          <Button type="button" onClick={handleAddProperty} className="flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
-            <Plus size={18} />
-            Thêm Bất động sản
-          </Button>
-        </div>
-      </div>
+      <PartnerSectionCard className="border-gray-100">
+        <PartnerSectionHeader
+          title="Quản lý Dữ liệu Tài sản"
+          description="Quản lý cơ sở lưu trú, căn hộ và phòng dịch vụ của bạn."
+          actions={(
+            <Button type="button" onClick={handleAddProperty} className="flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
+              <Plus size={18} />
+              Thêm Bất động sản
+            </Button>
+          )}
+        />
+      </PartnerSectionCard>
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col items-end gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:flex-row">
+      <div className="flex flex-col items-end gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm sm:p-4 md:flex-row">
         <div className="w-full flex-1 space-y-1.5">
           <Label htmlFor="search-property" className="text-xs font-semibold uppercase tracking-tighter text-gray-400">Tìm kiếm</Label>
           <div className="group relative">
@@ -368,7 +380,7 @@ const Properties: React.FC = () => {
              <span className="text-sm font-semibold">Xóa lọc</span>
            </Button>
          )}
-         <div className="flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-slate-50/50 px-4">
+         <div className="flex h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-slate-50/50 px-4 md:w-auto">
             <Checkbox 
               id="select-all-properties"
               checked={isAllPropertiesSelected}
@@ -379,14 +391,14 @@ const Properties: React.FC = () => {
       </div>
 
       {selectedPropertyIds.size > 0 && (
-        <div className="flex animate-in fade-in slide-in-from-top-2 items-center justify-between rounded-xl border border-blue-100 bg-blue-50/80 p-3 shadow-sm backdrop-blur-sm">
+        <div className="flex animate-in fade-in slide-in-from-top-2 flex-col items-start justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/80 p-3 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center">
            <div className="flex items-center gap-3 pl-2">
              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-md">
                {selectedPropertyIds.size}
              </div>
              <p className="text-sm font-bold text-blue-900">Bất động sản đã chọn</p>
            </div>
-           <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
              <Button 
                variant="ghost" 
                size="sm" 
@@ -479,7 +491,7 @@ const Properties: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <div className="mr-2 flex items-center gap-1 rounded-xl border border-slate-100 bg-slate-50/50 p-1">
-                  <Button 
+                  <Button
                     type="button" 
                     onClick={() => handleAddRoom(String(property.id))} 
                     size="sm" 
@@ -498,7 +510,7 @@ const Properties: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 self-end sm:self-auto">
                   <Button 
                     type="button" 
                     onClick={() => handleEditProperty(property)} 
@@ -857,8 +869,9 @@ const Properties: React.FC = () => {
               }
               reloadPropertyList();
               setIsRoomModalOpen(false);
-            } catch {
-              toastError('Lỗi khi lưu thông tin phòng.');
+            } catch (error: any) {
+              const msg = error?.response?.data?.message;
+              toastError(typeof msg === 'string' ? msg : 'Lỗi khi lưu thông tin phòng.');
             }
           }}
         />
@@ -945,7 +958,7 @@ const PropertyModal: React.FC<{
       open={isOpen}
       onClose={onClose}
       title={property ? 'Cập nhật Bất động sản' : 'Thêm Bất động sản mới'}
-      widthClassName="max-w-xl"
+      widthClassName="w-full md:max-w-xl"
       footer={
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
@@ -959,35 +972,29 @@ const PropertyModal: React.FC<{
             <Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: Khách sạn BKS Central" />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="province">Tỉnh/Thành phố</Label>
-              <select 
-                id="province" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus-visible:outline-none"
-                value={formData.province_id}
-                onChange={e => setFormData({...formData, province_id: Number(e.target.value), ward_id: 0})}
-              >
-                <option value={0}>Chọn Tỉnh/Thành</option>
-                {provinces.map((p: any) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+              <SearchableSelect
+                value={formData.province_id ? String(formData.province_id) : ''}
+                onValueChange={(v) => setFormData({ ...formData, province_id: Number(v), ward_id: 0 })}
+                options={provinces.map((p: any) => ({ value: String(p.id), label: p.name }))}
+                placeholder="Chọn Tỉnh/Thành"
+                searchPlaceholder="Tìm tỉnh/thành..."
+                emptyMessage="Không tìm thấy"
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="ward">Phường/Xã</Label>
-              <select 
-                id="ward" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus-visible:outline-none"
-                value={formData.ward_id}
-                onChange={e => setFormData({...formData, ward_id: Number(e.target.value)})}
+              <SearchableSelect
+                value={formData.ward_id ? String(formData.ward_id) : ''}
+                onValueChange={(v) => setFormData({ ...formData, ward_id: Number(v) })}
+                options={wards.map((w: any) => ({ value: String(w.id), label: w.name }))}
+                placeholder="Chọn Phường/Xã"
+                searchPlaceholder="Tìm phường/xã..."
+                emptyMessage="Không tìm thấy"
                 disabled={!formData.province_id}
-              >
-                <option value={0}>Chọn Phường/Xã</option>
-                {wards.map((w: any) => (
-                  <option key={w.id} value={w.id}>{w.name}</option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 
@@ -996,34 +1003,34 @@ const PropertyModal: React.FC<{
             <Input id="address" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="VD: 123 Nguyễn Văn Linh..." />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="type">Loại hình</Label>
-              <select 
-                id="type" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus-visible:outline-none"
-                value={formData.property_type_id}
-                onChange={e => setFormData({...formData, property_type_id: Number(e.target.value)})}
-              >
-                <option value={0}>Chọn loại hình</option>
-                {propertyTypes.map(type => (
-                  <option key={type.id} value={type.id}>{normalizeStayPropertyTypeLabel(type.name)}</option>
-                ))}
-              </select>
+              <SearchableSelect
+                value={formData.property_type_id ? String(formData.property_type_id) : ''}
+                onValueChange={(v) => setFormData({ ...formData, property_type_id: Number(v) })}
+                options={propertyTypes.map((type) => ({
+                  value: String(type.id),
+                  label: normalizeStayPropertyTypeLabel(type.name),
+                }))}
+                placeholder="Chọn loại hình"
+                searchPlaceholder="Tìm loại hình..."
+                emptyMessage="Không tìm thấy"
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="rent_category">Hình thức cho thuê</Label>
-              <select 
-                id="rent_category" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus-visible:outline-none"
-                value={formData.rent_category}
-                onChange={e => setFormData({...formData, rent_category: Number(e.target.value)})}
-              >
-                <option value={0}>Chọn hình thức</option>
-                {Object.entries(RENT_CATEGORY).map(([value, labelKey]) => (
-                  <option key={value} value={value}>{t(labelKey as string)}</option>
-                ))}
-              </select>
+              <SearchableSelect
+                value={formData.rent_category ? String(formData.rent_category) : ''}
+                onValueChange={(v) => setFormData({ ...formData, rent_category: Number(v) })}
+                options={Object.entries(RENT_CATEGORY).map(([value, labelKey]) => ({
+                  value,
+                  label: t(labelKey as string),
+                }))}
+                placeholder="Chọn hình thức"
+                searchPlaceholder="Tìm hình thức..."
+                emptyMessage="Không tìm thấy"
+              />
             </div>
           </div>
           
@@ -1036,35 +1043,71 @@ const PropertyModal: React.FC<{
   );
 };
 
+const createDefaultPriceRow = (packageId = 0) => ({
+  id: 'p' + Date.now(),
+  price_package_id: packageId,
+  packageName: '',
+  price: 0,
+  duration: 1,
+  unit: 'month' as const,
+});
+
 const RoomModal: React.FC<{ isOpen: boolean, onClose: () => void, room: Room | null, propertyId: string, onSave: (data: Partial<Room>) => void }> = ({ isOpen, onClose, room, propertyId, onSave }) => {
+  const { data: pricePackagesRes, isLoading: isPricePackagesLoading } = useQuery({
+    queryKey: ['partner', 'price-packages'],
+    queryFn: () => partnerService.getPricePackages(),
+    enabled: isOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const pricePackages = useMemo(() => {
+    const raw = (pricePackagesRes as any)?.data?.data ?? (pricePackagesRes as any)?.data ?? [];
+    return Array.isArray(raw) ? raw : [];
+  }, [pricePackagesRes]);
+
+  const defaultPackageId = useMemo(() => {
+    const medium = pricePackages.find((pkg: any) => pkg.name === 'medium');
+    return Number(medium?.id ?? pricePackages[0]?.id ?? 0);
+  }, [pricePackages]);
+
   const [formData, setFormData] = useState<Partial<Room>>({
     name: room?.name || '',
     area: room?.area || 0,
     amenities: room?.amenities || [],
     services: room?.services || [],
     propertyId: propertyId,
-    prices: room?.prices || [{ id: 'p' + Date.now(), packageName: 'Gói chuẩn', price: 0, duration: 1 }]
+    prices: room?.prices || [createDefaultPriceRow()],
   });
 
   React.useEffect(() => {
+    if (!isOpen) return;
     if (room) {
-      setFormData({...room});
-    } else {
-      setFormData({
-        name: '', 
-        area: 0, 
-        propertyId, 
-        amenities: [], 
-        services: [], 
-        prices: [{ id: 'p' + Date.now(), packageName: 'Gói chuẩn', price: 0, duration: 1 }]
-      });
+      setFormData({ ...room, propertyId });
+      return;
     }
-  }, [room, propertyId, isOpen]);
+    setFormData({
+      name: '',
+      area: 0,
+      propertyId,
+      amenities: [],
+      services: [],
+      prices: [createDefaultPriceRow(defaultPackageId || 0)],
+    });
+  }, [room, propertyId, isOpen, defaultPackageId]);
+
+  const pricePackageOptions = useMemo(
+    () =>
+      pricePackages.map((pkg: any) => ({
+        value: String(pkg.id),
+        label: formatPricePackageLabel(pkg.name),
+      })),
+    [pricePackages],
+  );
 
   const addPrice = () => {
     setFormData({
       ...formData,
-      prices: [...(formData.prices || []), { id: 'p' + Date.now(), packageName: '', price: 0, duration: 1 }]
+      prices: [...(formData.prices || []), createDefaultPriceRow(defaultPackageId || 0)],
     });
   };
 
@@ -1073,7 +1116,7 @@ const RoomModal: React.FC<{ isOpen: boolean, onClose: () => void, room: Room | n
       open={isOpen}
       onClose={onClose}
       title={room ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
-      widthClassName="max-w-3xl"
+      widthClassName="w-full md:max-w-3xl"
       footer={
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
@@ -1082,14 +1125,24 @@ const RoomModal: React.FC<{ isOpen: boolean, onClose: () => void, room: Room | n
       }
     >
         <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label>Tên phòng/Số phòng</Label>
               <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: P.101" />
             </div>
             <div className="grid gap-2">
               <Label>Diện tích (m²)</Label>
-              <Input type="number" value={formData.area} onChange={e => setFormData({...formData, area: Number(e.target.value)})} />
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="VD: 25"
+                value={formData.area === 0 ? '' : formData.area}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setFormData({ ...formData, area: raw === '' ? 0 : Number(raw) });
+                }}
+              />
             </div>
           </div>
 
@@ -1109,38 +1162,81 @@ const RoomModal: React.FC<{ isOpen: boolean, onClose: () => void, room: Room | n
             </div>
             <div className="space-y-3">
               {formData.prices?.map((p, idx) => (
-                <div key={p.id} className="relative grid grid-cols-12 items-end gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                  <div className="col-span-12 mb-1 flex items-center justify-between">
+                <div key={p.id} className="relative rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <div className="mb-2 flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase text-blue-600">Gói #{idx + 1}</span>
                     {idx > 0 && (
-                      <button onClick={() => setFormData({...formData, prices: formData.prices?.filter(pr => pr.id !== p.id)})} className="text-red-400 hover:text-red-600">
+                      <button type="button" onClick={() => setFormData({...formData, prices: formData.prices?.filter(pr => pr.id !== p.id)})} className="text-red-400 hover:text-red-600">
                         <X size={14} />
                       </button>
                     )}
                   </div>
-                  <div className="col-span-5 grid gap-1">
-                    <span className="text-[10px] text-gray-500">Tên gói</span>
-                    <Input value={p.packageName} onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        const newPrices = [...(formData.prices || [])];
-                        newPrices[idx].packageName = e.target.value;
-                        setFormData({...formData, prices: newPrices});
-                    }} placeholder="VD: Gói 6 tháng" className="h-8 text-xs" />
-                  </div>
-                  <div className="col-span-4 grid gap-1">
-                    <span className="text-[10px] text-gray-500">Giá (VNĐ)</span>
-                    <Input type="number" value={p.price} onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        const newPrices = [...(formData.prices || [])];
-                        newPrices[idx].price = Number(e.target.value);
-                        setFormData({...formData, prices: newPrices});
-                    }} className="h-8 text-xs font-bold" />
-                  </div>
-                  <div className="col-span-3 grid gap-1">
-                    <span className="text-[10px] text-gray-500">Tháng</span>
-                    <Input type="number" value={p.duration} onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        const newPrices = [...(formData.prices || [])];
-                        newPrices[idx].duration = Number(e.target.value);
-                        setFormData({...formData, prices: newPrices});
-                    }} className="h-8 text-xs" />
+                  <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-12">
+                    <div className="grid gap-1 md:col-span-5">
+                      <span className="text-[10px] text-gray-500">Gói giá</span>
+                      <Select
+                        value={p.price_package_id ? String(p.price_package_id) : undefined}
+                        onValueChange={(v) => {
+                          const pkg = pricePackages.find((item: any) => String(item.id) === v);
+                          const newPrices = [...(formData.prices || [])];
+                          newPrices[idx] = {
+                            ...newPrices[idx],
+                            price_package_id: Number(v),
+                            packageName: pkg?.name ?? '',
+                          };
+                          setFormData({ ...formData, prices: newPrices });
+                        }}
+                        disabled={isPricePackagesLoading || pricePackageOptions.length === 0}
+                      >
+                        <SelectTrigger className="h-10 text-xs">
+                          <SelectValue placeholder={isPricePackagesLoading ? 'Đang tải...' : 'Chọn gói giá'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pricePackageOptions
+                            .filter(
+                              (opt) =>
+                                !formData.prices?.some(
+                                  (row, rowIdx) => rowIdx !== idx && String(row.price_package_id) === opt.value,
+                                ),
+                            )
+                            .map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1 md:col-span-4">
+                      <span className="text-[10px] text-gray-500">Giá (VNĐ)</span>
+                      <Input
+                        value={p.price ? formatCurrencyInput(p.price) : ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          const cleaned = validateCurrencyInput(e.target.value);
+                          if (cleaned === null) return;
+                          const newPrices = [...(formData.prices || [])];
+                          newPrices[idx].price = parseCurrencyValue(cleaned);
+                          setFormData({ ...formData, prices: newPrices });
+                        }}
+                        placeholder="VD: 1.000.000"
+                        className="h-10 text-xs font-bold"
+                      />
+                    </div>
+                    <div className="grid gap-1 md:col-span-3">
+                      <span className="text-[10px] text-gray-500">Tháng</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={p.duration === 0 ? '' : p.duration}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value;
+                          const newPrices = [...(formData.prices || [])];
+                          newPrices[idx].duration = raw === '' ? 0 : Number(raw);
+                          setFormData({ ...formData, prices: newPrices });
+                        }}
+                        className="h-10 text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

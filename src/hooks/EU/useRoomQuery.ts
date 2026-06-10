@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PublicRoomListParams, roomApi } from "@/api/EU/roomApi";
 import type {
@@ -43,6 +43,7 @@ export const usePaginatedRoomsQuery = (params: PublicRoomListParams, options?: {
       }
     },
     enabled: options?.enabled !== false,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -86,5 +87,25 @@ export const useSuggestedRoomsByTouristSpotQuery = (
       return response.data as SuggestedRoomsByTouristSpotGroup[];
     },
     enabled: (options?.enabled ?? true) && (spotSlugs.length > 0 || spotIds.length > 0),
+  });
+};
+
+export const usePublicAmenitiesQuery = () => {
+  return useQuery({
+    queryKey: ["public-amenities"],
+    queryFn: async () => {
+      const response = await roomApi.getAmenities();
+      return response.data;
+    },
+  });
+};
+
+export const usePublicServicesQuery = () => {
+  return useQuery({
+    queryKey: ["public-services"],
+    queryFn: async () => {
+      const response = await roomApi.getServices();
+      return response.data;
+    },
   });
 };

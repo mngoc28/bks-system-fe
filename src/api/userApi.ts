@@ -22,6 +22,9 @@ export const userApi = {
 
   updateUser: (id: number, data: UpdateUserProfileRequest): Promise<UserProfileResponse> => axiosClient.put(`admin/users/${id}`, data),
 
+  updateUserStatus: (id: number, status: 1 | 2): Promise<UserProfileDetailResponse> =>
+    axiosClient.put(`admin/users/${id}/status`, { status }),
+
   resetPassword: (id: number, data: ResetPasswordRequest): Promise<UserProfileResponse> => axiosClient.post(`admin/users/reset-password/${id}`, data),
 
   uploadAvatar: (id: number, data: FormData): Promise<AvatarResponse> => axiosClient.post(`admin/users/avatar/${id}`, data, {

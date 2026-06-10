@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Loader2, RefreshCw, Calendar, Building2, Home, FileText, AlertCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
@@ -222,8 +223,12 @@ function DetailModal({
 // ─── Main Component ───────────────────────────────────────────────────────────
 const CancellationRequests: React.FC = () => {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>("pending");
-  const [propertyFilter, setPropertyFilter] = useState<string>("all");
+  const [propertyFilter, setPropertyFilter] = useState<string>(() => {
+    const fromUrl = searchParams.get("property_id");
+    return fromUrl && fromUrl !== "all" ? fromUrl : "all";
+  });
   const [page, setPage] = useState(1);
   const perPage = 15;
 
@@ -415,7 +420,35 @@ const CancellationRequests: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="space-y-3 md:hidden">
+        {items.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+            Không có yêu cầu phù hợp bộ lọc.
+          </div>
+        ) : (
+          items.map((row, idx) => (
+            <div
+              key={`mobile-cancel-${row.id}`}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              onClick={() => setDetailRow(row)}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs text-slate-400">#{(page - 1) * perPage + idx + 1} · booking #{row.booking_id}</p>
+                  <p className="text-sm font-semibold text-slate-900">{row.property?.name ?? "—"}</p>
+                  <p className="text-xs text-slate-500">{roomLabel(row)}</p>
+                </div>
+                <Badge variant="outline" className={`${statusBadgeClass(row.status)} text-[10px]`}>
+                  {statusLabel(row.status)}
+                </Badge>
+              </div>
+              <p className="mt-2 text-xs text-slate-700">{formatReasonCode(row.reason_code)}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
         {listQuery.isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Spinner size="md" showText text="Đang tải danh sách..." />

@@ -120,18 +120,46 @@ const News: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý Tin tức & Ưu đãi</h1>
+          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Quản lý Tin tức & Ưu đãi</h1>
           <p className="mt-1 text-gray-500">Cập nhật các chương trình khuyến mãi và thông báo cho khách hàng của bạn.</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="h-10 bg-blue-600 px-4 font-bold text-white hover:bg-blue-700">
+        <Button onClick={() => handleOpenModal()} className="h-10 w-full bg-blue-600 px-4 font-bold text-white hover:bg-blue-700 sm:w-auto">
           <Plus size={18} className="mr-2" /> Soạn bài viết mới
         </Button>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {newsList.map((post) => (
+            <div key={`mobile-news-${post.id}`} className="rounded-xl border border-slate-200 p-4">
+              <div className="flex gap-3">
+                <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-100">
+                  <img src={post.thumbnail} alt={post.title} className="size-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="line-clamp-2 text-sm font-bold text-gray-800">{post.title}</h3>
+                  <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                    <Calendar size={12} /> {formatDate(post.createdAt)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${
+                  post.status === 'Đã đăng' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-amber-100 bg-amber-50 text-amber-700'
+                }`}>
+                  {post.status}
+                </span>
+                <div className="flex gap-1">
+                  <Button onClick={() => handleOpenModal(post)} variant="ghost" size="icon" className="size-8 text-gray-400"><Edit size={16} /></Button>
+                  <Button onClick={() => handleDelete(post.id)} variant="ghost" size="icon" className="size-8 text-gray-400"><Trash2 size={16} /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-100 bg-slate-50">
@@ -188,7 +216,7 @@ const News: React.FC = () => {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingPost ? 'Chỉnh sửa bài viết' : 'Soạn bài viết mới'}
-        widthClassName="max-w-3xl"
+        widthClassName="w-full md:max-w-3xl"
         footer={
           <div className="flex items-center justify-end gap-2">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>

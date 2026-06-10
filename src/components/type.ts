@@ -74,6 +74,8 @@ export type MenuItem = {
   children?: MenuItem[];
   isHeader?: boolean;
   permissionKey?: string;
+  defaultCollapsed?: boolean;
+  badgeCount?: number;
 };
 
 export interface ClassSidebarProps {

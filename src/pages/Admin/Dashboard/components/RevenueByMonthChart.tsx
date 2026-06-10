@@ -2,7 +2,7 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useTranslation } from "react-i18next";
 import { useRevenueByMonthQuery } from "@/hooks/useDashboardQuery";
-import { Input } from "@/components/ui/input";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Button } from "@/components/ui/button";
 import { getDashboardDateRange, setDashboardDateRange } from "@/utils/storage";
 import { Spinner } from "@/components/ui/spinner";
@@ -75,15 +75,27 @@ const RevenueByMonthChart: React.FC = () => {
       <div className="flex items-center justify-end">
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col items-center gap-2 sm:flex-row">
-            <div className="flex flex-col">
-              <div className="mb-2 text-[15px] text-slate-700">{t("dashboard.start_date")}</div>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-30 sm:w-45 h-8 text-[13px] sm:h-10 sm:text-[15px]" placeholder={t("dashboard.start_date")} />
-            </div>
+            <DatePickerField
+              id="revenue-chart-start-date"
+              label={t("dashboard.start_date")}
+              labelClassName="text-[15px] font-normal text-slate-700"
+              value={startDate}
+              onChange={setStartDate}
+              maxDate={endDate || undefined}
+              className="w-30 space-y-2 sm:w-45"
+              triggerClassName="h-8 min-h-0 w-30 text-[13px] font-normal shadow-none hover:shadow-none sm:h-10 sm:w-45 sm:text-[15px]"
+            />
             <span className="text-slate-500">-</span>
-            <div className="flex flex-col">
-              <div className="mb-2 text-[15px] text-slate-700">{t("dashboard.start_date")}</div>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-30 sm:w-45 h-8 text-[13px] sm:h-10 sm:text-[15px]" placeholder={t("dashboard.end_date")} />
-            </div>
+            <DatePickerField
+              id="revenue-chart-end-date"
+              label={t("dashboard.end_date")}
+              labelClassName="text-[15px] font-normal text-slate-700"
+              value={endDate}
+              onChange={setEndDate}
+              minDate={startDate || undefined}
+              className="w-30 space-y-2 sm:w-45"
+              triggerClassName="h-8 min-h-0 w-30 text-[13px] font-normal shadow-none hover:shadow-none sm:h-10 sm:w-45 sm:text-[15px]"
+            />
           </div>
           <Button onClick={handleApplyDateRange} size="sm" variant="outline" className="h-8 bg-primary text-slate-100 hover:bg-primary-hover hover:text-zinc-100 sm:h-10">
             {t("common.apply")}

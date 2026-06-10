@@ -15,4 +15,8 @@ export const bookingApi = {
     /** To look up your application publicly: email + code (no login required). */
     lookupBooking: (data: PublicBookingLookupRequest): Promise<any> =>
         axiosClient.post(`bookings/lookup`, data),
+
+    /** Update booking email publicly (for pending bookings only). */
+    updateBookingEmail: (data: { booking_code?: string; old_email?: string; new_email: string }): Promise<any> =>
+        axiosClient.post(`bookings/update-email`, data),
 }

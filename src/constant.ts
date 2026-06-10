@@ -46,6 +46,7 @@ export const enum ROUTERS {
   NEWS_ADD = "/admin/news/add",
   NEWS_EDIT = "/admin/news/edit",
   NEWS_DETAIL = "/admin/news/detail",
+  NEWSLETTER_MANAGEMENT = "/admin/newsletter-management",
   PARTNER_MANAGEMENT = "/admin/partner-information",
   PARTNER_APPROVAL = "/admin/partner-approval",
   PARTNER_SETTLEMENTS = "/admin/settlements",
@@ -87,6 +88,7 @@ export const enum ROUTERS {
   RESET_TOKEN_SUCCESS = "/reset-token-success",
   PUBLIC_NEWS_DETAIL = "/news/:newsId",
   PUBLIC_NEWS_LIST = "/news-list",
+  PUBLIC_FAQ = "/faq",
   BKS_STAY = "/bks-stay",
   BKS_STAY_DASHBOARD = "/bks-stay/dashboard",
   BKS_STAY_HISTORY = "/bks-stay/bookings",
@@ -330,6 +332,7 @@ export const BOOKING_STATUS_ORDER = [0, 1, 3, 2] as const;
 // Chatbot configuration
 export const FIRST_MESSAGE_ID = "start";
 export const BOT_TYPING_DELAY_MS = 1200;
+export const ENABLE_CHATBOT = import.meta.env.VITE_ENABLE_CHATBOT === "true";
 
 // status news
 export const DEFAULT_STATUS_NEWS = 0;

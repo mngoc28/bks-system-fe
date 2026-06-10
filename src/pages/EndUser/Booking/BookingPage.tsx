@@ -14,11 +14,13 @@ import {
   formatPriceUnitLabel,
   getPrimaryDayPackagePrice,
   resolveStayPriceQuote,
+  parseRoomPrices,
 } from "@/utils/bookingAmount";
 import { countBookingDaysInclusive, formatBookingDaysCount, formatRoomRentalLineLabel } from "@/utils/dateUtils";
 import { formatCurrencyInput } from "@/utils/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { resolveImageUrl } from "@/utils/imageUtils";
+import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -67,7 +69,7 @@ const getServiceIcon = (name: string): LucideIcon => {
 };
 
 const BookingPage = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { roomId } = useParams<{ roomId: string }>();
     const id = Number(roomId);
@@ -265,50 +267,207 @@ const BookingPage = () => {
         return services.filter((service) => serviceIds.includes(service.id));
     }, [services, serviceIds]);
 
-    const isDepositRequired = useMemo(() => {
-        if (!startDate || !endDate || !room) return false;
+    const hasStayDates = Boolean(startDate && endDate);
 
-        const hasStayDates = Boolean(startDate && endDate);
-        const priceQuote = hasStayDates
-                ? resolveStayPriceQuote(startDate, endDate, {
-                      allPrices: room.all_prices,
-                      cheapestDailyPrice: room.cheapest_daily_price,
-                  })
-                : null;
-        const defaultPackage = getPrimaryDayPackagePrice(room.all_prices, room.cheapest_daily_price);
+    const priceQuote = useMemo(() => {
+        if (!hasStayDates || !room) return null;
+        return resolveStayPriceQuote(startDate, endDate, {
+            allPrices: room.all_prices,
+            cheapestDailyPrice: room.cheapest_daily_price,
+        });
+    }, [hasStayDates, startDate, endDate, room]);
+
+    const defaultPackage = useMemo(() => {
+        if (!room) return { unit: "day", price: 0 };
+        return getPrimaryDayPackagePrice(room.all_prices, room.cheapest_daily_price);
+    }, [room]);
+
+    const depositRequirements = useMemo(() => {
+        if (!startDate || !endDate || !room) return { isRequired: false, reasons: [] };
+
         const pUnit = priceQuote?.unit ?? defaultPackage.unit;
+
+        const reasons: string[] = [];
 
         // 1. Long term checking
         const isLongTerm = pUnit === 'month' || room.property_type_id === 2 || room.property_type_id === 3;
-        if (isLongTerm) return true;
-
-        // 2. Check last-minute (< 24h)
-        const checkInDate = new Date(startDate);
-        const today = new Date();
-        const diffTime = checkInDate.getTime() - today.getTime();
-        const diffHours = diffTime / (1000 * 60 * 60);
-        if (diffHours <= 24) return true;
-
-        // 3. Check weekend (Saturday = 6, Sunday = 0)
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const current = new Date(start);
-        while (current <= end) {
-            const day = current.getDay();
-            if (day === 0 || day === 6) {
-                return true;
+        if (isLongTerm) {
+            reasons.push("Thuê dài hạn (Căn hộ / Dịch vụ dài hạn)");
+        } else {
+            // 2. Check last-minute (< 24h) - Only for short term
+            const checkInDate = new Date(startDate);
+            const today = new Date();
+            const diffTime = checkInDate.getTime() - today.getTime();
+            const diffHours = diffTime / (1000 * 60 * 60);
+            if (diffHours <= 24) {
+                reasons.push("Đặt phòng sát giờ (trong vòng 24h)");
             }
-            current.setDate(current.getDate() + 1);
+
+            // 3. Check weekend (Saturday = 6, Sunday = 0) - Only for short term
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const current = new Date(start);
+            let hasWeekend = false;
+            while (current <= end) {
+                const day = current.getDay();
+                if (day === 0 || day === 6) {
+                    hasWeekend = true;
+                    break;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            if (hasWeekend) {
+                reasons.push("Thời gian lưu trú có ngày Cuối tuần (Thứ 7 / Chủ nhật)");
+            }
         }
 
-        return false;
-    }, [startDate, endDate, room]);
+        return {
+            isRequired: reasons.length > 0,
+            reasons
+        };
+    }, [startDate, endDate, room, priceQuote, defaultPackage]);
+
+    const isDepositRequired = depositRequirements.isRequired;
+
+    const depositAmount = useMemo(() => {
+        if (!startDate || !endDate || !room) return 0;
+        
+        const days = countBookingDaysInclusive(startDate, endDate);
+        const rows = parseRoomPrices(room.all_prices);
+        const isLongStay = days >= 30;
+        
+        const eligible = rows.filter((row) => {
+            const unit = (row.unit ?? "").toLowerCase();
+            return isLongStay ? unit === "month" : unit === "day";
+        });
+        const matchedRow = eligible.find((row) => Number(row.price ?? 0) > 0) ?? rows.find((row) => Number(row.price ?? 0) > 0) ?? null;
+
+        const totalRoomPrice = priceQuote?.roomStayTotal ?? 0;
+
+        let baseDeposit = 0;
+        if (matchedRow && matchedRow.deposit_amount !== undefined && matchedRow.deposit_amount !== null && Number(matchedRow.deposit_amount) > 0) {
+            baseDeposit = Number(matchedRow.deposit_amount);
+        } else if (room.deposit !== undefined && room.deposit !== null && Number(room.deposit) > 0) {
+            baseDeposit = Number(room.deposit);
+        } else {
+            const isLastMinute = depositRequirements.reasons.some(r => r.includes("sát giờ"));
+            baseDeposit = isLastMinute ? totalRoomPrice : Math.round(totalRoomPrice * 0.5);
+        }
+
+        // If deposit is required but baseDeposit is 0 or less, force the policy minimums
+        if (isDepositRequired && baseDeposit <= 0) {
+            const isLastMinute = depositRequirements.reasons.some(r => r.includes("sát giờ"));
+            baseDeposit = isLastMinute ? totalRoomPrice : Math.round(totalRoomPrice * 0.5);
+        }
+
+        return baseDeposit;
+    }, [startDate, endDate, room, isDepositRequired, depositRequirements, priceQuote]);
+
+    const depositPercent = useMemo(() => {
+        const totalRoomPrice = priceQuote?.roomStayTotal ?? 0;
+        if (totalRoomPrice <= 0 || depositAmount <= 0) return 0;
+        return Math.round((depositAmount / totalRoomPrice) * 100);
+    }, [priceQuote?.roomStayTotal, depositAmount]);
 
     useEffect(() => {
         if (isDepositRequired) {
             setValue("payment_method", "online");
         }
     }, [isDepositRequired, setValue]);
+
+    const bookingDays = priceQuote?.days ?? 0;
+    const roomTotal = priceQuote?.roomStayTotal ?? 0;
+    const priceUnit = priceQuote?.unit ?? defaultPackage.unit;
+    const unitPrice = priceQuote?.price ?? defaultPackage.price;
+    const serviceTotal = computeBookingServicesTotal(selectedServices.map(s => ({ price: Number(s.price) })));
+    const estimatedTotal = roomTotal + serviceTotal;
+
+    const isVi = i18n.language.startsWith("vi");
+    const isLongStay = bookingDays > 0 ? bookingDays >= 30 : (priceUnit === "month");
+
+    const policyRules = useMemo(() => {
+        const getFormattedPolicyDate = (baseDateStr: string, daysToSubtract: number) => {
+            const date = new Date(baseDateStr);
+            date.setDate(date.getDate() - daysToSubtract);
+            
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const day = pad(date.getDate());
+            const month = pad(date.getMonth() + 1);
+            const year = date.getFullYear();
+            
+            return `00:00 ngày ${day}/${month}/${year}`;
+        };
+
+        const getFormattedPolicyDateEn = (baseDateStr: string, daysToSubtract: number) => {
+            const date = new Date(baseDateStr);
+            date.setDate(date.getDate() - daysToSubtract);
+            
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const day = pad(date.getDate());
+            const month = pad(date.getMonth() + 1);
+            const year = date.getFullYear();
+            
+            return `00:00 on ${day}/${month}/${year}`;
+        };
+
+        if (isLongStay) {
+            if (startDate) {
+                const date30 = getFormattedPolicyDate(startDate, 30);
+                const date7 = getFormattedPolicyDate(startDate, 7);
+
+                const date30En = getFormattedPolicyDateEn(startDate, 30);
+                const date7En = getFormattedPolicyDateEn(startDate, 7);
+
+                return isVi ? [
+                    `Hủy trước ${date30} (≥ 30 ngày trước check-in): Hoàn trả 100% tiền cọc (Hủy miễn phí).`,
+                    `Hủy từ ${date30} đến trước ${date7} (7 đến dưới 30 ngày trước check-in): Hoàn trả 50% tiền cọc.`,
+                    `Hủy từ ${date7} trở đi (dưới 7 ngày trước check-in): Không hoàn trả tiền cọc (Phí hủy 100% cọc).`
+                ] : [
+                    `Cancellation before ${date30En} (≥ 30 days before check-in): Free cancellation (100% refund).`,
+                    `Cancellation from ${date30En} to ${date7En} (7 to 30 days before check-in): 50% fee, 50% refund.`,
+                    `Cancellation from ${date7En} onwards (less than 7 days before check-in): 100% fee (No refund).`
+                ];
+            }
+
+            return isVi ? [
+                "Hủy trước khi nhận phòng từ 30 ngày trở lên (≥ 720 giờ): Hủy miễn phí (Hoàn lại 100%).",
+                "Hủy trước khi nhận phòng từ 7 đến dưới 30 ngày (168 giờ đến 719 giờ): Phí hủy 50% tổng giá trị phòng, hoàn lại 50%.",
+                "Hủy dưới 7 ngày trước giờ nhận phòng: Phí hủy 100% tổng giá trị phòng (Không hoàn lại)."
+            ] : [
+                "Cancellation 30 days or more before check-in (≥ 720 hours): Free cancellation (100% refund).",
+                "Cancellation between 7 and 30 days before check-in (168 to 719 hours): 50% fee, 50% refund.",
+                "Cancellation less than 7 days before check-in: 100% fee (No refund)."
+            ];
+        } else {
+            if (startDate) {
+                const date7 = getFormattedPolicyDate(startDate, 7);
+                const date2 = getFormattedPolicyDate(startDate, 2);
+
+                const date7En = getFormattedPolicyDateEn(startDate, 7);
+                const date2En = getFormattedPolicyDateEn(startDate, 2);
+
+                return isVi ? [
+                    `Hủy trước ${date7} (≥ 7 ngày trước check-in): Hoàn trả 100% tiền cọc (Hủy miễn phí).`,
+                    `Hủy từ ${date7} đến trước ${date2} (2 đến dưới 7 ngày trước check-in): Hoàn trả 50% tiền cọc.`,
+                    `Hủy từ ${date2} trở đi (dưới 48 giờ trước check-in): Không hoàn trả tiền cọc (Phí hủy 100% cọc).`
+                ] : [
+                    `Cancellation before ${date7En} (≥ 7 days before check-in): Free cancellation (100% refund).`,
+                    `Cancellation from ${date7En} to ${date2En} (2 to 7 days before check-in): 50% fee, 50% refund.`,
+                    `Cancellation from ${date2En} onwards (less than 48 hours before check-in): 100% fee (No refund).`
+                ];
+            }
+
+            return isVi ? [
+                "Hủy trước khi nhận phòng từ 7 ngày trở lên (≥ 168 giờ): Hủy miễn phí (Hoàn lại 100%).",
+                "Hủy từ 2 đến dưới 7 ngày (48 giờ đến 167 giờ trước check-in): Phí hủy 50% tổng giá trị phòng, hoàn lại 50%.",
+                "Hủy dưới 48 giờ trước giờ nhận phòng: Phí hủy 100% tổng giá trị phòng (Không hoàn lại)."
+            ] : [
+                "Cancellation 7 days or more before check-in (≥ 168 hours): Free cancellation (100% refund).",
+                "Cancellation between 2 and 7 days before check-in (48 - 167 hours): 50% fee, 50% refund.",
+                "Cancellation less than 48 hours before check-in: 100% fee (No refund)."
+            ];
+        }
+    }, [isLongStay, isVi, startDate]);
 
     if (isLoading) {
         return (
@@ -324,22 +483,7 @@ const BookingPage = () => {
         || (room.images && room.images.length > 0
             ? resolveImageUrl(room.images[0].image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL })
             : "")
-        || "";
-
-    const hasStayDates = Boolean(startDate && endDate);
-    const priceQuote = hasStayDates
-            ? resolveStayPriceQuote(startDate, endDate, {
-                  allPrices: room.all_prices,
-                  cheapestDailyPrice: room.cheapest_daily_price,
-              })
-            : null;
-    const defaultPackage = getPrimaryDayPackagePrice(room.all_prices, room.cheapest_daily_price);
-    const bookingDays = priceQuote?.days ?? 0;
-    const roomTotal = priceQuote?.roomStayTotal ?? 0;
-    const priceUnit = priceQuote?.unit ?? defaultPackage.unit;
-    const unitPrice = priceQuote?.price ?? defaultPackage.price;
-    const serviceTotal = computeBookingServicesTotal(selectedServices.map(s => ({ price: Number(s.price) })));
-    const estimatedTotal = roomTotal + serviceTotal;
+        || getRoomFallbackImage(room.property_type_name, room.title);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
@@ -415,7 +559,7 @@ const BookingPage = () => {
 
             <div className="flex flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
 
-                <div className="mx-auto mb-6 flex w-full max-w-7xl items-center gap-3">
+                <div className="mx-auto mb-6 flex w-full max-w-7xl flex-wrap items-center gap-3">
                     <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${currentStep === 1 ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>
                         <span className="inline-flex size-5 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
                         Thông tin
@@ -614,26 +758,55 @@ const BookingPage = () => {
                             <CardContent className="h-full space-y-4">
                                 <div className="flex items-start text-sm text-slate-700">
                                     <Clock className="mr-3 mt-0.5 size-5 text-sky-500 shrink-0" />
-                                    <span className="font-medium">{t("booking.policySection.time")}</span>
+                                    <span className="font-medium">
+                                        {isVi 
+                                            ? "Giờ nhận phòng: từ 14:00 (2:00 chiều) | Giờ trả phòng: trước 12:00 (12:00 trưa)" 
+                                            : "Check-in: from 2:00 PM | Check-out: before 12:00 PM"}
+                                    </span>
                                 </div>
                                 <div className="flex items-start text-sm text-emerald-600 font-bold">
-                                    <CheckCircle2 className="mr-3 mt-0.5 size-5 shrink-0" />
-                                    <span>{t("booking.policySection.cancellation")}</span>
+                                    <CheckCircle2 className="mr-3 mt-0.5 size-5 shrink-0 text-emerald-500" />
+                                    <span>
+                                        {isLongStay 
+                                            ? (isVi ? "Chính sách hủy phòng dài hạn (≥ 30 đêm)" : "Long-term cancellation policy (≥ 30 nights)")
+                                            : (isVi ? "Chính sách hủy phòng ngắn hạn (< 30 đêm)" : "Short-term cancellation policy (< 30 nights)")}
+                                    </span>
                                 </div>
                                 <div className="mt-3 border-t pt-4">
                                     <ul className="space-y-3 text-sm text-slate-600">
-                                        {(() => {
-                                            const rules = t("booking.policySection.rules", { returnObjects: true });
-                                            const rulesArray = Array.isArray(rules) ? rules : [];
-                                            return rulesArray.map((rule: string, index: number) => (
-                                                <li key={index} className="flex items-start">
-                                                    <Check className="mr-3 mt-0.5 size-5 shrink-0 text-green-500" />
-                                                    {rule}
-                                                </li>
-                                            ));
-                                        })()}
+                                        {policyRules.map((rule: string, index: number) => (
+                                            <li key={index} className="flex items-start">
+                                                <Check className="mr-3 mt-0.5 size-5 shrink-0 text-green-500" />
+                                                <span>{rule}</span>
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
+                                <div className="mt-4 rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                                    <p className="text-xs text-slate-500 leading-relaxed italic">
+                                        {isVi ? (
+                                            <>
+                                                <strong>Lưu ý về quy định hoàn trả:</strong> Các mốc thời gian hoàn cọc trên được thiết lập nhằm đảm bảo sự cân bằng giữa quyền lợi giữ phòng của quý khách và kế hoạch chuẩn bị đón tiếp từ phía chủ nhà. Kính mong quý khách hàng thông cảm và cân nhắc kỹ kế hoạch di chuyển trước khi thực hiện đặt phòng.
+                                            </>
+                                        ) : (
+                                            <>
+                                                <strong>Note on Refund Policy:</strong> The tiered refund schedules above are established to balance the booking rights of our guests with the hosts' preparation schedules. We kindly request your understanding and suggest verifying your travel plan before booking.
+                                            </>
+                                        )}
+                                    </p>
+                                </div>
+                                {isDepositRequired && (
+                                    <div className="mt-3 border-t pt-4">
+                                        <div className="rounded-2xl bg-orange-50 p-3.5 flex items-start gap-2.5 border border-orange-100">
+                                            <AlertCircle className="size-5 text-orange-600 shrink-0 mt-0.5" />
+                                            <span className="text-xs text-orange-800 leading-relaxed">
+                                                {isVi 
+                                                    ? `Yêu cầu đặt cọc trước (${depositRequirements.reasons.join(", ")})` 
+                                                    : `Deposit required (${depositRequirements.reasons.join(", ")})`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -701,9 +874,26 @@ const BookingPage = () => {
                                                 </div>
                                             </div>
                                             
+                                            {hasStayDates && isDepositRequired && (
+                                                <div className="border-t border-sky-100/70 pt-3 space-y-1.5 text-xs">
+                                                    <div className="flex justify-between text-slate-600">
+                                                        <span>Tiền cọc giữ phòng (Thanh toán ngay - {depositPercent}%)</span>
+                                                        <span className="font-bold text-red-600">
+                                                            {formatCurrencyInput(depositAmount.toString())} {t("booking.money_unit")}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between text-slate-600">
+                                                        <span>Còn lại (Thanh toán sau tại chỗ/hợp đồng)</span>
+                                                        <span className="font-semibold text-slate-700">
+                                                            {formatCurrencyInput(Math.max(0, estimatedTotal - depositAmount).toString())} {t("booking.money_unit")}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="border-t border-sky-100 pt-4 flex items-center justify-between">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">Tổng cộng tạm tính</span>
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">Tổng cộng toàn bộ kỳ nghỉ</span>
                                                     <span className="text-2xl font-black text-sky-600">
                                                         {hasStayDates ? (
                                                             <>
@@ -717,7 +907,11 @@ const BookingPage = () => {
                                                 </div>
                                                 <div className="flex flex-col items-end text-[10px] text-slate-400 italic">
                                                     <span>* Đã bao gồm thuế & phí</span>
-                                                    <span>* Thanh toán khi nhận phòng</span>
+                                                    <span>
+                                                        {isDepositRequired 
+                                                            ? "* Yêu cầu hoàn tất cọc trực tuyến để giữ chỗ" 
+                                                            : "* Thanh toán khi nhận phòng"}
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -862,54 +1056,76 @@ const BookingPage = () => {
                                                     <div className="rounded-xl border border-orange-200 bg-orange-50/50 p-4 flex items-start gap-3">
                                                         <AlertCircle className="size-5 text-orange-600 shrink-0 mt-0.5" />
                                                         <p className="text-xs text-orange-800 leading-relaxed">
-                                                            Khoảng thời gian hoặc loại phòng bạn chọn (Cuối tuần, Ngày lễ, Đặt sát giờ hoặc Thuê dài hạn) yêu cầu đặt cọc giữ chỗ. 
-                                                            <strong> Tùy chọn thanh toán tại quầy không khả dụng.</strong>
+                                                            Yêu cầu đặt cọc giữ chỗ do: <strong className="text-orange-950 font-bold">{depositRequirements.reasons.join(", ")}</strong>. 
+                                                            Không áp dụng giữ phòng 0đ cọc để đảm bảo giữ chỗ. <strong>Bạn cần hoàn tất thanh toán cọc trực tuyến để xác nhận đơn phòng, phần còn lại có thể thanh toán sau.</strong>
                                                         </p>
                                                     </div>
                                                 )}
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {/* Option 1: Online */}
-                                                    <div 
-                                                        onClick={() => setValue("payment_method", "online")}
-                                                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200 ${
-                                                            watch("payment_method") === "online" 
-                                                                ? "border-sky-500 bg-sky-50/50 shadow-sm" 
-                                                                : "border-slate-200 bg-white hover:border-sky-200 hover:shadow-sm"
-                                                        }`}
-                                                    >
-                                                        <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300">
-                                                            <div className={`size-2 rounded-full bg-sky-600 ${watch("payment_method") === "online" ? "opacity-100" : "opacity-0"}`} />
+                                                    {isDepositRequired ? (
+                                                        <div 
+                                                            className="col-span-1 md:col-span-2 flex items-start gap-4 rounded-2xl border border-sky-500 bg-sky-50/50 p-4 shadow-sm"
+                                                        >
+                                                            <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-sky-600 bg-sky-600">
+                                                                <div className="size-2 rounded-full bg-white" />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <p className="text-sm font-bold text-slate-900">
+                                                                    Đặt cọc trực tuyến để giữ phòng
+                                                                </p>
+                                                                <p className="text-xs text-slate-600 leading-relaxed">
+                                                                    Thanh toán khoản cọc <strong>{formatCurrencyInput(depositAmount.toString())} VNĐ ({depositPercent}%)</strong> trực tuyến để khóa phòng. Số tiền còn lại <strong>{formatCurrencyInput(Math.max(0, estimatedTotal - depositAmount).toString())} VNĐ</strong> có thể thanh toán trực tuyến qua Stay Portal hoặc trả tại quầy lễ tân khi nhận phòng.
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-sm font-bold text-slate-900">Thanh toán trực tuyến</p>
-                                                            <p className="text-xs text-slate-500 leading-relaxed">Thanh toán cọc hoặc toàn bộ tiền phòng qua Thẻ, Ví điện tử (VNPay/GMO) để được xác nhận phòng ngay.</p>
-                                                        </div>
-                                                    </div>
+                                                    ) : (
+                                                        <>
+                                                            {/* Option 1: Online */}
+                                                            <div 
+                                                                onClick={() => setValue("payment_method", "online")}
+                                                                className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200 ${
+                                                                    watch("payment_method") === "online" 
+                                                                        ? "border-sky-500 bg-sky-50/50 shadow-sm" 
+                                                                        : "border-slate-200 bg-white hover:border-sky-200 hover:shadow-sm"
+                                                                }`}
+                                                            >
+                                                                <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300">
+                                                                    <div className={`size-2 rounded-full bg-sky-600 ${watch("payment_method") === "online" ? "opacity-100" : "opacity-0"}`} />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <p className="text-sm font-bold text-slate-900">
+                                                                        Thanh toán trực tuyến
+                                                                    </p>
+                                                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                                                        Thanh toán 100% tiền thuê phòng {formatCurrencyInput(estimatedTotal.toString())} VNĐ trực tuyến qua Thẻ/Ví điện tử để xác nhận phòng ngay.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
 
-                                                    {/* Option 2: Counter */}
-                                                    <div 
-                                                        onClick={() => {
-                                                            if (!isDepositRequired) {
-                                                                setValue("payment_method", "pay_at_counter");
-                                                            }
-                                                        }}
-                                                        className={`flex items-start gap-4 rounded-2xl border p-4 transition-all duration-200 ${
-                                                            isDepositRequired 
-                                                                ? "opacity-50 cursor-not-allowed border-slate-200 bg-slate-50" 
-                                                                : watch("payment_method") === "pay_at_counter"
-                                                                    ? "border-sky-500 bg-sky-50/50 shadow-sm cursor-pointer" 
-                                                                    : "border-slate-200 bg-white hover:border-sky-200 hover:shadow-sm cursor-pointer"
-                                                        }`}
-                                                    >
-                                                        <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300">
-                                                            <div className={`size-2 rounded-full bg-sky-600 ${watch("payment_method") === "pay_at_counter" && !isDepositRequired ? "opacity-100" : "opacity-0"}`} />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-sm font-bold text-slate-700">Thanh toán tại quầy</p>
-                                                            <p className="text-xs text-slate-500 leading-relaxed">Xác nhận giữ phòng tạm thời và thanh toán bằng tiền mặt/thẻ khi check-in tại quầy lễ tân.</p>
-                                                        </div>
-                                                    </div>
+                                                            {/* Option 2: Counter */}
+                                                            <div 
+                                                                onClick={() => setValue("payment_method", "pay_at_counter")}
+                                                                className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200 ${
+                                                                    watch("payment_method") === "pay_at_counter" 
+                                                                        ? "border-sky-500 bg-sky-50/50 shadow-sm" 
+                                                                        : "border-slate-200 bg-white hover:border-sky-200 hover:shadow-sm"
+                                                                }`}
+                                                            >
+                                                                <div className="mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300">
+                                                                    <div className={`size-2 rounded-full bg-sky-600 ${watch("payment_method") === "pay_at_counter" ? "opacity-100" : "opacity-0"}`} />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <p className="text-sm font-bold text-slate-700">
+                                                                        Thanh toán tại quầy
+                                                                    </p>
+                                                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                                                        Giữ phòng tạm thời (cọc 0đ). Bạn sẽ thanh toán 100% tiền thuê phòng {formatCurrencyInput(estimatedTotal.toString())} VNĐ tại quầy lễ tân khi check-in.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </div>
                                                 {errors.payment_method && (
                                                     <p className="text-sm text-red-500">{errors.payment_method.message}</p>
@@ -969,6 +1185,22 @@ const BookingPage = () => {
                                                     <span className="font-semibold">Tổng cộng</span>
                                                     <span className="font-bold text-sky-600">{formatCurrencyInput(estimatedTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
+                                                {isDepositRequired && (
+                                                    <div className="mt-2 border-t border-dashed border-slate-200 pt-2 space-y-1.5 text-xs text-slate-600">
+                                                        <div className="flex justify-between">
+                                                            <span>Tiền cọc giữ phòng (Thanh toán ngay - {depositPercent}%)</span>
+                                                            <span className="font-bold text-red-600">
+                                                                {formatCurrencyInput(depositAmount.toString())} {t("booking.money_unit")}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between text-slate-600">
+                                                            <span>Còn lại (Thanh toán sau)</span>
+                                                            <span className="font-semibold text-slate-700">
+                                                                {formatCurrencyInput(Math.max(0, estimatedTotal - depositAmount).toString())} {t("booking.money_unit")}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 

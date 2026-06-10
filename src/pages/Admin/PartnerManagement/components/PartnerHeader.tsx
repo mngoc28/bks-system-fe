@@ -20,9 +20,7 @@ const PartnerHeader: React.FC<PartnerHeaderProps> = ({ onOpenFilter, viewMode, o
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Removing redundant <h1> as it's often shown in the layout header or breadcrumbs */}
-      <PageBar
+    <PageBar
         subtitle={t("partner.partner_list_subtitle") || "Manage were professional relationship and details of your partners."}
         showLayoutToggle={true}
         viewMode={viewMode}
@@ -52,7 +50,6 @@ const PartnerHeader: React.FC<PartnerHeaderProps> = ({ onOpenFilter, viewMode, o
           </>
         }
       />
-    </div>
   );
 };
 

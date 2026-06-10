@@ -31,8 +31,8 @@ const OccupancyChart: React.FC<OccupancyChartProps> = ({ data = [], isLoading = 
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-xl font-bold">Occupancy 30 ngày</CardTitle>
-        <CardDescription>Tỷ lệ phòng có booking đã xác nhận/hoàn tất theo từng ngày.</CardDescription>
+        <CardTitle className="text-lg font-bold sm:text-xl">Tỷ lệ lấp phòng 30 ngày</CardTitle>
+        <CardDescription className="text-xs sm:text-sm">Tỷ lệ phòng có booking đã xác nhận/hoàn tất theo từng ngày.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[320px] w-full">
@@ -66,7 +66,7 @@ const OccupancyChart: React.FC<OccupancyChartProps> = ({ data = [], isLoading = 
                 />
                 <Tooltip
                   labelFormatter={formatDate}
-                  formatter={(value) => [`${Number(value ?? 0).toFixed(2)}%`, 'Occupancy']}
+                  formatter={(value) => [`${Number(value ?? 0).toFixed(2)}%`, 'Lấp phòng']}
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
                 />
                 <Area

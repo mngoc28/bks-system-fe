@@ -1,4 +1,4 @@
-﻿import Pagination from "@/components/Pagination";
+import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import type { Booking, BookingFilters, SearchBookingRequest } from "@/dataHelper/booking.dataHelper";
@@ -10,7 +10,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BookingDetailDialog, BookingEditDialog, BookingSearchSection, BookingsEmptyState, DeleteConfirmDialog, BookingCard } from "./components";
 import BookingCreateDialog from "./components/BookingCreateDialog";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import PageBar from "@/components/PageBar";
 import { ViewMode } from "@/components/LayoutToggle";
 import BookingTable from "./components/BookingTable";
@@ -29,6 +30,9 @@ export default function BookingManagePage() {
   const roomIdContext = Number(searchParams.get("room_id") || "") || undefined;
   const propertyIdContext = Number(searchParams.get("property_id") || "") || undefined;
   const partnerIdContext = Number(searchParams.get("partner_id") || "") || undefined;
+  const stayStatusContext = searchParams.get("stay_status") || undefined;
+  const startDateModeContext = (searchParams.get("start_date_mode") as "exact" | "from" | null) || undefined;
+  const endDateModeContext = (searchParams.get("end_date_mode") as "exact" | "to" | null) || undefined;
   const [open, setOpen] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -86,6 +90,9 @@ export default function BookingManagePage() {
     status: filters.status ? parseInt(filters.status) : undefined,
     start_date: filters.start_date || undefined,
     end_date: filters.end_date || undefined,
+    start_date_mode: startDateModeContext,
+    end_date_mode: endDateModeContext,
+    stay_status: stayStatusContext,
     room_name: filters.room || undefined,
     room_id: roomIdContext,
     property_id: propertyIdContext,
@@ -117,6 +124,7 @@ export default function BookingManagePage() {
         return 0;
       })(),
       status: mapBookingStatus(item.booking_status ?? 0),
+      stay_status: item.stay_status ?? null,
       assignee: item.partner_name ?? "-",
       created_at: item.created_at ?? "",
     }));
@@ -212,9 +220,9 @@ export default function BookingManagePage() {
   } | null>(null);
 
   return (
-    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+    <AdminPageShell>
       <PageBar
-        subtitle={t("bookings.subtitle") || "Theo dõi và quản lý các lượt đặt phòng của khách hàng."}
+        subtitle={t("bookings.subtitle") || "Theo d?i v? qu?n l? c?c lu?t d?t ph?ng c?a kh?ch h?ng."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -267,16 +275,14 @@ export default function BookingManagePage() {
       />
 
       {isLoading ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-          <Spinner size="lg" showText text={t("common.loading_data")} />
-        </div>
+        <AdminListLoading mode={viewMode} />
       ) : totalItems === 0 ? (
         <BookingsEmptyState onOpenFilter={() => setOpen(true)} />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
           {viewMode === "grid" ? (
             <>
-              <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {pageRows.map((m) => (
                   <BookingCard
                     key={m.id}
@@ -400,7 +406,7 @@ export default function BookingManagePage() {
         onClose={() => setEditOpen(false)}
         onSuccess={(id) => setHighlightedId(id.toString())}
       />
-    </div>
+    </AdminPageShell>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { 
   ShieldCheck, FileText, CheckCircle2, XCircle, Eye, 
@@ -7,74 +7,36 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toastError, toastSuccess } from "@/components/ui/toast";
+import { toastError } from "@/components/ui/toast";
 import axiosClient from "@/api/axiosClient";
 import { Spinner } from "@/components/ui/spinner";
-
-interface PendingPartner {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  status: number;
-  created_at: string;
-  partner_info?: {
-    id: number;
-    partner_type: string;
-    company_name: string;
-    tax_code: string;
-    representative_name: string;
-    phone: string;
-    address: string;
-    website: string;
-    description: string;
-    bank_name: string;
-    bank_account_number: string;
-    bank_account_holder: string;
-    id_card_front: string;
-    id_card_back: string;
-    business_license: string;
-    ownership_document: string;
-    bank_statement_image: string;
-    contract_pdf_path: string;
-    rejection_reason?: string;
-  };
-}
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import type { PendingPartnerItem } from "@/api/partnerApprovalApi";
+import {
+  usePartnerApprovalDetailQuery,
+  usePendingApprovalListQuery,
+  useVerifyPartnerMutation,
+} from "@/hooks/usePartnerApprovalQuery";
 
 export default function PartnerApproval() {
-  const [pendingList, setPendingList] = useState<PendingPartner[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [selectedPartner, setSelectedPartner] = useState<PendingPartner | null>(null);
+  const { data: pendingList = [], isLoading, isFetching, refetch } = usePendingApprovalListQuery();
+  const verifyPartner = useVerifyPartnerMutation();
+  const [reviewPartnerId, setReviewPartnerId] = useState<number | null>(null);
+  const { data: reviewDetail, isLoading: isDetailLoading } = usePartnerApprovalDetailQuery(reviewPartnerId);
   const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
-  const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
   const [rejectReason, setRejectReason] = useState<string>("");
   const [showRejectForm, setShowRejectForm] = useState<boolean>(false);
-
-  // Document Blob viewing states
   const [docLoading, setDocLoading] = useState<Record<string, boolean>>({});
 
-  const fetchPendingPartners = async () => {
-    setIsLoading(true);
-    try {
-      const response: any = await axiosClient.get("admin/partners/pending-list");
-      if (response.status === "success" && Array.isArray(response.data)) {
-        setPendingList(response.data);
-      } else {
-        setPendingList([]);
-      }
-    } catch (err: any) {
-      toastError(err?.response?.data?.message || "Không thể tải danh sách đối tác chờ duyệt.");
-    } finally {
-      setIsLoading(false);
+  const selectedPartner = useMemo(() => {
+    if (reviewPartnerId == null) {
+      return null;
     }
-  };
+    return reviewDetail ?? pendingList.find((partner) => partner.id === reviewPartnerId) ?? null;
+  }, [reviewDetail, reviewPartnerId, pendingList]);
 
-  useEffect(() => {
-    fetchPendingPartners();
-  }, []);
-
-  const handleOpenReview = (partner: PendingPartner) => {
-    setSelectedPartner(partner);
+  const handleOpenReview = (partner: PendingPartnerItem) => {
+    setReviewPartnerId(partner.id);
     setIsReviewOpen(true);
     setShowRejectForm(false);
     setRejectReason("");
@@ -82,7 +44,7 @@ export default function PartnerApproval() {
 
   const handleCloseReview = () => {
     setIsReviewOpen(false);
-    setSelectedPartner(null);
+    setReviewPartnerId(null);
   };
 
   // Securely download/view files by fetching them as blobs with authorization headers
@@ -115,23 +77,11 @@ export default function PartnerApproval() {
   const handleApprove = async () => {
     if (!selectedPartner) return;
 
-    setIsActionLoading(true);
     try {
-      const response: any = await axiosClient.post(`admin/partners/${selectedPartner.id}/verify`, {
-        action: "approve"
-      });
-
-      if (response.status === "success") {
-        toastSuccess(response.message || `Đã phê duyệt đối tác ${selectedPartner.name} thành công!`);
-        fetchPendingPartners();
-        handleCloseReview();
-      } else {
-        toastError(response.message || "Phê duyệt thất bại.");
-      }
-    } catch (err: any) {
-      toastError(err?.response?.data?.message || "Lỗi xử lý.");
-    } finally {
-      setIsActionLoading(false);
+      await verifyPartner.mutateAsync({ id: selectedPartner.id, action: "approve" });
+      handleCloseReview();
+    } catch {
+      // Toast handled in mutation.
     }
   };
 
@@ -142,24 +92,15 @@ export default function PartnerApproval() {
       return;
     }
 
-    setIsActionLoading(true);
     try {
-      const response: any = await axiosClient.post(`admin/partners/${selectedPartner.id}/verify`, {
+      await verifyPartner.mutateAsync({
+        id: selectedPartner.id,
         action: "reject",
-        rejection_reason: rejectReason
+        rejection_reason: rejectReason.trim(),
       });
-
-      if (response.status === "success") {
-        toastSuccess(response.message || `Đã từ chối phê duyệt đối tác ${selectedPartner.name}.`);
-        fetchPendingPartners();
-        handleCloseReview();
-      } else {
-        toastError(response.message || "Từ chối phê duyệt thất bại.");
-      }
-    } catch (err: any) {
-      toastError(err?.response?.data?.message || "Lỗi xử lý.");
-    } finally {
-      setIsActionLoading(false);
+      handleCloseReview();
+    } catch {
+      // Toast handled in mutation.
     }
   };
 
@@ -179,10 +120,11 @@ export default function PartnerApproval() {
         </div>
         <Button
           variant="outline"
-          onClick={fetchPendingPartners}
+          onClick={() => refetch()}
+          disabled={isFetching}
           className="h-10 gap-2 rounded-xl font-bold text-slate-700"
         >
-          <RefreshCw className="size-4" />
+          <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} />
           Làm mới
         </Button>
       </div>
@@ -190,9 +132,8 @@ export default function PartnerApproval() {
       {/* Main Grid */}
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Spinner size="md" />
-            <span className="text-sm font-bold text-slate-500">Đang tải hồ sơ chờ duyệt...</span>
+          <div className="p-4">
+            <AdminListLoading mode="table" />
           </div>
         ) : pendingList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center p-6">
@@ -247,10 +188,15 @@ export default function PartnerApproval() {
                       )}
                     </td>
                     <td className="py-4 px-6 text-xs text-slate-400">
-                      {new Date(partner.created_at).toLocaleDateString("vi-VN", {
-                        year: 'numeric', month: 'long', day: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                      })}
+                      {partner.created_at
+                        ? new Date(partner.created_at).toLocaleDateString("vi-VN", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "—"}
                     </td>
                     <td className="py-4 px-6 text-right">
                       <Button
@@ -306,6 +252,13 @@ export default function PartnerApproval() {
                     * Hệ thống đang chờ đối tác bổ sung/chỉnh sửa tài liệu để nộp lại. Bạn vẫn có thể cập nhật lý do từ chối hoặc phê duyệt ngay nếu cần thiết.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {isDetailLoading && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">
+                <Spinner size="sm" />
+                Đang tải chi tiết hồ sơ...
               </div>
             )}
 
@@ -455,7 +408,7 @@ export default function PartnerApproval() {
                   <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:justify-end">
                     <Button
                       onClick={() => setShowRejectForm(true)}
-                      disabled={isActionLoading || selectedPartner.status === 4}
+                      disabled={verifyPartner.isPending || selectedPartner.status === 4}
                       variant="outline"
                       className="h-12 rounded-xl border-rose-200 text-rose-600 bg-rose-50/10 hover:bg-rose-50 hover:border-rose-300 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -464,7 +417,7 @@ export default function PartnerApproval() {
                     </Button>
                     <Button
                       onClick={handleApprove}
-                      disabled={isActionLoading || !selectedPartner.partner_info?.contract_pdf_path || selectedPartner.status === 4}
+                      disabled={verifyPartner.isPending || !selectedPartner.partner_info?.contract_pdf_path || selectedPartner.status === 4}
                       className="h-12 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 px-8 shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                     >
                       <CheckCircle2 className="mr-2 size-4" />
@@ -494,7 +447,7 @@ export default function PartnerApproval() {
                     </Button>
                     <Button
                       onClick={handleReject}
-                      disabled={isActionLoading}
+                      disabled={verifyPartner.isPending}
                       className="h-10 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg px-6"
                     >
                       Xác nhận gửi từ chối

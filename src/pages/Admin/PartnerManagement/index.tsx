@@ -5,9 +5,9 @@ import EmptyPage from "@/components/EmptyPage";
 import { DEFAULT_PAGE, DEFAULT_CARD_LIMIT, ROUTERS, SEARCH_DEBOUNCE_DELAY_MS } from "@/constant";
 import Pagination from "@/components/Pagination";
 import { PartnerCard, PartnerHeader, PartnerSearchSection } from "./components";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import { PartnerTable } from "./components";
 import { ViewMode } from "@/components/LayoutToggle";
 import { useSearchParams } from "react-router-dom";
@@ -17,7 +17,6 @@ import { useSearchParams } from "react-router-dom";
  * Handles the listing, searching, and navigation to partner details or edit forms.
  */
 const Partners: React.FC = () => {
-    const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
@@ -120,7 +119,7 @@ const Partners: React.FC = () => {
     const totalPages = paginationData?.last_page ?? Math.max(1, Math.ceil(totalItems / (filters.per_page ?? DEFAULT_CARD_LIMIT)));
 
     return (
-        <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+        <AdminPageShell>
             <PartnerHeader 
                 onOpenFilter={() => setOpen(true)} 
                 viewMode={viewMode}
@@ -140,16 +139,14 @@ const Partners: React.FC = () => {
             />
 
             {isLoading ? (
-                <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-slate-100 bg-white/50 backdrop-blur-sm">
-                    <Spinner size="lg" showText text={t("common.loading_data")} />
-                </div>
+                <AdminListLoading mode={viewMode} />
             ) : totalItems === 0 ? (
                 <EmptyPage />
             ) : (
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-5">
                     {viewMode === "grid" ? (
                         <>
-                            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                                 {serverRows.map((partner: PartnerInfor) => (
                                     <PartnerCard
                                         key={partner.id}
@@ -169,7 +166,7 @@ const Partners: React.FC = () => {
                                 ))}
                             </div>
                             {totalItems > 0 && (
-                                <div className="mt-4 flex justify-center border-t border-slate-100 pt-8">
+                                <div className="mt-2 flex justify-center border-t border-slate-100 pt-4">
                                     <Pagination
                                         currentPage={filters.page ?? DEFAULT_PAGE}
                                         totalPages={totalPages}
@@ -212,7 +209,7 @@ const Partners: React.FC = () => {
                     )}
                 </div>
             )}
-        </div>
+        </AdminPageShell>
     );
 };
 

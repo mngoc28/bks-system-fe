@@ -10,7 +10,8 @@
     "lint:ci": "eslint .",
     "lint:a11y:ci": "eslint -c eslint.a11y-ci.config.js src/components/**/*.tsx src/pages/**/*.tsx --max-warnings=0",
     "preview": "vite preview",
-    "generate:icon-types": "node scripts/generateIconType.mjs"
+    "generate:icon-types": "node scripts/generateIconType.mjs",
+    "i18n:check": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

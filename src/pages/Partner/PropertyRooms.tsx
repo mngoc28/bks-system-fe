@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePickerField } from '@/components/ui/date-picker-field';
 import { Label } from '@/components/ui/label';
 import { 
   Select, 
@@ -481,13 +482,13 @@ const PropertyRooms: React.FC = () => {
   }, [occupancyData]);
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6">
+    <div className="mx-auto max-w-[1600px] space-y-6 px-1 sm:px-0">
       {/* Header Section */}
-      <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
         <div className="absolute right-0 top-0 p-8 opacity-5 transition-opacity group-hover:opacity-10">
           <Building2 size={120} />
         </div>
-        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-3">
             <button
               onClick={() => navigate('/partner/properties')}
@@ -524,8 +525,8 @@ const PropertyRooms: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1 rounded-xl border border-slate-200/50 bg-slate-100 p-1 shadow-inner">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200/50 bg-slate-100 p-1 shadow-inner [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <Button 
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                 size="sm" 
@@ -543,7 +544,7 @@ const PropertyRooms: React.FC = () => {
                 <Activity size={16} /> Trạng thái & Lịch
               </Button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button 
                 variant={isBulkMode ? "secondary" : "outline"} 
                 onClick={() => {
@@ -846,13 +847,13 @@ const PropertyRooms: React.FC = () => {
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-10">
-           <div className="flex items-center gap-6 rounded-xl border border-slate-800 bg-slate-900 px-6 py-4 text-white shadow-2xl ring-4 ring-slate-900/10 backdrop-blur-md">
-              <div className="flex items-center gap-3 border-r border-slate-800 pr-6">
+        <div className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-1rem)] -translate-x-1/2 animate-in slide-in-from-bottom-10 sm:bottom-8 sm:w-auto">
+           <div className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-white shadow-2xl ring-4 ring-slate-900/10 backdrop-blur-md sm:flex-row sm:items-center sm:gap-6 sm:px-6 sm:py-4">
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-3 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-6">
                  <div className="flex size-6 items-center justify-center rounded-full bg-blue-600 text-[10px] font-black">{selectedIds.length}</div>
                  <span className="text-sm font-semibold tracking-tight">đã chọn</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                  <Button onClick={handleBulkShow} variant="ghost" className="h-10 gap-2 rounded-xl px-4 font-semibold text-emerald-300 transition-all hover:bg-emerald-500/10">
                    <Eye size={16} /> Hiện phòng
                  </Button>
@@ -920,7 +921,7 @@ const PropertyRooms: React.FC = () => {
                     <p>- Bạn xem trước danh sách sinh tự động trước khi bấm lưu.</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-2">
                     <div className="grid gap-2">
                       <Label className="font-semibold">Kiểu mã phòng</Label>
                       <select
@@ -1029,7 +1030,7 @@ const PropertyRooms: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                    <div className="grid gap-2">
                      <Label className="font-semibold">Số phòng / Tên phòng</Label>
                      <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: P.101" className="h-11 rounded-xl" />
@@ -1041,7 +1042,7 @@ const PropertyRooms: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                  <div className="grid gap-2">
                     <Label className="font-semibold">Diện tích (m²)</Label>
                     <Input type="number" value={formData.area} onChange={e => setFormData({...formData, area: Number(e.target.value)})} className="h-11 rounded-xl" />
@@ -1121,7 +1122,7 @@ const PropertyRooms: React.FC = () => {
                         </div>
                         
                         {!fee.included && (
-                          <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1">
+                          <div className="grid grid-cols-1 gap-3 animate-in fade-in slide-in-from-top-1 md:grid-cols-2">
                             <div className="space-y-1">
                               <Label className="text-[10px] uppercase font-bold text-slate-400">Cách tính</Label>
                               <Select 
@@ -1170,7 +1171,7 @@ const PropertyRooms: React.FC = () => {
                        <div key={idx} className="relative space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-blue-200 transition-colors">
                           <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, prices: formData.prices.filter((_:any, i:number) => i !== idx)})} className="absolute top-2 right-2 size-7 p-0 text-slate-400 hover:text-rose-500"><X size={14} /></Button>
                           
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                              <div className="space-y-1">
                                 <Label className="text-[10px] uppercase font-bold text-slate-400">Tên gói / Loại hình</Label>
                                 <Input value={p.packageName} onChange={e => {
@@ -1193,7 +1194,7 @@ const PropertyRooms: React.FC = () => {
                              </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                              <div className="space-y-1">
                                 <Label className="text-[10px] uppercase font-bold text-slate-400">Giá thuê (VNĐ)</Label>
                                 <Input type="number" value={p.price} onChange={e => {
@@ -1246,15 +1247,27 @@ const PropertyRooms: React.FC = () => {
                  <Label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Mô tả chi tiết</Label>
                  <PlainTextarea value={maintenanceForm.description} onChange={e => setMaintenanceForm({...maintenanceForm, description: e.target.value})} placeholder="Mô tả cụ thể tình trạng hoặc yêu cầu kỹ thuật..." className="min-h-[100px] rounded-xl" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="grid gap-1">
-                    <Label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Ngày bắt đầu</Label>
-                    <Input type="date" value={maintenanceForm.start_date} onChange={e => setMaintenanceForm({...maintenanceForm, start_date: e.target.value})} className="rounded-xl" />
-                 </div>
-                 <div className="grid gap-1">
-                    <Label className="text-xs font-semibold uppercase tracking-widest text-slate-400">Dự kiến hoàn thành</Label>
-                    <Input type="date" value={maintenanceForm.end_date} onChange={e => setMaintenanceForm({...maintenanceForm, end_date: e.target.value})} className="rounded-xl" />
-                 </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                 <DatePickerField
+                    id="maintenance-start-date"
+                    label="Ngày bắt đầu"
+                    labelClassName="text-xs font-semibold uppercase tracking-widest text-slate-400"
+                    value={maintenanceForm.start_date}
+                    onChange={(ymd) => setMaintenanceForm({ ...maintenanceForm, start_date: ymd })}
+                    maxDate={maintenanceForm.end_date || undefined}
+                    className="space-y-1"
+                    triggerClassName="h-10 min-h-0 rounded-xl text-sm font-normal shadow-none hover:shadow-none"
+                 />
+                 <DatePickerField
+                    id="maintenance-end-date"
+                    label="Dự kiến hoàn thành"
+                    labelClassName="text-xs font-semibold uppercase tracking-widest text-slate-400"
+                    value={maintenanceForm.end_date}
+                    onChange={(ymd) => setMaintenanceForm({ ...maintenanceForm, end_date: ymd })}
+                    minDate={maintenanceForm.start_date || undefined}
+                    className="space-y-1"
+                    triggerClassName="h-10 min-h-0 rounded-xl text-sm font-normal shadow-none hover:shadow-none"
+                 />
               </div>
            </div>
         </div>
@@ -1266,7 +1279,7 @@ const PropertyRooms: React.FC = () => {
         onClose={() => setQuickDetailRoom(null)}
         title="Thông tin chi tiết cư dân"
         footer={<Button onClick={() => setQuickDetailRoom(null)} className="w-full">Đóng</Button>}
-        widthClassName="max-w-md"
+        widthClassName="w-full md:max-w-md"
       >
         {quickDetailRoom && (
            <div className="space-y-8 duration-300 animate-in fade-in slide-in-from-right-10">
@@ -1280,7 +1293,7 @@ const PropertyRooms: React.FC = () => {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                  <div className="flex flex-col items-center space-y-1 rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Phòng</span>
                     <span className="text-lg font-black text-slate-900">{quickDetailRoom.title}</span>

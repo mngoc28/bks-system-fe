@@ -31,7 +31,14 @@ export interface PartnerHeadlineKpis {
   commissionRate: number;
   avgConfirmSeconds: number | null;
   pendingCount: number;
+  overbookingCount: number;
   calculatedAt: string;
+}
+
+export interface PartnerDashboardQueryParams {
+  property_id?: number;
+  limit?: number;
+  signal?: AbortSignal;
 }
 
 export interface OccupancyChartPoint {
@@ -57,27 +64,38 @@ export interface UrgentMaintenance {
   createdAt: string;
 }
 
+const buildDashboardParams = (params?: PartnerDashboardQueryParams) => {
+  const { property_id, limit, signal } = params ?? {};
+  return {
+    params: {
+      ...(property_id !== undefined ? { property_id } : {}),
+      ...(limit !== undefined ? { limit } : {}),
+    },
+    ...(signal ? { signal } : {}),
+  };
+};
+
 export const partnerDashboardApi = {
   /**
    * Get summary stats for the partner
    */
-  getStats: (config?: any): Promise<ApiResponse<PartnerStats>> => 
-    axiosClient.get("/partner/dashboard/stats", config),
+  getStats: (params?: PartnerDashboardQueryParams): Promise<ApiResponse<PartnerStats>> =>
+    axiosClient.get("/partner/dashboard/stats", buildDashboardParams(params)),
 
-  getHeadlineKpis: (config?: any): Promise<ApiResponse<PartnerHeadlineKpis>> =>
-    axiosClient.get("/partner/dashboard/kpis", config),
+  getHeadlineKpis: (params?: PartnerDashboardQueryParams): Promise<ApiResponse<PartnerHeadlineKpis>> =>
+    axiosClient.get("/partner/dashboard/kpis", buildDashboardParams(params)),
 
-  getOccupancyChart: (config?: any): Promise<ApiResponse<OccupancyChartPoint[]>> =>
-    axiosClient.get("/partner/dashboard/charts/occupancy", config),
+  getOccupancyChart: (params?: PartnerDashboardQueryParams): Promise<ApiResponse<OccupancyChartPoint[]>> =>
+    axiosClient.get("/partner/dashboard/charts/occupancy", buildDashboardParams(params)),
 
-  getGmvChart: (config?: any): Promise<ApiResponse<GmvChartPoint[]>> =>
-    axiosClient.get("/partner/dashboard/charts/gmv", config),
-  
+  getGmvChart: (params?: PartnerDashboardQueryParams): Promise<ApiResponse<GmvChartPoint[]>> =>
+    axiosClient.get("/partner/dashboard/charts/gmv", buildDashboardParams(params)),
+
   /**
    * Get list of bookings awaiting approval for the partner
    */
-  getPendingBookings: (config?: any): Promise<ApiResponse<RecentBooking[]>> => 
-    axiosClient.get("/partner/dashboard/pending-bookings", config),
+  getPendingBookings: (params?: PartnerDashboardQueryParams): Promise<ApiResponse<RecentBooking[]>> =>
+    axiosClient.get("/partner/dashboard/pending-bookings", buildDashboardParams({ ...params, limit: params?.limit ?? 10 })),
   
   /**
    * Get list of urgent maintenance tasks for the partner

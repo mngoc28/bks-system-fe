@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PartnerInfor } from "@/dataHelper/partner.dataHelper";
 import AdminUserProfileLink from "@/components/admin/AdminUserProfileLink";
-import { Map, MapPin, Phone, Edit, Globe, ImageIcon } from "lucide-react";
+import { BedDouble, Building2, CalendarDays, Edit, Globe, ImageIcon, Map, MapPin, Phone, User } from "lucide-react";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { useNavigate } from "react-router-dom";
+import AdminCardCrossNavMenu from "@/components/admin/AdminCardCrossNavMenu";
 import { buildAdminUrl, toBookingsByPartner, toPropertiesByPartner, toRoomsByPartner } from "@/utils/adminNavigation";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
@@ -124,54 +125,56 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit, high
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(buildAdminUrl(ROUTERS.PROPERTIES, toPropertiesByPartner(partner.id, "partner-management", partner.company_name || partner.user_name)));
-            }}
-          >
-            {t("adminCrossNav.properties")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(buildAdminUrl(ROUTERS.ROOMS, toRoomsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name)));
-            }}
-          >
-            {t("adminCrossNav.rooms")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name)));
-            }}
-          >
-            {t("adminCrossNav.bookings")}
-          </Button>
-          {partner.user_id ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`${ROUTERS.USER_DETAIL}/${partner.user_id}`);
-              }}
-            >
-              {t("adminCrossNav.user_account")}
-            </Button>
-          ) : null}
-        </div>
+        <AdminCardCrossNavMenu
+          actions={[
+            {
+              key: "properties",
+              label: t("adminCrossNav.properties"),
+              icon: <Building2 className="size-4" />,
+              onClick: () =>
+                navigate(
+                  buildAdminUrl(
+                    ROUTERS.PROPERTIES,
+                    toPropertiesByPartner(partner.id, "partner-management", partner.company_name || partner.user_name),
+                  ),
+                ),
+            },
+            {
+              key: "rooms",
+              label: t("adminCrossNav.rooms"),
+              icon: <BedDouble className="size-4" />,
+              onClick: () =>
+                navigate(
+                  buildAdminUrl(
+                    ROUTERS.ROOMS,
+                    toRoomsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name),
+                  ),
+                ),
+            },
+            {
+              key: "bookings",
+              label: t("adminCrossNav.bookings"),
+              icon: <CalendarDays className="size-4" />,
+              onClick: () =>
+                navigate(
+                  buildAdminUrl(
+                    ROUTERS.BOOKING_MANAGE,
+                    toBookingsByPartner(partner.id, "partner-management", partner.company_name || partner.user_name),
+                  ),
+                ),
+            },
+            ...(partner.user_id
+              ? [
+                  {
+                    key: "user",
+                    label: t("adminCrossNav.user_account"),
+                    icon: <User className="size-4" />,
+                    onClick: () => navigate(`${ROUTERS.USER_DETAIL}/${partner.user_id}`),
+                  },
+                ]
+              : []),
+          ]}
+        />
       </div>
     </Card>
   );

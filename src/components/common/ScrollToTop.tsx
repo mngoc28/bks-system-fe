@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 const SCROLL_PREFIX = "bks_scroll_";
@@ -23,6 +23,7 @@ const loadPos = (path: string): number | null => {
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
+  const prevPathnameRef = useRef<string | null>(null);
 
   // Disable browser's built-in scroll restoration (it fires too early, before async content loads)
   useEffect(() => {
@@ -39,6 +40,13 @@ const ScrollToTop = () => {
   }, [pathname]);
 
   useLayoutEffect(() => {
+    const prevPathname = prevPathnameRef.current;
+    prevPathnameRef.current = pathname;
+
+    if (prevPathname === pathname) {
+      return;
+    }
+
     if (navigationType === "POP") {
       const target = loadPos(pathname);
       if (target === null || target === 0) return;

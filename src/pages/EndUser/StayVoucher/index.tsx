@@ -156,7 +156,7 @@ const StayVoucher = () => {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block">Khách hàng</span>
-                    <span className="text-sm font-bold text-slate-800">{booking.room?.property?.user?.name || "Thành viên BKS"}</span>
+                    <span className="text-sm font-bold text-slate-800">{booking.user?.name || "Thành viên BKS"}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ const StayVoucher = () => {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block">Số điện thoại liên hệ</span>
-                    <span className="text-sm font-bold text-slate-800">{booking.room?.property?.user?.phone || "—"}</span>
+                    <span className="text-sm font-bold text-slate-800">{booking.user?.phone || "—"}</span>
                   </div>
                 </div>
               </div>
@@ -178,10 +178,12 @@ const StayVoucher = () => {
                   <h3 className="text-base font-bold text-slate-900">{booking.room?.title}</h3>
                   <p className="text-xs text-slate-500 font-semibold">{booking.room?.property?.name}</p>
                 </div>
-                <div className="flex items-start gap-2 text-xs text-slate-600">
-                  <MapPin className="size-4 shrink-0 text-slate-400 mt-0.5" />
-                  <span>{booking.room?.property?.address}</span>
-                </div>
+                {(booking.room?.property?.address_detail || booking.room?.property?.address) && (
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <MapPin className="size-4 shrink-0 text-slate-400" />
+                    <span className="relative top-[1px]">{booking.room?.property?.address_detail || booking.room?.property?.address}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -230,6 +232,29 @@ const StayVoucher = () => {
                     ) : null}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Signatures & Stamp Section */}
+          <div className="grid grid-cols-2 gap-8 border-t border-slate-100 pt-6">
+            <div className="text-center italic text-slate-400 space-y-4">
+              <p className="text-xs font-bold text-slate-500 not-italic">Khách hàng lưu trú</p>
+              <div className="flex h-24 flex-col items-center justify-center">
+                <p className="text-xs font-bold text-emerald-600 not-italic">Đã xác nhận tự động</p>
+                <p className="mt-1 text-[9px] leading-tight opacity-75 not-italic text-slate-500">Hệ thống khớp mã đặt phòng<br/>{booking.booking_code || id}</p>
+              </div>
+            </div>
+            <div className="text-center italic text-slate-400 space-y-4">
+              <p className="text-xs font-bold text-slate-500 not-italic">Đại diện BKS Stay (Bên A)</p>
+              <div className="flex h-24 items-center justify-center">
+                <div className="relative flex size-24 select-none items-center justify-center rounded-full border-4 border-double border-red-500/80 p-1.5 text-red-500/80 font-black rotate-[-8deg] duration-300 hover:rotate-0">
+                  <div className="flex flex-col items-center text-center">
+                    <span className="text-[6px] font-black uppercase tracking-wider leading-none">CÔNG TY BKS</span>
+                    <span className="text-[8px] font-extrabold uppercase tracking-widest border-y border-red-500/80 my-0.5 py-0.5 px-1 leading-none">ĐÃ XÁC THỰC</span>
+                    <span className="text-[6px] font-bold uppercase tracking-wider leading-none">BKS STAY STAMP</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

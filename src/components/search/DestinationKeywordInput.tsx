@@ -15,6 +15,7 @@ interface DestinationKeywordInputProps {
   placeholder?: string;
   className?: string;
   inputClassName?: string;
+  provinceId?: number | null;
 }
 
 function normalizeText(text: string): string {
@@ -48,18 +49,27 @@ const DestinationKeywordInput = ({
   placeholder = "Điểm đến hoặc từ khóa...",
   className,
   inputClassName,
+  provinceId = null,
 }: DestinationKeywordInputProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const deferredKeyword = value.trim();
 
   const { data: featuredSpots = [], isLoading: isLoadingFeatured } = usePublicTouristSpotsQuery(
-    { featured_only: true, limit: 30 },
+    {
+      featured_only: provinceId ? undefined : true,
+      province_id: provinceId ?? undefined,
+      limit: 30,
+    },
     { enabled: open },
   );
 
   const { data: searchedSpots = [], isLoading: isLoadingSearch } = usePublicTouristSpotsQuery(
-    { keyword: deferredKeyword, limit: 15 },
+    {
+      keyword: deferredKeyword,
+      province_id: provinceId ?? undefined,
+      limit: 15,
+    },
     { enabled: open && deferredKeyword.length >= 1 },
   );
 
@@ -72,15 +82,18 @@ const DestinationKeywordInput = ({
           const haystack = normalizeText(`${spot.name} ${spot.region_label ?? ""} ${spot.slug}`);
           return haystack.includes(normalizedQuery);
         })
-      : source.filter((spot) => {
-          const priorityNames = SUGGESTED_ROOM_SPOT_PRIORITY.map(normalizeText);
-          return priorityNames.includes(normalizeText(spot.name));
-        });
+      : (provinceId
+          ? source
+          : source.filter((spot) => {
+              const priorityNames = SUGGESTED_ROOM_SPOT_PRIORITY.map(normalizeText);
+              return priorityNames.includes(normalizeText(spot.name));
+            })
+        );
 
     const ordered = sortByPriority(filtered.length ? filtered : source);
 
     return ordered.slice(0, 8);
-  }, [deferredKeyword, featuredSpots, searchedSpots]);
+  }, [deferredKeyword, featuredSpots, searchedSpots, provinceId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -123,7 +136,9 @@ const DestinationKeywordInput = ({
           <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
             <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <Sparkles className="size-3 text-emerald-600" />
-              {deferredKeyword ? "Gợi ý điểm du lịch" : "Điểm đến phổ biến"}
+              {deferredKeyword
+                ? "Gợi ý điểm du lịch"
+                : (provinceId ? "Điểm du lịch tại khu vực" : "Điểm đến phổ biến")}
             </p>
           </div>
 
