@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { ROUTERS } from "@/constant";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "sonner";
 import { readPersistedUserProfile, useUserStore } from "@/store/useUserStore";
 import { getAccessToken } from "@/utils/storage";
 import stayService from "@/services/stayService";
@@ -34,6 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { isBksStayRouteEnabled } from "@/lib/featureFlags";
 
 const BksStayLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -110,7 +110,7 @@ const BksStayLayout = () => {
     { id: "contracts", label: "Hồ sơ lưu trú & Hợp đồng", path: ROUTERS.BKS_STAY_CONTRACTS, icon: <FileText className="size-5" /> },
     { id: "guide", label: "Hướng dẫn lưu trú", path: ROUTERS.BKS_STAY_GUIDE, icon: <BookOpen className="size-5" /> },
     { id: "support", label: "Hỗ trợ", path: ROUTERS.BKS_STAY_SUPPORT, icon: <HelpCircle className="size-5" /> },
-  ];
+  ].filter((item) => isBksStayRouteEnabled(item.path));
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -259,7 +259,6 @@ const BksStayLayout = () => {
         </main>
       </div>
 
-      <Toaster richColors position="bottom-right" />
       {logoutMutation.isPending ? <LoadingScreen text="Đang đăng xuất..." /> : null}
     </div>
   );

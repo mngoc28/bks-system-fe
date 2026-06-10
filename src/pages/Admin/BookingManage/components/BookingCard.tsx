@@ -7,6 +7,7 @@ import { Booking } from "@/dataHelper/booking.dataHelper";
 import { Edit, Trash2, Calendar, User, Home, CreditCard, UserCheck, Clock, ArrowDown } from "lucide-react";
 import { formatDateVietnam, safeFormatDateTime } from "@/utils/dateUtils";
 import { formatPrice, highlightText } from "@/utils/utils";
+import { getAdminBookingCardColor, getAdminBookingDisplayKey } from "@/utils/bookingDisplay";
 
 interface BookingCardProps {
   booking: Booking;
@@ -27,15 +28,8 @@ interface BookingCardProps {
 const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDelete, highlightTerms }) => {
   const { t } = useTranslation();
 
-  const getStatusColor = (status: "pending" | "confirmed" | "cancelled" | "completed") => {
-    switch (status) {
-      case "pending": return "bg-amber-500";
-      case "confirmed": return "bg-blue-500";
-      case "cancelled": return "bg-rose-500";
-      case "completed": return "bg-emerald-500";
-      default: return "bg-slate-500";
-    }
-  };
+  const displayKey = getAdminBookingDisplayKey(booking.status, booking.stay_status);
+  const statusColor = getAdminBookingCardColor(booking.status, booking.stay_status);
 
   return (
     <Card
@@ -44,8 +38,8 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onView, onEdit, onDe
     >
       {/* Top Header */}
       <div className="mb-4 flex items-center justify-between">
-        <Badge className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg ${getStatusColor(booking.status as any)}`}>
-          {t(`bookings.search.status_${booking.status}`)}
+        <Badge className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg ${statusColor}`}>
+          {t(`bookings.display.${displayKey}`, { defaultValue: t(`bookings.search.status_${booking.status}`) })}
         </Badge>
         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">ID: {booking.id}</span>
       </div>

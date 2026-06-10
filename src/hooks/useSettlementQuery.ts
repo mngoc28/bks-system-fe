@@ -40,6 +40,8 @@ export const useAdminSettlementDailyReportQuery = (startDate: string, endDate: s
     queryKey: ["admin", "settlement-daily-report", startDate, endDate],
     queryFn: () => settlementApi.getAdminSettlementDailyReport(startDate, endDate),
     enabled: !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 };
 

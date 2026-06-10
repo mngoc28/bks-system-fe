@@ -96,7 +96,7 @@ const SuggestedRoomsByProvince = ({ groups = [], priorityProvinceNames = [], cla
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3 mb-6">
+      <div className="mb-6 flex gap-2 overflow-x-auto border-b border-slate-200 pb-3 scrollbar-hide">
         {loading ? (
           [...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-10 w-24 rounded-full" />
@@ -110,7 +110,7 @@ const SuggestedRoomsByProvince = ({ groups = [], priorityProvinceNames = [], cla
                 key={key}
                 type="button"
                 onClick={() => setActiveTabKey(key)}
-                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
+                className={`shrink-0 whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
                   isActive
                     ? "bg-slate-900 text-white shadow-md scale-105"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"

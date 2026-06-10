@@ -126,8 +126,8 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[min(85vh,calc(100vh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 space-y-0 px-6 pt-6">
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600">
               <Lock size={18} />
@@ -136,7 +136,7 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
             <label htmlFor="block-room" className="text-xs font-bold text-slate-600 uppercase tracking-wider">Phòng</label>
             <Select value={roomId} onValueChange={setRoomId}>
@@ -234,7 +234,7 @@ export const RoomBlockDialog: React.FC<RoomBlockDialogProps> = ({
           )}
         </div>
 
-        <DialogFooter className="flex flex-row flex-wrap items-center justify-end gap-2 gap-y-2 border-t border-slate-100 pt-4 sm:justify-end">
+        <DialogFooter className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-2 gap-y-2 border-t border-slate-100 bg-background px-6 py-4 sm:justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting} className="min-w-[96px]">
             Hủy
           </Button>

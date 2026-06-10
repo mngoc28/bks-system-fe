@@ -1,4 +1,4 @@
-﻿import Pagination from "@/components/Pagination";
+import Pagination from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import type { AddUserFormData, UpdateUserProfileRequest, UserFilters, UserProfile } from "@/dataHelper/user.dataHelper";
@@ -9,7 +9,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AddUserDialog, DeleteConfirmDialog, EditUserDialog, ResetPasswordDialog, UserSearchSection, UsersEmptyState, UserCard, UserTable } from "./components";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import PageBar from "@/components/PageBar";
 import { ViewMode } from "@/components/LayoutToggle";
 
@@ -84,6 +85,27 @@ const UserManagement: React.FC = () => {
     if (searchParams.get("source") === "dashboard") {
       setOpen(true);
     }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const nextQ = searchParams.get("q") || "";
+    const nextEmail = searchParams.get("email") || "";
+    const nextPhone = searchParams.get("phone") || "";
+
+    setSearchQ(nextQ);
+    setSearchEmail(nextEmail);
+    setSearchPhone(nextPhone);
+    setFilters((prev) => ({
+      ...prev,
+      q: nextQ,
+      email: nextEmail,
+      phone: nextPhone,
+      role: searchParams.get("role") || "",
+      status: searchParams.get("status") || "",
+      created_at_from: searchParams.get("created_at_from") || "",
+      created_at_to: searchParams.get("created_at_to") || "",
+      page: Number(searchParams.get("page") || DEFAULT_PAGE),
+    }));
   }, [searchParams]);
 
   const { data: apiData, isLoading } = useGetAllUsersQuery(filters);
@@ -268,9 +290,9 @@ const UserManagement: React.FC = () => {
   }, [addUserOpen]);
 
   return (
-    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+    <AdminPageShell>
       <PageBar
-        subtitle={t("user.user_list_subtitle") || "Quản lý danh sách thành viên và quyền hạn truy cập."}
+        subtitle={t("user.user_list_subtitle") || "Qu?n l? danh s?ch th?nh vi?n v? quy?n h?n truy c?p."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -313,15 +335,13 @@ const UserManagement: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-          <Spinner size="lg" showText text={t("common.loading_data")} />
-        </div>
+        <AdminListLoading mode={viewMode} />
       ) : totalItems === 0 ? (
         <UsersEmptyState onOpenFilter={() => setOpen(true)} />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {filtered.map((user: UserProfile) => (
                 <UserCard
                   key={user.id}
@@ -409,7 +429,7 @@ const UserManagement: React.FC = () => {
         onClose={() => setEditUserOpen(false)}
         onSubmit={handleEditUser}
       />
-    </div>
+    </AdminPageShell>
   );
 };
 

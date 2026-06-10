@@ -43,7 +43,7 @@ const sliderOptions = {
     1280: { perPage: 3 },
     1024: { perPage: 2 },
     768: { perPage: 1.5 },
-    640: { perPage: 1 },
+    640: { perPage: 1, padding: { left: "0.5rem", right: "0.5rem" } },
   },
 } as const;
 
@@ -79,7 +79,7 @@ const RoomCarouselContainer = ({
           {ctaLabel && ctaHref && (
             <Link
               to={ctaHref}
-              className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+              className="hidden sm:inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
             >
               {ctaLabel}
             </Link>
@@ -101,6 +101,17 @@ const RoomCarouselContainer = ({
             </SplideSlide>
           ))}
         </Splide>
+      )}
+
+      {ctaLabel && ctaHref && !loading && (
+        <div className="mt-6 flex justify-center sm:hidden">
+          <Link
+            to={ctaHref}
+            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95"
+          >
+            {ctaLabel}
+          </Link>
+        </div>
       )}
     </section>
   );

@@ -2,12 +2,12 @@ import Header from "@/components/Header";
 import { ROUTERS } from "@/constant";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 import { MenuItem } from "@/shared/types";
-import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench, ShieldCheck, CircleDollarSign } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
+import { BotIcon, Building2, Calendar, Cog, DoorOpen, Handshake, House, MapPinned, Newspaper, Users2, Wrench, ShieldCheck, CircleDollarSign, Mail } from "lucide-react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router";
 import { useLocation } from "react-router-dom";
-import { Toaster } from "sonner";
+import { isRouteActive } from "@/lib/utils";
 import ClassSidebar from "../ClassSidebar";
 
 // Mock class info
@@ -23,7 +23,6 @@ const Layout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
-
   useEffect(() => {
     // Current layout is only for Admin/Manager, so we set all permissions
     setPermissions(new Set([
@@ -39,137 +38,142 @@ const Layout = () => {
       "news:view",
       "partner-management:view",
       "partner-settlement:view",
+      "newsletter-management:view",
     ]));
     setIsLoading(false);
   }, []);
 
+  const menuItems: MenuItem[] = useMemo(
+    () => [
+      {
+        id: "group-operations",
+        label: t("menu.group_operations", { defaultValue: "Vận hành" }),
+        icon: <House />,
+        defaultCollapsed: false,
+        children: [
+          {
+            id: "dashboard",
+            permissionKey: "dashboard:view",
+            label: t("menu.dashboard"),
+            path: ROUTERS.CONTROL,
+            icon: <House />,
+          },
+          {
+            id: "partner-information",
+            permissionKey: "partner-management:view",
+            label: t("menu.partner"),
+            path: ROUTERS.PARTNER_MANAGEMENT,
+            icon: <Handshake />,
+          },
+          {
+            id: "partner-approval",
+            permissionKey: "partner-management:view",
+            label: t("menu.partner_approval"),
+            path: ROUTERS.PARTNER_APPROVAL,
+            icon: <ShieldCheck />,
+          },
+          {
+            id: "properties",
+            permissionKey: "properties:view",
+            label: t("menu.properties"),
+            path: ROUTERS.PROPERTIES,
+            icon: <Building2 />,
+          },
+          {
+            id: "rooms",
+            permissionKey: "rooms:view",
+            label: t("menu.rooms"),
+            path: ROUTERS.ROOMS,
+            icon: <DoorOpen />,
+          },
+          {
+            id: "bookings",
+            permissionKey: "booking:view",
+            label: t("menu.bookings"),
+            path: ROUTERS.BOOKING_MANAGE,
+            icon: <Calendar />,
+          },
+          {
+            id: "settlements",
+            permissionKey: "partner-settlement:view",
+            label: t("menu.settlements"),
+            path: ROUTERS.PARTNER_SETTLEMENTS,
+            icon: <CircleDollarSign />,
+          },
+        ],
+      },
+      {
+        id: "group-content",
+        label: t("menu.group_content", { defaultValue: "Danh mục & Nội dung" }),
+        icon: <Newspaper />,
+        defaultCollapsed: true,
+        children: [
+          {
+            id: "amenities",
+            permissionKey: "amenities:view",
+            label: t("menu.amenities"),
+            path: ROUTERS.AMENITY_MANAGEMENT,
+            icon: <Wrench />,
+          },
+          {
+            id: "service-management",
+            permissionKey: "service-management:view",
+            label: t("menu.service"),
+            path: ROUTERS.SERVICE_MANAGEMENT,
+            icon: <Cog />,
+          },
+          {
+            id: "province-manage",
+            permissionKey: "province-manage:view",
+            label: t("menu.province-management"),
+            path: ROUTERS.PROVINCE_MANAGE,
+            icon: <MapPinned className="size-5" />,
+          },
+          {
+            id: "news-management",
+            permissionKey: "news:view",
+            label: t("menu.news"),
+            path: ROUTERS.NEWS,
+            icon: <Newspaper />,
+          },
+          {
+            id: "question-management",
+            permissionKey: "question-management:view",
+            label: t("menu.chatbot"),
+            path: ROUTERS.QUESTION_MANAGEMENT,
+            icon: <BotIcon className="size-5" />,
+          },
+          {
+            id: "newsletter-management",
+            permissionKey: "newsletter-management:view",
+            label: t("menu.coupon_registration"),
+            path: ROUTERS.NEWSLETTER_MANAGEMENT,
+            icon: <Mail />,
+          },
+        ],
+      },
+      {
+        id: "group-system",
+        label: t("menu.group_system", { defaultValue: "Hệ thống" }),
+        icon: <Users2 />,
+        defaultCollapsed: false,
+        children: [
+          {
+            id: "user-management",
+            permissionKey: "user-management:view",
+            label: t("menu.user-management"),
+            path: ROUTERS.USER_MANAGEMENT,
+            icon: <Users2 />,
+          },
+        ],
+      },
+    ],
+    [t],
+  );
+
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
-
-  const menuItems: MenuItem[] = [
-    {
-      id: "header-general",
-      isHeader: true,
-      label: t("menu.header_general"),
-    },
-    {
-      id: "dashboard",
-      permissionKey: "dashboard:view",
-      label: t("menu.dashboard"),
-      path: ROUTERS.CONTROL,
-      icon: <House />,
-    },
-    {
-      id: "header-partner",
-      isHeader: true,
-      label: t("menu.header_partner"),
-    },
-    {
-      id: "partner-information",
-      permissionKey: "partner-management:view",
-      label: t("menu.partner"),
-      path: ROUTERS.PARTNER_MANAGEMENT,
-      icon: <Handshake />,
-    },
-    {
-      id: "partner-approval",
-      permissionKey: "partner-management:view",
-      label: t("menu.partner_approval"),
-      path: ROUTERS.PARTNER_APPROVAL,
-      icon: <ShieldCheck />,
-    },
-    {
-      id: "header-accommodation",
-      isHeader: true,
-      label: t("menu.header_accommodation"),
-    },
-    {
-      id: "properties",
-      permissionKey: "properties:view",
-      label: t("menu.properties"),
-      path: ROUTERS.PROPERTIES,
-      icon: <Building2 />,
-    },
-    {
-      id: "rooms",
-      permissionKey: "rooms:view",
-      label: t("menu.rooms"),
-      path: ROUTERS.ROOMS,
-      icon: <DoorOpen />,
-    },
-    {
-      id: "bookings",
-      permissionKey: "booking:view",
-      label: t("menu.bookings"),
-      path: ROUTERS.BOOKING_MANAGE,
-      icon: <Calendar />,
-    },
-    {
-      id: "header-catalog-content",
-      isHeader: true,
-      label: t("menu.header_catalog_content"),
-    },
-    {
-      id: "amenities",
-      permissionKey: "amenities:view",
-      label: t("menu.amenities"),
-      path: ROUTERS.AMENITY_MANAGEMENT,
-      icon: <Wrench />,
-    },
-    {
-      id: "service-management",
-      permissionKey: "service-management:view",
-      label: t("menu.service"),
-      path: ROUTERS.SERVICE_MANAGEMENT,
-      icon: <Cog />,
-    },
-    {
-      id: "province-manage",
-      permissionKey: "province-manage:view",
-      label: t("menu.province-management"),
-      path: ROUTERS.PROVINCE_MANAGE,
-      icon: <MapPinned className="size-5" />,
-    },
-    {
-      id: "news-management",
-      permissionKey: "news:view",
-      label: t("menu.news"),
-      path: ROUTERS.NEWS,
-      icon: <Newspaper />,
-    },
-    {
-      id: "question-management",
-      permissionKey: "question-management:view",
-      label: t("menu.chatbot"),
-      path: ROUTERS.QUESTION_MANAGEMENT,
-      icon: <BotIcon className="size-5" />,
-    },
-    {
-      id: "header-finance",
-      isHeader: true,
-      label: t("menu.header_finance"),
-    },
-    {
-      id: "settlements",
-      permissionKey: "partner-settlement:view",
-      label: t("menu.settlements"),
-      path: ROUTERS.PARTNER_SETTLEMENTS,
-      icon: <CircleDollarSign />,
-    },
-    {
-      id: "header-system",
-      isHeader: true,
-      label: t("menu.header_system"),
-    },
-    {
-      id: "user-management",
-      permissionKey: "user-management:view",
-      label: t("menu.user-management"),
-      path: ROUTERS.USER_MANAGEMENT,
-      icon: <Users2 />,
-    },
-  ];
 
   // get page title from path name
   const getpageTitle = (pathName: string) => {
@@ -194,7 +198,10 @@ const Layout = () => {
     if (pathName.includes(ROUTERS.USER_MANAGEMENT)) {
       return t("menu.users");
     }
-    if (pathName.includes(ROUTERS.NEWS)) {
+    if (isRouteActive(pathName, ROUTERS.NEWSLETTER_MANAGEMENT)) {
+      return t("menu.coupon_registration");
+    }
+    if (isRouteActive(pathName, ROUTERS.NEWS)) {
       return t("menu.news");
     }
     if (pathName.includes(ROUTERS.PROVINCE_MANAGE) || pathName.includes(ROUTERS.PROVINCE_DETAIL)) {
@@ -248,14 +255,25 @@ const Layout = () => {
    * @param menuItems The menu items to filter.
    * @param permissions The set of allowed permission keys.
    */
-  const filterMenuItemsByPermissions = (menuItems: MenuItem[], permissions: Set<string>): MenuItem[] => {
-    const filteredItems = menuItems
-      .filter((item) => item.isHeader || (item.permissionKey && permissions.has(item.permissionKey)))
-      .map((item) => ({
-        ...item,
-        children: item.children ? filterMenuItemsByPermissions(item.children, permissions) : undefined,
-      }))
-      .filter((item) => !item.children || item.children.length > 0);
+  const filterMenuItemsByPermissions = (items: MenuItem[], allowed: Set<string>): MenuItem[] => {
+    const filteredItems = items
+      .map((item) => {
+        if (item.isHeader) {
+          return item;
+        }
+        if (item.children?.length) {
+          const children = filterMenuItemsByPermissions(item.children, allowed);
+          if (children.length === 0) {
+            return null;
+          }
+          return { ...item, children };
+        }
+        if (!item.permissionKey || !allowed.has(item.permissionKey)) {
+          return null;
+        }
+        return item;
+      })
+      .filter((item): item is MenuItem => item !== null);
 
     return stripOrphanMenuHeaders(filteredItems);
   };
@@ -273,8 +291,8 @@ const Layout = () => {
         />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header pageTitle={getpageTitle(location.pathname)} />
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto max-w-7xl space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">
+            <div className="mx-auto w-full max-w-[1600px] space-y-5">
               {/* fallback=null: tránh 2 spinner (suspense + trang con); trang con tự hiển thị loader */}
               <Suspense fallback={null}>
                 <Outlet />
@@ -283,7 +301,6 @@ const Layout = () => {
           </div>
         </div>
       </main>
-      <Toaster richColors position="bottom-right" />
     </div>
   );
 };

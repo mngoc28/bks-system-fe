@@ -51,8 +51,7 @@ import {
   CreditCard,
   RefreshCw
 } from "lucide-react";
-import { toast } from "sonner";
-import { toastSuccess, toastError } from "@/components/ui/toast";
+import { toastDismiss, toastError, toastLoading, toastSuccess } from "@/components/ui/toast";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 
 const SettlementManage: React.FC = () => {
@@ -106,14 +105,14 @@ const SettlementManage: React.FC = () => {
   };
 
   const handleIssue = async (id: number) => {
-    const toastId = toast.loading("Đang phát hành kỳ đối soát...");
+    const toastId = toastLoading("Đang phát hành kỳ đối soát...");
     try {
       await issueMutation.mutateAsync(id);
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastSuccess("Phát hành kỳ đối soát thành công và gửi email thông báo!");
       refetchSummary();
     } catch (e) {
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastError("Có lỗi xảy ra khi phát hành.");
       console.error(e);
     }
@@ -133,7 +132,7 @@ const SettlementManage: React.FC = () => {
       return;
     }
 
-    const toastId = toast.loading("Đang xác nhận thanh toán...");
+    const toastId = toastLoading("Đang xác nhận thanh toán...");
     try {
       await confirmPaymentMutation.mutateAsync({
         id: selectedPeriodId,
@@ -142,12 +141,12 @@ const SettlementManage: React.FC = () => {
           note: paymentNote,
         },
       });
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastSuccess("Xác nhận thanh toán thành công, kỳ đối soát đã được khóa!");
       setIsPayDialogOpen(false);
       refetchSummary();
     } catch (e) {
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
       toastError("Lỗi xác nhận thanh toán.");
       console.error(e);
     }

@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import { Outlet, useOutletContext } from "react-router-dom";
 
@@ -21,7 +20,6 @@ const AuthLayout: React.FC = () => {
             <div className="hidden w-1/2 items-center justify-center bg-slate-50 md:flex">
                 {imageSrc && <img src={imageSrc} className="m-auto size-auto max-h-[512px] max-w-[512px] rounded-lg object-contain" alt="Auth Illustration" />}
             </div>
-            <Toaster richColors />
         </div>
     );
 };

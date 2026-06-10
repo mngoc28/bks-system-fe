@@ -144,7 +144,7 @@ const BookingEditDialog: React.FC<BookingEditDialogProps> = ({ id, open, onClose
                       value={mapBookingStatus(status)}
                       className={getStatusClass(status)}
                     >
-                      {t(`bookings.add.status_${mapBookingStatus(status)}`)}
+                      {t(`bookings.status_${mapBookingStatus(status)}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -159,8 +159,8 @@ const BookingEditDialog: React.FC<BookingEditDialogProps> = ({ id, open, onClose
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={updateMutation.isPending}>Hủy</Button>
-          <Button onClick={onSubmit} disabled={updateMutation.isPending || confirmMutation.isPending || isLoading || !bookingRaw}>Lưu</Button>
+          <Button variant="outline" onClick={onClose} disabled={updateMutation.isPending}>{t("common.cancel")}</Button>
+          <Button onClick={onSubmit} disabled={updateMutation.isPending || confirmMutation.isPending || isLoading || !bookingRaw}>{t("common.save")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

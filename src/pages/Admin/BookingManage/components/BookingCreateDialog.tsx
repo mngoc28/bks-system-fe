@@ -1,7 +1,7 @@
 ﻿import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { BOOKING_STATUS_ORDER } from "@/constant";
@@ -205,9 +205,20 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
                   name="startDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("bookings.add.start_time")} <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <DatePickerField
+                          id="booking-create-start-date"
+                          label={
+                            <>
+                              {t("bookings.add.start_time")} <span className="text-red-500">*</span>
+                            </>
+                          }
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxDate={form.watch("endDate") || undefined}
+                          invalid={!!form.formState.errors.startDate}
+                          triggerClassName="h-10 min-h-0 w-full text-sm font-normal shadow-none hover:shadow-none"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -218,9 +229,20 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
                   name="endDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("bookings.add.end_time")} <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <DatePickerField
+                          id="booking-create-end-date"
+                          label={
+                            <>
+                              {t("bookings.add.end_time")} <span className="text-red-500">*</span>
+                            </>
+                          }
+                          value={field.value}
+                          onChange={field.onChange}
+                          minDate={form.watch("startDate") || undefined}
+                          invalid={!!form.formState.errors.endDate}
+                          triggerClassName="h-10 min-h-0 w-full text-sm font-normal shadow-none hover:shadow-none"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -250,7 +272,7 @@ const BookingCreateDialog: React.FC<BookingCreateDialogProps> = ({ open, onClose
                             value={mapBookingStatus(status)}
                             className={getStatusClass(status)}
                           >
-                            {t(`bookings.add.status_${mapBookingStatus(status)}`)}
+                            {t(`bookings.status_${mapBookingStatus(status)}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>

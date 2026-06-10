@@ -29,7 +29,7 @@ createRoot(document.getElementById("root")!).render(
         <ScrollToTop />
         <Router />
       </BrowserRouter>
-      <Toaster />
+      <Toaster position="bottom-right" />
       <Analytics />
     </QueryClientProvider>
   </StrictMode>,

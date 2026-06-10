@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Calendar,
   User,
@@ -14,7 +15,9 @@ import {
   LogOut,
   Image as ImageIcon,
   ExternalLink,
-  ShieldAlert
+  ShieldAlert,
+  UserX,
+  Info,
 } from 'lucide-react';
 import { Booking } from './types';
 import { Button } from "@/components/ui/button";
@@ -41,14 +44,36 @@ import { Undo2, RefreshCw } from 'lucide-react';
 import {
   countPartnerBookingNightsExclusive,
   formatPartnerBookingDateVi,
+  canMarkPartnerBookingNoShow,
   getPartnerBookingBadgeClass,
+  getPartnerDepositDisplay,
+  getPartnerPaymentDisplay,
   getPartnerRowDisplayStatus,
+  getPartnerStatusSubBadge,
+  isPartnerCheckInDepositLocked,
   normalizePartnerBookingStatusCode,
   partnerBaseStatusLabel,
 } from '@/utils/partnerBookingDisplay';
 import FrontDeskPanel from './Bookings/FrontDeskPanel';
+import TodayOperationsPanel, { type TodayBookingRow } from './Bookings/TodayOperationsPanel';
+import {
+  HorizontalChipScroller,
+  PartnerSectionCard,
+  PartnerSectionHeader,
+} from './components/ResponsiveBlocks';
 
-type BookingStatusFilter = 'all' | 0 | 1 | 2 | 3 | 4 | 'in_stay';
+type BookingStatusFilter =
+  | 'all'
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 'in_stay'
+  | 'no_show'
+  | 'deposit_unpaid'
+  | 'deposit_submitted'
+  | 'payment_unpaid';
 
 interface BookingRow extends Booking {
   phone?: string;
@@ -60,6 +85,10 @@ interface BookingRow extends Booking {
   createdAt?: string;
   deposit_amount?: number;
   deposit_status?: string;
+  payment_status?: string;
+  cancellation_reason?: string;
+  cancelled_at?: string;
+  no_show_at?: string;
   bookingDeposit?: {
     id: number;
     amount: number;
@@ -69,14 +98,32 @@ interface BookingRow extends Booking {
   } | null;
 }
 
+const parseBookingsStatusFromUrl = (raw: string | null): BookingStatusFilter | null => {
+  if (!raw) return null;
+  if (raw === 'pending' || raw === '0') return 0;
+  if (raw === 'in_stay') return 'in_stay';
+  if (raw === 'no_show') return 'no_show';
+  if (raw === 'deposit_unpaid') return 'deposit_unpaid';
+  if (raw === 'deposit_submitted') return 'deposit_submitted';
+  if (raw === 'payment_unpaid') return 'payment_unpaid';
+  const numeric = Number(raw);
+  if (Number.isInteger(numeric) && numeric >= 0 && numeric <= 4) {
+    return numeric as BookingStatusFilter;
+  }
+  return null;
+};
+
 const Bookings: React.FC = () => {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const { data: globalStats, isLoading: statsLoading } = usePartnerStatsQuery();
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>(() => {
+    return parseBookingsStatusFromUrl(searchParams.get('status')) ?? 'all';
+  });
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
   
   // Pagination State
@@ -94,9 +141,15 @@ const Bookings: React.FC = () => {
   const [actionConfirmModalOpen, setActionConfirmModalOpen] = useState(false);
   const [actionTargetBooking, setActionTargetBooking] = useState<BookingRow | null>(null);
   const [actionType, setActionType] = useState<'check_in' | 'check_out' | null>(null);
+  const [noShowTargetId, setNoShowTargetId] = useState<number | string | null>(null);
+  const [noShowCount, setNoShowCount] = useState(0);
+  const [depositUnpaidCount, setDepositUnpaidCount] = useState(0);
+  const [depositSubmittedCount, setDepositSubmittedCount] = useState(0);
+  const [paymentUnpaidCount, setPaymentUnpaidCount] = useState(0);
+  const [todayPanelKey, setTodayPanelKey] = useState(0);
 
   // View state & Lightbox state
-  const [viewMode, setViewMode] = useState<'list' | 'front_desk'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'today' | 'front_desk'>('list');
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -110,6 +163,71 @@ const Bookings: React.FC = () => {
     const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  const bookingIdFromUrl = searchParams.get('id');
+
+  useEffect(() => {
+    if (!bookingIdFromUrl) {
+      return;
+    }
+    setSearchTerm(bookingIdFromUrl);
+    setStatusFilter('all');
+  }, [bookingIdFromUrl]);
+
+  useEffect(() => {
+    if (!bookingIdFromUrl || bookings.length === 0) {
+      return;
+    }
+    const found = bookings.find((b) => String(b.id) === bookingIdFromUrl);
+    if (found) {
+      setSelectedBooking(found);
+    }
+  }, [bookingIdFromUrl, bookings]);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    const parseTotal = (res: any): number => {
+      const resBody = res?.data || res;
+      const paginator =
+        resBody?.data && typeof resBody.data === 'object' && !Array.isArray(resBody.data)
+          ? resBody.data
+          : resBody;
+      return Number(paginator.total ?? 0);
+    };
+
+    const loadFinanceCounts = async () => {
+      try {
+        const [noShowRes, depositUnpaidRes, depositSubmittedRes, paymentUnpaidRes] = await Promise.all([
+          partnerService.getBookings(
+            { status: 1, stay_status: 'no_show', per_page: 1, page: 1 },
+            { signal: abortController.signal },
+          ),
+          partnerService.getBookings(
+            { status: 1, deposit_status: 'pending', per_page: 1, page: 1 },
+            { signal: abortController.signal },
+          ),
+          partnerService.getBookings(
+            { status: 1, deposit_status: 'payment_submitted', per_page: 1, page: 1 },
+            { signal: abortController.signal },
+          ),
+          partnerService.getBookings(
+            { payment_status: 'unpaid', per_page: 1, page: 1 },
+            { signal: abortController.signal },
+          ),
+        ]);
+        setNoShowCount(parseTotal(noShowRes));
+        setDepositUnpaidCount(parseTotal(depositUnpaidRes));
+        setDepositSubmittedCount(parseTotal(depositSubmittedRes));
+        setPaymentUnpaidCount(parseTotal(paymentUnpaidRes));
+      } catch (err: any) {
+        if (err.name === 'CanceledError' || err.name === 'AbortError' || abortController.signal.aborted) {
+          return;
+        }
+      }
+    };
+    void loadFinanceCounts();
+    return () => abortController.abort();
+  }, [todayPanelKey, bookings]);
 
   useEffect(() => {
     const filtersChanged =
@@ -157,6 +275,10 @@ const Bookings: React.FC = () => {
         stay_status: item.stay_status || 'pending',
         deposit_amount: item.deposit_amount != null ? Number(item.deposit_amount) : undefined,
         deposit_status: item.deposit_status ?? undefined,
+        payment_status: item.payment_status ?? 'unpaid',
+        cancellation_reason: item.cancellation_reason ?? undefined,
+        cancelled_at: item.cancelled_at ?? undefined,
+        no_show_at: item.no_show_at ?? undefined,
         bookingDeposit: item.booking_deposit ?? item.booking_deposits ?? undefined,
       };
     });
@@ -179,6 +301,17 @@ const Bookings: React.FC = () => {
       if (statusFilter === 'in_stay') {
         params.stay_status = 'checked_in';
         params.status = 1;
+      } else if (statusFilter === 'no_show') {
+        params.stay_status = 'no_show';
+        params.status = 1;
+      } else if (statusFilter === 'deposit_unpaid') {
+        params.status = 1;
+        params.deposit_status = 'pending';
+      } else if (statusFilter === 'deposit_submitted') {
+        params.status = 1;
+        params.deposit_status = 'payment_submitted';
+      } else if (statusFilter === 'payment_unpaid') {
+        params.payment_status = 'unpaid';
       } else if (statusFilter !== 'all') {
         params.status = statusFilter;
       }
@@ -262,6 +395,12 @@ const Bookings: React.FC = () => {
           <div className="flex items-center gap-1.5">
             <Skeleton className="h-4 w-4 rounded-full animate-pulse bg-slate-200" />
             <Skeleton className="h-3.5 w-28 animate-pulse bg-slate-200" />
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-5 w-32 rounded-full animate-pulse bg-slate-200" />
+            <Skeleton className="h-5 w-28 rounded-full animate-pulse bg-slate-200" />
           </div>
         </td>
         <td className="px-6 py-4 text-center">
@@ -398,6 +537,7 @@ const Bookings: React.FC = () => {
 
       // Close modal if open
       setActionConfirmModalOpen(false);
+      setTodayPanelKey((k) => k + 1);
 
       // Silent refresh to sync all data without showing global loader
       fetchBookings(false);
@@ -426,6 +566,7 @@ const Bookings: React.FC = () => {
 
       // Close modal if open
       setActionConfirmModalOpen(false);
+      setTodayPanelKey((k) => k + 1);
 
       // Silent refresh
       fetchBookings(false);
@@ -451,6 +592,49 @@ const Bookings: React.FC = () => {
     }
   };
 
+  const handleNoShow = async (id: string | number) => {
+    try {
+      setActionLoadingId(id);
+      await partnerService.noShowBooking(id);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, stay_status: 'no_show' } : b)),
+      );
+      toastSuccess('Đã đánh dấu khách không đến.');
+      setNoShowTargetId(null);
+      setSelectedBooking(null);
+      setTodayPanelKey((k) => k + 1);
+      queryClient.invalidateQueries({ queryKey: ['partner-stats'] });
+      fetchBookings(false);
+    } catch (error: any) {
+      const errMsg = error?.response?.data?.message || 'Không thể đánh dấu no-show.';
+      toastError(errMsg);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const openTodayBookingDetail = (booking: TodayBookingRow) => {
+    setSelectedBooking({
+      id: booking.id,
+      guestName: booking.guestName,
+      roomName: booking.roomName,
+      propertyName: booking.propertyName,
+      phone: booking.phone,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      totalAmount: booking.totalAmount,
+      status: getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status),
+      rawStatus: booking.rawStatus,
+      stay_status: booking.stay_status as BookingRow['stay_status'],
+      deposit_amount: booking.deposit_amount,
+      deposit_status: booking.deposit_status,
+      payment_status: booking.payment_status,
+      cancellation_reason: booking.cancellation_reason,
+      cancelled_at: booking.cancelled_at,
+      no_show_at: booking.no_show_at,
+    });
+  };
+
   const filteredBookings = useMemo(() => {
     // Since we now filter on the server, filteredBookings is just the current page's bookings.
     // We keep the memo to minimize downstream re-renders.
@@ -464,9 +648,16 @@ const Bookings: React.FC = () => {
     { key: 0, label: 'Chờ duyệt', count: globalStats?.pendingBookingsCount ?? 0 },
     { key: 1, label: 'Đã duyệt', count: globalStats?.confirmedBookingsCount ?? 0 },
     { key: 'in_stay', label: 'Đang ở', count: globalStats?.inStayCount ?? 0 },
+    { key: 'no_show', label: 'Không đến', count: noShowCount },
     { key: 4, label: 'Chờ duyệt hủy', count: globalStats?.pendingCancellationCount ?? 0 },
     { key: 2, label: 'Đã hủy', count: globalStats?.cancelledBookingsCount ?? 0 },
     { key: 3, label: 'Đã hoàn thành', count: globalStats?.completedBookingsCount ?? 0 },
+  ];
+
+  const financeTabs: Array<{ key: BookingStatusFilter; label: string; count: number }> = [
+    { key: 'deposit_unpaid', label: 'Chưa cọc', count: depositUnpaidCount },
+    { key: 'deposit_submitted', label: 'Chờ duyệt biên lai', count: depositSubmittedCount },
+    { key: 'payment_unpaid', label: 'Chưa thanh toán đơn', count: paymentUnpaidCount },
   ];
 
   const exportCsv = () => {
@@ -479,6 +670,9 @@ const Bookings: React.FC = () => {
       'checkIn',
       'checkOut',
       'status',
+      'statusDetail',
+      'deposit',
+      'payment',
       'totalAmount',
       'note',
     ];
@@ -492,6 +686,14 @@ const Bookings: React.FC = () => {
       b.checkIn,
       b.checkOut,
       getPartnerRowDisplayStatus(b.rawStatus ?? 1, b.stay_status),
+      getPartnerStatusSubBadge(
+        b.rawStatus,
+        b.stay_status,
+        b.deposit_status,
+        b.cancellation_reason,
+      )?.label ?? '',
+      getPartnerDepositDisplay(b.deposit_status, b.deposit_amount)?.label ?? 'Không yêu cầu cọc',
+      getPartnerPaymentDisplay(b.payment_status, b.totalAmount).label,
       b.totalAmount,
       (b.note ?? '').replace(/\r?\n/g, ' '),
     ]);
@@ -514,22 +716,22 @@ const Bookings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý Đặt phòng</h1>
-          <p className="mt-1 text-gray-500">Theo dõi, duyệt nhanh và tra cứu booking theo khách/phòng.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={exportCsv} variant="outline" className="gap-2">
-            <FileDown size={16} /> Xuất CSV
-          </Button>
-        </div>
-      </div>
+      <PartnerSectionCard className="border-gray-100">
+        <PartnerSectionHeader
+          title="Quản lý Đặt phòng"
+          description="Theo dõi, duyệt nhanh và tra cứu booking theo khách/phòng."
+          actions={(
+            <Button onClick={exportCsv} variant="outline" className="gap-2">
+              <FileDown size={16} /> Xuất CSV
+            </Button>
+          )}
+        />
+      </PartnerSectionCard>
 
-      <div className="flex border-b border-slate-200 gap-6">
+      <div className="flex gap-3 overflow-x-auto border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setViewMode('list')}
-          className={`pb-3 text-sm font-bold transition-all relative ${
+          className={`relative shrink-0 pb-3 text-sm font-bold transition-all ${
             viewMode === 'list' 
               ? 'text-slate-900 border-b-2 border-slate-900' 
               : 'text-slate-400 hover:text-slate-600'
@@ -538,18 +740,55 @@ const Bookings: React.FC = () => {
           Danh sách đặt phòng
         </button>
         <button
+          onClick={() => setViewMode('today')}
+          className={`relative shrink-0 pb-3 text-sm font-bold transition-all flex items-center gap-1.5 ${
+            viewMode === 'today'
+              ? 'text-indigo-600 border-b-2 border-indigo-600'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          Vận hành hôm nay
+        </button>
+        <button
           onClick={() => setViewMode('front_desk')}
-          className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-1.5 ${
+          className={`relative shrink-0 pb-3 text-sm font-bold transition-all flex items-center gap-1.5 ${
             viewMode === 'front_desk' 
               ? 'text-rose-600 border-b-2 border-rose-600' 
               : 'text-slate-400 hover:text-slate-600'
           }`}
         >
-          Quầy Lễ Tân (Chờ cọc)
+          Duyệt cọc
         </button>
       </div>
 
-      {viewMode === 'front_desk' ? (
+      {viewMode === 'today' ? (
+        <TodayOperationsPanel
+          actionLoadingId={actionLoadingId}
+          operationsRefreshKey={todayPanelKey}
+          onRefreshStats={handleRefresh}
+          onCheckIn={(booking) =>
+            requestActionConfirm(
+              {
+                ...booking,
+                status: getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status),
+              } as BookingRow,
+              'check_in',
+            )
+          }
+          onCheckOut={(booking) =>
+            requestActionConfirm(
+              {
+                ...booking,
+                status: getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status),
+              } as BookingRow,
+              'check_out',
+            )
+          }
+          onNoShow={setNoShowTargetId}
+          onViewDetail={openTodayBookingDetail}
+          onGoToDepositDesk={() => setViewMode('front_desk')}
+        />
+      ) : viewMode === 'front_desk' ? (
         <FrontDeskPanel onRefreshStats={handleRefresh} />
       ) : (
         <>
@@ -600,53 +839,93 @@ const Bookings: React.FC = () => {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="relative max-w-lg">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tên khách, số điện thoại, mã phòng..."
-            className="pl-10"
-          />
+        <div className="flex gap-3 rounded-xl border border-sky-100 bg-sky-50/60 px-4 py-3 text-sm text-sky-950">
+          <Info size={18} className="mt-0.5 shrink-0 text-sky-600" />
+          <div className="space-y-1 text-xs leading-relaxed sm:text-sm">
+            <p className="font-bold text-sky-900">Giải phóng phòng trên hệ thống</p>
+            <p>
+              <span className="font-semibold">Hủy tự động</span> — đơn <span className="font-semibold">Chờ duyệt</span> quá hạn cọc
+              → tab <span className="font-semibold">Đã hủy</span> (badge &quot;Hủy tự động&quot;, hệ thống quét ~10 phút/lần).
+            </p>
+            <p>
+              <span className="font-semibold">Không đến</span> — đơn <span className="font-semibold">Đã duyệt</span>, khách không nhận phòng
+              → lễ tân bấm thủ công → tab <span className="font-semibold">Không đến</span> (phòng đưa lại kho bán).
+            </p>
+          </div>
+        </div>
+
+        <div className="max-w-lg space-y-2">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
+              size={16}
+              aria-hidden
+            />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm khách, SĐT, mã phòng..."
+              className="h-10 pl-10 pr-3 text-sm"
+            />
+          </div>
           {(searchTerm || statusFilter !== 'all') && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setSearchTerm('');
                 setStatusFilter('all');
               }}
-              className="mt-2 text-xs text-slate-500 hover:text-blue-600 sm:absolute sm:right-2 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2"
+              className="h-8 px-2 text-xs text-slate-500 hover:text-blue-600"
             >
               Xóa bộ lọc
             </Button>
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            {statusTabs.map((tab) => (
-              <Button
-                key={String(tab.key)}
-                size="sm"
-                variant={statusFilter === tab.key ? 'default' : 'outline'}
-                onClick={() => setStatusFilter(tab.key)}
-                className="rounded-full"
-              >
-                {tab.label} ({tab.count})
-              </Button>
-            ))}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <HorizontalChipScroller className="min-w-0 flex-1">
+              {statusTabs.map((tab) => (
+                <Button
+                  key={String(tab.key)}
+                  size="sm"
+                  variant={statusFilter === tab.key ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter(tab.key)}
+                  className="shrink-0 rounded-full"
+                >
+                  {tab.label} ({tab.count})
+                </Button>
+              ))}
+            </HorizontalChipScroller>
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="icon"
+              className="size-9 shrink-0 text-slate-600 hover:border-blue-200 hover:text-blue-600 active:scale-95"
+              disabled={loading || isRefreshing}
+              aria-label="Làm mới"
+            >
+              <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-blue-500' : ''} />
+            </Button>
           </div>
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            size="sm"
-            className="shrink-0 gap-1.5 text-slate-600 hover:text-blue-600 hover:border-blue-200 active:scale-95 transition-all"
-            disabled={loading || isRefreshing}
-          >
-            <RefreshCw size={14} className={isRefreshing ? 'animate-spin text-blue-500' : ''} />
-            Làm mới
-          </Button>
+          <div className="border-t border-slate-100 pt-3">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Tài chính</span>
+            <HorizontalChipScroller className="mt-2">
+              {financeTabs.map((tab) => (
+                <Button
+                  key={String(tab.key)}
+                  size="sm"
+                  variant={statusFilter === tab.key ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter(tab.key)}
+                  className={`rounded-full ${statusFilter === tab.key ? 'bg-slate-800 hover:bg-slate-900' : ''}`}
+                >
+                  {tab.label}
+                  {tab.count > 0 ? ` (${tab.count})` : ''}
+                </Button>
+              ))}
+            </HorizontalChipScroller>
+          </div>
         </div>
 
         {isPartner360Enabled() && selectedIds.size > 0 && (
@@ -683,7 +962,57 @@ const Bookings: React.FC = () => {
         )}
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="space-y-3 md:hidden">
+        {(loading || isRefreshing) ? (
+          Array.from({ length: 3 }).map((_, idx) => (
+            <div key={`booking-mobile-skeleton-${idx}`} className="rounded-xl border border-slate-200 bg-white p-4">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="mt-2 h-3 w-32" />
+              <Skeleton className="mt-4 h-8 w-full" />
+            </div>
+          ))
+        ) : displayBookings.length > 0 ? (
+          displayBookings.map((booking) => (
+            <div key={`mobile-${booking.id}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">{booking.guestName || 'Khách ẩn danh'}</p>
+                  <p className="text-xs text-slate-500">#{booking.id} • {booking.roomName || 'N/A'}</p>
+                </div>
+                <Badge className={`text-[10px] ${getPartnerBookingBadgeClass(booking.rawStatus ?? 1, booking.stay_status)}`}>
+                  {getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status)}
+                </Badge>
+              </div>
+              <div className="mt-3 space-y-1 text-xs text-slate-600">
+                <p>Nhận: {formatPartnerBookingDateVi(booking.checkIn)}</p>
+                <p>Trả: {formatPartnerBookingDateVi(booking.checkOut)}</p>
+                <p>Tòa nhà: {booking.propertyName || 'N/A'}</p>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button onClick={() => setSelectedBooking(booking)} variant="outline" size="sm" className="h-8">
+                  <Eye size={14} className="mr-1" /> Chi tiết
+                </Button>
+                {booking.rawStatus === 0 ? (
+                  <>
+                    <Button onClick={() => handleApprove(booking.id)} size="sm" className="h-8">
+                      Duyệt
+                    </Button>
+                    <Button onClick={() => handleReject(booking.id)} variant="outline" size="sm" className="h-8 border-red-200 text-red-600">
+                      Từ chối
+                    </Button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-400">
+            Không có booking phù hợp bộ lọc hiện tại.
+          </div>
+        )}
+      </div>
+
+      <div className="relative hidden overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -699,6 +1028,7 @@ const Bookings: React.FC = () => {
                 <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Ngày nhận/Trả</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Ngày đặt</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Tòa nhà</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500">Cọc & Thanh toán</th>
                 <th className="px-6 py-4 text-center text-xs font-bold uppercase text-gray-500">Trạng thái</th>
                 <th className="px-6 py-4 text-right text-xs font-bold uppercase text-gray-500">Thao tác</th>
               </tr>
@@ -774,15 +1104,71 @@ const Bookings: React.FC = () => {
                       {booking.propertyName || 'N/A'}
                     </div>
                   </td>
+                  <td className="px-6 py-4 align-top">
+                    {(() => {
+                      const deposit = getPartnerDepositDisplay(booking.deposit_status, booking.deposit_amount);
+                      const payment = getPartnerPaymentDisplay(booking.payment_status, booking.totalAmount);
+                      return (
+                        <div className="flex max-w-[220px] flex-col gap-1.5">
+                          {deposit ? (
+                            <div>
+                              <span
+                                className={`inline-flex max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-bold ${deposit.badgeClass}`}
+                                title={deposit.label}
+                              >
+                                {deposit.label}
+                              </span>
+                              {deposit.hint && (
+                                <p className="mt-0.5 text-[10px] leading-snug text-slate-500">{deposit.hint}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-400">Không yêu cầu cọc</span>
+                          )}
+                          <div>
+                            <span
+                              className={`inline-flex max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-bold ${payment.badgeClass}`}
+                              title={payment.label}
+                            >
+                              {payment.label}
+                            </span>
+                            {payment.hint && !deposit?.hint && (
+                              <p className="mt-0.5 text-[10px] leading-snug text-slate-500">{payment.hint}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="px-6 py-4 text-center">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold ${getPartnerBookingBadgeClass(
-                        booking.rawStatus ?? 1,
+                    {(() => {
+                      const subBadge = getPartnerStatusSubBadge(
+                        booking.rawStatus,
                         booking.stay_status,
-                      )}`}
-                    >
-                      {getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status)}
-                    </span>
+                        booking.deposit_status,
+                        booking.cancellation_reason,
+                      );
+                      return (
+                        <div className="inline-flex flex-col items-center gap-1">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold ${getPartnerBookingBadgeClass(
+                              booking.rawStatus ?? 1,
+                              booking.stay_status,
+                            )}`}
+                          >
+                            {getPartnerRowDisplayStatus(booking.rawStatus ?? 1, booking.stay_status)}
+                          </span>
+                          {subBadge && (
+                            <span
+                              className={`inline-flex max-w-[140px] truncate rounded-full border px-2 py-0.5 text-[9px] font-bold ${subBadge.badgeClass}`}
+                              title={subBadge.hint ?? subBadge.label}
+                            >
+                              {subBadge.label}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
@@ -812,9 +1198,41 @@ const Bookings: React.FC = () => {
                            <Undo2 size={14} className="mr-1" />
                            Hoàn tác ({Math.ceil(remainingMs(booking.id) / 1000)}s)
                          </Button>
+                       ) : canMarkPartnerBookingNoShow(booking.rawStatus, booking.stay_status, booking.checkIn) ? (
+                          <>
+                            {!isPartnerCheckInDepositLocked(booking.deposit_amount, booking.deposit_status) && (
+                              <Button
+                                onClick={() => requestActionConfirm(booking, 'check_in')}
+                                size="sm"
+                                className={`
+                                  h-8 gap-1.5 px-3 font-bold text-white shadow-sm transition-all
+                                  bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700
+                                  ${new Date(booking.checkIn).toDateString() === new Date().toDateString() ? 'animate-pulse ring-2 ring-indigo-500/20' : ''}
+                                `}
+                                disabled={actionLoadingId === booking.id}
+                              >
+                                {actionLoadingId === booking.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <LogIn size={14} />
+                                )}
+                                Check-in
+                              </Button>
+                            )}
+                            <Button
+                              onClick={() => setNoShowTargetId(booking.id)}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1 border-slate-300 px-2 text-slate-700 hover:bg-slate-50"
+                              disabled={actionLoadingId === booking.id}
+                            >
+                              <UserX size={14} />
+                              Không đến
+                            </Button>
+                          </>
                        ) : booking.rawStatus === 1 && booking.stay_status === 'pending' ? (
                           (() => {
-                            const isCheckInLocked = (booking.deposit_amount ?? 0) > 0 && !['confirmed_by_partner', 'held_in_escrow'].includes(booking.deposit_status || '');
+                            const isCheckInLocked = isPartnerCheckInDepositLocked(booking.deposit_amount, booking.deposit_status);
                             if (isCheckInLocked) {
                               return (
                                 <div className="relative group inline-block">
@@ -880,7 +1298,7 @@ const Bookings: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                   <td colSpan={7} className="px-6 py-20 text-center italic text-gray-400">Không có booking phù hợp bộ lọc hiện tại.</td>
+                   <td colSpan={8} className="px-6 py-20 text-center italic text-gray-400">Không có booking phù hợp bộ lọc hiện tại.</td>
                 </tr>
               )}
             </tbody>
@@ -1006,32 +1424,45 @@ const Bookings: React.FC = () => {
                 <p className="mt-1 whitespace-pre-wrap text-slate-700">{selectedBooking.note || 'Không có ghi chú.'}</p>
               </div>
 
+              <div className="rounded-xl border border-slate-200 p-4 space-y-2">
+                <p className="text-xs font-bold uppercase text-slate-500">Thanh toán đơn</p>
+                {(() => {
+                  const payment = getPartnerPaymentDisplay(
+                    selectedBooking.payment_status,
+                    selectedBooking.totalAmount,
+                  );
+                  return (
+                    <>
+                      <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${payment.badgeClass}`}>
+                        {payment.label}
+                      </Badge>
+                      {payment.hint && (
+                        <p className="text-xs text-slate-500">{payment.hint}</p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+
               {(selectedBooking.deposit_amount ?? 0) > 0 && (
                 <div className="rounded-xl border border-slate-200 p-4 space-y-3">
                   <p className="text-xs font-bold uppercase text-slate-500">Thông tin đặt cọc</p>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-semibold text-rose-600">
-                      Tiền cọc: {selectedBooking.deposit_amount?.toLocaleString('vi-VN')} đ
-                    </span>
-                    <Badge
-                      variant="none"
-                      className={`text-xs font-bold uppercase px-2.5 py-0.5 border rounded ${
-                        selectedBooking.deposit_status === 'confirmed_by_partner' || selectedBooking.deposit_status === 'held_in_escrow'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : selectedBooking.deposit_status === 'payment_submitted'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-rose-50 text-rose-700 border-rose-200'
-                      }`}
-                    >
-                      {selectedBooking.deposit_status === 'confirmed_by_partner'
-                        ? 'Đã xác nhận'
-                        : selectedBooking.deposit_status === 'held_in_escrow'
-                        ? 'Đang giữ hộ (Escrow)'
-                        : selectedBooking.deposit_status === 'payment_submitted'
-                        ? 'Chờ duyệt biên lai'
-                        : 'Chưa thanh toán'}
-                    </Badge>
-                  </div>
+                  {(() => {
+                    const deposit = getPartnerDepositDisplay(
+                      selectedBooking.deposit_status,
+                      selectedBooking.deposit_amount,
+                    );
+                    return deposit ? (
+                      <>
+                        <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${deposit.badgeClass}`}>
+                          {deposit.label}
+                        </Badge>
+                        {deposit.hint && (
+                          <p className="text-xs text-slate-500">{deposit.hint}</p>
+                        )}
+                      </>
+                    ) : null;
+                  })()}
                   {selectedBooking.bookingDeposit?.receipt_path && (
                     <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
                       <span className="text-slate-500 font-semibold flex items-center gap-1">
@@ -1057,6 +1488,7 @@ const Bookings: React.FC = () => {
                           await partnerService.confirmDeposit(selectedBooking.id);
                           toastSuccess(`Đã xác thực cọc thành công cho đơn #${selectedBooking.id}`);
                           setSelectedBooking(null);
+                          setTodayPanelKey((k) => k + 1);
                           fetchBookings(false);
                         } catch {
                           toastError('Xác nhận đặt cọc thất bại.');
@@ -1069,16 +1501,69 @@ const Bookings: React.FC = () => {
                 </div>
               )}
 
+              {(selectedBooking.rawStatus === 2 || selectedBooking.stay_status === 'no_show') && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-2">
+                  <p className="text-xs font-bold uppercase text-slate-500">Giải phóng phòng</p>
+                  {(() => {
+                    const subBadge = getPartnerStatusSubBadge(
+                      selectedBooking.rawStatus,
+                      selectedBooking.stay_status,
+                      selectedBooking.deposit_status,
+                      selectedBooking.cancellation_reason,
+                    );
+                    return subBadge ? (
+                      <>
+                        <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${subBadge.badgeClass}`}>
+                          {subBadge.label}
+                        </Badge>
+                        {subBadge.hint && <p className="text-xs text-slate-600">{subBadge.hint}</p>}
+                      </>
+                    ) : null;
+                  })()}
+                  {selectedBooking.cancellation_reason && (
+                    <p className="text-xs text-slate-600">
+                      <span className="font-semibold text-slate-500">Lý do: </span>
+                      {selectedBooking.cancellation_reason}
+                    </p>
+                  )}
+                  {selectedBooking.cancelled_at && (
+                    <p className="text-xs text-slate-500">
+                      Hủy lúc {new Date(selectedBooking.cancelled_at).toLocaleString('vi-VN')}
+                    </p>
+                  )}
+                  {selectedBooking.no_show_at && (
+                    <p className="text-xs text-slate-500">
+                      Đánh dấu không đến lúc {new Date(selectedBooking.no_show_at).toLocaleString('vi-VN')}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                <Badge
-                  variant="none"
-                  className={`border px-3 py-1 font-semibold ${getPartnerBookingBadgeClass(
-                    selectedBooking.rawStatus ?? 1,
-                    selectedBooking.stay_status,
-                  )}`}
-                >
-                  {getPartnerRowDisplayStatus(selectedBooking.rawStatus ?? 1, selectedBooking.stay_status)}
-                </Badge>
+                <div className="flex flex-col items-start gap-1">
+                  <Badge
+                    variant="none"
+                    className={`border px-3 py-1 font-semibold ${getPartnerBookingBadgeClass(
+                      selectedBooking.rawStatus ?? 1,
+                      selectedBooking.stay_status,
+                    )}`}
+                  >
+                    {getPartnerRowDisplayStatus(selectedBooking.rawStatus ?? 1, selectedBooking.stay_status)}
+                  </Badge>
+                  {(() => {
+                    const subBadge = getPartnerStatusSubBadge(
+                      selectedBooking.rawStatus,
+                      selectedBooking.stay_status,
+                      selectedBooking.deposit_status,
+                      selectedBooking.cancellation_reason,
+                    );
+                    return subBadge ? (
+                      <span className={`text-[10px] font-bold ${subBadge.badgeClass.includes('slate') ? 'text-slate-500' : 'text-rose-600'}`}>
+                        {subBadge.label}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
                 <div className="flex items-center gap-2">
                   {selectedBooking.rawStatus === 0 && (
                     <>
@@ -1098,6 +1583,21 @@ const Bookings: React.FC = () => {
                         Duyệt booking
                       </Button>
                     </>
+                  )}
+                  {canMarkPartnerBookingNoShow(
+                    selectedBooking.rawStatus,
+                    selectedBooking.stay_status,
+                    selectedBooking.checkIn,
+                  ) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 border-slate-300 font-bold text-slate-700"
+                      onClick={() => setNoShowTargetId(selectedBooking.id)}
+                    >
+                      <UserX size={14} />
+                      Không đến
+                    </Button>
                   )}
                 </div>
               </div>
@@ -1122,6 +1622,40 @@ const Bookings: React.FC = () => {
         onClose={() => setBulkCancelOpen(false)}
         onConfirm={handleBulkCancelSubmit}
       />
+
+      <Dialog open={noShowTargetId !== null} onOpenChange={(open) => !open && setNoShowTargetId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-800">
+              <UserX size={20} className="text-slate-600" />
+              Xác nhận khách không đến (No-show)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-slate-600">
+              Đánh dấu booking <strong>#{noShowTargetId}</strong> là khách không đến nhận phòng. Các ngày trên lịch sẽ được
+              giải phóng để khách khác có thể đặt lại; đơn vẫn nằm tab <strong>Không đến</strong> (khác hủy tự động ở tab Đã hủy).
+            </p>
+            <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Chỉ áp dụng khi khách đã qua ngày nhận phòng mà không check-in.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <Button variant="ghost" onClick={() => setNoShowTargetId(null)}>
+              Hủy
+            </Button>
+            <Button
+              variant="outline"
+              className="border-slate-400 font-semibold text-slate-800"
+              disabled={actionLoadingId !== null}
+              onClick={() => noShowTargetId !== null && handleNoShow(noShowTargetId)}
+            >
+              {actionLoadingId !== null ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
+              Xác nhận no-show
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={actionConfirmModalOpen} onOpenChange={setActionConfirmModalOpen}>
         <DialogContent className="sm:max-w-[425px]">

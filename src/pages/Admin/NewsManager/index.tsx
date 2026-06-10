@@ -8,7 +8,8 @@ import { News, NewsFilters } from "@/dataHelper/news.dataHelper";
 import Pagination from "@/components/Pagination";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { useNavigate } from "react-router";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import { ViewMode } from "@/components/LayoutToggle";
 
 /**
@@ -113,7 +114,7 @@ const NewsManager: React.FC = () => {
   const perPage = news?.data?.per_page ?? DEFAULT_CARD_LIMIT;
 
   return (
-    <div className="flex w-full flex-col gap-6 p-[12px_24px]">
+    <AdminPageShell>
       <NewsHeader 
         onCreateNews={showCreateNews} 
         onOpenFilter={handleOpenSearch} 
@@ -136,19 +137,17 @@ const NewsManager: React.FC = () => {
       />
       {
         isLoadingNews ? (
-          <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-            <Spinner size="lg" showText text={t("common.loading_data")} />
-          </div>
+          <AdminListLoading mode={viewMode} />
         ) : errorNews ? (
           <div className="rounded-lg border bg-white p-6 text-sm text-slate-500">{t("common.error")}</div>
         ) :
           totalItems === 0 ? (
             <EmptyPage />
           ) : (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-5">
               {viewMode === "grid" ? (
                 <>
-                  <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     {news?.data?.data?.map((item: News) => (
                       <NewsCard
                         key={item.id}
@@ -221,7 +220,7 @@ const NewsManager: React.FC = () => {
             </div>
           )
       }
-    </div>
+    </AdminPageShell>
   );
 };
 

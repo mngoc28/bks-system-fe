@@ -222,18 +222,18 @@ const ContractDetail: React.FC = () => {
   const hasReminder = Boolean(contract.renewal_reminder_at);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="space-y-6 p-3 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/partner/contracts')}>
             <ArrowLeft size={18} />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">{contract.title}</h1>
+            <h1 className="truncate text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">{contract.title}</h1>
             <p className="text-xs text-gray-500">#CTR-{contract.id} · {contract.contract_type}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge className={`border-none ${status.cls}`}>{status.label}</Badge>
           {isTerminated && <Badge className="border-none bg-rose-100 text-rose-700">Đã chấm dứt</Badge>}
           {hasReminder && !isTerminated && (

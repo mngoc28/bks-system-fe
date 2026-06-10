@@ -3,8 +3,8 @@
  * Dùng chung cho layout, PageBar, bảng, nút và chip ngữ cảnh.
  */
 export const adminTheme = {
-  page: "flex w-full flex-col gap-8",
-  pagePadding: "p-[24px_32px]",
+  page: "flex w-full flex-col gap-5",
+  pagePadding: "",
 
   surface: "rounded-xl border border-primary/10 bg-white shadow-sm",
   surfaceMuted: "rounded-xl border border-primary/10 bg-white/80 backdrop-blur-sm",
@@ -27,7 +27,7 @@ export const adminTheme = {
 
   /** Loading trong vùng nội dung (không phủ sidebar) */
   contentLoading:
-    "flex min-h-[400px] w-full items-center justify-center rounded-2xl border border-primary/10 bg-white/60",
+    "flex min-h-[240px] w-full items-center justify-center rounded-xl border border-primary/10 bg-white/60",
 
   /** Admin sidebar — premium navy */
   sidebar: {
@@ -43,12 +43,17 @@ export const adminTheme = {
     navItem:
       "relative flex items-center gap-2 rounded-lg text-[15px] text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white",
     navItemCompact: "relative flex items-center justify-center rounded-lg px-3 py-3 transition-all duration-200",
-    navItemActive: "bg-white/12 text-white shadow-inner ring-1 ring-white/10",
-    navItemIcon: "transition-all duration-200 [&_svg]:size-5",
-    navItemIconActive: "scale-110 text-white",
-    activeIndicator: "absolute left-0 top-1/4 h-1/2 w-1 rounded-r-full bg-premium-blue shadow-[0_0_8px_hsl(var(--premium-blue)/0.6)]",
+    navItemActive:
+      "bg-white/20 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/25",
+    navItemIcon:
+      "flex size-5 shrink-0 items-center justify-center transition-all duration-200 [&_svg]:size-5",
+    navChevron: "flex size-5 shrink-0 items-center justify-center text-white/60",
+    navItemIconActive: "scale-110 text-white drop-shadow-sm",
+    activeIndicator:
+      "absolute left-0 top-1/4 h-1/2 w-[3px] rounded-r-full bg-premium-blue shadow-[0_0_10px_hsl(var(--premium-blue)/0.75)]",
     submenuItem:
-      "flex items-center gap-2 rounded-lg px-4 py-2 text-base text-white/70 transition-colors hover:bg-white/10 hover:text-white",
-    submenuItemActive: "bg-white/12 text-white",
+      "relative flex items-center gap-2 rounded-lg px-3 py-2 text-[15px] text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white",
+    submenuItemActive:
+      "bg-white/18 font-semibold text-white ring-1 ring-inset ring-white/15",
   },
 } as const;

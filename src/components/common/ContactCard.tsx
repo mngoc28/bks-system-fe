@@ -26,7 +26,7 @@ const ContactCard = ({
 
   return (
     <section id="contact" className={className}>
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-slate-100 p-8 shadow-sm md:p-10">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-slate-100 p-6 shadow-sm sm:p-8 md:p-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl space-y-4">
             <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary">
@@ -34,7 +34,7 @@ const ContactCard = ({
             </span>
             <h2 className="text-[1.9rem] font-semibold text-slate-900 md:text-[2.25rem]">{titleText}</h2>
             <p className="text-sm leading-6 text-slate-600 md:text-base">{descriptionText}</p>
-            <div className="flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:gap-6">
+            <div className="flex flex-col gap-3 text-sm text-slate-600">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-sm">
                 <Phone className="size-4 text-primary" />
                 <span className="font-semibold text-slate-900">{hotlineLabelText}:</span>

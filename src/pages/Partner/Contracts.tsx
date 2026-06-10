@@ -153,8 +153,8 @@ const Contracts: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Hợp đồng</h1>
           <p className="text-gray-500">Quản lý và tạo hợp đồng thuê phòng điện tử.</p>
@@ -164,7 +164,7 @@ const Contracts: React.FC = () => {
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
@@ -179,7 +179,38 @@ const Contracts: React.FC = () => {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="space-y-3 sm:hidden">
+        {filteredContracts.map((contract) => (
+          <div key={`mobile-contract-${contract.id}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-bold text-slate-900">{contract.title}</p>
+                <p className="text-xs text-slate-500">#CTR-{contract.id}</p>
+              </div>
+              {getStatusBadge(contract.status)}
+            </div>
+            <p className="mt-2 text-xs text-slate-600">{contract.booking?.user?.name || 'N/A'}</p>
+            <p className="text-xs text-slate-500">{contract.booking?.room?.property?.name || 'N/A'}</p>
+            <div className="mt-3 flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => navigate(`/partner/contracts/${contract.id}`)}
+              >
+                <Eye size={14} className="mr-1" /> Chi tiết
+              </Button>
+            </div>
+          </div>
+        ))}
+        {filteredContracts.length === 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-400">
+            Chưa có hợp đồng nào.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm sm:block">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-[11px] font-bold uppercase tracking-widest text-gray-500">

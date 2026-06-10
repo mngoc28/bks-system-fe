@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { usePermissionStore } from "@/store/usePermissionStore";
-import { toast } from "sonner";
+import { toastError } from "@/components/ui/toast";
 import { useTranslation } from "react-i18next";
 
 interface PermissionRouteProps {
@@ -24,7 +24,7 @@ const PermissionRoute: React.FC<PermissionRouteProps> = ({
 
     useEffect(() => {
       if (!canAccess) {
-        toast.error(t("screenPermissions.error_permission"));
+        toastError(t("screenPermissions.error_permission"));
         navigate(-1);
       }
     }, [canAccess, navigate, t]);

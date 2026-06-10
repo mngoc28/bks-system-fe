@@ -38,6 +38,10 @@ export interface DatePickerFieldProps {
   triggerClassName?: string;
   /** Placeholder when no date is selected */
   placeholder?: string;
+  /** Extra classes for the popover content (e.g. z-index inside dialogs) */
+  popoverClassName?: string;
+  /** Use modal popover layer — required when inside Dialog/Sheet */
+  popoverModal?: boolean;
 }
 
 /**
@@ -57,6 +61,8 @@ export function DatePickerField({
   invalid,
   triggerClassName,
   placeholder,
+  popoverClassName,
+  popoverModal = false,
 }: DatePickerFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const selected = parseYmdToLocalDate(value);
@@ -90,7 +96,7 @@ export function DatePickerField({
       >
         {label}
       </label>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={popoverModal}>
         <PopoverTrigger asChild>
           <Button
             id={id}
@@ -114,7 +120,13 @@ export function DatePickerField({
             </span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+        <PopoverContent
+          className={cn('w-auto overflow-hidden p-0', popoverClassName)}
+          align="start"
+          side="bottom"
+          sideOffset={8}
+          avoidCollisions
+        >
           <Calendar
             mode="single"
             locale={vi}

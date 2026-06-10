@@ -1,4 +1,4 @@
-﻿import Pagination from "@/components/Pagination";
+import Pagination from "@/components/Pagination";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
 import type { ProvinceFilter, Provinces } from "@/dataHelper/province.dataHelper";
 import { useGetAllProvinces } from "@/hooks/useProvinceQuery";
@@ -8,7 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ProvinceCard from "./components/ProvinceCard";
 import EmptyPage from "@/components/EmptyPage";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import PageBar from "@/components/PageBar";
 import { ViewMode } from "@/components/LayoutToggle";
 import ProvinceTable from "./components/ProvinceTable";
@@ -80,7 +81,7 @@ const ProvinceManage: React.FC = () => {
   const totalPages = paginationData?.last_page ?? Math.max(1, Math.ceil(totalItems / perPage));
 
   return (
-    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+    <AdminPageShell>
       <PageBar
         subtitle={t("province.subtitle")}
         showLayoutToggle={true}
@@ -100,16 +101,14 @@ const ProvinceManage: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-          <Spinner size="lg" showText text={t("common.loading_data")} />
-        </div>
+        <AdminListLoading mode={viewMode} />
       ) : totalItems === 0 ? (
         <EmptyPage />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
            {viewMode === "grid" ? (
              <>
-               <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {serverRows.map((province) => (
                     <ProvinceCard
                       key={province.id}
@@ -168,7 +167,7 @@ const ProvinceManage: React.FC = () => {
            )}
         </div>
       )}
-    </div>
+    </AdminPageShell>
   );
 };
 

@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
-import { Toaster } from "sonner";
 import { FloatingChatbot } from "@/components/chatbot";
 import ScrollToTopButton from "@/components/common/ScrollToTopButton";
 import { LoadingScreen } from "@/components/ui/loading-screen";
+import { ENABLE_CHATBOT } from "@/constant";
 
 const PublicLayout = () => {
   return (
@@ -11,13 +11,12 @@ const PublicLayout = () => {
       <Suspense fallback={<LoadingScreen />}>
         <Outlet />
       </Suspense>
-      <div className="pointer-events-none fixed bottom-6 right-6 z-[9999]">
+      <div className="pointer-events-none fixed bottom-4 right-4 z-[9999] sm:bottom-6 sm:right-6">
         <div data-chatbot-stack className="pointer-events-auto flex flex-col items-center gap-4">
           <ScrollToTopButton />
-          <FloatingChatbot />
+          {ENABLE_CHATBOT && <FloatingChatbot />}
         </div>
       </div>
-      <Toaster richColors position="bottom-right" />
     </div>
   );
 };

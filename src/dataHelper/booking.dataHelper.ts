@@ -57,6 +57,7 @@ export type Booking = {
 	end_date: string;
 	price: number;
 	status: "pending" | "confirmed" | "cancelled" | "completed";
+	stay_status?: string | null;
 	assignee?: string;
 	created_at: string;
 	note?: string | null;
@@ -101,6 +102,9 @@ export interface SearchBookingRequest {
 	property_id?: number;
 	start_date?: string;
 	end_date?: string;
+	start_date_mode?: "exact" | "from";
+	end_date_mode?: "exact" | "to";
+	stay_status?: string;
 	status?: number;
 	// Optional text filters (supported by backend if available)
 	room_name?: string;

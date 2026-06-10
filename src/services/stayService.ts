@@ -82,11 +82,18 @@ export interface BookingDetail {
   end_date: string;
   status: number;
   note: string;
+  user?: {
+    id: number;
+    name: string;
+    phone?: string;
+    email?: string;
+  };
   room: {
     title: string;
     property: {
       name: string;
       address: string;
+      address_detail?: string;
       property_type?: {
         id: number;
         name: string;
@@ -130,6 +137,8 @@ export interface BookingDetail {
     receipt_path?: string;
   };
   payment_method?: string;
+  payment_method_changed_at?: string | null;
+  payment_status?: string;
 }
 
 export interface NotificationData {
@@ -204,6 +213,10 @@ const stayService = {
 
   submitReceipt: (bookingId: number | string, receiptPath: string) => {
     return apiService.post<unknown>(`/api/v1/stay/bookings/${bookingId}/submit-receipt`, { receipt_path: receiptPath });
+  },
+
+  changePaymentMethod: (bookingId: number | string, paymentMethod: "online" | "pay_at_counter") => {
+    return apiService.patch<unknown>(`/api/v1/stay/bookings/${bookingId}/payment-method`, { payment_method: paymentMethod });
   },
 
   markNotificationAsRead: (id: number) => {

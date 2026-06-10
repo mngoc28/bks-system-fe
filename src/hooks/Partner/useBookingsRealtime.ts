@@ -99,6 +99,7 @@ export const useBookingsRealtime = (options: Options = {}) => {
       (payload: RealtimeBookingPayload) => {
         queryClient.invalidateQueries({ queryKey: ["partner", "bookings"] });
         queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "kpis"] });
+        queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "charts"] });
         queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
         queryClient.invalidateQueries({ queryKey: ["partner-pending-bookings"] });
         // Phase 3: calendar phụ thuộc cùng các event này; invalidate prefix
@@ -116,6 +117,9 @@ export const useBookingsRealtime = (options: Options = {}) => {
       queryClient.invalidateQueries({ queryKey: ["partner", "bookings"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "calendar"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "charts"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-pending-bookings"] });
       optionsRef.current.onCancellationRequestEvent?.(payload);
     };
 
@@ -191,6 +195,7 @@ export const useBookingsRealtime = (options: Options = {}) => {
     const tick = () => {
       queryClient.invalidateQueries({ queryKey: ["partner", "bookings"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "dashboard", "charts"] });
       queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
       queryClient.invalidateQueries({ queryKey: ["partner-pending-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "calendar"] });

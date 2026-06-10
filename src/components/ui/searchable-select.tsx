@@ -70,7 +70,7 @@ export default function SearchableSelect({
   const isDark = triggerClassName?.includes("text-white");
 
   return (
-    <div ref={containerRef} className="relative z-[500] w-full">
+    <div ref={containerRef} className={cn("relative w-full", open && "z-[500]")}>
       <div className="absolute -inset-x-3 -inset-y-2 -z-10" />
       <Button
         type="button"

@@ -251,12 +251,12 @@ const Amenities: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 md:flex-row md:items-center">
+        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           <PropertySelector 
             selectedId={filterPropertyId} 
             onSelect={setFilterPropertyId} 
-            className="w-64"
+            className="w-full sm:w-64"
           />
           <div className="hidden h-10 w-px bg-gray-100 md:block"></div>
           <div>
@@ -264,12 +264,12 @@ const Amenities: React.FC = () => {
             <p className="mt-1 text-gray-500">Danh mục các tiện ích đi kèm trong phòng lưu trú.</p>
           </div>
         </div>
-        <Button onClick={() => handleOpenModal()} className="h-10 bg-blue-600 px-4 font-bold text-white hover:bg-blue-700">
+        <Button onClick={() => handleOpenModal()} className="h-10 w-full bg-blue-600 px-4 font-bold text-white hover:bg-blue-700 sm:w-auto">
           <Plus size={18} className="mr-2" /> Thêm Tiện ích
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {amenities.map((item) => {
               const Icon = iconMap[String(item.icon)] || Wifi;
@@ -279,7 +279,7 @@ const Amenities: React.FC = () => {
                     <div className="rounded-lg bg-white p-2 text-blue-600 shadow-sm transition-colors group-hover:bg-blue-600 group-hover:text-white">
                       <Icon size={24} />
                     </div>
-                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                       <Button onClick={() => handleOpenModal(item)} variant="ghost" size="icon" className="size-7 text-gray-400 hover:text-amber-600"><Edit size={14} /></Button>
                       <Button onClick={() => handleDelete(item.id)} variant="ghost" size="icon" className="size-7 text-gray-400 hover:text-red-600"><Trash2 size={14} /></Button>
                     </div>
@@ -298,7 +298,7 @@ const Amenities: React.FC = () => {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingAmenity ? 'Cập nhật tiện ích' : 'Thêm tiện ích mới'}
-        widthClassName="max-w-lg"
+        widthClassName="w-full md:max-w-lg"
         footer={
           <div className="flex w-full items-center justify-between">
             <div>

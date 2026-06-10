@@ -22,6 +22,11 @@ export interface PublicRoomListParams {
     end_date?: string;
     guests?: number;
     tourist_spot_slug?: string;
+    rating_min?: number;
+    price_min?: number;
+    price_max?: number;
+    amenity_ids?: number[];
+    service_ids?: number[];
 }
 
 export const roomApi = {
@@ -31,6 +36,14 @@ export const roomApi = {
 
     getPaginatedRoomList: (params: PublicRoomListParams): Promise<ApiResponse<PublicRoomPageData>> => {
         return axiosClient.get<PublicRoomPageData>("rooms/search", { params }) as unknown as Promise<ApiResponse<PublicRoomPageData>>;
+    },
+
+    getAmenities: (): Promise<ApiResponse<any>> => {
+        return axiosClient.get("home/amenities");
+    },
+
+    getServices: (): Promise<ApiResponse<any>> => {
+        return axiosClient.get("home/services");
     },
 
     getRoomDetail: (id: number): Promise<ApiResponse<any>> => {

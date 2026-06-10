@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/dataHelper/room.dataHelper";
-import { Edit, Trash2, MapPin, Maximize2, Users, ImageIcon } from "lucide-react";
+import { Building2, CalendarDays, Edit, Trash2, MapPin, Maximize2, Users, ImageIcon } from "lucide-react";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { highlightText } from "@/utils/utils";
 import { useNavigate } from "react-router-dom";
+import AdminCardCrossNavMenu from "@/components/admin/AdminCardCrossNavMenu";
 import { buildAdminUrl, toBookingsByRoom, toRoomsByProperty } from "@/utils/adminNavigation";
 
 interface RoomCardProps {
@@ -141,38 +142,39 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onView, onEdit, onDelete, isD
             </p>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {room.property_id ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(
-                  buildAdminUrl(
-                    ROUTERS.ROOMS,
-                    toRoomsByProperty(room.property_id as number, "room-management", room.property_name || room.property?.name || undefined),
-                  ),
-                );
-              }}
-            >
-              {t("adminCrossNav.rooms")}
-            </Button>
-          ) : null}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              const roomDisplayName = room.room_number || room.title;
-              navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByRoom(room.id, "room-management", roomDisplayName)));
-            }}
-          >
-            {t("adminCrossNav.bookings")}
-          </Button>
-        </div>
+        <AdminCardCrossNavMenu
+          actions={[
+            ...(room.property_id
+              ? [
+                  {
+                    key: "property-rooms",
+                    label: t("adminCrossNav.property_rooms"),
+                    icon: <Building2 className="size-4" />,
+                    onClick: () =>
+                      navigate(
+                        buildAdminUrl(
+                          ROUTERS.ROOMS,
+                          toRoomsByProperty(
+                            room.property_id as number,
+                            "room-management",
+                            room.property_name || room.property?.name || undefined,
+                          ),
+                        ),
+                      ),
+                  },
+                ]
+              : []),
+            {
+              key: "bookings",
+              label: t("adminCrossNav.room_bookings"),
+              icon: <CalendarDays className="size-4" />,
+              onClick: () => {
+                const roomDisplayName = room.room_number || room.title;
+                navigate(buildAdminUrl(ROUTERS.BOOKING_MANAGE, toBookingsByRoom(room.id, "room-management", roomDisplayName)));
+              },
+            },
+          ]}
+        />
       </div>
     </Card>
   );

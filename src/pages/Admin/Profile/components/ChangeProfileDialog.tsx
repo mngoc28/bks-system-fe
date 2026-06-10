@@ -9,7 +9,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { profileFormSchema } from "@/shared/shema";
 import { userApi } from "@/api/userApi";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/components/ui/toast";
 import { ChangeProfileDialogProps } from "@/dataHelper/user.dataHelper";
 
 /**
@@ -51,17 +51,11 @@ const ChangeProfileDialog = ({
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
       await userApi.updateProfile(values);
-      toast.success(t("user.update_profile_success"), {
-        style: { background: "#10B981", color: "#FFFFFF" },
-        className: "border-green-500",
-      });
+      toastSuccess(t("user.update_profile_success"));
       onClose();
       onSuccess();
     } catch {
-      toast.error(t("user.profile_failed"), {
-        style: { background: "#EF4444", color: "#FFFFFF" },
-        className: "border-red-500",
-      });
+      toastError(t("user.profile_failed"));
     }
   });
 

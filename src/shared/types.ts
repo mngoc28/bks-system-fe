@@ -7,4 +7,8 @@ export interface MenuItem {
   children?: MenuItem[];
   permissionKey?: string;
   isHeader?: boolean;
-}; 
+  /** Collapsible group: collapsed by default when true */
+  defaultCollapsed?: boolean;
+  /** Badge count on nav item (e.g. pending bookings) */
+  badgeCount?: number;
+} 

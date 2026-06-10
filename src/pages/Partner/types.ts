@@ -42,9 +42,10 @@ export interface Service {
 
 export interface RoomPrice {
   id: string | number;
+  price_package_id?: number;
   packageName: string;
   price: number;
-  duration: number; 
+  duration: number;
   unit: 'day' | 'month';
   deposit_amount?: number;
   minimum_stay?: number;
@@ -98,7 +99,7 @@ export interface Booking {
   totalAmount: number;
   stay_status?: 'pending' | 'checked_in' | 'checked_out' | 'no_show';
   booking_status?: number;
-  status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành' | 'Chờ duyệt hủy';
+  status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành' | 'Chờ duyệt hủy' | 'Không đến';
 }
 
 export interface MaintenanceRequest {

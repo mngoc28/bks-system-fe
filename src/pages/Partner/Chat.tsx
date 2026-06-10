@@ -10,8 +10,10 @@ import {
   Paperclip,
   Check,
   CheckCheck,
-  MessageSquare
+  MessageSquare,
+  ArrowLeft,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -146,10 +148,13 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-blue-950/5">
+    <div className="flex h-[calc(100vh-120px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-blue-950/5 sm:h-[calc(100vh-140px)] sm:rounded-3xl">
       {/* Sidebar */}
-      <div className="flex w-full flex-col border-r border-slate-100 bg-slate-50/50 md:w-[380px]">
-        <div className="space-y-4 p-6">
+      <div className={cn(
+        'w-full flex-col border-r border-slate-100 bg-slate-50/50 md:flex md:w-[380px]',
+        activeConversation ? 'hidden md:flex' : 'flex',
+      )}>
+        <div className="space-y-4 p-4 sm:p-6">
            <div className="flex items-center justify-between">
               <h1 className="text-xl font-black text-slate-900">Tin nhắn</h1>
               <Button variant="ghost" size="icon" className="rounded-full border border-slate-100 bg-white shadow-sm">
@@ -221,12 +226,24 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex flex-1 flex-col bg-white">
+      <div className={cn(
+        'flex-1 flex-col bg-white',
+        activeConversation ? 'flex' : 'hidden md:flex',
+      )}>
          {activeConversation ? (
             <>
                {/* Chat Header */}
-               <div className="z-10 flex items-center justify-between border-b border-slate-50 bg-white/80 p-4 backdrop-blur-md md:p-6">
-                  <div className="flex items-center gap-4">
+               <div className="z-10 flex items-center justify-between border-b border-slate-50 bg-white/80 p-3 backdrop-blur-md sm:p-4 md:p-6">
+                  <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                     <Button
+                       variant="ghost"
+                       size="icon"
+                       className="shrink-0 rounded-xl md:hidden"
+                       onClick={() => setActiveConversation(null)}
+                       aria-label="Quay lại danh sách hội thoại"
+                     >
+                       <ArrowLeft size={18} />
+                     </Button>
                      <Avatar className="size-10 border border-slate-100 md:size-12">
                         <AvatarImage src={activeConversation.booking?.user?.avatar} />
                         <AvatarFallback className="bg-slate-100 font-bold uppercase text-slate-600">

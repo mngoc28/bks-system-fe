@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PaginationProps {
   currentPage: number;
@@ -39,6 +40,7 @@ const Pagination = ({
   resultsText,
   hideTotalItems = false
 }: PaginationProps) => {
+  const { t } = useTranslation();
 
   const handlePageClick = (e: React.MouseEvent, page: number) => {
     e.preventDefault();
@@ -79,7 +81,9 @@ const Pagination = ({
         {onPerPageChange && perPage && (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Xem</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+                {t("pagination.show")}
+              </span>
               <Select 
                 value={String(perPage)} 
                 onValueChange={(val) => onPerPageChange?.(Number(val))}
@@ -90,7 +94,7 @@ const Pagination = ({
                 <SelectContent>
                   {perPageOptions.map((option) => (
                     <SelectItem key={option} value={String(option)} className="font-bold">
-                      {option} bản ghi
+                      {t("pagination.records_count", { count: option })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -101,7 +105,7 @@ const Pagination = ({
               <div className="flex items-center gap-2 rounded-lg border border-primary/10 bg-primary/5 px-3 py-1.5 shadow-sm">
                 <Layers size={14} className="text-primary" />
                 <span className="whitespace-nowrap text-xs font-bold text-primary">
-                  {(totalItems ?? 0).toLocaleString('vi-VN')} {resultsText || "kết quả"}
+                  {(totalItems ?? 0).toLocaleString('vi-VN')} {resultsText || t("pagination.results")}
                 </span>
               </div>
             )}
@@ -112,7 +116,7 @@ const Pagination = ({
       {/* Right: Pagination Buttons */}
       <div className="flex items-center gap-4">
         <div className="hidden items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:flex">
-          <span className="text-slate-600">Trang {currentPage}</span>
+          <span className="text-slate-600">{t("pagination.page")} {currentPage}</span>
           <span className="opacity-50">/</span>
           <span>{totalPages}</span>
         </div>
@@ -124,7 +128,7 @@ const Pagination = ({
                 disabled={currentPage === 1}
                 className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40`}
                 onClick={() => onPageChange(currentPage - 1)}
-                title="Trang trước"
+                title={t("pagination.previous_page")}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -164,7 +168,7 @@ const Pagination = ({
                 disabled={currentPage === totalPages}
                 className={`flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40`}
                 onClick={() => onPageChange(currentPage + 1)}
-                title="Trang tiếp"
+                title={t("pagination.next_page")}
               >
                 <ChevronRight size={18} />
               </button>

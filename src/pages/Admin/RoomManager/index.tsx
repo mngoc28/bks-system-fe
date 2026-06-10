@@ -1,4 +1,4 @@
-﻿import EmptyPage from "@/components/EmptyPage";
+import EmptyPage from "@/components/EmptyPage";
 import { Button } from "@/components/ui/button";
 import { toastError } from "@/components/ui/toast";
 import { DEFAULT_CARD_LIMIT, DEFAULT_PAGE, ROUTERS } from "@/constant";
@@ -12,7 +12,8 @@ import { useLocation, useNavigate } from "react-router";
 import { DeleteRoomDialog, RoomSearchSection, RoomCard, RoomTable } from "./components";
 import { ViewMode } from "@/components/LayoutToggle";
 import Pagination from "@/components/Pagination";
-import { Spinner } from "@/components/ui/spinner";
+import AdminListLoading from "@/components/admin/AdminListLoading";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 import PageBar from "@/components/PageBar";
 import { adminTheme } from "@/lib/adminTheme";
 import { useSearchParams } from "react-router-dom";
@@ -224,9 +225,9 @@ const RoomManager: React.FC = () => {
 
 
   return (
-    <div className="flex w-full flex-col gap-8 p-[24px_32px]">
+    <AdminPageShell>
       <PageBar
-        subtitle={t("rooms.room_list_subtitle") || "Quản lý danh sách phòng và trạng thái lưu trú."}
+        subtitle={t("rooms.room_list_subtitle") || "Qu?n l? danh s?ch ph?ng v? tr?ng th?i luu tr?."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -275,15 +276,13 @@ const RoomManager: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-slate-100 bg-white/50">
-          <Spinner size="lg" showText text={t("common.loading_data")} />
-        </div>
+        <AdminListLoading mode={viewMode} />
       ) : totalItems === 0 ? (
         <EmptyPage />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {rooms.map((room: Room) => (
                 <RoomCard
                   key={room.id}
@@ -377,7 +376,7 @@ const RoomManager: React.FC = () => {
         onConfirm={handleConfirmDeleteRoom}
         isLoading={deleteRoomMutation.isPending}
       />
-    </div>
+    </AdminPageShell>
   );
 };
 

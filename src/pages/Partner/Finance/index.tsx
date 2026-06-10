@@ -37,6 +37,7 @@ import {
   FileText
 } from "lucide-react";
 import { toastSuccess, toastError } from "@/components/ui/toast";
+import { HorizontalChipScroller } from "../components/ResponsiveBlocks";
 
 const PartnerFinance: React.FC = () => {
   // Filters state
@@ -215,7 +216,7 @@ const PartnerFinance: React.FC = () => {
   return (
     <div className="flex w-full flex-col gap-6 pb-12">
       {/* Title block */}
-      <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between rounded-3xl border border-slate-200 bg-gradient-to-r from-white via-indigo-50/20 to-white p-6 shadow-sm">
+      <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-gradient-to-r from-white via-indigo-50/20 to-white p-4 shadow-sm md:flex-row md:items-center md:justify-between md:p-6">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">Tài chính & Đối soát</h1>
           <p className="mt-1 text-xs text-slate-600">
@@ -235,7 +236,7 @@ const PartnerFinance: React.FC = () => {
       </section>
 
       {/* KPI and Bank Instructions grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
         {/* Left Column: KPI cards */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -290,7 +291,7 @@ const PartnerFinance: React.FC = () => {
                 <div className="p-8 text-center text-slate-400">Chưa phát hành kỳ đối soát nào.</div>
               ) : (
                 <div className="flex flex-col">
-                  <div className="overflow-x-auto">
+                  <div className="hidden overflow-x-auto md:block">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -356,6 +357,45 @@ const PartnerFinance: React.FC = () => {
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+                  <div className="space-y-3 p-3 md:hidden">
+                    {listItems.map((period: any) => (
+                      <div key={`mobile-finance-${period.id}`} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Kỳ #{period.id}</p>
+                            <p className="text-[11px] text-slate-500">
+                              {formatDate(period.period_start)} - {formatDate(period.period_end)}
+                            </p>
+                          </div>
+                          {getStatusBadge(period.status)}
+                        </div>
+                        <div className="mt-2 space-y-1 text-xs">
+                          <p className="text-slate-600">GMV: <span className="font-semibold">{formatCurrency(period.total_gmv)}</span></p>
+                          <p className="text-slate-700">Phí: <span className="font-bold text-indigo-700">{formatCurrency(period.net_commission_to_pay)}</span></p>
+                        </div>
+                        <HorizontalChipScroller className="mt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleExportExcel(period.id)}
+                            disabled={isExportingExcel || isExportingPdf}
+                            className="h-8 text-emerald-600"
+                          >
+                            <FileSpreadsheet className="mr-1 size-4" /> Excel
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleExportPdf(period.id)}
+                            disabled={isExportingPdf || isExportingExcel}
+                            className="h-8 text-rose-600"
+                          >
+                            <FileText className="mr-1 size-4" /> PDF
+                          </Button>
+                        </HorizontalChipScroller>
+                      </div>
+                    ))}
                   </div>
                   <div className="border-t border-slate-100 p-4">
                     <Pagination

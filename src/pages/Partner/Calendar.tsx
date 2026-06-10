@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -8,18 +9,18 @@ import {
   Home,
   User,
   MapPin,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   AlertTriangle,
   LogIn,
   LogOut,
   Phone,
-  Lock,
   Plus,
   Trash2,
   Info,
   FileText,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  X,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
@@ -50,11 +51,15 @@ import {
 } from '@/hooks/Partner/useCalendar';
 import { useBookingsRealtime } from '@/hooks/Partner/useBookingsRealtime';
 import { RoomBlockDialog } from './components/RoomBlockDialog';
+import CancelBookingDialog from './components/CancelBookingDialog';
 import { isPartner360Enabled } from '@/lib/featureFlags';
+import { ROUTERS } from '@/constant';
 import {
   PARTNER_BLOCK_TYPE_LABEL_VI,
   countPartnerBookingNightsExclusive,
+  formatCalendarGuestLabel,
   formatPartnerBookingDateVi,
+  getCalendarDayOperationalMarker,
   getPartnerBlockCalendarHex,
   getPartnerBookingCalendarHex,
   getPartnerRowDisplayStatus,
@@ -95,6 +100,17 @@ interface CalendarEvent {
 }
 
 const ALL_PROPERTIES = '__all__';
+const ROOMS_FILTER_PER_PAGE = 100;
+
+type OperationalFilter = 'all' | 'arrivals' | 'departures' | 'in_stay' | 'pending' | 'blocks';
+
+const OPERATIONAL_FILTER_LABELS: Record<Exclude<OperationalFilter, 'all'>, string> = {
+  arrivals: 'Nhận phòng hôm nay',
+  departures: 'Trả phòng hôm nay',
+  in_stay: 'Đang ở',
+  pending: 'Chờ duyệt',
+  blocks: 'Chặn lịch',
+};
 
 const FC_BUTTON_TEXT = {
   today: 'Hôm nay',
@@ -128,8 +144,12 @@ function parsePartnerRoomsSearchResponse(res: any): any[] {
 }
 
 const CalendarPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [properties, setProperties] = useState<any[]>([]);
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string>(ALL_PROPERTIES);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>(() => {
+    const fromUrl = searchParams.get('property_id');
+    return fromUrl && fromUrl !== ALL_PROPERTIES ? fromUrl : ALL_PROPERTIES;
+  });
   const [rooms, setRooms] = useState<any[]>([]);
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string>('all');
@@ -139,7 +159,15 @@ const CalendarPage: React.FC = () => {
   });
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [calendarViewType, setCalendarViewType] = useState('dayGridMonth');
+  const [eventListExpanded, setEventListExpanded] = useState(false);
+  const [operationalFilter, setOperationalFilter] = useState<OperationalFilter>('all');
+  const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
+  const [dayPanel, setDayPanel] = useState<{ date: string; events: CalendarEvent[] } | null>(null);
   const calendarRef = useRef<FullCalendar | null>(null);
+
+  const eventOverlapsDay = (event: CalendarEvent, dayStr: string): boolean =>
+    event.start <= dayStr && event.end > dayStr;
 
   // Phase 2 realtime — listener đã invalidate query 'partner.calendar'.
   useBookingsRealtime();
@@ -174,13 +202,27 @@ const CalendarPage: React.FC = () => {
   const fetchRoomsForFilter = async (signal?: AbortSignal) => {
     setRoomsLoading(true);
     try {
-      const params: Record<string, string | number> = { page: 1, per_page: 300 };
-      if (selectedPropertyId !== ALL_PROPERTIES) {
-        params.property_id = Number(selectedPropertyId);
-      }
-      const res: any = await partnerService.getRooms(params, { signal });
-      const list = parsePartnerRoomsSearchResponse(res);
-      setRooms(list);
+      const allRooms: ReturnType<typeof parsePartnerRoomsSearchResponse> = [];
+      let page = 1;
+      let lastPage = 1;
+
+      do {
+        const params: Record<string, string | number> = {
+          page,
+          per_page: ROOMS_FILTER_PER_PAGE,
+        };
+        if (selectedPropertyId !== ALL_PROPERTIES) {
+          params.property_id = Number(selectedPropertyId);
+        }
+        const res: any = await partnerService.getRooms(params, { signal });
+        allRooms.push(...parsePartnerRoomsSearchResponse(res));
+
+        const roomData = res?.data ?? {};
+        lastPage = Number(roomData.last_page ?? 1);
+        page += 1;
+      } while (page <= lastPage && !signal?.aborted);
+
+      setRooms(allRooms);
       setSelectedRoomId('all');
     } catch (err: any) {
       if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
@@ -198,7 +240,11 @@ const CalendarPage: React.FC = () => {
   const fetchProperties = async (signal?: AbortSignal) => {
     try {
       const res: any = await partnerService.getPropertyNames({ signal });
-      setProperties(parsePartnerPropertyNamesResponse(res));
+      const list = parsePartnerPropertyNamesResponse(res);
+      setProperties(list);
+      if (list.length === 1 && selectedPropertyId === ALL_PROPERTIES) {
+        setSelectedPropertyId(String(list[0].id));
+      }
     } catch (err: any) {
       if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
         return;
@@ -301,6 +347,50 @@ const CalendarPage: React.FC = () => {
     return list;
   }, [events, selectedPropertyId, selectedRoomId]);
 
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  const displayEvents = useMemo(() => {
+    if (operationalFilter === 'all') {
+      return filteredEvents;
+    }
+
+    return filteredEvents.filter((e) => {
+      const p = e.extendedProps;
+      switch (operationalFilter) {
+        case 'arrivals':
+          return p.kind === 'booking' && p.checkIn === todayStr && p.rawStatus === 1;
+        case 'departures':
+          return p.kind === 'booking' && p.checkOut === todayStr && p.stayStatus === 'checked_in';
+        case 'in_stay':
+          return p.kind === 'booking' && p.stayStatus === 'checked_in';
+        case 'pending':
+          return p.kind === 'booking' && p.rawStatus === 0;
+        case 'blocks':
+          return p.kind === 'block';
+        default:
+          return true;
+      }
+    });
+  }, [filteredEvents, operationalFilter, todayStr]);
+
+  const pendingEvents = useMemo(
+    () => filteredEvents.filter((e) => e.extendedProps.kind === 'booking' && e.extendedProps.rawStatus === 0),
+    [filteredEvents],
+  );
+
+  const toggleOperationalFilter = (filter: Exclude<OperationalFilter, 'all'>) => {
+    setOperationalFilter((prev) => (prev === filter ? 'all' : filter));
+  };
+
+  const isPortfolioView = selectedPropertyId === ALL_PROPERTIES && selectedRoomId === 'all';
+  const isMonthView = calendarViewType === 'dayGridMonth';
+
+  const dayMaxEvents = useMemo(() => {
+    if (isMonthView && isPortfolioView) return 2;
+    if (isMonthView) return 4;
+    return 8;
+  }, [isMonthView, isPortfolioView]);
+
   // Overbooking detection: hai event cùng room có khoảng giao nhau (end exclusive).
   const overbookingCount = useMemo(() => {
     const byRoom = new Map<number, CalendarEvent[]>();
@@ -329,23 +419,47 @@ const CalendarPage: React.FC = () => {
   const renderEventContent = (eventInfo: any) => {
     const props = eventInfo.event.extendedProps as CalendarEventExt;
     const isBlock = props.kind === 'block';
-    const showProperty =
-      selectedPropertyId === ALL_PROPERTIES && Boolean(props.propertyName);
+    const viewType = eventInfo.view?.type ?? calendarViewType;
+    const monthGrid = viewType === 'dayGridMonth';
+    const title = eventInfo.event.title || '';
 
-    const getIcon = () => {
-      if (isBlock) return <Lock size={11} className="text-white/80" />;
-      if (props.rawStatus === 0) return <Clock size={11} className="text-white/80" />;
-      if (props.rawStatus === 2) return <AlertCircle size={11} className="text-white/80" />;
-      if (props.rawStatus === 3) return <CheckCircle2 size={11} className="text-white/80" />;
-      if (props.stayStatus === 'checked_in') return <LogIn size={11} className="text-white/80" />;
-      return <CheckCircle2 size={11} className="text-white/80" />;
-    };
+    if (monthGrid && isPortfolioView) {
+      const label = isBlock ? `⊘ ${props.roomName}` : props.roomName;
+      return (
+        <div className="truncate px-1 py-0.5 text-[10px] font-bold leading-tight text-white" title={title}>
+          {label}
+        </div>
+      );
+    }
+
+    if (monthGrid) {
+      const cellDate = format(eventInfo.event.start!, 'yyyy-MM-dd');
+      const marker = isBlock
+        ? ''
+        : getCalendarDayOperationalMarker(cellDate, props.checkIn, props.checkOut, props.stayStatus);
+      const guestLabel = isBlock ? 'Chặn' : formatCalendarGuestLabel(props.guestName, props.bookingId);
+      const label = `${props.roomName} · ${guestLabel}${marker ? ` ·${marker}` : ''}`;
+      return (
+        <div
+          className="flex items-center gap-1 truncate px-1 py-0.5 text-[10px] font-semibold leading-tight text-white"
+          title={title}
+        >
+          <span className="truncate">{label}</span>
+          {marker === 'IN' && (
+            <span className="shrink-0 rounded bg-white/25 px-0.5 text-[8px] font-black">IN</span>
+          )}
+          {marker === 'OUT' && (
+            <span className="shrink-0 rounded bg-white/25 px-0.5 text-[8px] font-black">OUT</span>
+          )}
+          {props.isLongTerm && <FileText size={9} className="shrink-0 opacity-90" />}
+        </div>
+      );
+    }
 
     return (
       <div
-        className={`flex w-full flex-col gap-0.5 overflow-hidden p-1.5 transition-all ${
-          isBlock ? 'opacity-95' : ''
-        }`}
+        className={`flex w-full flex-col gap-0.5 overflow-hidden p-1.5 ${isBlock ? 'opacity-95' : ''}`}
+        title={title}
         style={
           isBlock
             ? {
@@ -355,30 +469,9 @@ const CalendarPage: React.FC = () => {
             : undefined
         }
       >
-        {showProperty && (
-          <div className="truncate text-[10px] font-semibold leading-tight text-white/80">
-            {props.propertyName}
-          </div>
-        )}
-        <div className="flex items-center justify-between gap-1">
-          <div className="truncate text-xs font-bold leading-tight text-white drop-shadow-sm">
-            {props.roomName}
-          </div>
-          <div className="flex-shrink-0">{getIcon()}</div>
-        </div>
-        <div className="truncate text-[11px] font-semibold leading-tight text-white drop-shadow-sm">
+        <div className="truncate text-xs font-bold leading-tight text-white">{props.roomName}</div>
+        <div className="truncate text-[11px] text-white/90">
           {isBlock ? props.reason || props.status : props.guestName}
-        </div>
-        <div className="mt-0.5 flex items-center gap-1">
-          <span className="truncate text-[10px] font-medium capitalize text-white/85">{props.status}</span>
-          {props.isLongTerm && (
-            <span
-              className="ml-auto flex shrink-0 items-center gap-0.5 rounded bg-white/20 px-1 py-[1px] text-[9px] font-bold uppercase tracking-wide text-white"
-              title={`Hợp đồng dài hạn (${props.nights} đêm)`}
-            >
-              <FileText size={9} /> Contract
-            </span>
-          )}
         </div>
       </div>
     );
@@ -390,6 +483,9 @@ const CalendarPage: React.FC = () => {
   // thay vì `arg.start/arg.end` — cái thứ hai bao luôn các ngày tuần lệch
   // ngoài tháng (41–42 ngày) và sẽ vượt cap 31 ngày của BE.
   const onDatesSet = (arg: any) => {
+    const viewType = arg.view?.type ?? 'dayGridMonth';
+    setCalendarViewType((prev) => (prev === viewType ? prev : viewType));
+
     const viewStart: Date = arg.view?.currentStart ?? arg.start;
     const viewEnd: Date = arg.view?.currentEnd ?? arg.end;
     const start = format(viewStart, 'yyyy-MM-dd');
@@ -415,14 +511,22 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleReject = async (id: number) => {
+  const handleReject = (id: number) => {
+    setCancelTargetId(id);
+  };
+
+  const handleCancelSubmit = async (reason: string) => {
+    if (cancelTargetId === null) {
+      return;
+    }
     try {
-      await partnerService.cancelBooking(id);
+      await partnerService.cancelBooking(cancelTargetId, reason);
       toastSuccess('Đã từ chối đặt phòng.');
       invalidateCalendar();
       setSelectedEvent(null);
     } catch {
       toastError('Lỗi khi từ chối đặt phòng.');
+      throw new Error('cancel_failed');
     }
   };
 
@@ -493,13 +597,12 @@ const CalendarPage: React.FC = () => {
   };
 
   const operationalStats = useMemo(() => {
-    const today = format(new Date(), 'yyyy-MM-dd');
     return {
       arrivals: filteredEvents.filter(
-        (e) => e.extendedProps.kind === 'booking' && e.extendedProps.checkIn === today && e.extendedProps.rawStatus === 1,
+        (e) => e.extendedProps.kind === 'booking' && e.extendedProps.checkIn === todayStr && e.extendedProps.rawStatus === 1,
       ).length,
       departures: filteredEvents.filter(
-        (e) => e.extendedProps.kind === 'booking' && e.extendedProps.checkOut === today && e.extendedProps.stayStatus === 'checked_in',
+        (e) => e.extendedProps.kind === 'booking' && e.extendedProps.checkOut === todayStr && e.extendedProps.stayStatus === 'checked_in',
       ).length,
       inStay: filteredEvents.filter(
         (e) => e.extendedProps.kind === 'booking' && e.extendedProps.stayStatus === 'checked_in',
@@ -509,7 +612,13 @@ const CalendarPage: React.FC = () => {
       ).length,
       blocks: filteredEvents.filter((e) => e.extendedProps.kind === 'block').length,
     };
-  }, [filteredEvents]);
+  }, [filteredEvents, todayStr]);
+
+  useEffect(() => {
+    if (operationalStats.pending > 0) {
+      setEventListExpanded(true);
+    }
+  }, [operationalStats.pending]);
 
   const dialogRooms = useMemo(() => {
     return rooms.map((r: any) => ({
@@ -522,30 +631,52 @@ const CalendarPage: React.FC = () => {
 
   const loading = calendarQuery.isFetching;
 
-  return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="flex items-center gap-3 text-2xl font-black text-slate-900 sm:text-3xl">
-          <div className="rounded-xl bg-blue-50 p-2 text-blue-600">
-            <CalendarIcon size={26} />
-          </div>
-          Lịch khả dụng
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm font-medium text-slate-600 sm:text-base">
-          Xem và điều phối đặt phòng, chặn lịch phòng theo từng cơ sở. Chọn bộ lọc bên dưới để đồng bộ với dữ liệu trên server.
-        </p>
-      </div>
+  const sortedEventsForList = useMemo(() => {
+    return [...displayEvents].sort((a, b) => a.start.localeCompare(b.start));
+  }, [displayEvents]);
 
+  const kpiItems: Array<{
+    key: Exclude<OperationalFilter, 'all'>;
+    label: string;
+    value: number;
+    tone: string;
+    activeTone: string;
+  }> = [
+    { key: 'arrivals', label: 'Nhận phòng', value: operationalStats.arrivals, tone: 'text-emerald-600', activeTone: 'ring-emerald-400 bg-emerald-50' },
+    { key: 'departures', label: 'Trả phòng', value: operationalStats.departures, tone: 'text-amber-600', activeTone: 'ring-amber-400 bg-amber-50' },
+    { key: 'in_stay', label: 'Đang ở', value: operationalStats.inStay, tone: 'text-blue-600', activeTone: 'ring-blue-400 bg-blue-50' },
+    { key: 'pending', label: 'Chờ duyệt', value: operationalStats.pending, tone: 'text-rose-600', activeTone: 'ring-rose-400 bg-rose-50' },
+    { key: 'blocks', label: 'Chặn lịch', value: operationalStats.blocks, tone: 'text-violet-600', activeTone: 'ring-violet-400 bg-violet-50' },
+  ];
+
+  return (
+    <div className="space-y-4">
       <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg text-slate-900">Bộ lọc lịch</CardTitle>
-          <CardDescription className="text-slate-600">
-            Danh sách phòng được tải qua API theo cơ sở đã chọn.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-12 md:gap-4">
-            <div className="space-y-1.5 md:col-span-5">
+        <CardHeader className="space-y-4 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl text-slate-900 sm:text-2xl">
+                <CalendarIcon size={22} className="text-blue-600" />
+                Lịch khả dụng
+              </CardTitle>
+              <CardDescription className="mt-1 max-w-2xl">
+                Chọn <strong>một cơ sở</strong> (hoặc một phòng) để xem lịch rõ ràng. Chế độ tổng hợp chỉ dùng để rà soát nhanh.
+              </CardDescription>
+            </div>
+            {isPartner360Enabled() && (
+              <Button
+                type="button"
+                className="h-10 shrink-0 gap-2 rounded-lg bg-amber-600 px-4 font-semibold hover:bg-amber-700"
+                onClick={() => setBlockDialogOpen(true)}
+              >
+                <Plus size={18} />
+                Tạo block
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-1.5">
               <label htmlFor="property-select" className="block text-xs font-semibold text-slate-600">Cơ sở</label>
               <div className="relative">
                 <Home
@@ -553,11 +684,11 @@ const CalendarPage: React.FC = () => {
                   size={18}
                 />
                 <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
-                  <SelectTrigger id="property-select" className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white">
+                  <SelectTrigger id="property-select" className="h-10 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800">
                     <SelectValue placeholder="Chọn cơ sở" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-lg border-slate-200">
-                    <SelectItem value={ALL_PROPERTIES}>Tất cả cơ sở</SelectItem>
+                  <SelectContent className="max-h-[min(16rem,60vh)] overflow-y-auto rounded-lg border-slate-200">
+                    <SelectItem value={ALL_PROPERTIES}>Tất cả cơ sở (tổng hợp)</SelectItem>
                     {properties.map((b) => (
                       <SelectItem key={b.id} value={String(b.id)}>
                         {b.name}
@@ -568,94 +699,166 @@ const CalendarPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-1.5 md:col-span-5">
+            <div className="space-y-1.5">
               <label htmlFor="room-select" className="block text-xs font-semibold text-slate-600">Phòng</label>
               <div className="relative">
                 <MapPin
                   className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400"
                   size={18}
                 />
-                <Select
-                  value={selectedRoomId}
-                  onValueChange={setSelectedRoomId}
-                  disabled={roomsLoading}
-                >
-                  <SelectTrigger id="room-select" className="h-11 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 shadow-sm hover:bg-white disabled:opacity-60">
+                <Select value={selectedRoomId} onValueChange={setSelectedRoomId} disabled={roomsLoading}>
+                  <SelectTrigger
+                    id="room-select"
+                    className="h-10 w-full rounded-lg border-slate-200 bg-slate-50/80 pl-10 font-medium text-slate-800 disabled:opacity-60"
+                  >
                     <SelectValue placeholder={roomsLoading ? 'Đang tải…' : 'Tất cả phòng'} />
                   </SelectTrigger>
-                  <SelectContent className="max-h-72 rounded-lg border-slate-200">
+                  <SelectContent className="max-h-[min(16rem,60vh)] overflow-y-auto rounded-lg border-slate-200">
                     <SelectItem value="all">Tất cả phòng</SelectItem>
                     {rooms.map((r: any) => (
                       <SelectItem key={r.id} value={String(r.id)}>
                         {r.room_number || r.title || r.name || `Phòng ${r.id}`}
-                        {r.property_name || r.property_name ? ` — ${r.property_name || r.property_name}` : ''}
+                        {r.property_name ? ` — ${r.property_name}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+          </div>
 
-            <div className="flex md:col-span-2 md:justify-end">
-              {isPartner360Enabled() && (
-                <Button
+          <div className="overflow-x-auto border-t border-slate-100 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max min-w-full gap-2">
+            {kpiItems.map((item) => {
+              const isActive = operationalFilter === item.key;
+              return (
+                <button
+                  key={item.key}
                   type="button"
-                  className="h-11 w-full gap-2 rounded-lg bg-amber-600 px-4 font-semibold hover:bg-amber-700 md:w-auto md:min-w-[140px]"
-                  onClick={() => setBlockDialogOpen(true)}
+                  onClick={() => toggleOperationalFilter(item.key)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-all ${
+                    isActive
+                      ? `border-transparent ring-2 ${item.activeTone}`
+                      : 'border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white'
+                  }`}
+                  aria-pressed={isActive}
                 >
-                  <Plus size={18} />
-                  Tạo block
-                </Button>
-              )}
+                  <span className={`text-base font-black leading-none ${item.tone}`}>{item.value}</span>
+                  <span className="font-medium text-slate-500">{item.label}</span>
+                </button>
+              );
+            })}
             </div>
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
 
-      {overbookingCount > 0 && (
-        <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 shadow-sm">
-          <AlertTriangle size={20} className="flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-bold">Cảnh báo trùng lịch</p>
-            <p className="text-xs text-rose-700">
-              Phát hiện {overbookingCount} cặp đặt phòng giao khoảng trong dải ngày hiện tại. Vui lòng kiểm tra và điều phối.
+      {operationalFilter !== 'all' && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-sm text-blue-900">
+          <span>
+            Đang lọc: <strong>{OPERATIONAL_FILTER_LABELS[operationalFilter]}</strong>
+            {' · '}
+            {displayEvents.length} sự kiện
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1 text-blue-800 hover:bg-blue-100 hover:text-blue-950"
+            onClick={() => setOperationalFilter('all')}
+          >
+            <X size={14} />
+            Xóa lọc
+          </Button>
+        </div>
+      )}
+
+      {pendingEvents.length > 0 && (
+        <Card className="border-rose-200 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-rose-900">
+              Cần duyệt ngay ({pendingEvents.length})
+            </CardTitle>
+            <CardDescription className="text-rose-700/80">
+              Xử lý các yêu cầu đặt phòng chờ xác nhận trong phạm vi đang lọc.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            {pendingEvents.map((e) => {
+              const p = e.extendedProps;
+              return (
+                <div
+                  key={e.id}
+                  className="flex flex-col gap-3 rounded-lg border border-rose-100 bg-rose-50/40 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-900">#{p.bookingId}</span>
+                      <span className="truncate text-sm font-semibold text-slate-800">{p.guestName}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-slate-600">
+                      {p.roomName}
+                      {p.propertyName ? ` · ${p.propertyName}` : ''}
+                      {' · '}
+                      {formatPartnerBookingDateVi(p.checkIn)} → {formatPartnerBookingDateVi(p.checkOut)}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 border-slate-200"
+                      onClick={() => setSelectedEvent(e)}
+                    >
+                      Chi tiết
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 border-rose-200 text-rose-600 hover:bg-rose-50"
+                      onClick={() => handleReject(p.bookingId)}
+                    >
+                      Từ chối
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => handleApprove(p.bookingId)}
+                    >
+                      Duyệt ngay
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {isPortfolioView && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-amber-900">
+          <Info size={18} className="mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-semibold">Đang xem tổng hợp nhiều cơ sở</p>
+            <p className="mt-0.5 text-xs text-amber-800/90">
+              Ô lịch chỉ hiển thị mã phòng để giảm rối. Chọn một cơ sở cụ thể để thấy tên khách và điều phối chi tiết.
             </p>
           </div>
         </div>
       )}
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-bold text-slate-900">Vận hành hôm nay</CardTitle>
-          <CardDescription className="text-xs text-slate-500">
-            Số liệu theo bộ lọc và ngày hệ thống ({formatPartnerBookingDateVi(format(new Date(), 'yyyy-MM-dd'))}).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-            <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-center sm:text-left">
-              <p className="text-2xl font-black text-emerald-600">{operationalStats.arrivals}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nhận phòng</p>
-            </div>
-            <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-center sm:text-left">
-              <p className="text-2xl font-black text-amber-600">{operationalStats.departures}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Trả phòng</p>
-            </div>
-            <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-center sm:text-left">
-              <p className="text-2xl font-black text-blue-600">{operationalStats.inStay}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Đang lưu trú</p>
-            </div>
-            <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-center sm:text-left">
-              <p className="text-2xl font-black text-rose-600">{operationalStats.pending}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Chờ duyệt</p>
-            </div>
-            <div className="col-span-2 rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-center sm:col-span-1 sm:text-left">
-              <p className="text-2xl font-black text-violet-600">{operationalStats.blocks}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Chặn lịch</p>
-            </div>
+      {overbookingCount > 0 && !isPortfolioView && (
+        <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">
+          <AlertTriangle size={18} className="shrink-0" />
+          <div className="text-sm">
+            <p className="font-bold">Trùng lịch: {overbookingCount} cặp</p>
+            <p className="text-xs text-rose-700">Kiểm tra các booking giao khoảng trong phạm vi đang lọc.</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -706,17 +909,39 @@ const CalendarPage: React.FC = () => {
               }}
               buttonText={FC_BUTTON_TEXT}
               locale="vi"
-              events={filteredEvents}
+              events={displayEvents}
               eventContent={renderEventContent}
-              height="720px"
+              height={isPortfolioView && isMonthView ? '640px' : '680px'}
               eventClick={(info) => setSelectedEvent(info.event as unknown as CalendarEvent)}
-              editable={true}
-              selectable={true}
+              editable={!isPortfolioView}
+              selectable={!isPortfolioView}
               selectMirror={true}
-              dayMaxEvents={3}
-              moreLinkText={(n) => `+${n} sự kiện`}
+              dayMaxEvents={dayMaxEvents}
+              moreLinkText={(n) => `+${n} booking`}
+              eventDisplay={isMonthView ? 'block' : 'auto'}
+              moreLinkClick={(info) => {
+                info.jsEvent.preventDefault();
+                const dayStr = format(info.date, 'yyyy-MM-dd');
+                const dayEvents = displayEvents
+                  .filter((e) => eventOverlapsDay(e, dayStr))
+                  .sort((a, b) => {
+                    const byRoom = a.extendedProps.roomName.localeCompare(b.extendedProps.roomName, 'vi', {
+                      numeric: true,
+                    });
+                    if (byRoom !== 0) return byRoom;
+                    if (a.extendedProps.rawStatus !== b.extendedProps.rawStatus) {
+                      return a.extendedProps.rawStatus - b.extendedProps.rawStatus;
+                    }
+                    return a.extendedProps.guestName.localeCompare(b.extendedProps.guestName, 'vi');
+                  });
+                setDayPanel({ date: dayStr, events: dayEvents });
+              }}
               eventDidMount={(info) => {
-                const t = info.event.title || '';
+                const props = info.event.extendedProps as CalendarEventExt;
+                const t =
+                  props.kind === 'booking'
+                    ? `${props.roomName} · ${props.guestName} · ${props.status} · #${props.bookingId}`
+                    : info.event.title || '';
                 info.el.setAttribute('title', t);
               }}
               datesSet={onDatesSet}
@@ -731,51 +956,147 @@ const CalendarPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg text-slate-900">Sự kiện trong khoảng thời gian</CardTitle>
-          <CardDescription className="text-slate-600">
-            {formatPartnerBookingDateVi(range.from)} — {formatPartnerBookingDateVi(range.to)} · tối đa 12 mục
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {filteredEvents.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-500">
-              Chưa có sự kiện trong khoảng thời gian hiển thị.
-            </p>
-          ) : (
-            <div className="max-h-80 overflow-y-auto rounded-lg border border-slate-100">
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.4fr)_auto] gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
-                <span>Loại</span>
-                <span>Phòng</span>
-                <span>Chi tiết</span>
-                <span className="text-right">Trạng thái</span>
+      {sortedEventsForList.length > 0 && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-base text-slate-900">Danh sách sự kiện</CardTitle>
+              <CardDescription className="text-xs">
+                {formatPartnerBookingDateVi(range.from)} — {formatPartnerBookingDateVi(range.to)} ·{' '}
+                {sortedEventsForList.length} mục
+              </CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-slate-600"
+              onClick={() => setEventListExpanded((v) => !v)}
+            >
+              {eventListExpanded ? (
+                <>
+                  Thu gọn <ChevronUp size={16} />
+                </>
+              ) : (
+                <>
+                  Mở rộng <ChevronDown size={16} />
+                </>
+              )}
+            </Button>
+          </CardHeader>
+          {eventListExpanded && (
+            <CardContent className="pt-0">
+              <div className="custom-scrollbar max-h-72 overflow-y-auto rounded-lg border border-slate-100">
+                <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.4fr)_auto] gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:grid">
+                  <span>Loại</span>
+                  <span>Phòng</span>
+                  <span>Chi tiết</span>
+                  <span className="text-right">Trạng thái</span>
+                </div>
+                {sortedEventsForList.slice(0, 50).map((e) => (
+                  <React.Fragment key={e.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEvent(e)}
+                      className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.4fr)_auto] gap-2 border-b border-slate-50 px-3 py-2 text-left text-xs transition-colors hover:bg-slate-50 max-sm:hidden"
+                    >
+                      <span className="font-semibold text-slate-800">
+                        {e.extendedProps.kind === 'block' ? 'Chặn' : 'Booking'}
+                      </span>
+                      <span className="truncate text-slate-700">{e.extendedProps.roomName}</span>
+                      <span className="truncate text-slate-600">
+                        {e.extendedProps.kind === 'block'
+                          ? e.extendedProps.reason || e.extendedProps.status
+                          : e.extendedProps.guestName}
+                      </span>
+                      <span className="truncate text-right text-[11px] text-slate-500">{e.extendedProps.status}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEvent(e)}
+                      className="w-full border-b border-slate-50 px-3 py-2 text-left text-xs transition-colors hover:bg-slate-50 sm:hidden"
+                    >
+                      <p className="font-semibold text-slate-800">{e.extendedProps.roomName}</p>
+                      <p className="mt-0.5 truncate text-slate-600">
+                        {e.extendedProps.kind === 'block'
+                          ? e.extendedProps.reason || e.extendedProps.status
+                          : e.extendedProps.guestName}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-slate-500">{e.extendedProps.status}</p>
+                    </button>
+                  </React.Fragment>
+                ))}
               </div>
-              {filteredEvents.slice(0, 12).map((e) => (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => setSelectedEvent(e)}
-                  className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.4fr)_auto] gap-2 border-b border-slate-50 px-3 py-2.5 text-left text-xs transition-colors hover:bg-slate-50 sm:text-sm"
-                >
-                  <span className="font-semibold text-slate-800">
-                    {e.extendedProps.kind === 'block' ? 'Chặn lịch' : 'Đặt phòng'}
-                  </span>
-                  <span className="truncate text-slate-700">{e.extendedProps.roomName}</span>
-                  <span className="truncate text-slate-600">
-                    {e.extendedProps.kind === 'block'
-                      ? e.extendedProps.reason || e.extendedProps.status
-                      : e.extendedProps.guestName}
-                  </span>
-                  <span className="truncate text-right text-[11px] font-medium text-slate-500">
-                    {e.extendedProps.status}
-                  </span>
-                </button>
-              ))}
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      <Dialog open={dayPanel !== null} onOpenChange={(open) => !open && setDayPanel(null)}>
+        <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg">
+          {dayPanel && (
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Vận hành trong ngày</p>
+                <h2 className="text-lg font-black text-slate-900">
+                  {formatPartnerBookingDateVi(dayPanel.date)}
+                </h2>
+                <p className="text-xs text-slate-500">{dayPanel.events.length} sự kiện · sắp xếp theo phòng</p>
+              </div>
+              <div className="custom-scrollbar max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+                {dayPanel.events.map((e) => {
+                  const p = e.extendedProps;
+                  const marker = getCalendarDayOperationalMarker(
+                    dayPanel.date,
+                    p.checkIn,
+                    p.checkOut,
+                    p.stayStatus,
+                  );
+                  return (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => {
+                        setDayPanel(null);
+                        setSelectedEvent(e);
+                      }}
+                      className="flex w-full items-start gap-3 rounded-lg border border-slate-100 p-3 text-left transition-colors hover:bg-slate-50"
+                    >
+                      <span
+                        className="mt-1 h-8 w-1 shrink-0 rounded-full"
+                        style={{ backgroundColor: e.backgroundColor }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-slate-900">{p.roomName}</span>
+                          {marker && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {marker === 'IN' ? 'Nhận phòng' : 'Trả phòng'}
+                            </Badge>
+                          )}
+                          {p.isLongTerm && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              HĐ dài hạn
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="mt-0.5 truncate text-sm text-slate-700">
+                          {p.kind === 'block' ? p.reason || 'Chặn lịch' : p.guestName}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {p.kind === 'booking' ? `#${p.bookingId} · ` : ''}
+                          {p.status}
+                          {p.kind === 'booking' && p.phone ? ` · ${p.phone}` : ''}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
         <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-none shadow-2xl">
@@ -907,6 +1228,14 @@ const CalendarPage: React.FC = () => {
                     <Button variant="ghost" onClick={() => setSelectedEvent(null)} className="font-semibold text-slate-600">
                       Đóng
                     </Button>
+                    {selectedEvent.extendedProps.kind === 'booking' && (
+                      <Button variant="outline" asChild className="gap-2 font-semibold">
+                        <Link to={`${ROUTERS.PARTNER_BOOKINGS}?id=${selectedEvent.extendedProps.bookingId}`}>
+                          <ExternalLink size={14} />
+                          Xem trên trang Đặt phòng
+                        </Link>
+                      </Button>
+                    )}
                     {selectedEvent.extendedProps.kind === 'booking' && selectedEvent.extendedProps.rawStatus === 0 && (
                       <>
                         <Button
@@ -973,17 +1302,29 @@ const CalendarPage: React.FC = () => {
         onCreated={() => invalidateCalendar()}
       />
 
+      <CancelBookingDialog
+        open={cancelTargetId !== null}
+        bookingId={cancelTargetId}
+        onClose={() => setCancelTargetId(null)}
+        onConfirm={handleCancelSubmit}
+        title={cancelTargetId ? `Xác nhận từ chối booking #${cancelTargetId}` : undefined}
+        description="Vui lòng nhập lý do từ chối. Lý do sẽ được lưu trong nhật ký để minh bạch với khách."
+        confirmText="Xác nhận từ chối"
+      />
+
       <style dangerouslySetInnerHTML={{ __html: `
         .fc-theme-standard .fc-scrollgrid { border-radius: 16px; overflow: hidden; border: 1px solid #f1f5f9; }
-        .fc-header-toolbar { margin-bottom: 2rem !important; }
+        .fc-header-toolbar { margin-bottom: 1rem !important; }
         .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 800 !important; color: #0f172a; text-transform: capitalize; }
         .fc-button { padding: 0.6rem 1rem !important; font-size: 0.875rem !important; font-weight: 700 !important; border-radius: 10px !important; transition: all 0.2s; border: none !important; }
         .fc-button-primary { background-color: #f8fafc !important; color: #64748b !important; border: 1px solid #e2e8f0 !important; }
         .fc-button-primary:hover { background-color: #f1f5f9 !important; color: #0f172a !important; }
         .fc-button-active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; }
         .fc-today-button { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
-        .fc-event { cursor: pointer; border-radius: 8px !important; margin: 2px 4px !important; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: none !important; transition: transform 0.15s; }
-        .fc-event:hover { transform: scale(1.02); }
+        .fc-event { cursor: pointer; border-radius: 4px !important; margin: 1px 2px !important; box-shadow: none !important; border: none !important; min-height: 1.25rem; }
+        .fc-event:hover { filter: brightness(1.05); }
+        .fc-daygrid-event { padding: 0 !important; }
+        .fc-daygrid-dot-event { padding: 0 2px !important; }
         .fc-daygrid-day-number { font-size: 0.875rem; font-weight: 700; color: #64748b; padding: 8px !important; }
         .fc-col-header-cell-cushion { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px !important; }
         .fc-day-today { background-color: #eff6ff !important; }

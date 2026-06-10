@@ -99,29 +99,36 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
           <ChevronDown size={16} className="text-gray-400" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 rounded-xl border-gray-100 p-2 shadow-xl">
+      <DropdownMenuContent
+        align="start"
+        className="flex w-72 max-h-[min(20rem,70vh)] flex-col overflow-hidden rounded-xl border-gray-100 p-0 shadow-xl"
+      >
         {allowAll && (
           <DropdownMenuItem
             onClick={() => onSelect(null)}
-            className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-blue-50 hover:text-blue-700"
+            className="mx-2 mt-2 flex shrink-0 cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-blue-50 hover:text-blue-700"
           >
             <span className="text-sm font-medium">Tất cả tòa nhà</span>
-            {selectedId === null && <Check size={16} className="text-blue-600" />}
+            {selectedId === null && <Check size={16} className="shrink-0 text-blue-600" />}
           </DropdownMenuItem>
         )}
-        {properties.map((property) => (
-          <DropdownMenuItem
-            key={property.id}
-            onClick={() => onSelect(String(property.id))}
-            className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-blue-50 hover:text-blue-700"
-          >
-            <span className="truncate text-sm font-medium">{property.name}</span>
-            {String(selectedId) === String(property.id) && <Check size={16} className="text-blue-600" />}
-          </DropdownMenuItem>
-        ))}
-        {properties.length === 0 && !loading && (
-          <div className="p-3 text-center text-xs italic text-gray-400">Chưa có tòa nhà nào</div>
-        )}
+        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          {properties.map((property) => (
+            <DropdownMenuItem
+              key={property.id}
+              onClick={() => onSelect(String(property.id))}
+              className="flex cursor-pointer items-center justify-between gap-2 rounded-lg p-3 transition-colors hover:bg-blue-50 hover:text-blue-700"
+            >
+              <span className="min-w-0 truncate text-sm font-medium">{property.name}</span>
+              {String(selectedId) === String(property.id) && (
+                <Check size={16} className="shrink-0 text-blue-600" />
+              )}
+            </DropdownMenuItem>
+          ))}
+          {properties.length === 0 && !loading && (
+            <div className="p-3 text-center text-xs italic text-gray-400">Chưa có tòa nhà nào</div>
+          )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

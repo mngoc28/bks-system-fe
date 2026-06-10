@@ -10,6 +10,7 @@ const PartnerLayout: React.FC = () => {
   const { data: profileRes, isLoading } = useGetUserProfileQuery();
   const user = profileRes?.data;
   const userStatus = user ? Number(user.status) : 1;
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
   if (isLoading) {
     return <LoadingScreen text="Đang tải dữ liệu đối tác..." />;
@@ -23,12 +24,15 @@ const PartnerLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
-      <Sidebar />
-      <div className="flex flex-1 flex-col">
-        <Header />
+      <Sidebar
+        mobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+      />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Header onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
         <RealtimeNotifyProvider>
-          <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-6 md:p-8">
-            <div className="mx-auto max-w-7xl">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-3 sm:p-4 md:p-6 lg:p-8">
+            <div className="mx-auto w-full max-w-7xl">
               <Outlet />
             </div>
           </main>

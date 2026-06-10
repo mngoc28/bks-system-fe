@@ -1,17 +1,17 @@
-﻿import { Button } from "@/components/ui/button";
-import FilterPortal from "@/components/common/FilterPortal";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+﻿import { Input } from "@/components/ui/input";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { toastError } from "@/components/ui/toast";
+import AdvancedFilterPanel, {
+  FilterField,
+  FilterSelect,
+  filterInputClassName,
+  filterLabelClassName,
+  filterDateTriggerClassName,
+} from "@/components/common/AdvancedFilterPanel";
 import { NewsSearchSectionProps } from "@/dataHelper/news.dataHelper";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Search, X, RotateCcw } from "lucide-react";
 
-/**
- * News Search Section
- * An expandable filter panel allowing users to search news by title, author, status, and publication date range.
- */
 const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
 
@@ -38,117 +38,60 @@ const NewsSearchSection: React.FC<NewsSearchSectionProps> = ({ open, filters, se
   };
 
   return (
-    <FilterPortal open={open} onClose={onClose}>
-    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/50 transition-all duration-300 animate-in fade-in slide-in-from-top-4">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-primary/100 p-1.5 text-white">
-            <Search className="size-4" />
-          </div>
-          <h3 className="text-sm font-bold tracking-tight text-slate-800">
-            {t("common.advanced_filter", { defaultValue: "Bộ lọc nâng cao" })}
-          </h3>
-        </div>
-        <button
-          onClick={onClose}
-          className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
+    <AdvancedFilterPanel open={open} onClose={onClose} onReset={onReset}>
+      <FilterField label={t("news.filter_user_name")}>
+        <Input
+          value={filters.user_name || ""}
+          onChange={(e) => setFilters({ ...filters, user_name: e.target.value })}
+          placeholder={t("news.filter_user_name_placeholder")}
+          className={filterInputClassName}
+        />
+      </FilterField>
 
-      {/* Body */}
-      <div className="p-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <FilterField label={t("news.filter_title")}>
+        <Input
+          value={filters.title || ""}
+          onChange={(e) => setFilters({ ...filters, title: e.target.value })}
+          placeholder={t("news.filter_title_placeholder")}
+          className={filterInputClassName}
+        />
+      </FilterField>
 
-          {/* Author / User Name */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t("news.filter_user_name")}
-            </label>
-            <Input
-              value={filters.user_name || ""}
-              onChange={(e) => setFilters({ ...filters, user_name: e.target.value })}
-              placeholder={t("news.filter_user_name_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+      <FilterField label={t("news.filter_status")}>
+        <FilterSelect
+          value={filters.status?.toString() || ""}
+          onValueChange={(next) => setFilters({ ...filters, status: next ? Number(next) : undefined })}
+          placeholder={t("news.filter_status_placeholder")}
+          options={[
+            { value: "0", label: t("news.filter_status_draft") },
+            { value: "1", label: t("news.filter_status_published") },
+            { value: "2", label: t("news.filter_status_archived") },
+          ]}
+        />
+      </FilterField>
 
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t("news.filter_title")}
-            </label>
-            <Input
-              value={filters.title || ""}
-              onChange={(e) => setFilters({ ...filters, title: e.target.value })}
-              placeholder={t("news.filter_title_placeholder")}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+      <DatePickerField
+        id="news-search-published-start"
+        label={t("news.filter_published_start_at")}
+        labelClassName={filterLabelClassName}
+        value={filters.published_at_start || ""}
+        onChange={handleStartDateChange}
+        maxDate={filters.published_at_end || undefined}
+        className="space-y-1"
+        triggerClassName={filterDateTriggerClassName}
+      />
 
-          {/* Status */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t("news.filter_status")}
-            </label>
-            <Select
-              value={filters.status?.toString() || ""}
-              onValueChange={(value) => setFilters({ ...filters, status: value ? Number(value) : undefined })}
-            >
-              <SelectTrigger className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:ring-2 focus:ring-primary/20">
-                <SelectValue placeholder={t("news.filter_status_placeholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">{t("news.filter_status_draft")}</SelectItem>
-                <SelectItem value="1">{t("news.filter_status_published")}</SelectItem>
-                <SelectItem value="2">{t("news.filter_status_archived")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Published Start */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t("news.filter_published_start_at")}
-            </label>
-            <Input
-              type="date"
-              value={filters.published_at_start || ""}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          {/* Published End */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t("news.filter_published_end_at")}
-            </label>
-            <Input
-              type="date"
-              value={filters.published_at_end || ""}
-              onChange={(e) => handleEndDateChange(e.target.value)}
-              className="h-10 rounded-xl border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-        </div>
-
-        {/* Footer Actions */}
-        <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-50 pt-6">
-          <Button
-            variant="ghost"
-            onClick={onReset}
-            className="h-10 gap-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-primary"
-          >
-            <RotateCcw className="size-4" />
-            {t("common.reset")}
-          </Button>
-        </div>
-      </div>
-    </div>
-    </FilterPortal>
+      <DatePickerField
+        id="news-search-published-end"
+        label={t("news.filter_published_end_at")}
+        labelClassName={filterLabelClassName}
+        value={filters.published_at_end || ""}
+        onChange={handleEndDateChange}
+        minDate={filters.published_at_start || undefined}
+        className="space-y-1"
+        triggerClassName={filterDateTriggerClassName}
+      />
+    </AdvancedFilterPanel>
   );
 };
 

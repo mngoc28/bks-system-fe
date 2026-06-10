@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { PlainTextarea as Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import SearchableSelect from "@/components/ui/searchable-select";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/components/ui/toast";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetUserProfileQuery, useUpdateUserProfileMutation } from "@/hooks/useUserQuery";
@@ -106,12 +106,12 @@ const Profile = () => {
         ward_id: formData.wardId
       });
 
-      toast.success("Đã cập nhật thông tin thành công!");
+      toastSuccess("Đã cập nhật thông tin thành công!");
       if (formData.name) {
         useUserStore.setState({ userName: formData.name });
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Cập nhật hồ sơ thất bại.");
+      toastError(error?.response?.data?.message || "Cập nhật hồ sơ thất bại.");
     }
   };
 
@@ -127,10 +127,10 @@ const Profile = () => {
   const partnerDetail = partnerResponse?.data;
 
   return (
-    <div className="space-y-8 pb-20 duration-500 animate-in fade-in slide-in-from-bottom-4">
+    <div className="space-y-6 pb-20 duration-500 animate-in fade-in slide-in-from-bottom-4 sm:space-y-8">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-           <h1 className="text-3xl font-black tracking-tight text-slate-900">Thông tin cá nhân</h1>
+           <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Thông tin cá nhân</h1>
            <p className="mt-1 text-sm text-slate-500">Quản lý thông tin hồ sơ và bảo mật tài khoản đối tác của bạn.</p>
         </div>
       </div>
@@ -313,7 +313,7 @@ const Profile = () => {
 
            {/* Security Settings */}
            <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
                  <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
                     <Lock className="size-5 text-blue-600" /> Bảo mật & Mật khẩu
                  </h3>
@@ -333,7 +333,7 @@ const Profile = () => {
 
         {/* Sidebar Info */}
         <div className="space-y-6">
-           <Card className="group relative overflow-hidden rounded-[32px] border-none bg-slate-900 p-8 text-white shadow-lg">
+           <Card className="group relative overflow-hidden rounded-[32px] border-none bg-slate-900 p-4 text-white shadow-lg sm:p-6 lg:p-8">
               <div className="absolute right-0 top-0 p-4 opacity-10 transition-transform duration-500 group-hover:scale-125">
                  <BadgeCheck className="size-24 text-blue-400" />
               </div>
@@ -355,7 +355,7 @@ const Profile = () => {
               </div>
            </Card>
 
-           <Card className="overflow-hidden rounded-[32px] border-none bg-white p-8 shadow-xl shadow-slate-200/50">
+           <Card className="overflow-hidden rounded-[32px] border-none bg-white p-4 shadow-xl shadow-slate-200/50 sm:p-6 lg:p-8">
               <CardContent className="p-0">
                  <div className="mb-6 flex items-center justify-between">
                     <h3 className="flex items-center gap-2 text-lg font-bold">

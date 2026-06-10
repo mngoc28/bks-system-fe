@@ -129,7 +129,7 @@ const CompanyHub = () => {
           </div>
         </div>
 
-        <section className="mx-auto w-full max-w-5xl px-6 py-16">
+        <section className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6">
           <header className="mb-8">
             <h2 className="text-2xl font-semibold text-slate-900">{t("public.company.list.heading")}</h2>
             <p className="mt-1 text-sm text-slate-600">{t("public.company.list.description")}</p>

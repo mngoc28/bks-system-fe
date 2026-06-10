@@ -112,7 +112,7 @@ export default function BecomeAPartner() {
         <div className="absolute left-1/4 top-1/4 size-[400px] -translate-y-1/2 rounded-full bg-blue-600/10 blur-[120px]"></div>
         <div className="absolute right-1/4 bottom-10 size-[300px] rounded-full bg-indigo-600/10 blur-[100px]"></div>
 
-        <div className="relative mx-auto max-w-6xl px-6 text-center">
+        <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-400">
             <Smartphone className="size-3.5 animate-bounce" />
             Hợp Tác Kinh Doanh Lưu Trú Cùng BKS
@@ -145,7 +145,7 @@ export default function BecomeAPartner() {
 
       {/* Verticals Section */}
       <section className="border-t border-slate-900 bg-slate-950/40 py-20">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-16 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">4 Phân Khúc Đối Tác Hợp Tác Chính</h2>
             <p className="mt-4 text-slate-400">BKS System tối ưu hóa biểu mẫu và quy trình quản trị chuyên sâu phù hợp với từng loại hình kinh doanh</p>
@@ -189,7 +189,7 @@ export default function BecomeAPartner() {
 
       {/* Benefits Section */}
       <section className="border-t border-slate-900 py-20 bg-slate-900/10">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-16 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Lợi Ích Vượt Trội Từ BKS System</h2>
             <p className="mt-4 text-slate-400">Bộ công cụ công nghệ giúp đơn giản hóa quản trị pháp lý, dòng tiền và lấp đầy phòng trống</p>
@@ -214,7 +214,7 @@ export default function BecomeAPartner() {
 
       {/* Interactive Process / Workflow */}
       <section className="border-t border-slate-900 py-20 bg-slate-950">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="mb-16 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Quy Trình 3 Bước Tham Gia Đơn Giản</h2>
             <p className="mt-4 text-slate-400">Từ đăng ký ban đầu đến khi đón khách và nhận dòng tiền</p>
@@ -270,7 +270,7 @@ export default function BecomeAPartner() {
 
       {/* Security and Required Documents Notice */}
       <section className="border-t border-slate-900 py-16 bg-slate-900/20">
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div className="rounded-3xl border border-blue-500/20 bg-gradient-to-r from-blue-950/20 via-indigo-950/20 to-slate-950 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
             <div className="flex flex-col items-start gap-6 sm:flex-row">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400">
@@ -312,7 +312,7 @@ export default function BecomeAPartner() {
 
       {/* FAQ Section */}
       <section className="border-t border-slate-900 py-20 bg-slate-950">
-        <div className="mx-auto max-w-3xl px-6">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Giải Đáp Câu Hỏi Thường Gặp</h2>
             <p className="mt-3 text-slate-400">Những thắc mắc phổ biến của đối tác mới gia nhập hệ thống</p>

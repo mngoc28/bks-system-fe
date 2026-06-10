@@ -22,10 +22,10 @@ import type { TouristSpotSuggestion } from "@/dataHelper/EU/touristSpot.dataHelp
 import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
-import { usePaginatedRoomsQuery } from "@/hooks/EU/useRoomQuery";
+import { usePaginatedRoomsQuery, usePublicAmenitiesQuery, usePublicServicesQuery } from "@/hooks/EU/useRoomQuery";
 import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { normalizeStayPropertyTypeLabel, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
-import { formatPrice } from "@/utils/utils";
+import { formatPrice, formatCurrencyInput, parseCurrencyValue, validateCurrencyInput } from "@/utils/utils";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 import { resolveImageUrl } from "@/utils/imageUtils";
@@ -52,14 +52,17 @@ const parsePositiveInt = (value: string | null, fallback: number) => {
 };
 const DiscountBanner = () => {
   const [email, setEmail] = useState("");
-  const [couponCode, setCouponCode] = useState("BKSSUMMER10");
+  const [couponValue, setCouponValue] = useState<number | string>(10);
+  const [couponType, setCouponType] = useState<string>("percent");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [messageKind, setMessageKind] = useState<"validation" | "duplicate" | "server">("validation");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setMessageKind("validation");
 
     if (!email) {
       setError("Vui lòng nhập email.");
@@ -76,13 +79,20 @@ const DiscountBanner = () => {
     try {
       const response = await axiosClient.post("/home/coupons/register", { email });
       const dataPayload = response?.data;
-      const code = dataPayload?.code || "BKSSUMMER10";
-      setCouponCode(code);
+      const val = dataPayload?.value ?? 10;
+      const typ = dataPayload?.type || "percent";
+
+      setCouponValue(val);
+      setCouponType(typ);
       setIsSubmitted(true);
-      toastSuccess("Đăng ký nhận mã coupon thành công!");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Đã xảy ra lỗi khi đăng ký coupon.");
-      toastError(err?.response?.data?.message || "Không thể đăng ký coupon.");
+      const backendMessage = err?.response?.data?.message;
+      const fallbackMessage = "Đã xảy ra lỗi khi đăng ký coupon. Vui lòng thử lại sau.";
+      const message = backendMessage || fallbackMessage;
+      const isDuplicate = typeof backendMessage === "string" && backendMessage.includes("đã được sử dụng");
+
+      setMessageKind(isDuplicate ? "duplicate" : "server");
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -107,17 +117,16 @@ const DiscountBanner = () => {
           </p>
         </div>
 
-        <div className="w-full md:w-auto min-w-[320px] sm:min-w-[400px]">
+        <div className="w-full max-w-md md:w-auto md:min-w-[320px] lg:min-w-[400px]">
           {isSubmitted ? (
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-5 text-center backdrop-blur-sm animate-fade-in shadow-inner">
-              <p className="text-sm font-semibold text-emerald-400">🎉 Đăng ký thành công!</p>
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <span className="text-xs text-slate-300">Mã giảm giá của bạn:</span>
-                <code className="rounded bg-emerald-500/20 px-3 py-1.5 text-sm font-bold text-amber-300 border border-emerald-500/20 select-all tracking-wider">
-                  {couponCode}
-                </code>
-              </div>
-              <p className="mt-1.5 text-[11px] text-slate-400">Sử dụng mã coupon này khi tiến hành đặt phòng.</p>
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-6 text-center backdrop-blur-sm animate-fade-in shadow-inner">
+              <p className="text-sm font-bold text-emerald-400">🎉 Đăng ký thành công!</p>
+              <p className="mt-2 text-xs text-slate-200 leading-relaxed">
+                Chúng tôi đã gửi mã giảm giá chào mừng <strong>giảm {couponValue}{couponType === "percent" ? "%" : "đ"}</strong> đến địa chỉ email của bạn.
+              </p>
+              <p className="mt-2 text-[11px] text-slate-400 italic">
+                Vui lòng kiểm tra hộp thư (bao gồm cả mục Thư rác/Spam) để lấy mã và áp dụng khi tiến hành đặt phòng.
+              </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -128,7 +137,10 @@ const DiscountBanner = () => {
                   disabled={isLoading}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    if (error) setError("");
+                    if (error) {
+                      setError("");
+                      setMessageKind("validation");
+                    }
                   }}
                   placeholder="Nhập email của bạn..."
                   className="h-11 flex-1 rounded-xl border border-slate-700 bg-slate-900/60 px-4 text-sm text-white placeholder-slate-400 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 backdrop-blur-sm"
@@ -142,7 +154,18 @@ const DiscountBanner = () => {
                   {isLoading ? "Đang gửi..." : "Nhận Coupon"}
                 </Button>
               </div>
-              {error && <p className="text-xs text-rose-400 font-medium ml-1">{error}</p>}
+              {error && (
+                <p
+                  className={`text-xs font-medium ml-1 leading-relaxed ${
+                    messageKind === "duplicate"
+                      ? "text-amber-300"
+                      : "text-rose-400"
+                  }`}
+                  role={messageKind === "duplicate" ? "status" : "alert"}
+                >
+                  {error}
+                </p>
+              )}
             </form>
           )}
         </div>
@@ -201,6 +224,25 @@ const formatRoomAddress = (provinceName: string, propertyAddress: string) => {
   return `${cleanProvince} - ${cleanAddress}`;
 };
 
+const FEATURED_AMENITY_KEYWORDS = ["wifi", "điều hòa", "bếp", "máy giặt", "ban công", "bãi đỗ xe", "đỗ xe"];
+const FEATURED_SERVICE_KEYWORDS = ["giặt ủi", "sân bay", "bữa sáng", "gym", "fitness", "bể bơi", "hồ bơi", "xe máy"];
+
+const isFeaturedAmenity = (name: string) => {
+  if (!name) return false;
+  const norm = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return FEATURED_AMENITY_KEYWORDS.some(keyword => 
+    norm.includes(keyword.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+  );
+};
+
+const isFeaturedService = (name: string) => {
+  if (!name) return false;
+  const norm = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return FEATURED_SERVICE_KEYWORDS.some(keyword => 
+    norm.includes(keyword.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+  );
+};
+
 const RoomSearch = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -216,6 +258,10 @@ const RoomSearch = () => {
     return Math.max(1, guests);
   });
   const [localChildren, setLocalChildren] = useState<number>(0);
+  const [localPriceMinStr, setLocalPriceMinStr] = useState("");
+  const [localPriceMaxStr, setLocalPriceMaxStr] = useState("");
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const [showAllServices, setShowAllServices] = useState(false);
 
   const [wishlist, setWishlist] = useState<number[]>(() => {
     try {
@@ -292,6 +338,25 @@ const RoomSearch = () => {
   const sortBy = searchParams.get("sort") || DEFAULT_SORT;
   const touristSpotSlug = searchParams.get("tourist_spot_slug") || "";
   const deferredKeyword = useDeferredValue(keyword.trim());
+  const ratingMin = searchParams.get("rating_min")
+    ? Number(searchParams.get("rating_min")) || null
+    : null;
+  const priceMin = searchParams.get("price_min")
+    ? Number(searchParams.get("price_min")) || null
+    : null;
+  const priceMax = searchParams.get("price_max")
+    ? Number(searchParams.get("price_max")) || null
+    : null;
+  const amenityIds = useMemo(() => {
+    const val = searchParams.get("amenity_ids");
+    return val ? val.split(",").map(Number).filter(Boolean) : [];
+  }, [searchParams]);
+  const serviceIds = useMemo(() => {
+    const val = searchParams.get("service_ids");
+    return val ? val.split(",").map(Number).filter(Boolean) : [];
+  }, [searchParams]);
+
+  const hasSecondaryFilters = !!(ratingMin || priceMin || priceMax || amenityIds.length > 0 || serviceIds.length > 0);
 
   const touristSpotLabel = useMemo(() => {
     if (!touristSpotSlug) {
@@ -322,9 +387,36 @@ const RoomSearch = () => {
     setKeyword(searchParams.get("keyword") || "");
   }, [searchParams]);
 
+  useEffect(() => {
+    setLocalPriceMinStr(priceMin ? formatCurrencyInput(priceMin) : "");
+    setLocalPriceMaxStr(priceMax ? formatCurrencyInput(priceMax) : "");
+  }, [priceMin, priceMax]);
+
   const { data: provincesData } = useGetAllProvincesTypes();
   const { data: wardsData, isLoading: isLoadingWards } = useGetHomeWardsByProvinceId(localProvinceId ?? provinceId ?? 0);
   const { data: propertyTypesData } = usePropertyTypesQuery();
+  const { data: publicAmenitiesData } = usePublicAmenitiesQuery();
+  const { data: publicServicesData } = usePublicServicesQuery();
+
+  const featuredAmenities = useMemo(() => {
+    const list = publicAmenitiesData ?? [];
+    return list.filter((am: any) => isFeaturedAmenity(am.name));
+  }, [publicAmenitiesData]);
+
+  const otherAmenities = useMemo(() => {
+    const list = publicAmenitiesData ?? [];
+    return list.filter((am: any) => !isFeaturedAmenity(am.name));
+  }, [publicAmenitiesData]);
+
+  const featuredServices = useMemo(() => {
+    const list = publicServicesData ?? [];
+    return list.filter((sv: any) => isFeaturedService(sv.name));
+  }, [publicServicesData]);
+
+  const otherServices = useMemo(() => {
+    const list = publicServicesData ?? [];
+    return list.filter((sv: any) => !isFeaturedService(sv.name));
+  }, [publicServicesData]);
 
   const provinceOptions = useMemo(() => {
     const options =
@@ -395,6 +487,7 @@ const RoomSearch = () => {
     data: roomsPageData,
     isLoading,
     isError,
+    isPlaceholderData,
     refetch,
   } = usePaginatedRoomsQuery(
     {
@@ -408,6 +501,11 @@ const RoomSearch = () => {
       end_date: endDate || undefined,
       guests: guests || undefined,
       tourist_spot_slug: touristSpotSlug || undefined,
+      rating_min: ratingMin || undefined,
+      price_min: priceMin || undefined,
+      price_max: priceMax || undefined,
+      amenity_ids: amenityIds.length > 0 ? amenityIds : undefined,
+      service_ids: serviceIds.length > 0 ? serviceIds : undefined,
       ...roomSortParams,
     },
     { enabled: true },
@@ -525,13 +623,58 @@ const RoomSearch = () => {
     updateSearchParams({
       page: String(DEFAULT_PAGE),
       propertyTypeId: propertyTypeId ? String(propertyTypeId) : null,
-    });
+    }, { scroll: false });
   };
 
   const handleSortChange = (nextSort: string) => {
     updateSearchParams({
       page: String(DEFAULT_PAGE),
       sort: nextSort,
+    }, { scroll: false });
+  };
+
+  const handleRatingMinChange = (nextRatingMin: number | null) => {
+    updateSearchParams({
+      page: String(DEFAULT_PAGE),
+      rating_min: nextRatingMin ? String(nextRatingMin) : null,
+    }, { scroll: false });
+  };
+
+  const handlePriceRangeChange = (min: number | null, max: number | null) => {
+    updateSearchParams({
+      page: String(DEFAULT_PAGE),
+      price_min: min !== null ? String(min) : null,
+      price_max: max !== null ? String(max) : null,
+    }, { scroll: false });
+  };
+
+  const handleAmenityIdsChange = (ids: number[]) => {
+    updateSearchParams({
+      page: String(DEFAULT_PAGE),
+      amenity_ids: ids.length > 0 ? ids.join(",") : null,
+    }, { scroll: false });
+  };
+
+  const handleServiceIdsChange = (ids: number[]) => {
+    updateSearchParams({
+      page: String(DEFAULT_PAGE),
+      service_ids: ids.length > 0 ? ids.join(",") : null,
+    }, { scroll: false });
+  };
+
+  const handleClearSecondaryFilters = () => {
+    setLocalPriceMinStr("");
+    setLocalPriceMaxStr("");
+    setShowAllAmenities(false);
+    setShowAllServices(false);
+
+    updateSearchParams({
+      rating_min: null,
+      price_min: null,
+      price_max: null,
+      amenity_ids: null,
+      service_ids: null,
+      page: String(DEFAULT_PAGE),
     }, { scroll: false });
   };
 
@@ -554,6 +697,11 @@ const RoomSearch = () => {
       propertyTypeId: null,
       tourist_spot_slug: null,
       sort: DEFAULT_SORT,
+      rating_min: null,
+      price_min: null,
+      price_max: null,
+      amenity_ids: null,
+      service_ids: null,
     });
   };
 
@@ -563,10 +711,9 @@ const RoomSearch = () => {
       page: String(DEFAULT_PAGE),
       tourist_spot_slug: spot.slug,
       keyword: null,
-      provinceId: null,
+      provinceId: localProvinceId ? String(localProvinceId) : null,
       wardId: null,
     });
-    setLocalProvinceId(null);
     setLocalWardId(null);
   };
 
@@ -1101,6 +1248,7 @@ const RoomSearch = () => {
               selectedSpotLabel={touristSpotLabel}
               onSelectSpot={handleSelectTouristSpot}
               onClearSpot={handleClearTouristSpot}
+              provinceId={localProvinceId}
             />
           </div>
 
@@ -1162,18 +1310,329 @@ const RoomSearch = () => {
                     <>Danh sách phòng lưu trú trên toàn quốc</>
                   )}
                 </p>
-                {touristSpotLabel ? (
-                  <button
-                    type="button"
-                    className="interactive-click w-fit rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800"
-                    onClick={() => updateSearchParams({ tourist_spot_slug: null, page: String(DEFAULT_PAGE) })}
-                  >
-                    Bỏ lọc {touristSpotLabel}
-                  </button>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  {touristSpotLabel && (
+                    <button
+                      type="button"
+                      className="interactive-click w-fit rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800"
+                      onClick={() => updateSearchParams({ tourist_spot_slug: null, page: String(DEFAULT_PAGE) })}
+                    >
+                      Bỏ lọc {touristSpotLabel}
+                    </button>
+                  )}
+                  {ratingMin && (
+                    <button
+                      type="button"
+                      className="interactive-click w-fit rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 flex items-center gap-1"
+                      onClick={() => handleRatingMinChange(null)}
+                    >
+                      <Star className="size-3 fill-amber-500 text-amber-500" />
+                      Bỏ lọc: từ {ratingMin}⭐
+                    </button>
+                  )}
+                  {(priceMin || priceMax) && (
+                    <button
+                      type="button"
+                      className="interactive-click w-fit rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800"
+                      onClick={() => handlePriceRangeChange(null, null)}
+                    >
+                      Giá: {priceMin ? `${priceMin.toLocaleString("vi-VN")}đ` : "0đ"} - {priceMax ? `${priceMax.toLocaleString("vi-VN")}đ` : "Không giới hạn"} ×
+                    </button>
+                  )}
+                  {amenityIds.map(id => {
+                    const name = publicAmenitiesData?.find((am: any) => am.id === id)?.name || `Tiện nghi #${id}`;
+                    return (
+                      <button
+                        key={`am-${id}`}
+                        type="button"
+                        className="interactive-click w-fit rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800"
+                        onClick={() => {
+                          handleAmenityIdsChange(amenityIds.filter(val => val !== id));
+                        }}
+                      >
+                        {name} ×
+                      </button>
+                    );
+                  })}
+                  {serviceIds.map(id => {
+                    const name = publicServicesData?.find((sv: any) => sv.id === id)?.name || `Dịch vụ #${id}`;
+                    return (
+                      <button
+                        key={`sv-${id}`}
+                        type="button"
+                        className="interactive-click w-fit rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800"
+                        onClick={() => {
+                          handleServiceIdsChange(serviceIds.filter(val => val !== id));
+                        }}
+                      >
+                        {name} ×
+                      </button>
+                    );
+                  })}
+                  {hasSecondaryFilters && (
+                    <button
+                      type="button"
+                      className="interactive-click text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline ml-2 py-1 px-3 rounded-full bg-rose-50 border border-rose-100 flex items-center gap-1 transition-all"
+                      onClick={handleClearSecondaryFilters}
+                    >
+                      Xóa tất cả bộ lọc
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative min-w-[200px]">
+              <div className="flex flex-wrap items-center gap-3 overflow-x-auto pb-1 scrollbar-hide md:overflow-visible">
+                {/* Bộ lọc Giá */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`h-10 rounded-full border-slate-200 bg-white font-semibold text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10 ${
+                        priceMin || priceMax ? "border-sky-500 text-sky-600 bg-sky-50/50" : ""
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>Giá</span>
+                        {priceMin || priceMax ? (
+                          <span className="bg-sky-500 text-white size-5 flex items-center justify-center rounded-full text-[10px]">
+                            !
+                          </span>
+                        ) : null}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900 font-sans" align="end">
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-sm text-slate-800">Khoảng giá</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label htmlFor="price-min-input" className="text-xs font-medium text-slate-400">Tối thiểu</label>
+                          <input
+                            type="text"
+                            placeholder="0đ"
+                            value={localPriceMinStr}
+                            onChange={(e) => {
+                              const cleaned = validateCurrencyInput(e.target.value);
+                              if (cleaned !== null) {
+                                setLocalPriceMinStr(formatCurrencyInput(cleaned));
+                              }
+                            }}
+                            id="price-min-input"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-sky-500 focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label htmlFor="price-max-input" className="text-xs font-medium text-slate-400">Tối đa</label>
+                          <input
+                            type="text"
+                            placeholder="Không giới hạn"
+                            value={localPriceMaxStr}
+                            onChange={(e) => {
+                              const cleaned = validateCurrencyInput(e.target.value);
+                              if (cleaned !== null) {
+                                setLocalPriceMaxStr(formatCurrencyInput(cleaned));
+                              }
+                            }}
+                            id="price-max-input"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-sky-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full text-xs"
+                          onClick={() => {
+                            setLocalPriceMinStr("");
+                            setLocalPriceMaxStr("");
+                            handlePriceRangeChange(null, null);
+                          }}
+                        >
+                          Xóa
+                        </Button>
+                        <Button
+                          variant="gradient"
+                          size="sm"
+                          className="rounded-full text-xs px-4"
+                          onClick={() => {
+                            const minVal = localPriceMinStr ? parseCurrencyValue(localPriceMinStr) : null;
+                            const maxVal = localPriceMaxStr ? parseCurrencyValue(localPriceMaxStr) : null;
+                            if (minVal !== null && maxVal !== null && maxVal <= minVal) {
+                              toastError("Giá tối đa phải lớn hơn giá tối thiểu");
+                              return;
+                            }
+                            handlePriceRangeChange(minVal, maxVal);
+                          }}
+                        >
+                          Áp dụng
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Bộ lọc Tiện nghi & Dịch vụ */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`h-10 rounded-full border-slate-200 bg-white font-semibold text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10 ${
+                        amenityIds.length > 0 || serviceIds.length > 0 ? "border-sky-500 text-sky-600 bg-sky-50/50" : ""
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>Tiện ích</span>
+                        {(amenityIds.length + serviceIds.length) > 0 ? (
+                          <span className="bg-sky-500 text-white size-5 flex items-center justify-center rounded-full text-[10px]">
+                            {amenityIds.length + serviceIds.length}
+                          </span>
+                        ) : null}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[min(340px,calc(100vw-2rem))] max-h-[420px] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900 font-sans custom-scrollbar" align="end">
+                    <div className="space-y-5">
+                      {/* Tiện nghi */}
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-800 mb-2 flex items-center gap-1.5">
+                          <span className="h-3 w-1 rounded-full bg-sky-500" />
+                          Tiện nghi phòng
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 pr-1">
+                          {featuredAmenities.map((am: any) => (
+                            <label key={am.id} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={amenityIds.includes(am.id)}
+                                onChange={(e) => {
+                                  const nextIds = e.target.checked
+                                    ? [...amenityIds, am.id]
+                                    : amenityIds.filter(id => id !== am.id);
+                                  handleAmenityIdsChange(nextIds);
+                                }}
+                                className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 size-3.5"
+                              />
+                              <span className="truncate">{am.name}</span>
+                            </label>
+                          ))}
+                          {showAllAmenities && otherAmenities.map((am: any) => (
+                            <label key={am.id} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={amenityIds.includes(am.id)}
+                                onChange={(e) => {
+                                  const nextIds = e.target.checked
+                                    ? [...amenityIds, am.id]
+                                    : amenityIds.filter(id => id !== am.id);
+                                  handleAmenityIdsChange(nextIds);
+                                }}
+                                className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 size-3.5"
+                              />
+                              <span className="truncate">{am.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {otherAmenities.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllAmenities(!showAllAmenities)}
+                            className="mt-1 text-[11px] font-bold text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-0.5"
+                          >
+                            {showAllAmenities ? "Thu gọn ▲" : `Xem thêm (+${otherAmenities.length}) ▼`}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Dịch vụ */}
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-800 mb-2 flex items-center gap-1.5">
+                          <span className="h-3 w-1 rounded-full bg-indigo-500" />
+                          Dịch vụ thêm
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 pr-1">
+                          {featuredServices.map((sv: any) => (
+                            <label key={sv.id} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={serviceIds.includes(sv.id)}
+                                onChange={(e) => {
+                                  const nextIds = e.target.checked
+                                    ? [...serviceIds, sv.id]
+                                    : serviceIds.filter(id => id !== sv.id);
+                                  handleServiceIdsChange(nextIds);
+                                }}
+                                className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 size-3.5"
+                              />
+                              <span className="truncate">{sv.name}</span>
+                            </label>
+                          ))}
+                          {showAllServices && otherServices.map((sv: any) => (
+                            <label key={sv.id} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={serviceIds.includes(sv.id)}
+                                onChange={(e) => {
+                                  const nextIds = e.target.checked
+                                    ? [...serviceIds, sv.id]
+                                    : serviceIds.filter(id => id !== sv.id);
+                                  handleServiceIdsChange(nextIds);
+                                }}
+                                className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 size-3.5"
+                              />
+                              <span className="truncate">{sv.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {otherServices.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllServices(!showAllServices)}
+                            className="mt-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-0.5"
+                          >
+                            {showAllServices ? "Thu gọn ▲" : `Xem thêm (+${otherServices.length}) ▼`}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full text-xs h-8"
+                          onClick={() => {
+                            handleAmenityIdsChange([]);
+                            handleServiceIdsChange([]);
+                            setShowAllAmenities(false);
+                            setShowAllServices(false);
+                          }}
+                        >
+                          Xóa tất cả
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[180px] shrink-0">
+                  <Select
+                    value={ratingMin ? String(ratingMin) : "all"}
+                    onValueChange={(val) => handleRatingMinChange(val === "all" ? null : Number(val))}
+                  >
+                    <SelectTrigger className="h-10 rounded-full border-slate-200 bg-white font-semibold text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                        <SelectValue placeholder="Đánh giá từ" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                      <SelectItem value="all" className="rounded-xl">Tất cả đánh giá</SelectItem>
+                      <SelectItem value="4.5" className="rounded-xl">Tuyệt vời (4.5⭐ trở lên)</SelectItem>
+                      <SelectItem value="4.0" className="rounded-xl">Rất tốt (4.0⭐ trở lên)</SelectItem>
+                      <SelectItem value="3.0" className="rounded-xl">Tốt (3.0⭐ trở lên)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[200px] shrink-0">
                   <Select value={sortBy} onValueChange={handleSortChange}>
                     <SelectTrigger className="h-10 rounded-full border-slate-200 bg-white font-semibold text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10">
                       <div className="flex items-center gap-2">
@@ -1194,44 +1653,46 @@ const RoomSearch = () => {
               </div>
             </div>
 
-            {/* Group 1: Daily Stays (Khách sạn, Nhà nghỉ & Homestay) */}
-            {dailyRooms.length > 0 && (
-              <div className="mb-8">
-                <div className="mb-4 flex items-center justify-between font-sans">
-                  <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span className="h-5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
-                    Khách sạn/Nhà nghỉ/Homestay
-                  </h3>
-                  <Badge variant="secondary" className="rounded-full bg-sky-50 text-sky-700 font-semibold px-3 py-1 shadow-sm border border-sky-100">
-                    {dailyRooms.length} phòng
-                  </Badge>
+            <div className={isPlaceholderData ? "opacity-50 pointer-events-none transition-opacity duration-200" : "transition-opacity duration-200"}>
+              {/* Group 1: Daily Stays (Khách sạn, Nhà nghỉ & Homestay) */}
+              {dailyRooms.length > 0 && (
+                <div className="mb-8">
+                  <div className="mb-4 flex items-center justify-between font-sans">
+                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <span className="h-5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
+                      Khách sạn/Nhà nghỉ/Homestay
+                    </h3>
+                    <Badge variant="secondary" className="rounded-full bg-sky-50 text-sky-700 font-semibold px-3 py-1 shadow-sm border border-sky-100">
+                      {dailyRooms.length} phòng
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {dailyRooms.map((room) => renderRoomCard(room))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {dailyRooms.map((room) => renderRoomCard(room))}
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* Discount CTA Banner */}
-            <DiscountBanner />
+              {/* Discount CTA Banner */}
+              <DiscountBanner />
 
-            {/* Group 2: Monthly Stays (Căn hộ dịch vụ) */}
-            {monthlyRooms.length > 0 && (
-              <div className="mt-8 mb-8">
-                <div className="mb-4 flex items-center justify-between font-sans">
-                  <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span className="h-5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                    Căn hộ dịch vụ
-                  </h3>
-                  <Badge variant="secondary" className="rounded-full bg-indigo-50 text-indigo-700 font-semibold px-3 py-1 shadow-sm border border-indigo-100">
-                    {monthlyRooms.length} phòng
-                  </Badge>
+              {/* Group 2: Monthly Stays (Căn hộ dịch vụ) */}
+              {monthlyRooms.length > 0 && (
+                <div className="mt-8 mb-8">
+                  <div className="mb-4 flex items-center justify-between font-sans">
+                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <span className="h-5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                      Căn hộ dịch vụ
+                    </h3>
+                    <Badge variant="secondary" className="rounded-full bg-indigo-50 text-indigo-700 font-semibold px-3 py-1 shadow-sm border border-indigo-100">
+                      {monthlyRooms.length} phòng
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {monthlyRooms.map((room) => renderRoomCard(room))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {monthlyRooms.map((room) => renderRoomCard(room))}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <Pagination

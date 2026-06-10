@@ -10,7 +10,7 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS, DEFAULT_ROOM_IMAGE } from "@/cons
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toastSuccess } from "@/components/ui/toast";
 
 const NewsDetail = () => {
   const { t } = useTranslation();
@@ -25,7 +25,7 @@ const NewsDetail = () => {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success(t("public.newsDetail.copySuccess", "Đã sao chép liên kết!"));
+    toastSuccess(t("public.newsDetail.copySuccess", "Đã sao chép liên kết!"));
   };
 
   if (isError) {
