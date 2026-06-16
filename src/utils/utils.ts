@@ -207,21 +207,50 @@ export function formatPhoneNumber(phone?: string | null): string {
 }
 
 /**
- * Formats a province name to include 'thành phố' prefix for municipalities.
+ * Formats a province/city name into a standardized display label.
+ * Handles raw DB names that may or may not include admin prefixes
+ * like "Thành phố", "Tỉnh", "TP." — output is always consistent.
+ *
+ * Rules:
+ *  - 5 centrally-administered municipalities (Hà Nội, HCM, Đà Nẵng, Hải Phòng, Cần Thơ)
+ *    → shown as "Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", etc. (no redundant prefix)
+ *  - Remaining provinces → shown without any prefix (just the bare name)
  * @param name string
  * @returns string
  */
 export function formatProvinceName(name?: string | null): string {
   if (!name) return "";
-  const cleanName = name.trim();
-  const lower = cleanName.toLowerCase();
 
-  const cities = ["hồ chí minh", "hà nội", "đà nẵng", "hải phòng", "cần thơ"];
-  if (cities.includes(lower)) {
-    if (lower === "hồ chí minh") {
-      return "TP. Hồ Chí Minh";
-    }
-    return `thành phố ${cleanName}`;
+  // Strip any existing admin prefix the DB may have stored
+  const stripped = name
+    .trim()
+    .replace(/^(thành\s*phố|tỉnh|tp\.?\s*)/i, "")
+    .trim();
+
+  const lower = stripped.toLowerCase();
+
+  // Special display label for centrally-administered municipalities
+  if (lower === "hồ chí minh") return "TP. Hồ Chí Minh";
+  if (lower === "hà nội") return "Hà Nội";
+  if (lower === "đà nẵng") return "Đà Nẵng";
+  if (lower === "hải phòng") return "Hải Phòng";
+  if (lower === "cần thơ") return "Cần Thơ";
+
+  // All other provinces: just return bare name
+  return stripped;
+}
+
+/**
+ * Simplify a detailed address to show only district/ward and province/city.
+ * Example: "Số 11 Hoàng Quốc Việt, Phường Nghĩa Đô, Quận Cầu Giấy, Hà Nội" -> "Quận Cầu Giấy, Hà Nội"
+ * @param address string
+ * @returns string
+ */
+export function simplifyAddress(address?: string | null): string {
+  if (!address) return "Đang cập nhật";
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return parts.slice(-2).join(", ");
   }
-  return cleanName;
+  return address;
 }

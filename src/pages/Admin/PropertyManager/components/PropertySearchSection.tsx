@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { PropertySearchSectionProps, PropertyType } from "@/dataHelper/property.dataHelper";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
@@ -6,15 +6,38 @@ import AdvancedFilterPanel, {
   FilterField,
   FilterSelect,
   filterInputClassName,
+  filterSelectTriggerClassName,
 } from "@/components/common/AdvancedFilterPanel";
 import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
+import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
+import { useGetWardsByProvinceId } from "@/hooks/useWardQuery";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { RENT_CATEGORY } from "@/constant";
+import SearchableSelect from "@/components/ui/searchable-select";
+import { useListPartnerQuery } from "@/hooks/usePartnerQuery";
+import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
 
 const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = false, filters, setFilters, onReset, onClose }) => {
   const { t } = useTranslation();
   const { data: propertyTypes } = usePropertyTypesQuery(open);
   const [areaMode, setAreaMode] = useState<"min" | "max">("max");
+
+  // Fetch user profile and partners list if admin
+  const { data: userProfile } = useGetUserProfileQuery();
+  const isAdmin = userProfile?.data?.role === "admin";
+  const { data: partnersResponse } = useListPartnerQuery({ per_page: 200 }, { enabled: open && isAdmin });
+  const partnersPayload: any = partnersResponse;
+  const partners: any[] = Array.isArray(partnersPayload?.data?.data)
+    ? partnersPayload.data.data
+    : Array.isArray(partnersPayload?.data)
+    ? partnersPayload.data
+    : [];
+
+  // Fetch provinces and wards data for selects
+  const { data: provincesData } = useGetAllProvincesTypes();
+  const selectedProvince = provincesData?.data?.find((p) => p.name === filters.province_name);
+  const selectedProvinceId = selectedProvince?.id || 0;
+  const { data: wardsData } = useGetWardsByProvinceId(selectedProvinceId);
 
   return (
     <AdvancedFilterPanel open={open} onClose={onClose} onReset={onReset}>
@@ -27,21 +50,60 @@ const PropertySearchSection: React.FC<PropertySearchSectionProps> = ({ open = fa
         />
       </FilterField>
 
+      {isAdmin && (
+        <FilterField label={t("properties.filter_partner", { defaultValue: "Chủ sở hữu / Đối tác" })}>
+          <SearchableSelect
+            value={filters.partner_id ? String(filters.partner_id) : ""}
+            onValueChange={(next) =>
+              setFilters({
+                ...filters,
+                partner_id: next ? Number(next) : null,
+              })
+            }
+            placeholder={t("properties.filter_partner_placeholder", { defaultValue: "Chọn chủ sở hữu..." }) as string}
+            searchPlaceholder={t("common.search", { defaultValue: "Tìm kiếm..." }) as string}
+            emptyMessage={t("common.no_data", { defaultValue: "Không có dữ liệu" }) as string}
+            options={partners.map((p: any) => ({
+              value: String(p.id),
+              label: `${p.company_name} (${p.user_name})`,
+            }))}
+            triggerClassName={filterSelectTriggerClassName}
+          />
+        </FilterField>
+      )}
+
       <FilterField label={t("properties.filter_province")}>
-        <Input
+        <FilterSelect
           value={filters.province_name || ""}
-          onChange={(e) => setFilters({ ...filters, province_name: e.target.value })}
+          onValueChange={(next) =>
+            setFilters({
+              ...filters,
+              province_name: next || null,
+              ward_name: null,
+            })
+          }
           placeholder={t("properties.filter_province_placeholder")}
-          className={filterInputClassName}
+          options={
+            provincesData?.data?.map((p) => ({
+              value: p.name,
+              label: p.name,
+            })) ?? []
+          }
         />
       </FilterField>
 
       <FilterField label={t("properties.filter_ward")}>
-        <Input
+        <FilterSelect
           value={filters.ward_name || ""}
-          onChange={(e) => setFilters({ ...filters, ward_name: e.target.value })}
+          onValueChange={(next) => setFilters({ ...filters, ward_name: next || null })}
           placeholder={t("properties.filter_ward_placeholder")}
-          className={filterInputClassName}
+          disabled={!selectedProvinceId}
+          options={
+            wardsData?.data?.map((w) => ({
+              value: w.name,
+              label: w.name,
+            })) ?? []
+          }
         />
       </FilterField>
 

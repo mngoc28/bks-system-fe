@@ -18,6 +18,7 @@ export interface ProvinceDetail {
     id: number;
     name: string;
     name_en: string;
+    image?: string | null;
     ward_count: number;
     room_count: number;
     rooms: room[];
@@ -42,6 +43,7 @@ export interface Provinces {
     id: number;
     name: string;
     name_en: string;
+    image?: string | null;
     ward_count: number;
     room_count: number;
 }
@@ -75,6 +77,7 @@ export interface ProvinceTypes {
     id: number;
     name: string;
     name_en: string;
+    image?: string | null;
 }
 
 export interface ProvinceCard extends ProvinceTypes {

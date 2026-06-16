@@ -225,6 +225,26 @@ const stayService = {
   markAllAsRead: () => {
     return apiService.put("/api/v1/stay/notifications/read-all");
   },
+
+  getConversations: (config?: { signal?: AbortSignal }) =>
+    apiService.get("/api/v1/stay/chat", config),
+
+  getMessages: (conversationId: number | string, config?: { signal?: AbortSignal }) =>
+    apiService.get(`/api/v1/stay/chat/${conversationId}`, config),
+
+  sendMessage: (data: { conversation_id: number | string; content: string; metadata?: Record<string, unknown> }) =>
+    apiService.post("/api/v1/stay/chat", data),
+
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("folder", "chat");
+    return apiService.post("/api/v1/stay/cloudinary/upload-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
 
 export default stayService;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Calendar, User, Clock, Share2, Facebook, Twitter, Link as LinkIcon, ArrowLeft } from "lucide-react";
@@ -10,7 +11,10 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS, DEFAULT_ROOM_IMAGE } from "@/cons
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { toastSuccess } from "@/components/ui/toast";
+import { toastSuccess, toastError } from "@/components/ui/toast";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { Input } from "@/components/ui/input";
+import axiosClient from "@/api/axiosClient";
 
 const NewsDetail = () => {
   const { t } = useTranslation();
@@ -23,9 +27,53 @@ const NewsDetail = () => {
   const news = newsDetailResponse?.data;
   const latestNews = latestNewsResponse?.data || [];
 
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false);
+  const [newsletterCoupon, setNewsletterCoupon] = useState<{ code: string; value: number; type: string } | null>(null);
+
+  const handleNewsletterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes("@")) {
+      toastError(t("validation.newsletter.email_invalid", "Vui lòng nhập email hợp lệ."));
+      return;
+    }
+
+    setIsSubmittingNewsletter(true);
+    try {
+      const response: any = await axiosClient.post("/home/coupons/register", {
+        email: newsletterEmail,
+      });
+      if (response && response.success) {
+        toastSuccess(response.message || t("public.newsDetail.subscribeSuccess", "Đăng ký nhận tin thành công!"));
+        if (response.data) {
+          setNewsletterCoupon(response.data);
+        }
+        setNewsletterEmail("");
+      } else {
+        toastError((response && response.message) || t("public.newsDetail.subscribeFailed", "Đăng ký thất bại. Vui lòng thử lại."));
+      }
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || t("public.newsDetail.subscribeFailed", "Đăng ký thất bại. Vui lòng thử lại.");
+      toastError(errorMsg);
+    } finally {
+      setIsSubmittingNewsletter(false);
+    }
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toastSuccess(t("public.newsDetail.copySuccess", "Đã sao chép liên kết!"));
+  };
+
+  const handleShareFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank", "width=600,height=400");
+  };
+
+  const handleShareTwitter = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(news?.title || "BKS Stay News");
+    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, "_blank", "width=600,height=400");
   };
 
   if (isError) {
@@ -56,7 +104,7 @@ const NewsDetail = () => {
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
-              { label: t("public.newsDetail.breadcrumb.news", "Tin tức"), href: "#" },
+              { label: t("public.newsDetail.breadcrumb.news", "Tin tức"), href: ROUTERS.PUBLIC_NEWS_LIST },
               { label: news?.title || t("public.newsDetail.breadcrumb.loading", "Đang tải...") },
             ]}
           />
@@ -87,7 +135,7 @@ const NewsDetail = () => {
                 {/* News Image */}
                 <div className="relative aspect-video overflow-hidden">
                   <img
-                    src={news?.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${news.image_url}` : DEFAULT_ROOM_IMAGE}
+                    src={resolveImageUrl(news?.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || DEFAULT_ROOM_IMAGE}
                     alt={news?.title}
                     className="size-full object-cover"
                     onError={(e) => {
@@ -153,10 +201,10 @@ const NewsDetail = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-semibold uppercase tracking-wider text-slate-500">{t("public.newsDetail.share", "Chia sẻ bài viết")}:</span>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" className="rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-600 hover:text-white">
+                        <Button variant="ghost" size="icon" className="rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-600 hover:text-white" onClick={handleShareFacebook}>
                           <Facebook className="size-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="rounded-full bg-sky-50 text-sky-500 transition-colors hover:bg-sky-500 hover:text-white">
+                        <Button variant="ghost" size="icon" className="rounded-full bg-sky-50 text-sky-500 transition-colors hover:bg-sky-500 hover:text-white" onClick={handleShareTwitter}>
                           <Twitter className="size-5" />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={handleCopyLink} className="rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-600 hover:text-white">
@@ -209,7 +257,7 @@ const NewsDetail = () => {
                     >
                       <div className="size-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 shadow-sm">
                         <img 
-                          src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : DEFAULT_ROOM_IMAGE} 
+                          src={resolveImageUrl(item.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || DEFAULT_ROOM_IMAGE} 
                           alt={item.title} 
                           className="size-full object-cover transition duration-300 group-hover:scale-110"
                           onError={(e) => {
@@ -234,7 +282,7 @@ const NewsDetail = () => {
               </div>
 
               <Button asChild className="mt-4 w-full rounded-full bg-slate-900 text-white hover:bg-slate-800">
-                <Link to={ROUTERS.HOME}>
+                <Link to={ROUTERS.PUBLIC_NEWS_LIST}>
                   {t("public.newsDetail.viewAllNews", "Xem tất cả tin tức")}
                 </Link>
               </Button>
@@ -247,14 +295,47 @@ const NewsDetail = () => {
               </div>
               <div className="relative z-10 space-y-4">
                 <h3 className="text-2xl font-bold leading-tight">
-                  {t("public.newsDetail.ctaTitle", "Tìm kiếm nơi ở lý tưởng?")}
+                  {t("public.newsDetail.ctaTitle", "Đăng ký nhận tin tức")}
                 </h3>
                 <p className="text-sm leading-relaxed text-sky-100">
-                  {t("public.newsDetail.ctaDesc", "Hàng ngàn căn hộ và phòng trọ chất lượng đang chờ đón bạn. Khám phá ngay!")}
+                  {t("public.newsDetail.ctaDesc", "Đừng bỏ lỡ các tin tức và cập nhật mới nhất từ chúng tôi.")}
                 </p>
-                <Button asChild className="w-full rounded-full bg-white px-6 text-sky-600 hover:bg-sky-50 sm:w-auto">
-                  <Link to={ROUTERS.SEARCH_ROOMS}>{t("public.newsDetail.ctaBtn", "Tìm phòng ngay")}</Link>
-                </Button>
+                
+                {newsletterCoupon ? (
+                  <div className="rounded-2xl bg-white/10 p-5 border border-white/20 backdrop-blur-sm space-y-3 text-center transition-all duration-300">
+                    <span className="text-xs uppercase tracking-widest text-emerald-300 font-extrabold">🎉 Đăng ký thành công!</span>
+                    <h4 className="text-[15px] font-bold">Mã ưu đãi của bạn:</h4>
+                    <div className="bg-white text-sky-800 font-mono font-bold text-lg py-2 px-4 rounded-xl border border-sky-200 shadow-inner inline-block select-all cursor-pointer">
+                      {newsletterCoupon.code}
+                    </div>
+                    <p className="text-xs text-emerald-200">
+                      Giảm {newsletterCoupon.value}{newsletterCoupon.type === 'percent' ? '%' : '₫'} cho lần đặt phòng kế tiếp.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleNewsletterSubscribe} className="space-y-3 pt-2">
+                    <div className="flex flex-col gap-2">
+                      <Input
+                        type="email"
+                        required
+                        value={newsletterEmail}
+                        onChange={(e) => setNewsletterEmail(e.target.value)}
+                        placeholder={t("public.footer.newsletter.placeholder", "Nhập email của bạn")}
+                        className="rounded-full bg-white/10 border-white/20 text-white placeholder:text-sky-200/60 focus:bg-white/95 focus:text-slate-900 focus:placeholder:text-slate-400 focus:outline-none"
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmittingNewsletter}
+                        className="w-full rounded-full bg-white text-sky-600 hover:bg-sky-50 font-bold"
+                      >
+                        {isSubmittingNewsletter ? "Đang xử lý..." : t("public.newsDetail.ctaBtn", "Đăng ký ngay")}
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-sky-200/70 italic text-center">
+                      * Nhận ngay mã giảm giá chào mừng sau khi đăng ký thành công.
+                    </p>
+                  </form>
+                )}
               </div>
             </div>
           </aside>

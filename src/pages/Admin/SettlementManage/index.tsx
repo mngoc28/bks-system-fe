@@ -6,6 +6,8 @@ import {
   useIssueSettlementMutation,
   useConfirmSettlementPaymentMutation
 } from "@/hooks/useSettlementQuery";
+import { useListPartnerQuery } from "@/hooks/usePartnerQuery";
+import SearchableSelect from "@/components/ui/searchable-select";
 import { ROUTERS } from "@/constant";
 import { Spinner } from "@/components/ui/spinner";
 import Pagination from "@/components/Pagination";
@@ -62,7 +64,7 @@ const SettlementManage: React.FC = () => {
     page: 1,
     per_page: 10,
     status: "",
-    partner_name: "",
+    partner_id: "",
     start_date: "",
     end_date: "",
   });
@@ -76,6 +78,15 @@ const SettlementManage: React.FC = () => {
   // Queries
   const { data: summaryData, isLoading: isSummaryLoading, refetch: refetchSummary } = useAdminSettlementSummaryQuery();
   const { data: settlementsData, isLoading: isListLoading, refetch: refetchList } = useAdminSettlementsQuery(filters);
+
+  // Fetch partners list for filter dropdown
+  const { data: partnersResponse } = useListPartnerQuery({ per_page: 200 });
+  const partnersPayload: any = partnersResponse;
+  const partners: any[] = Array.isArray(partnersPayload?.data?.data)
+    ? partnersPayload.data.data
+    : Array.isArray(partnersPayload?.data)
+    ? partnersPayload.data
+    : [];
 
   // Mutations
   const issueMutation = useIssueSettlementMutation();
@@ -98,7 +109,7 @@ const SettlementManage: React.FC = () => {
       page: 1,
       per_page: 10,
       status: "",
-      partner_name: "",
+      partner_id: "",
       start_date: "",
       end_date: "",
     });
@@ -291,13 +302,18 @@ const SettlementManage: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="partner_name" className="text-xs font-medium text-slate-500">Đối tác</Label>
-            <Input
-              id="partner_name"
-              placeholder="Tên đối tác..."
-              value={filters.partner_name}
-              onChange={(e) => handleFilterChange("partner_name", e.target.value)}
-              className="h-9"
+            <Label htmlFor="partner_id" className="text-xs font-medium text-slate-500">Đối tác</Label>
+            <SearchableSelect
+              value={filters.partner_id ? String(filters.partner_id) : ""}
+              onValueChange={(next) => handleFilterChange("partner_id", next ? Number(next) : "")}
+              placeholder="Chọn đối tác..."
+              searchPlaceholder="Tìm kiếm..."
+              emptyMessage="Không tìm thấy đối tác"
+              options={partners.map((p: any) => ({
+                value: String(p.id),
+                label: `${p.company_name} (${p.user_name})`,
+              }))}
+              triggerClassName="h-9 min-h-0 bg-white border border-slate-300 rounded-md px-3 text-sm font-normal text-slate-700 shadow-none hover:border-slate-400 focus:border-slate-500 focus:ring-0 w-full flex items-center justify-between"
             />
           </div>
 

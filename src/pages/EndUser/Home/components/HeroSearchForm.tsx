@@ -1,3 +1,4 @@
+
 import { useTranslation } from "react-i18next";
 import { Building2, Calendar, MapPin, Minus, Plus, Search, Users } from "lucide-react";
 import SearchableSelect from "@/components/ui/searchable-select";
@@ -129,7 +130,7 @@ const HeroSearchForm = ({ search, variant = "inline", className }: HeroSearchFor
               value={startDate}
               onChange={(val) => {
                 setStartDate(val);
-                if (endDate && val > endDate) {
+                if (endDate && val >= endDate) {
                   setEndDate("");
                 }
               }}
@@ -146,7 +147,16 @@ const HeroSearchForm = ({ search, variant = "inline", className }: HeroSearchFor
               placeholder="Trả phòng"
               value={endDate}
               onChange={setEndDate}
-              minDate={startDate || heroSearchToday()}
+              minDate={(() => {
+                if (!startDate) return heroSearchToday();
+                const parts = startDate.split("-").map(Number);
+                if (parts.length === 3) {
+                  const date = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+                  const pad = (n: number) => n.toString().padStart(2, "0");
+                  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                }
+                return heroSearchToday();
+              })()}
               className="space-y-0"
               triggerClassName={cn(fieldTriggerClass, !isSheet && "hover:bg-white/95")}
               popoverClassName={overlayLayerClass}

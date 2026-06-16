@@ -1,8 +1,8 @@
 import { provinceApi } from "@/api/provinceApi";
 import { ApiResponse } from "@/api/types";
-import { toastError } from "@/components/ui/toast";
+import { toastError, toastSuccess } from "@/components/ui/toast";
 import { ProvinceDetail, ProvinceFilter, ProvinceTypes } from "@/dataHelper/province.dataHelper";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 export const useProvinceQuery = (id: number) => {
@@ -22,6 +22,7 @@ export const useProvinceQuery = (id: number) => {
                     id: nestedData.province.id,
                     name: nestedData.province.name,
                     name_en: nestedData.province.name_en,
+                    image: nestedData.province.image || null,
                     ward_count: nestedData.ward_count || 0,
                     room_count: nestedData.room_count || 0,
                     wards: nestedData.wards || [],
@@ -60,5 +61,26 @@ export const useGetAllProvincesTypes = () => {
       return response;
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes to prevent duplicate/delayed background refetches
+  });
+};
+
+export const useUpdateProvinceMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { name?: string; name_en?: string; image?: string | null } }) => {
+      const response = await provinceApi.updateProvince(id, data);
+      return response;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["province", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["provinces"] });
+      queryClient.invalidateQueries({ queryKey: ["home-provinces"] });
+      toastSuccess(t("common.update_success"));
+    },
+    onError: () => {
+      toastError(t("common.update_error"));
+    },
   });
 };

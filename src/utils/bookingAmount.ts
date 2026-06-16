@@ -1,4 +1,4 @@
-import { countBookingDaysInclusive } from "@/utils/dateUtils";
+import { countBookingDaysInclusive, countBookingNights } from "@/utils/dateUtils";
 
 export const DAYS_PER_MONTH = 30;
 export const DAYS_PER_WEEK = 7;
@@ -30,22 +30,23 @@ export function computeBookingRoomStayTotal(
     return 0;
   }
 
-  const days = countBookingDaysInclusive(input.start_date, input.end_date);
-  const unit = (input.price?.unit ?? "day").toLowerCase();
+  const unit = (input.price?.unit ?? "night").toLowerCase();
+  const nights = countBookingNights(input.start_date, input.end_date);
+  const calendarDays = countBookingDaysInclusive(input.start_date, input.end_date);
 
   let total: number;
   switch (unit) {
     case "month":
-      total = unitPrice * (days / DAYS_PER_MONTH);
+      total = unitPrice * (calendarDays / DAYS_PER_MONTH);
       break;
     case "week":
-      total = unitPrice * (days / DAYS_PER_WEEK);
+      total = unitPrice * (nights / DAYS_PER_WEEK);
       break;
     case "year":
-      total = unitPrice * (days / DAYS_PER_YEAR);
+      total = unitPrice * (nights / DAYS_PER_YEAR);
       break;
     default:
-      total = unitPrice * days;
+      total = unitPrice * nights;
   }
 
   return Math.round(total);
@@ -89,11 +90,11 @@ export function parseRoomPrices(allPrices: string | unknown): RoomPriceRow[] {
   }
 }
 
-function filterPriceRowsForStayDuration(rows: RoomPriceRow[], days: number): RoomPriceRow[] {
-  const isLongStay = days >= LONG_STAY_DAYS_THRESHOLD;
+function filterPriceRowsForStayDuration(rows: RoomPriceRow[], stayNights: number): RoomPriceRow[] {
+  const isLongStay = stayNights >= LONG_STAY_DAYS_THRESHOLD;
 
   if (!isLongStay) {
-    const dayRows = rows.filter((row) => (row.unit ?? "day").toLowerCase() === "day");
+    const dayRows = rows.filter((row) => (row.unit ?? "night").toLowerCase() === "night");
 
     return dayRows.length > 0 ? dayRows : rows;
   }
@@ -103,7 +104,7 @@ function filterPriceRowsForStayDuration(rows: RoomPriceRow[], days: number): Roo
     return monthRows;
   }
 
-  return rows.filter((row) => (row.unit ?? "day").toLowerCase() === "day");
+  return rows.filter((row) => (row.unit ?? "night").toLowerCase() === "night");
 }
 
 /** Gói giá cố định theo unit — đơn giá không phụ thuộc số ngày đã chọn. */
@@ -122,15 +123,15 @@ export function getPrimaryDayPackagePrice(
   cheapestDailyPrice?: number | null,
 ): { price: number; unit: string } {
   const rows = parseRoomPrices(allPrices);
-  const dayRow = rows.find((row) => (row.unit ?? "").toLowerCase() === "day");
+  const dayRow = rows.find((row) => (row.unit ?? "").toLowerCase() === "night");
 
   if (dayRow && Number(dayRow.price) > 0) {
-    return { price: Number(dayRow.price), unit: "day" };
+    return { price: Number(dayRow.price), unit: "night" };
   }
 
   return {
     price: Number(cheapestDailyPrice ?? 0),
-    unit: "day",
+    unit: "night",
   };
 }
 
@@ -145,8 +146,9 @@ export function resolveStayPriceQuote(
     allPrices?: string | unknown;
     cheapestDailyPrice?: number | null;
   },
-): { price: number; unit: string; roomStayTotal: number; days: number } {
-  const days = countBookingDaysInclusive(startDate, endDate);
+): { price: number; unit: string; roomStayTotal: number; days: number; nights: number } {
+  const nights = countBookingNights(startDate, endDate);
+  const calendarDays = countBookingDaysInclusive(startDate, endDate);
   const rows = parseRoomPrices(options.allPrices);
 
   if (rows.length === 0) {
@@ -154,18 +156,25 @@ export function resolveStayPriceQuote(
 
     return {
       price: daily,
-      unit: "day",
-      roomStayTotal: Math.round(daily * days),
-      days,
+      unit: "night",
+      roomStayTotal: Math.round(daily * nights),
+      days: nights,
+      nights,
     };
   }
 
-  const row = pickCanonicalPriceRow(rows, days);
+  const row = pickCanonicalPriceRow(rows, nights);
 
   if (row === null) {
     const daily = Number(options.cheapestDailyPrice ?? 0);
 
-    return { price: daily, unit: "day", roomStayTotal: Math.round(daily * days), days };
+    return {
+      price: daily,
+      unit: "night",
+      roomStayTotal: Math.round(daily * nights),
+      days: nights,
+      nights,
+    };
   }
 
   const unitPrice = Number(row.price);
@@ -174,25 +183,29 @@ export function resolveStayPriceQuote(
     end_date: endDate,
     price: { price: unitPrice, unit: row.unit },
   });
+  const displayDuration =
+    (row.unit ?? "night").toLowerCase() === "month" ? calendarDays : nights;
 
   return {
     price: unitPrice,
     unit: row.unit,
     roomStayTotal,
-    days,
+    days: displayDuration,
+    nights,
   };
 }
 
 /** Nhãn đơn vị gói giá cho hiển thị. */
 export function formatPriceUnitLabel(unit?: string | null): string {
-  switch ((unit ?? "day").toLowerCase()) {
+  switch ((unit ?? "night").toLowerCase()) {
     case "month":
       return "tháng";
     case "week":
       return "tuần";
     case "year":
       return "năm";
+    case "night":
     default:
-      return "ngày";
+      return "đêm";
   }
 }

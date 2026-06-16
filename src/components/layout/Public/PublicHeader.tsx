@@ -7,11 +7,46 @@ import PublicMobileNav from "./PublicMobileNav";
 import { PublicHeaderProps } from "@/components/type";
 import { useUserStore } from "@/store/useUserStore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useEffect, useState } from "react";
+import stayService from "@/services/stayService";
 
 // Rewards & Loyalty Program Explainer Popover
 const RewardsPopover = () => {
   const { userEmail, userName, isAuthenticated } = useUserStore();
   const { t } = useTranslation();
+  const [points, setPoints] = useState<number>(0);
+  const [level, setLevel] = useState<string>("Bronze");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLoading(true);
+      stayService.getDashboard()
+        .then(res => {
+          if (res?.data?.user) {
+            setPoints(res.data.user.reward_points ?? 0);
+            setLevel(res.data.user.membership_level || "Bronze");
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch loyalty stats", err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [isAuthenticated]);
+
+  const formatLevel = (lvl: string) => {
+    const normalized = lvl.toUpperCase();
+    if (normalized.includes("GOLD") || normalized.includes("VÀNG")) {
+      return "Hạng Vàng (Gold Member)";
+    }
+    if (normalized.includes("DIAMOND") || normalized.includes("KIM CƯƠNG")) {
+      return "Hạng Kim Cương (Diamond Member)";
+    }
+    return "Hạng Đồng (Bronze Member)";
+  };
 
   return (
     <Popover>
@@ -42,11 +77,11 @@ const RewardsPopover = () => {
                 <p className="text-slate-600 text-xs">Xin chào,</p>
                 <p className="font-semibold text-slate-900">{userName || userEmail}</p>
                 <div className="mt-3 flex items-baseline gap-1 text-slate-900">
-                  <span className="text-2xl font-black text-primary">85</span>
+                  <span className="text-2xl font-black text-primary">{loading ? "..." : points}</span>
                   <span className="text-xs font-medium text-slate-500">điểm tích lũy</span>
                 </div>
                 <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                  Hạng Vàng (Gold Member)
+                  {loading ? "..." : formatLevel(level)}
                 </span>
               </div>
               <Link
@@ -102,7 +137,7 @@ const PublicHeader = ({
 
   return (
     <header className="relative z-[80] border-b border-slate-200/70 bg-white/90 shadow-sm shadow-slate-200/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4 sm:gap-6 sm:px-6">
+      <div className="mx-auto flex max-w-7xl lg:max-w-[1360px] items-center gap-4 px-4 py-4 sm:gap-6 sm:px-6">
         <Link to={ROUTERS.HOME} className="flex min-w-0 items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 sm:gap-3">
           <img src="/app/images/front/bks-icon.svg" alt="BKS Logo" className="size-10 shrink-0 sm:size-11" />
           <div className="min-w-0 leading-tight">

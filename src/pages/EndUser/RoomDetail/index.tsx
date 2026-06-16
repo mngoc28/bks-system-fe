@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus, RotateCcw } from "lucide-react";
+import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus, RotateCcw, BedDouble, Shield, PawPrint, Cigarette, PartyPopper, Volume2, LockKeyhole, Package, Accessibility, Home } from "lucide-react";
 import { useRoomReviewsQuery } from "@/hooks/useReviewQuery";
-import { resolveImageUrl } from "@/utils/imageUtils";
+import { resolveCloudinaryUrl } from "@/utils/imageUtils";
+import { getRoomFallbackImage } from "@/utils/fallbackImages";
 
 import { roomApi } from "@/api/EU/roomApi";
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -23,6 +24,7 @@ import { ReviewsModal } from "@/components/rooms/ReviewsModal";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { normalizeStayPropertyTypeLabel, supportsElectronicContractByPropertyType, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
 import { formatPrice, formatPhoneNumber } from "@/utils/utils";
+import { countBookingNights } from "@/utils/dateUtils";
 import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { RoomTouristSpotsSection } from "@/components/rooms/RoomTouristSpotsSection";
 
@@ -33,6 +35,18 @@ function parseYmdToLocalDate(value: string): Date | undefined {
   const [y, m, d] = value.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
   return Number.isNaN(dt.getTime()) ? undefined : dt;
+}
+
+function formatTimeLabel(value: unknown): string {
+  if (value == null || value === "") {
+    return "";
+  }
+  const str = String(value).trim();
+  const timeMatch = str.match(/(\d{1,2}):(\d{2})/);
+  if (timeMatch) {
+    return `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}`;
+  }
+  return str;
 }
 
 const PublicRoomDetail = () => {
@@ -71,8 +85,14 @@ const PublicRoomDetail = () => {
   const handleStartDateChange = (dateStr: string) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("startDate", dateStr);
+    let finalEnd = checkout;
     if (checkout && checkout <= dateStr) {
       newParams.delete("endDate");
+      finalEnd = "";
+    }
+    if (dateStr && finalEnd) {
+      const nights = countBookingNights(dateStr, finalEnd);
+      newParams.set("rent_type", nights >= 30 ? "monthly" : "daily");
     }
     setSearchParams(newParams);
   };
@@ -80,6 +100,10 @@ const PublicRoomDetail = () => {
   const handleEndDateChange = (dateStr: string) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("endDate", dateStr);
+    if (checkin && dateStr) {
+      const nights = countBookingNights(checkin, dateStr);
+      newParams.set("rent_type", nights >= 30 ? "monthly" : "daily");
+    }
     setSearchParams(newParams);
   };
 
@@ -100,17 +124,21 @@ const PublicRoomDetail = () => {
     }
 
     const { from, to } = range;
+    let finalTo = to;
+    if (from && to && format(from, 'yyyy-MM-dd') === format(to, 'yyyy-MM-dd')) {
+      finalTo = undefined;
+    }
 
-    if (from && to && bookedDates.length > 0) {
+    if (from && finalTo && bookedDates.length > 0) {
       const startStr = format(from, 'yyyy-MM-dd');
-      const endStr = format(to, 'yyyy-MM-dd');
+      const endStr = format(finalTo, 'yyyy-MM-dd');
       const hasConflict = bookedDates.some(dateStr => {
         return dateStr > startStr && dateStr < endStr;
       });
 
       if (hasConflict) {
         const newParams = new URLSearchParams(searchParams);
-        newParams.set("startDate", format(to, 'yyyy-MM-dd'));
+        newParams.set("startDate", format(finalTo, 'yyyy-MM-dd'));
         newParams.delete("endDate");
         setSearchParams(newParams);
         return;
@@ -123,11 +151,19 @@ const PublicRoomDetail = () => {
     } else {
       newParams.delete("startDate");
     }
-    if (to) {
-      newParams.set("endDate", format(to, 'yyyy-MM-dd'));
+    if (finalTo) {
+      newParams.set("endDate", format(finalTo, 'yyyy-MM-dd'));
     } else {
       newParams.delete("endDate");
     }
+
+    if (from && finalTo) {
+      const startStr = format(from, 'yyyy-MM-dd');
+      const endStr = format(finalTo, 'yyyy-MM-dd');
+      const nights = countBookingNights(startStr, endStr);
+      newParams.set("rent_type", nights >= 30 ? "monthly" : "daily");
+    }
+
     setSearchParams(newParams);
   };
 
@@ -164,6 +200,28 @@ const PublicRoomDetail = () => {
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
+  const DURATION_PRESETS = [
+    { label: "1 tháng", months: 1, days: 30 },
+    { label: "3 tháng", months: 3, days: 90 },
+    { label: "6 tháng", months: 6, days: 180 },
+  ] as const;
+
+  const handleDurationPreset = (days: number) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const start = format(tomorrow, "yyyy-MM-dd");
+
+    const end = new Date(tomorrow);
+    end.setDate(end.getDate() + days);
+    const endStr = format(end, "yyyy-MM-dd");
+
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("startDate", start);
+    newParams.set("endDate", endStr);
+    newParams.set("rent_type", "monthly");
+    setSearchParams(newParams);
+  };
+
   const { data: reviewsData, isLoading: isLoadingReviews } = useRoomReviewsQuery(id, {
     enabled: !!id,
   });
@@ -186,10 +244,10 @@ const PublicRoomDetail = () => {
       ? rawImages
         .map((image: any) => image?.image_url)
         .filter(Boolean)
-        .map((url: string) => resolveImageUrl(url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }))
+        .map((url: string) => resolveCloudinaryUrl(url, CLOUDINARY_HEADER_IMAGE_URL))
       : [];
 
-    const cover = room.room_image ? resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) : null;
+    const cover = room.room_image ? resolveCloudinaryUrl(room.room_image, CLOUDINARY_HEADER_IMAGE_URL) : null;
 
     return Array.from(new Set([cover, ...galleryFromImages].filter(Boolean))) as string[];
   }, [room]);
@@ -254,104 +312,305 @@ const PublicRoomDetail = () => {
   const isLongTerm = useMemo(() => {
     const isApartment = room?.property_type_name ? isApartmentSegmentPropertyType(room.property_type_name) : false;
     const hasMonthPrice = allPrices.some((p: any) => p.unit === 'month');
-    const hasDayPrice = allPrices.some((p: any) => p.unit === 'day');
+    const hasDayPrice = allPrices.some((p: any) => p.unit === 'night');
     return isApartment || (hasMonthPrice && !hasDayPrice);
   }, [room, allPrices]);
 
+  const selectedNights = useMemo(() => {
+    if (checkin && checkout) {
+      return countBookingNights(checkin, checkout);
+    }
+    return null;
+  }, [checkin, checkout]);
+
+  const activeUnit = useMemo(() => {
+    if (selectedNights !== null) {
+      return selectedNights >= 30 ? "month" : "night";
+    }
+
+    const rentTypeParam = searchParams.get("rent_type");
+    if (rentTypeParam === "monthly") {
+      return "month";
+    }
+    if (rentTypeParam === "daily") {
+      return "night";
+    }
+
+    if (allPrices.length === 1) {
+      return allPrices[0].unit;
+    }
+    const isApartment = room?.property_type_name ? isApartmentSegmentPropertyType(room.property_type_name) : false;
+    return isApartment ? "month" : "night";
+  }, [selectedNights, room, allPrices, searchParams]);
+
+  useEffect(() => {
+    if (selectedNights !== null) {
+      const currentRentType = searchParams.get("rent_type");
+      const expectedRentType = selectedNights >= 30 ? "monthly" : "daily";
+      if (currentRentType !== expectedRentType) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("rent_type", expectedRentType);
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [selectedNights, searchParams, setSearchParams]);
+
   const propertyTypeLabel = normalizeStayPropertyTypeLabel(room?.property_type_name);
 
+  const validationError = useMemo(() => {
+    if (!checkin || !checkout || !allPrices.length) return null;
+    const nights = countBookingNights(checkin, checkout);
+    const rows = allPrices;
+
+    // Find resolved price row (matching pickCanonicalPriceRow / filterPriceRowsForStayDuration)
+    const isLongStay = nights >= 30;
+    let eligible = rows;
+    if (!isLongStay) {
+      const dayRows = rows.filter((row: any) => (row.unit ?? "night").toLowerCase() === "night");
+      eligible = dayRows.length > 0 ? dayRows : rows;
+    } else {
+      const monthRows = rows.filter((row: any) => (row.unit ?? "").toLowerCase() === "month");
+      if (monthRows.length > 0) {
+        eligible = monthRows;
+      } else {
+        eligible = rows.filter((row: any) => (row.unit ?? "night").toLowerCase() === "night");
+      }
+    }
+    const matchedRow = eligible.find((row: any) => Number(row.price ?? 0) > 0) || null;
+
+    if (matchedRow && matchedRow.minimum_stay > 0) {
+      const isMonth = matchedRow.unit === 'month';
+      const minNights = isMonth ? matchedRow.minimum_stay * 30 : matchedRow.minimum_stay;
+      if (nights < minNights) {
+        return {
+          message: `Thời gian lưu trú tối thiểu cho gói này là ${matchedRow.minimum_stay} ${isMonth ? 'tháng' : 'đêm'} (${minNights} ngày). Quý khách đã chọn ${nights} đêm.`,
+          minNights
+        };
+      }
+    }
+    return null;
+  }, [checkin, checkout, allPrices]);
+
+  const initialPaymentBreakdown = useMemo(() => {
+    if (!checkin || !checkout || !allPrices.length || validationError) return null;
+
+    const nights = countBookingNights(checkin, checkout);
+    const monthPrice = allPrices.find((p: any) => p.unit === "month");
+    const nightPrice = allPrices.find((p: any) => p.unit === "night");
+
+    if (!monthPrice && !nightPrice) return null;
+
+    let rentTotal = 0;
+    let depositAmount = 0;
+
+    if (nights >= 30 && monthPrice) {
+      const months = nights / 30;
+      rentTotal = Math.round(monthPrice.price * months);
+      depositAmount = monthPrice.deposit_amount || 0;
+    } else if (nightPrice) {
+      rentTotal = Math.round(nightPrice.price * nights);
+      depositAmount = nightPrice.deposit_amount || 0;
+    }
+
+    return { rentTotal, depositAmount, total: rentTotal + depositAmount, nights };
+  }, [checkin, checkout, allPrices, validationError]);
+
+  const roomRules = useMemo(() => ({
+    pet_policy: room?.pet_policy ?? "not_allowed",
+    pet_policy_note: room?.pet_policy_note ?? null,
+    smoking_allowed: Boolean(room?.smoking_allowed),
+    parties_allowed: Boolean(room?.parties_allowed),
+    quiet_hours_start: room?.quiet_hours_start ?? "22:00:00",
+    quiet_hours_end: room?.quiet_hours_end ?? "06:00:00",
+    checkin_method: room?.checkin_method ?? "meet_host",
+    standard_checkin_start: room?.standard_checkin_start ?? "14:00:00",
+    standard_checkout_end: room?.standard_checkout_end ?? "12:00:00",
+    has_elevator: Boolean(room?.has_elevator),
+    has_step_free_access: Boolean(room?.has_step_free_access),
+    is_ground_floor: Boolean(room?.is_ground_floor),
+  }), [room]);
+
   const renderBookingCard = () => {
+    const pricesSection = (
+      <div className="space-y-4">
+        {allPrices.map((price: any, index: number) => {
+          const isMonth = price.unit === 'month';
+          const isDay = price.unit === 'night';
+
+          let unitTitle = "Thuê theo đêm";
+          let unitLabel = "đêm";
+          if (isMonth) {
+            unitTitle = "Thuê dài hạn";
+            unitLabel = "tháng";
+          } else if (isDay) {
+            unitTitle = "Thuê ngắn hạn";
+            unitLabel = "đêm";
+          } else if (price.unit) {
+            unitTitle = `Thuê theo ${price.unit}`;
+            unitLabel = price.unit;
+          }
+
+          const isActive = price.unit === activeUnit;
+
+          return (
+            <div
+              key={index}
+              className={`p-4 rounded-2xl border transition-all duration-300 ${
+                isActive
+                  ? "border-sky-500 bg-sky-50/70 shadow-sm ring-1 ring-sky-500"
+                  : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/30"
+              }`}
+            >
+              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
+                {unitTitle}
+              </p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-primary">{formatPrice(price.price)}</span>
+                <span className="text-sm text-slate-500">/{unitLabel}</span>
+              </div>
+              {price.minimum_stay > 0 && (
+                <p className="text-[10px] text-amber-600 mt-2 font-medium flex items-center gap-1 bg-amber-50/50 p-1.5 rounded-lg border border-amber-100/50">
+                  <Info className="size-3.5 text-amber-500 shrink-0" />
+                  <span>Yêu cầu thuê tối thiểu {price.minimum_stay} {unitLabel}</span>
+                </p>
+              )}
+              {isMonth && (
+                <p className="text-[9.5px] text-slate-500 mt-2 font-medium flex items-center gap-1.5 bg-slate-50/50 p-1.5 rounded-lg border border-slate-100">
+                  <Info className="size-3 text-slate-400 shrink-0" />
+                  <span>* Thuê lẻ ngày được tính chia đều theo tỷ lệ tháng (Giá tháng / 30).</span>
+                </p>
+              )}
+            </div>
+          );
+        })}
+        {!allPrices.length && (
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
+            <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
+            <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
+          </div>
+        )}
+      </div>
+    );
+
+    const dateSection = (
+      <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+        <h4 className="text-sm font-bold text-slate-800">Thời gian lưu trú</h4>
+        {isLongTerm && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chọn nhanh:</span>
+            {DURATION_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => handleDurationPreset(preset.days)}
+                className="px-3 py-1 rounded-full border border-sky-200 bg-sky-50 text-sky-700 text-xs font-bold hover:bg-sky-100 hover:border-sky-400 transition-all"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <DatePickerField
+            label="Nhận phòng"
+            value={checkin}
+            onChange={handleStartDateChange}
+            minDate={todayStr}
+            excludeDates={bookedDates}
+            triggerClassName="h-9 px-2 text-xs rounded-md"
+            labelClassName="text-[10px] font-bold text-slate-500"
+            placeholder="Chọn ngày"
+          />
+          <DatePickerField
+            label="Trả phòng"
+            value={checkout}
+            onChange={handleEndDateChange}
+            minDate={(() => {
+              if (!checkin) return todayStr;
+              const parts = checkin.split("-").map(Number);
+              if (parts.length === 3) {
+                const date = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+                const pad = (n: number) => n.toString().padStart(2, "0");
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+              }
+              return todayStr;
+            })()}
+            excludeDates={bookedDates}
+            triggerClassName="h-9 px-2 text-xs rounded-md"
+            labelClassName="text-[10px] font-bold text-slate-500"
+            placeholder="Chọn ngày"
+            disabled={!checkin}
+          />
+        </div>
+        {validationError && (
+          <p className="text-[10.5px] text-rose-600 font-semibold flex items-start gap-1 bg-rose-50 p-2 rounded-lg border border-rose-100 mt-2">
+            <Info className="size-3.5 text-rose-500 shrink-0 mt-0.5" />
+            <span>{validationError.message}</span>
+          </p>
+        )}
+        {initialPaymentBreakdown && (
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+              Tạm tính thanh toán ban đầu
+            </p>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between text-slate-700">
+                <span>Tiền phòng ({initialPaymentBreakdown.nights} đêm)</span>
+                <span className="font-semibold">{formatPrice(initialPaymentBreakdown.rentTotal)}</span>
+              </div>
+              {initialPaymentBreakdown.depositAmount > 0 && (
+                <div className="flex justify-between text-slate-700">
+                  <span>Tiền đặt cọc bảo đảm</span>
+                  <span className="font-semibold text-amber-700">{formatPrice(initialPaymentBreakdown.depositAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-slate-900 border-t border-indigo-200 pt-2 mt-2">
+                <span>Tổng thanh toán đợt 1</span>
+                <span className="text-primary text-base">{formatPrice(initialPaymentBreakdown.total)}</span>
+              </div>
+            </div>
+            <p className="text-[9px] text-indigo-600/80 italic">
+              * Chưa bao gồm phụ phí điện, nước phát sinh trong quá trình lưu trú.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+
+    const trustSection = (
+      <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[10px] text-slate-400 font-medium">
+        <span>✓ Giá tốt nhất</span>
+        <span>✓ Hỗ trợ 24/7</span>
+        <span>✓ An ninh & Hợp đồng</span>
+      </div>
+    );
+
+    const ctaSection = checkin && checkout ? (
+      validationError ? (
+        <Button disabled className="w-full rounded-full bg-rose-100 text-rose-400 border border-rose-200 cursor-not-allowed hover:bg-rose-100">
+          Chưa đạt ngày tối thiểu
+        </Button>
+      ) : (
+        <Button asChild variant="gradient" className="w-full rounded-full">
+          <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
+        </Button>
+      )
+    ) : (
+      <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 cursor-not-allowed">
+        Vui lòng chọn ngày để đặt
+      </Button>
+    );
+
     return (
       <Card className="rounded-3xl border-slate-200 shadow-sm bg-white">
         <CardContent className="space-y-6 p-6">
-          <div className="space-y-4">
-            {allPrices.map((price: any, index: number) => {
-              const isMonth = price.unit === 'month';
-              const isDay = price.unit === 'day';
-
-              let unitTitle = "Thuê theo đêm";
-              let unitLabel = "đêm";
-              if (isMonth) {
-                unitTitle = "Thuê dài hạn";
-                unitLabel = "tháng";
-              } else if (isDay) {
-                unitTitle = "Thuê ngắn hạn";
-                unitLabel = "ngày";
-              } else if (price.unit) {
-                unitTitle = `Thuê theo ${price.unit}`;
-                unitLabel = price.unit;
-              }
-
-              return (
-                <div key={index} className={`p-4 rounded-2xl border ${isMonth ? 'border-sky-200 bg-sky-50/50' : 'border-slate-100 bg-slate-50/50'}`}>
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">
-                    {unitTitle}
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-primary">{formatPrice(price.price)}</span>
-                    <span className="text-sm text-slate-500">/{unitLabel}</span>
-                  </div>
-                  {price.minimum_stay > 0 && (
-                    <p className="text-[10px] text-amber-600 mt-2 font-medium flex items-center gap-1 bg-amber-50/50 p-1.5 rounded-lg border border-amber-100/50">
-                      <Info className="size-3.5 text-amber-500 shrink-0" />
-                      <span>Yêu cầu thuê tối thiểu {price.minimum_stay} {unitLabel}</span>
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-            {!allPrices.length && (
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
-                <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
-                <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
-              </div>
-            )}
+          {pricesSection}
+          {dateSection}
+          <div className="border-t border-slate-100 pt-4">
+            {trustSection}
           </div>
-
-          {/* Widget Chọn Ngày */}
-          <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-            <h4 className="text-sm font-bold text-slate-800">Thời gian lưu trú</h4>
-            <div className="grid grid-cols-2 gap-3">
-              <DatePickerField
-                label="Nhận phòng"
-                value={checkin}
-                onChange={handleStartDateChange}
-                minDate={todayStr}
-                excludeDates={bookedDates}
-                triggerClassName="h-9 px-2 text-xs rounded-md"
-                labelClassName="text-[10px] font-bold text-slate-500"
-                placeholder="Chọn ngày"
-              />
-              <DatePickerField
-                label="Trả phòng"
-                value={checkout}
-                onChange={handleEndDateChange}
-                minDate={checkin || todayStr}
-                excludeDates={bookedDates}
-                triggerClassName="h-9 px-2 text-xs rounded-md"
-                labelClassName="text-[10px] font-bold text-slate-500"
-                placeholder="Chọn ngày"
-                disabled={!checkin}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 border-t border-slate-100 pt-4 text-[10px] text-slate-400 font-medium">
-            <span>✓ Giá tốt nhất</span>
-            <span>✓ Hỗ trợ 24/7</span>
-            <span>✓ An ninh & Hợp đồng</span>
-          </div>
-
-          {checkin && checkout ? (
-            <Button asChild variant="gradient" className="w-full rounded-full">
-              <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
-            </Button>
-          ) : (
-            <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 cursor-not-allowed">
-              Vui lòng chọn ngày để đặt
-            </Button>
-          )}
+          {ctaSection}
         </CardContent>
       </Card>
     );
@@ -380,10 +639,15 @@ const PublicRoomDetail = () => {
         {/* Background scenic image */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <img
-            src={roomImages[0] || "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=75"}
+            src={roomImages[0] || getRoomFallbackImage(room?.property_type_name, room?.title)}
             alt="hero background"
             className="h-full w-full object-cover"
             style={{ opacity: 0.35 }}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
+            }}
           />
         </div>
         {/* Multi-layer overlay */}
@@ -480,7 +744,7 @@ const PublicRoomDetail = () => {
         </div>
       </div>
 
-      <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+      <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:px-8 lg:py-4">
         <section className="space-y-6">
           {isLoading ? (
             <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
@@ -501,9 +765,14 @@ const PublicRoomDetail = () => {
                   }}
                 >
                   <img
-                    src={roomImages[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1400&q=80"}
+                    src={roomImages[0] || getRoomFallbackImage(room?.property_type_name, room?.title)}
                     alt={room.title}
                     className="h-[320px] w-full object-cover sm:h-[420px] transition-transform duration-300 group-hover:scale-[1.02]"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <span className="text-white text-xs font-bold bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm shadow-md">
@@ -524,10 +793,15 @@ const PublicRoomDetail = () => {
                       src={image} 
                       alt={`${room.title}-${index + 2}`} 
                       className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
+                      }}
                     />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                        Phóng to
+                    <div className={`absolute inset-0 transition-opacity duration-300 flex items-center justify-center ${index === Math.min(roomImages.length - 2, 3) && roomImages.length > 5 ? "bg-black/45 opacity-100" : "bg-black/20 opacity-0 group-hover:opacity-100"}`}>
+                      <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                        {index === Math.min(roomImages.length - 2, 3) && roomImages.length > 5 ? "Xem tất cả ảnh" : "Phóng to"}
                       </span>
                     </div>
                   </div>
@@ -561,7 +835,7 @@ const PublicRoomDetail = () => {
                     <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700">{room.province_name || "Việt Nam"}</Badge>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Sức chứa</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -577,17 +851,24 @@ const PublicRoomDetail = () => {
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Cấu trúc</p>
+                      <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                        <BedDouble className="size-4 text-primary" />
+                        {room.bedrooms_count || 1} PN • {room.beds_count || 1} giường
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Hình thức thuê</p>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
                         {isLongTerm ? (
                           <>
                             <FileText className="size-4 text-primary" />
-                            Thuê dài hạn (Hợp đồng)
+                            Thuê dài hạn
                           </>
                         ) : (
                           <>
                             <CalendarDays className="size-4 text-primary" />
-                            Đặt theo ngày (Ngắn hạn)
+                            Đặt theo ngày
                           </>
                         )}
                       </p>
@@ -613,6 +894,120 @@ const PublicRoomDetail = () => {
                           </Badge>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {isLongTerm && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3">
+                        <Shield className="size-5 text-primary" />
+                        Quy định & Nội quy chỗ ở
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Thú cưng</p>
+                          <div className="mt-2 space-y-1.5">
+                            <div className={`flex items-center gap-2 text-sm font-semibold ${
+                              roomRules.pet_policy === "allowed" ? "text-emerald-700" :
+                              roomRules.pet_policy === "conditional" ? "text-amber-700" : "text-rose-700"
+                            }`}>
+                              <PawPrint className="size-4 text-primary shrink-0" />
+                              <span>
+                                {roomRules.pet_policy === "allowed" ? "Được phép mang thú cưng" :
+                                 roomRules.pet_policy === "conditional" ? "Có điều kiện" :
+                                 "Không cho mang thú cưng"}
+                              </span>
+                            </div>
+                            {roomRules.pet_policy_note && (
+                              <p className="text-xs text-slate-500 italic">{roomRules.pet_policy_note}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Hút thuốc</p>
+                          <div className={`mt-2 flex items-center gap-2 text-sm font-semibold ${roomRules.smoking_allowed ? "text-emerald-700" : "text-rose-700"}`}>
+                            <Cigarette className="size-4 text-primary shrink-0" />
+                            <span>{roomRules.smoking_allowed ? "Cho phép hút thuốc" : "Cấm hút thuốc"}</span>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Tiệc tùng / Sự kiện</p>
+                          <div className="mt-2 space-y-1.5">
+                            <div className={`flex items-center gap-2 text-sm font-semibold ${roomRules.parties_allowed ? "text-emerald-700" : "text-rose-700"}`}>
+                              <PartyPopper className="size-4 text-primary shrink-0" />
+                              <span>{roomRules.parties_allowed ? "Được phép tổ chức" : "Không được tổ chức"}</span>
+                            </div>
+                            {roomRules.quiet_hours_start && roomRules.quiet_hours_end && (
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <Volume2 className="size-3.5 text-slate-400 shrink-0" />
+                                <span>
+                                  Giờ yên lặng: {formatTimeLabel(roomRules.quiet_hours_start)} – {formatTimeLabel(roomRules.quiet_hours_end)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Nhận / Trả phòng</p>
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                              {roomRules.checkin_method === "smart_lock" ? (
+                                <LockKeyhole className="size-4 text-primary shrink-0" />
+                              ) : roomRules.checkin_method === "lockbox" ? (
+                                <Package className="size-4 text-primary shrink-0" />
+                              ) : roomRules.checkin_method === "reception_24h" ? (
+                                <Building2 className="size-4 text-primary shrink-0" />
+                              ) : (
+                                <UserCheck className="size-4 text-primary shrink-0" />
+                              )}
+                              <span>
+                                {roomRules.checkin_method === "smart_lock" ? "Tự nhận phòng (Smart Lock)" :
+                                 roomRules.checkin_method === "lockbox" ? "Hộp chìa khóa (Lockbox)" :
+                                 roomRules.checkin_method === "reception_24h" ? "Lễ tân 24/7" :
+                                 "Gặp trực tiếp chủ nhà"}
+                              </span>
+                            </div>
+                            {(roomRules.standard_checkin_start || roomRules.standard_checkout_end) && (
+                              <p className="text-xs text-slate-500">
+                                {roomRules.standard_checkin_start && `Nhận phòng: từ ${formatTimeLabel(roomRules.standard_checkin_start)}`}
+                                {roomRules.standard_checkout_end && ` • Trả phòng: trước ${formatTimeLabel(roomRules.standard_checkout_end)}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {(roomRules.has_elevator || roomRules.has_step_free_access || roomRules.is_ground_floor) && (
+                        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                            <Accessibility className="size-3.5 text-primary shrink-0" />
+                            <span>Tiện ích tiếp cận</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {roomRules.has_elevator ? (
+                              <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                                <Building2 className="size-3 shrink-0" />
+                                Có thang máy
+                              </Badge>
+                            ) : null}
+                            {roomRules.has_step_free_access ? (
+                              <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                                <Accessibility className="size-3 shrink-0" />
+                                Lối đi xe lăn
+                              </Badge>
+                            ) : null}
+                            {roomRules.is_ground_floor ? (
+                              <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                                <Home className="size-3 shrink-0" />
+                                Tầng trệt
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -668,8 +1063,8 @@ const PublicRoomDetail = () => {
                                 let unitLabel = "ngày";
                                 if (p.unit === 'month') {
                                   unitLabel = "tháng";
-                                } else if (p.unit === 'day') {
-                                  unitLabel = "ngày";
+                                } else if (p.unit === 'night') {
+                                  unitLabel = "đêm";
                                 } else if (p.unit) {
                                   unitLabel = p.unit;
                                 }
@@ -971,7 +1366,7 @@ const PublicRoomDetail = () => {
           )}
         </section>
 
-        <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+        <aside className="hidden lg:block lg:sticky lg:top-2 lg:z-20 lg:self-start">
           {renderBookingCard()}
         </aside>
       </main>
@@ -997,11 +1392,17 @@ const PublicRoomDetail = () => {
           </div>
 
           {checkin && checkout ? (
-            <Button asChild variant="gradient" className="rounded-full px-6 text-xs font-bold h-10 shadow-md">
-              <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>
-                Đặt ngay
-              </Link>
-            </Button>
+            validationError ? (
+              <Button disabled className="rounded-full bg-rose-100 text-rose-400 border border-rose-200 cursor-not-allowed hover:bg-rose-100 text-xs font-bold h-10 px-6">
+                Chưa đủ tối thiểu
+              </Button>
+            ) : (
+              <Button asChild variant="gradient" className="rounded-full px-6 text-xs font-bold h-10 shadow-md">
+                <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>
+                  Đặt ngay
+                </Link>
+              </Button>
+            )
           ) : (
             <Button onClick={scrollToCalendar} className="rounded-full bg-primary hover:bg-primary/90 text-white text-xs font-bold px-6 h-10 shadow-md">
               Chọn ngày

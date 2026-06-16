@@ -6,6 +6,7 @@ import {
   getEcho,
   isRealtimeEnabled,
 } from "@/lib/echoClient";
+import { mapRealtimeChatMessage, type ChatMessagePayload } from "@/utils/chatRealtime";
 
 export type RealtimeBookingPayload = {
   id: number;
@@ -43,6 +44,7 @@ type Options = {
   onEvent?: (event: BookingEventName, payload: RealtimeBookingPayload) => void;
   /** BCP: inbox yêu cầu hủy — payload không chứa PII khách. */
   onCancellationRequestEvent?: (payload: RealtimeCancellationRequestPayload) => void;
+  onMessageEvent?: (payload: ChatMessagePayload) => void;
   // Bao nhiêu giây mất kết nối liên tục mới bật polling fallback (mặc định 5s).
   fallbackThresholdMs?: number;
   // Tần suất polling fallback (mặc định 30s).
@@ -123,12 +125,18 @@ export const useBookingsRealtime = (options: Options = {}) => {
       optionsRef.current.onCancellationRequestEvent?.(payload);
     };
 
+    const handleMessageSent = (payload: Record<string, unknown>) => {
+      const incoming = mapRealtimeChatMessage(payload);
+      optionsRef.current.onMessageEvent?.(incoming);
+    };
+
     channel.listen(".booking.created", handle("booking.created"));
     channel.listen(".booking.confirmed", handle("booking.confirmed"));
     channel.listen(".booking.cancelled", handle("booking.cancelled"));
     channel.listen(".room_block.changed", handle("room_block.changed"));
     channel.listen(".contract.renewal_reminder", handle("contract.renewal_reminder"));
     channel.listen(".cancellation_request.updated", handleCancellationRequest);
+    channel.listen(".MessageSent", handleMessageSent);
 
     const connector = (echo as unknown as { connector: { pusher: { connection: { state: string; bind: (e: string, cb: () => void) => void; unbind: (e: string, cb: () => void) => void } } } }).connector;
     const pusher = connector?.pusher;
@@ -171,6 +179,7 @@ export const useBookingsRealtime = (options: Options = {}) => {
         channel.stopListening(".room_block.changed");
         channel.stopListening(".contract.renewal_reminder");
         channel.stopListening(".cancellation_request.updated");
+        channel.stopListening(".MessageSent");
         echo.leave(channelName);
       } catch {
         // ignore

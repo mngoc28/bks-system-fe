@@ -79,6 +79,7 @@ const BksStayDetail = React.lazy(() => import("./pages/EndUser/BksStay/BookingDe
 const StayVoucher = React.lazy(() => import("./pages/EndUser/StayVoucher"));
 const BksStayAccount = React.lazy(() => import("./pages/EndUser/BksStay/Account"));
 const BksStaySupport = React.lazy(() => import("./pages/EndUser/BksStay/Support"));
+const BksStayChat = React.lazy(() => import("./pages/EndUser/BksStay/Chat"));
 const BksStayServices = React.lazy(() => import("./pages/EndUser/BksStay/InStayServices.tsx"));
 const BksStayContracts = React.lazy(() => import("./pages/EndUser/BksStay/Contracts.tsx"));
 const BksStayContractDetail = React.lazy(() => import("./pages/EndUser/BksStay/ContractDetail.tsx"));
@@ -295,6 +296,7 @@ export default function Router() {
           <Route path="bookings/:id/voucher" element={<StayVoucher />} />
           <Route path="account" element={<BksStayAccount />} />
           <Route path="support" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_SUPPORT}><BksStaySupport /></BksStayRouteGuard>} />
+          <Route path="chat" element={<BksStayChat />} />
           <Route path="services" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_SERVICES}><BksStayServices /></BksStayRouteGuard>} />
           <Route path="contracts" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_CONTRACTS}><BksStayContracts /></BksStayRouteGuard>} />
           <Route path="contracts/:id" element={<BksStayRouteGuard path={ROUTERS.BKS_STAY_CONTRACTS}><BksStayContractDetail /></BksStayRouteGuard>} />

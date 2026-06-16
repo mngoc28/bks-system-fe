@@ -274,6 +274,14 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ room, onEdit, on
                 <p className="mt-1 text-sm text-gray-900">{getRoomTypeName(room.room_type)}</p>
               </div>
               <div>
+                <label className="text-sm font-medium text-gray-700">{t("rooms.bedrooms_count")}</label>
+                <p className="mt-1 text-sm text-gray-900">{room.bedrooms_count ?? 1} phòng</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">{t("rooms.beds_count")}</label>
+                <p className="mt-1 text-sm text-gray-900">{room.beds_count ?? 1} giường</p>
+              </div>
+              <div>
                 <label className="text-sm font-medium text-gray-700">
                   {t("rooms.created_at")}
                 </label>

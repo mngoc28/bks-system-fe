@@ -46,6 +46,7 @@ type FilterSelectProps = {
   onValueChange: (value: string) => void;
   options: FilterSelectOption[];
   placeholder?: string;
+  disabled?: boolean;
 };
 
 export const FilterSelect: React.FC<FilterSelectProps> = ({
@@ -53,6 +54,7 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
   onValueChange,
   options,
   placeholder,
+  disabled,
 }) => {
   const hasAllOption = options.some((option) => option.value === "");
   const selectValue =
@@ -66,6 +68,7 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
     <Select
       value={selectValue}
       onValueChange={(next) => onValueChange(next === FILTER_SELECT_ALL ? "" : next)}
+      disabled={disabled}
     >
       <SelectTrigger className={filterSelectTriggerClassName}>
         <SelectValue placeholder={placeholder} />
@@ -103,8 +106,8 @@ const AdvancedFilterPanel: React.FC<AdvancedFilterPanelProps> = ({
 
   return (
     <FilterPortal open={open} onClose={onClose}>
-      <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-200 animate-in fade-in slide-in-from-top-2">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-2">
+      <div className="relative z-30 rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-200 animate-in fade-in slide-in-from-top-2">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-2 rounded-t-xl">
           <div className="flex min-w-0 items-center gap-2">
             <div className="rounded-md bg-primary p-1 text-white">
               <Search className="size-3.5" />
@@ -134,7 +137,7 @@ const AdvancedFilterPanel: React.FC<AdvancedFilterPanelProps> = ({
             </button>
           </div>
         </div>
-        <div className="p-4">
+        <div className="p-4 rounded-b-xl">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {children}
           </div>

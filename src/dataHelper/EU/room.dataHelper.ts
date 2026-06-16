@@ -6,6 +6,8 @@ export interface Room {
     title: string;
     room_type: string;
     people: number;
+    bedrooms_count?: number;
+    beds_count?: number;
     description?: string;
     province_name: string;
     property_address: string;
@@ -13,6 +15,7 @@ export interface Room {
     property_type_id?: number;
     cheapest_daily_price: number;
     cheapest_monthly_price?: number;
+    cheapest_nightly_price?: number;
     all_prices?: string;
     amenities?: string;
     room_image?: string;

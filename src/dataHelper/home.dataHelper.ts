@@ -6,6 +6,8 @@ export interface RoomCard {
   image: string;
   area: string;
   beds: number | string;
+  bedrooms_count?: number;
+  beds_count?: number;
   tourist_summary?: {
     has_tourist_mapping: boolean;
     tourist_spot_name?: string | null;
@@ -17,4 +19,5 @@ export interface RoomCard {
   room_type?: number | string;
   property_type_name?: string;
   partner_company_name?: string;
+  rent_type?: "daily" | "monthly";
 }

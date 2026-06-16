@@ -94,9 +94,10 @@ const NewsGrid = ({
               key={article.id}
               to={ROUTERS.PUBLIC_NEWS_DETAIL.replace(":newsId", article.id.toString())}
               aria-label={t("public.home.news.cardLabel", { title: article.title })}
-              className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-sm transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-sm transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 will-change-transform"
+              style={{ transform: "translateZ(0)" }}
             >
-            <div className="relative h-44 w-full overflow-hidden">
+            <div className="relative h-44 w-full overflow-hidden rounded-t-[22px]">
               <img
                 src={article.image || getNewsFallbackImage()}
                 alt={article.title}

@@ -155,6 +155,17 @@ export const partnerService = {
   sendMessage: (data: { conversation_id: number | string, content: string, metadata?: any }) =>
     apiService.post(`${BASE_URL}/chat`, data),
 
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('folder', 'chat');
+    return apiService.post(`${BASE_URL}/cloudinary/upload-image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
   // --- PRICE RULES ---
   getPriceRules: (params?: any, config?: any) => apiService.get(`${BASE_URL}/price-rules`, { params, ...config }),
   createPriceRule: (data: any) => apiService.post(`${BASE_URL}/price-rules`, data),

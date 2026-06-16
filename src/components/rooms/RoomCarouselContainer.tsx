@@ -33,12 +33,12 @@ export const RoomCardSkeleton = () => (
 );
 
 const sliderOptions = {
+  type: "slide",
+  rewind: false,
   perPage: 4,
   gap: "1.25rem",
   pagination: false,
-  autoplay: true,
-  interval: 5000,
-  pauseOnHover: true,
+  autoplay: false,
   breakpoints: {
     1280: { perPage: 3 },
     1024: { perPage: 2 },

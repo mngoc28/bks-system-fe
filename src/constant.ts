@@ -95,6 +95,7 @@ export const enum ROUTERS {
   BKS_STAY_DETAILS = "/bks-stay/bookings/:id",
   BKS_STAY_ACCOUNT = "/bks-stay/account",
   BKS_STAY_SUPPORT = "/bks-stay/support",
+  BKS_STAY_CHAT = "/bks-stay/chat",
   BKS_STAY_SERVICES = "/bks-stay/services",
   BKS_STAY_CONTRACTS = "/bks-stay/contracts",
   BKS_STAY_CONTRACT_DETAIL = "/bks-stay/contracts/:id",
@@ -325,6 +326,35 @@ export const ROOM_IMAGE_TYPE = {
   HALLWAY: 14,
   OFFICE: 15,
 } as const;
+
+export const getFilteredRoomImageTypes = (propertyTypeId?: number) => {
+  // If no property type is provided, return all types
+  if (!propertyTypeId) return Object.entries(ROOM_IMAGE_TYPE);
+
+  // Group mappings:
+  // Hotel = 7
+  // Guesthouse = 2 (Property), 6 (Boarding house)
+  // Apartment = 1 (Apartment property), 5 (Serviced apartment), 4 (Townhouse)
+  // Homestay = 3 (Villa), 9 (Other)
+
+  let hiddenKeys: string[] = [];
+
+  if (propertyTypeId === 7) {
+    // Hotel
+    hiddenKeys = ['KITCHEN', 'LIVING_ROOM', 'OFFICE', 'STAIRCASE', 'GARDEN'];
+  } else if (propertyTypeId === 6 || propertyTypeId === 2) {
+    // Guesthouse / Boarding house
+    hiddenKeys = ['KITCHEN', 'LIVING_ROOM', 'DINING_ROOM', 'GARDEN', 'STAIRCASE', 'OFFICE'];
+  } else if (propertyTypeId === 1 || propertyTypeId === 5 || propertyTypeId === 4) {
+    // Apartment
+    hiddenKeys = ['OFFICE', 'STAIRCASE', 'GARDEN'];
+  } else if (propertyTypeId === 3 || propertyTypeId === 9 || propertyTypeId === 8) {
+    // Homestay / Villa / Office
+    hiddenKeys = ['OFFICE'];
+  }
+
+  return Object.entries(ROOM_IMAGE_TYPE).filter(([key]) => !hiddenKeys.includes(key));
+};
 
 // Booking status order
 export const BOOKING_STATUS_ORDER = [0, 1, 3, 2] as const;

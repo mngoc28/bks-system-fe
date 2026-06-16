@@ -72,6 +72,8 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
       area: room.area.toString(),
       floor_number: room.floor_number,
       people: room.people,
+      bedrooms_count: room.bedrooms_count ?? 1,
+      beds_count: room.beds_count ?? 1,
       room_type: room.room_type,
       status: [true, "true", 1, "1"].includes(room.status),
       description: room.description || "",
@@ -79,11 +81,11 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
       services: room.services?.map(s => s.id).filter(id => id != null) || [],
       prices: room.prices?.map(p => ({
         price_package_id: p.price_package_id,
-        unit: p.unit as "day" | "month",
+        unit: p.unit as "night" | "month",
         unit_price: p.price.toString(),
       })) || [{
         price_package_id: 0,
-        unit: "month" as "day" | "month",
+        unit: "month" as "night" | "month",
         unit_price: "",
       }],
     },
@@ -105,6 +107,8 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
       area: data.area,
       floor_number: data.floor_number,
       people: data.people,
+      bedrooms_count: data.bedrooms_count,
+      beds_count: data.beds_count,
       room_type: data.room_type,
       status: data.status,
       description: data.description ?? "",
@@ -219,6 +223,36 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
                 <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.people")} <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
                   <Input {...field} type="number" placeholder={t("rooms.people_placeholder")} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Bedrooms Count */}
+          <FormField
+            control={form.control}
+            name="bedrooms_count"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.bedrooms_count")} <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" placeholder={t("rooms.bedrooms_count_placeholder")} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Beds Count */}
+          <FormField
+            control={form.control}
+            name="beds_count"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.beds_count")} <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" placeholder={t("rooms.beds_count_placeholder")} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -385,10 +419,10 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
                     <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.unit")}</FormLabel>
                     <ReactSelect
                       options={[
-                        { value: "day", label: t("rooms.unit_day") },
+                        { value: "night", label: t("rooms.unit_day") },
                         { value: "month", label: t("rooms.unit_month") }
                       ]}
-                      value={field.value ? { value: field.value, label: field.value === "day" ? t("rooms.unit_day") : field.value === "month" ? t("rooms.unit_month") : "" } : null}
+                      value={field.value ? { value: field.value, label: field.value === "night" ? t("rooms.unit_day") : field.value === "month" ? t("rooms.unit_month") : "" } : null}
                       onChange={(selected) => field.onChange(selected?.value || "")}
                       isDisabled={isLoading}
                       placeholder={t("rooms.unit_placeholder")}
@@ -430,7 +464,7 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({ room, onSubmit, isLoading =
               </Button>
             </div>
           ))}
-          <Button type="button" onClick={() => append({ price_package_id: 0, unit: "month" as "day" | "month", unit_price: "" })} disabled={fields.length >= 4}>
+          <Button type="button" onClick={() => append({ price_package_id: 0, unit: "month" as "night" | "month", unit_price: "" })} disabled={fields.length >= 4}>
             {t("rooms.add_price")}
           </Button>
         </div>

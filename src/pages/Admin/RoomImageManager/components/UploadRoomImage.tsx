@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toastError } from "@/components/ui/toast";
-import { IMAGE_COMPRESS_QUALITY, IMAGE_FOLDER, IMAGE_MAX_FILES, IMAGE_MAX_WIDTH, ROOM_IMAGE_TYPE } from "@/constant";
+import { IMAGE_COMPRESS_QUALITY, IMAGE_FOLDER, IMAGE_MAX_FILES, IMAGE_MAX_WIDTH, ROOM_IMAGE_TYPE, getFilteredRoomImageTypes } from "@/constant";
 import { FilePreview, UploadRoomImageProps } from "@/dataHelper/roomImage.dataHelper";
 import { useRoomImagesQuery, useUploadRoomImageMutation } from "@/hooks/useRoomImageQuery";
+import { useRoomQuery } from "@/hooks/useRoomQuery";
 import { singleImageSchema } from "@/shared/shema";
 import { AlertCircle, Image as ImageIcon, Upload, X } from "lucide-react";
 import React, { useCallback, useState } from "react";
@@ -20,6 +21,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
   const [isDragOver, setIsDragOver] = useState(false);
   const uploadMutation = useUploadRoomImageMutation();
   const { data: images } = useRoomImagesQuery(roomId);
+  const { data: room } = useRoomQuery(roomId);
 
   const imageSchema = singleImageSchema(t);
 
@@ -274,7 +276,7 @@ export const UploadRoomImage: React.FC<UploadRoomImageProps> = ({ roomId, onClos
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.entries(ROOM_IMAGE_TYPE).map(([key, value]) => (
+                            {getFilteredRoomImageTypes(room?.property_type_id).map(([key, value]) => (
                               <SelectItem key={value} value={value.toString()}>
                                 {t(`room_images.types.${key.toLowerCase()}`)}
                               </SelectItem>

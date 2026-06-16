@@ -67,6 +67,8 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
       area: "",
       floor_number: 1,
       people: 1,
+      bedrooms_count: 1,
+      beds_count: 1,
       room_type: 1,
       status: false,
       deposit: "",
@@ -94,6 +96,8 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
         area: data.area,
         floor_number: data.floor_number,
         people: data.people,
+        bedrooms_count: data.bedrooms_count,
+        beds_count: data.beds_count,
         room_type: data.room_type,
         status: data.status,
         description: data.description ?? "",
@@ -224,6 +228,36 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.people")} <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value) || 1)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Bedrooms Count */}
+          <FormField
+            control={form.control}
+            name="bedrooms_count"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.bedrooms_count")} <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value) || 1)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Beds Count */}
+          <FormField
+            control={form.control}
+            name="beds_count"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.beds_count")} <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
                   <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value) || 1)} />
                 </FormControl>
@@ -373,10 +407,10 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
                       <FormLabel className="text-sm font-medium text-gray-700">{t("rooms.unit")}</FormLabel>
                       <ReactSelect
                         options={[
-                          { value: "day", label: t("rooms.unit_day") },
+                          { value: "night", label: t("rooms.unit_day") },
                           { value: "month", label: t("rooms.unit_month") }
                         ]}
-                        value={field.value ? { value: field.value, label: field.value === "day" ? t("rooms.unit_day") : field.value === "month" ? t("rooms.unit_month") : "" } : null}
+                        value={field.value ? { value: field.value, label: field.value === "night" ? t("rooms.unit_day") : field.value === "month" ? t("rooms.unit_month") : "" } : null}
                         onChange={(selected) => field.onChange(selected?.value || "")}
                         isDisabled={isLoading}
                         placeholder={t("rooms.unit_placeholder")}
@@ -425,7 +459,7 @@ export const RoomAddForm: React.FC<RoomAddFormProps> = ({ onSubmit, onCancel, is
                 </Button>
               </div>
             ))}
-            <Button type="button" onClick={() => append({ price_package_id: 0, unit: "month" as "day" | "month", unit_price: "" })}>
+            <Button type="button" onClick={() => append({ price_package_id: 0, unit: "month" as "night" | "month", unit_price: "" })}>
               {t("rooms.add_price")}
             </Button>
           </div>

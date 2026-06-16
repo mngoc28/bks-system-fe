@@ -18,6 +18,8 @@ export interface Room {
   area: number;
   floor_number: number;
   people: number;
+  bedrooms_count?: number;
+  beds_count?: number;
   room_type: number;
   status: boolean;
   description: string | null;
@@ -31,6 +33,7 @@ export interface Room {
   prices?: RoomPrice[];
   images?: RoomImage[];
   province_id?: number;
+  property_type_id?: number;
 }
 
 // Related interfaces
@@ -160,6 +163,8 @@ export interface CreateRoomRequest {
   area: number;
   floor_number: number;
   people: number;
+  bedrooms_count?: number;
+  beds_count?: number;
   room_type: number;
   status: number;
   description?: string;
@@ -194,6 +199,8 @@ export type RoomFormData = {
   area: string;
   floor_number: number;
   people: number;
+  bedrooms_count?: number;
+  beds_count?: number;
   room_type: number;
   status: boolean;
   description?: string;

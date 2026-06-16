@@ -560,11 +560,17 @@ const PartnerDetail = () => {
                             {/* View All Button */}
                             <div className="mt-8 flex justify-center">
                                 <Button
-                                                    variant="outline"
-                                                    disabled={provinceData.rooms.length < 3}
-                                                    className={`group rounded-full transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 ${provinceData.rooms.length < 3 ? 'cursor-not-allowed opacity-50' : ''}`}
+                                    variant="outline"
+                                    disabled={provinceData.rooms.length < 3}
+                                    className={`group rounded-full transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 ${provinceData.rooms.length < 3 ? 'cursor-not-allowed opacity-50' : ''}`}
                                     onClick={() => {
-                                        // TODO: Navigate to all rooms of this province
+                                        if (provinceData.rooms.length >= 3) {
+                                            const prov = PROVINCES.find(p => p.name.toLowerCase() === provinceData.province.toLowerCase());
+                                            const targetProvinceId = prov ? prov.id : partnerData?.province_id;
+                                            if (targetProvinceId) {
+                                                navigate(ROUTERS.SEARCH_ROOMS_BY_PROVINCE.replace(":provinceId", targetProvinceId.toString()));
+                                            }
+                                        }
                                     }}
                                 >
                                     <span className="mr-2">{t("common.viewAll")}</span>

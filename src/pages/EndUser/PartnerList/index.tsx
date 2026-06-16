@@ -16,53 +16,35 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from "@/components/ui/dialog";
 import { CLOUDINARY_HEADER_IMAGE_URL, PROVINCES, ROUTERS } from "@/constant";
 import { usePartnerQuery } from "@/hooks/EU/usePartnerQuery";
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import { resolveImageUrl } from "@/utils/imageUtils";
+import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
+import { getProvinceImage } from "@/utils/fallbackImages";
+import { formatProvinceName } from "@/utils/utils";
+import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 
-const getProvinceHeroImage = (provinceName: string | undefined): string => {
-  if (!provinceName) return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80"; // Luxury resort default
 
-  const name = provinceName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  if (name.includes("da nang")) {
-    return "https://images.unsplash.com/photo-1559592442-7486a0952042?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("ha noi")) {
-    return "https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("ho chi minh") || name.includes("sai gon")) {
-    return "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("quang ninh") || name.includes("ha long")) {
-    return "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("nha trang") || name.includes("khanh hoa")) {
-    return "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("lam dong") || name.includes("da lat")) {
-    return "https://images.unsplash.com/photo-1583002621936-e82a0134ba44?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("lao cai") || name.includes("sa pa") || name.includes("sapa")) {
-    return "https://images.unsplash.com/photo-1550950158-d0d960dff51b?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("phu quoc") || name.includes("kien giang")) {
-    return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
-  }
-
-  return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80";
-};
 
 const PartnerList = () => {
     const { t } = useTranslation();
     const { provinceNameEn } = useParams<{ provinceNameEn: string }>();
     const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+    const [isProvincesDialogOpen, setIsProvincesDialogOpen] = useState(false);
 
-    const province = PROVINCES.find(p => p.name_en === provinceNameEn);
+    const { data: provincesData } = useGetAllProvincesTypes();
+    const fetchedProvince = provincesData?.data?.find(p => p.name_en === provinceNameEn);
+    const province = fetchedProvince || PROVINCES.find(p => p.name_en === provinceNameEn);
     const provinceId = province?.id || 0;
-    const provinceName = province?.name || t("common.unknown_province");
+    const provinceName = formatProvinceName(province?.name) || t("common.unknown_province");
 
     const { data: partners = [], isLoading, error } = usePartnerQuery(provinceId);
     const hasPartners = Array.isArray(partners) && partners.length > 0;
@@ -97,7 +79,7 @@ const PartnerList = () => {
                 {/* Background Image with elegant overlay */}
                 <div className="absolute inset-0 -z-10 overflow-hidden">
                   <img
-                    src={getProvinceHeroImage(provinceName)}
+                    src={(province as any)?.image ? resolveCloudinaryUrl((province as any).image, CLOUDINARY_HEADER_IMAGE_URL) || getProvinceImage(provinceName) : getProvinceImage(provinceName)}
                     alt={provinceName || "Background"}
                     className="absolute inset-0 size-full object-cover opacity-60 transition-all duration-700 scale-105"
                   />
@@ -287,7 +269,11 @@ const PartnerList = () => {
                   
                   {hasPartners && (
                     <div className="text-center">
-                      <Button variant="outline" className="h-14 rounded-full border-slate-100 bg-slate-50/50 px-10 font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                      <Button 
+                        variant="outline" 
+                        className="h-14 rounded-full border-slate-100 bg-slate-50/50 px-10 font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        onClick={() => setIsProvincesDialogOpen(true)}
+                      >
                         {t("endUserPartners.view_all_link", "Xem danh sách các nhà cung cấp dịch vụ cho thuê nhà tại các khu vực khác...")}
                       </Button>
                     </div>
@@ -307,8 +293,10 @@ const PartnerList = () => {
                       {t("endUserPartners.info_banner_sub", "Đăng ký và chuyển đến thông qua BKS Business, bạn chắc chắn sẽ nhận được điểm thưởng tương đương 3% tiền thuê nhà.")}
                     </p>
                   </div>
-                  <Button className="h-14 rounded-full bg-primary px-8 font-black shadow-lg shadow-primary/20 hover:bg-primary-hover">
-                    {t("endUserPartners.info_banner_cta", "Về dịch vụ tích điểm")}
+                  <Button asChild className="h-14 rounded-full bg-primary px-8 font-black shadow-lg shadow-primary/20 hover:bg-primary-hover">
+                    <Link to={`${ROUTERS.PUBLIC_FAQ}?category=rewards`}>
+                      {t("endUserPartners.info_banner_cta", "Về dịch vụ tích điểm")}
+                    </Link>
                   </Button>
                 </section>
 
@@ -405,7 +393,10 @@ const PartnerList = () => {
                       </p>
                     </div>
                     <div className="shrink-0 space-y-4">
-                      <Button className="group flex h-16 items-center gap-2 rounded-full bg-white px-10 text-lg font-black text-slate-900 shadow-xl hover:bg-primary-light">
+                      <Button 
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-public-chatbot"))}
+                        className="group flex h-16 items-center gap-2 rounded-full bg-white px-10 text-lg font-black text-slate-900 shadow-xl hover:bg-primary-light"
+                      >
                         {t("common.contact_us", "Liên hệ hỗ trợ ngay")}
                         <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
                       </Button>
@@ -416,6 +407,33 @@ const PartnerList = () => {
 
                 <div className="h-10" />
             </main>
+
+            <Dialog open={isProvincesDialogOpen} onOpenChange={setIsProvincesDialogOpen}>
+              <DialogContent className="sm:max-w-[500px] rounded-[24px] max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <MapPin className="size-5 text-primary" />
+                    Chọn khu vực lưu trú khác
+                  </DialogTitle>
+                  <DialogDescription className="text-slate-500 font-medium">
+                    Chọn một trong các tỉnh/thành phố dưới đây để xem danh sách đối tác lưu trú của BKS.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  {PROVINCES.filter(p => p.id !== provinceId).map((p) => (
+                    <Link
+                      key={p.id}
+                      to={ROUTERS.PARTNERS.replace(":provinceNameEn", p.name_en)}
+                      onClick={() => setIsProvincesDialogOpen(false)}
+                      className="flex items-center gap-2 rounded-2xl border border-slate-100 p-3.5 hover:bg-primary-light hover:border-primary/20 transition-all font-bold text-slate-700 hover:text-primary"
+                    >
+                      <MapPin className="size-4 text-primary shrink-0" />
+                      <span className="truncate">{p.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <PublicFooter />
         </div>

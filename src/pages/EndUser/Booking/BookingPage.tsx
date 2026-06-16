@@ -16,7 +16,14 @@ import {
   resolveStayPriceQuote,
   parseRoomPrices,
 } from "@/utils/bookingAmount";
-import { countBookingDaysInclusive, formatBookingDaysCount, formatRoomRentalLineLabel } from "@/utils/dateUtils";
+import {
+    countBookingNights,
+    formatBookingNightsCount,
+    formatBookingDaysCount,
+    formatRoomRentalLineLabel,
+    formatDate,
+} from "@/utils/dateUtils";
+import { isLongTermLeaseBooking } from "@/utils/stayClassification";
 import { formatCurrencyInput } from "@/utils/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { resolveImageUrl } from "@/utils/imageUtils";
@@ -38,7 +45,7 @@ import {
     Wifi, Tv, Refrigerator, WashingMachine, Utensils, Mountain, Shield, 
     AirVent, Coffee, Sparkles, Eraser, Zap, Stethoscope, Printer, 
     ParkingCircle, Waves, Plane, CheckCircle2, Info, ArrowRight,
-    LucideIcon, Users, Clock, AlertCircle, MapPin, Maximize, Check
+    LucideIcon, Users, Clock, AlertCircle, MapPin, Maximize, Check, Calendar
 } from "lucide-react";
 
 const getAmenityIcon = (name: string): LucideIcon => {
@@ -223,6 +230,36 @@ const BookingPage = () => {
     };
 
     const handleContinueToConfirm = handleSubmit((data) => {
+        // Validate minimum stay duration before continuing
+        if (room && data.start_date && data.end_date) {
+            const nights = countBookingNights(data.start_date, data.end_date);
+            const rows = parseRoomPrices(room.all_prices);
+            
+            // Find resolved price row
+            const isLongStay = nights >= 30;
+            let eligible = rows;
+            if (!isLongStay) {
+                const dayRows = rows.filter((row) => (row.unit ?? "night").toLowerCase() === "night");
+                eligible = dayRows.length > 0 ? dayRows : rows;
+            } else {
+                const monthRows = rows.filter((row) => (row.unit ?? "").toLowerCase() === "month");
+                if (monthRows.length > 0) {
+                    eligible = monthRows;
+                } else {
+                    eligible = rows.filter((row) => (row.unit ?? "night").toLowerCase() === "night");
+                }
+            }
+            const matchedRow = eligible.find((row) => Number(row.price ?? 0) > 0) ?? null;
+            
+            if (matchedRow && matchedRow.minimum_stay && matchedRow.minimum_stay > 0) {
+                const isMonth = matchedRow.unit === 'month';
+                const minNights = isMonth ? matchedRow.minimum_stay * 30 : matchedRow.minimum_stay;
+                if (nights < minNights) {
+                    toastError(`Thời gian lưu trú tối thiểu cho gói này là ${matchedRow.minimum_stay} ${isMonth ? 'tháng' : 'đêm'} (${minNights} ngày). Quý khách đã chọn ${nights} đêm.`);
+                    return;
+                }
+            }
+        }
         setPreviewData(data);
         setCurrentStep(2);
     });
@@ -278,37 +315,47 @@ const BookingPage = () => {
     }, [hasStayDates, startDate, endDate, room]);
 
     const defaultPackage = useMemo(() => {
-        if (!room) return { unit: "day", price: 0 };
+        if (!room) return { unit: "night", price: 0 };
         return getPrimaryDayPackagePrice(room.all_prices, room.cheapest_daily_price);
     }, [room]);
 
-    const depositRequirements = useMemo(() => {
-        if (!startDate || !endDate || !room) return { isRequired: false, reasons: [] };
+    const stayNights = useMemo(() => {
+        if (!startDate || !endDate) return 0;
+        return countBookingNights(startDate, endDate);
+    }, [startDate, endDate]);
 
-        const pUnit = priceQuote?.unit ?? defaultPackage.unit;
+    const priceUnit = priceQuote?.unit ?? defaultPackage.unit;
+
+    const isLeaseBooking = useMemo(() => {
+        if (!room || stayNights <= 0) return false;
+        return isLongTermLeaseBooking({
+            propertyTypeId: room.property_type_id,
+            propertyTypeName: room.property_type_name,
+            stayNights,
+            priceUnit,
+        });
+    }, [room, stayNights, priceUnit]);
+
+    const depositRequirements = useMemo(() => {
+        if (!startDate || !endDate || !room) return { isRequired: false, reasons: [] as string[] };
 
         const reasons: string[] = [];
 
-        // 1. Long term checking
-        const isLongTerm = pUnit === 'month' || room.property_type_id === 2 || room.property_type_id === 3;
-        if (isLongTerm) {
+        if (isLeaseBooking) {
             reasons.push("Thuê dài hạn (Căn hộ / Dịch vụ dài hạn)");
         } else {
-            // 2. Check last-minute (< 24h) - Only for short term
             const checkInDate = new Date(startDate);
             const today = new Date();
-            const diffTime = checkInDate.getTime() - today.getTime();
-            const diffHours = diffTime / (1000 * 60 * 60);
+            const diffHours = (checkInDate.getTime() - today.getTime()) / (1000 * 60 * 60);
             if (diffHours <= 24) {
                 reasons.push("Đặt phòng sát giờ (trong vòng 24h)");
             }
 
-            // 3. Check weekend (Saturday = 6, Sunday = 0) - Only for short term
             const start = new Date(startDate);
-            const end = new Date(endDate);
+            const endExclusive = new Date(endDate);
             const current = new Date(start);
             let hasWeekend = false;
-            while (current <= end) {
+            while (current < endExclusive) {
                 const day = current.getDay();
                 if (day === 0 || day === 6) {
                     hasWeekend = true;
@@ -323,22 +370,21 @@ const BookingPage = () => {
 
         return {
             isRequired: reasons.length > 0,
-            reasons
+            reasons,
         };
-    }, [startDate, endDate, room, priceQuote, defaultPackage]);
+    }, [startDate, endDate, room, isLeaseBooking]);
 
     const isDepositRequired = depositRequirements.isRequired;
 
     const depositAmount = useMemo(() => {
         if (!startDate || !endDate || !room) return 0;
         
-        const days = countBookingDaysInclusive(startDate, endDate);
         const rows = parseRoomPrices(room.all_prices);
-        const isLongStay = days >= 30;
+        const isLongStay = stayNights >= 30;
         
         const eligible = rows.filter((row) => {
             const unit = (row.unit ?? "").toLowerCase();
-            return isLongStay ? unit === "month" : unit === "day";
+            return isLongStay ? unit === "month" : unit === "night";
         });
         const matchedRow = eligible.find((row) => Number(row.price ?? 0) > 0) ?? rows.find((row) => Number(row.price ?? 0) > 0) ?? null;
 
@@ -361,7 +407,7 @@ const BookingPage = () => {
         }
 
         return baseDeposit;
-    }, [startDate, endDate, room, isDepositRequired, depositRequirements, priceQuote]);
+    }, [startDate, endDate, room, isDepositRequired, depositRequirements, priceQuote, stayNights]);
 
     const depositPercent = useMemo(() => {
         const totalRoomPrice = priceQuote?.roomStayTotal ?? 0;
@@ -377,13 +423,13 @@ const BookingPage = () => {
 
     const bookingDays = priceQuote?.days ?? 0;
     const roomTotal = priceQuote?.roomStayTotal ?? 0;
-    const priceUnit = priceQuote?.unit ?? defaultPackage.unit;
     const unitPrice = priceQuote?.price ?? defaultPackage.price;
     const serviceTotal = computeBookingServicesTotal(selectedServices.map(s => ({ price: Number(s.price) })));
     const estimatedTotal = roomTotal + serviceTotal;
+    const durationMode = (priceUnit ?? "night").toLowerCase() === "month" ? "calendar_days" as const : "nights" as const;
 
     const isVi = i18n.language.startsWith("vi");
-    const isLongStay = bookingDays > 0 ? bookingDays >= 30 : (priceUnit === "month");
+    const isLongStay = isLeaseBooking || (stayNights >= 30 && (priceUnit === "month"));
 
     const policyRules = useMemo(() => {
         const getFormattedPolicyDate = (baseDateStr: string, daysToSubtract: number) => {
@@ -582,6 +628,11 @@ const BookingPage = () => {
                                                 src={roomImage}
                                                 alt={room.title}
                                                 className="size-full object-cover transition-transform duration-500 hover:scale-110"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.onerror = null;
+                                                    target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
+                                                }}
                                             />
                                             <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
                                                 Ảnh phòng
@@ -595,6 +646,11 @@ const BookingPage = () => {
                                                             src={resolveImageUrl(img.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || ""}
                                                             className="size-full object-cover"
                                                             alt={`Room view ${idx + 1}`}
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.onerror = null;
+                                                                target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
+                                                            }}
                                                         />
                                                     </div>
                                                 ))}
@@ -686,8 +742,9 @@ const BookingPage = () => {
                                             checked={isAllSelected}
                                             onCheckedChange={(checked) => handleSelectAllServices(checked === true)}
                                             className="size-4"
+                                            disabled={currentStep === 2}
                                         />
-                                        <Label htmlFor="select-all-services" className="text-xs font-semibold cursor-pointer text-slate-600">
+                                        <Label htmlFor="select-all-services" className={`text-xs font-semibold text-slate-600 ${currentStep === 2 ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
                                             {isAllSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
                                         </Label>
                                     </div>
@@ -705,8 +762,12 @@ const BookingPage = () => {
                                             return (
                                                 <div 
                                                     key={service.id} 
-                                                    className={`group flex items-center space-x-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${
-                                                        isSelected ? "border-sky-500 bg-sky-50/50 shadow-sm" : "border-slate-200 bg-white hover:border-sky-200"
+                                                    className={`group flex items-center space-x-3 rounded-xl border p-4 transition-all duration-200 ${
+                                                        currentStep === 2 
+                                                            ? "opacity-60" 
+                                                            : "hover:shadow-md hover:border-sky-200"
+                                                    } ${
+                                                        isSelected ? "border-sky-500 bg-sky-50/50 shadow-sm" : "border-slate-200 bg-white"
                                                     }`}
                                                 >
                                                     <div className="relative flex items-center justify-center">
@@ -715,11 +776,14 @@ const BookingPage = () => {
                                                             checked={isSelected}
                                                             onCheckedChange={(checked) => handleServiceChange(service.id, checked === true)}
                                                             className="size-5 border-slate-300 data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600"
+                                                            disabled={currentStep === 2}
                                                         />
                                                     </div>
                                                     <Label
                                                         htmlFor={`service-${service.id}`}
-                                                        className="flex flex-1 cursor-pointer items-center justify-between gap-2"
+                                                        className={`flex flex-1 items-center justify-between gap-2 ${
+                                                            currentStep === 2 ? "cursor-not-allowed" : "cursor-pointer"
+                                                        }`}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className={`flex size-10 items-center justify-center rounded-lg transition-colors ${
@@ -839,12 +903,34 @@ const BookingPage = () => {
                                         <div className="bg-sky-600 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white flex items-center justify-between">
                                             <span>Tóm tắt đơn hàng</span>
                                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px]">
-                                                {hasStayDates ? formatBookingDaysCount(bookingDays) : "Chưa chọn ngày"}
+                                                {hasStayDates
+                                                    ? (durationMode === "nights"
+                                                        ? formatBookingNightsCount(bookingDays)
+                                                        : formatBookingDaysCount(bookingDays))
+                                                    : "Chưa chọn ngày"}
                                             </span>
                                         </div>
                                         <div className="p-5 space-y-4">
                                             {hasStayDates ? (
-                                                <BookingDaysRow days={bookingDays} />
+                                                <div className="space-y-3">
+                                                    <BookingDaysRow days={bookingDays} mode={durationMode} />
+                                                    <div className="grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-3 border border-slate-100/80">
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="size-4 text-sky-500 shrink-0" />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] uppercase font-bold text-slate-400">Nhận phòng</span>
+                                                                <span className="text-sm font-semibold text-slate-700 mt-0.5">{formatDate(startDate)}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
+                                                            <Calendar className="size-4 text-sky-500 shrink-0" />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] uppercase font-bold text-slate-400">Trả phòng</span>
+                                                                <span className="text-sm font-semibold text-slate-700 mt-0.5">{formatDate(endDate)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <p className="text-xs text-slate-500">Chọn ngày nhận và trả phòng để tính phí lưu trú.</p>
                                             )}
@@ -1157,7 +1243,8 @@ const BookingPage = () => {
                                                 <p><span className="font-semibold">Hình thức thanh toán:</span> {previewData?.payment_method === 'online' ? 'Thanh toán trực tuyến' : 'Thanh toán tại quầy'}</p>
                                                 {previewData?.start_date && previewData?.end_date ? (
                                                     <BookingDaysRow
-                                                        days={countBookingDaysInclusive(previewData.start_date, previewData.end_date)}
+                                                        days={bookingDays}
+                                                        mode={durationMode}
                                                     />
                                                 ) : null}
                                                 {previewData?.note ? <p><span className="font-semibold">Yêu cầu:</span> {previewData.note}</p> : null}
@@ -1224,7 +1311,7 @@ const BookingPage = () => {
                                                 Quy trình pháp lý
                                             </h3>
                                             <p className="mt-2 text-xs leading-relaxed text-amber-700">
-                                                {room.property_type_id === 2 || room.property_type_id === 3 ? ( // Giả định 2=Căn hộ, 3=Văn phòng/dài hạn
+                                                {isLeaseBooking ? (
                                                     "Đây là loại hình lưu trú dài hạn. Sau khi đối tác xác nhận, bạn sẽ nhận được thông báo yêu cầu ký Hợp đồng thuê nhà điện tử tại mục 'Hồ sơ lưu trú' để hoàn tất thủ tục."
                                                 ) : (
                                                     "Bằng việc xác nhận, bạn đồng ý với các Điều khoản & Điều kiện lưu trú ngắn hạn của hệ thống và đối tác."

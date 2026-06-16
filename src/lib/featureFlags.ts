@@ -25,7 +25,6 @@ export const isPartnerRealtimeEnabled = (): boolean => isPartner360Enabled();
  */
 export const PARTNER_SIDEBAR_DISABLED_PATHS: readonly string[] = [
   '/partner/calendar',
-  '/partner/chat',
   '/partner/stay-services',
   '/partner/news',
   '/partner/reports',

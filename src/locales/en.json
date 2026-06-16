@@ -147,7 +147,7 @@
     "servicesDescription": "You can select additional services during your stay",
     "success": "Booking submitted successfully!",
     "title": "Booking Request",
-    "unit": "day",
+    "unit": "night",
     "validation": {
       "email": {
         "invalid": "Please enter a valid email address",
@@ -1129,6 +1129,8 @@
     "filter_area": "Area",
     "filter_name": "Property Name",
     "filter_name_placeholder": "Enter property name...",
+    "filter_partner": "Partner",
+    "filter_partner_placeholder": "Select partner...",
     "filter_property_type": "Property Type",
     "filter_property_type_placeholder": "Select type...",
     "filter_province": "Province/City",
@@ -1245,49 +1247,60 @@
     "ward": "Ward/Commune",
     "ward_count": "Ward Count",
     "ward_list": "Ward/Commune List",
-    "wards": "wards"
+    "wards": "wards",
+    "province_image": "Province Image",
+    "no_image": "No cover image configured",
+    "use_default_image": "(Using system default image)",
+    "upload_image": "Upload Image",
+    "delete_image": "Delete Image",
+    "search_ward_placeholder": "Search ward/commune...",
+    "search_room_placeholder": "Search room number or title..."
   },
   "public": {
     "company": {
       "banner": {
-        "alt": "Modern office tower skyline",
-        "badge": "Province navigator",
-        "subtitle": "Choose a province or city to explore trusted partners and operators available in that market.",
-        "title": "Companies by province"
+        "alt": "Warm boutique hotel lobby with cozy lighting",
+        "badge": "Choose destination",
+        "subtitle": "Select your destination to discover exceptional boutique stays, charming homestays and hosts waiting to welcome you.",
+        "title": "Hospitality Brands by Destination"
       },
       "list": {
         "breadcrumb": {
-          "current": "Companies by province",
+          "current": "Hospitality Brands",
           "home": "Home"
         },
-        "description": "Pick a destination to view companies active in that area.",
-        "heading": "Select a province"
+        "description": "Choose a city to explore local superhosts and curated boutique stay chains — all verified by BKS System.",
+        "heading": "Select a destination"
       }
     },
     "contact": {
       "title": "Contact"
     },
     "contactCard": {
-      "cta": "Contact BKS",
-      "description": "Our team is ready to match you with the right property or partner. Reach out and we will follow up within the hour.",
+      "cta": "Chat with us now",
+      "description": "Not sure whether to pick a homestay or a boutique hotel? Unsure which option fits your budget? Our travel concierge team is available 24/7 and responds within 30 minutes.",
       "emailLabel": "Email",
-      "emailValue": "hello@bksrealestate.vn",
-      "eyebrow": "Need a hand?",
+      "emailValue": "hello@bksstay.vn",
+      "eyebrow": "Trip Support 24/7",
+      "facebookLabel": "Messenger",
+      "facebookValue": "m.me/BKSStay",
       "hotlineLabel": "Hotline",
       "hotlineValue": "+84 333 494 850",
-      "title": "Talk with a BKS advisor"
+      "title": "We're here for every journey you take",
+      "zaloLabel": "Zalo",
+      "zaloValue": "0333 494 850"
     },
     "footer": {
       "bottom": {
         "cookies": "Cookies",
         "investor": "Investor relations",
-        "note": "© {{year}} BKS Real Estate Experience. All rights reserved.",
+        "note": "© {{year}} BKS System. Trusted accommodation booking platform.",
         "sitemap": "Sitemap"
       },
       "brand": {
         "description": "We curate residential and hospitality developments with local insight and data-backed recommendations so you can secure the right property faster.",
         "eyebrow": "BKS",
-        "title": "Real Estate Hub"
+        "title": "BKS System"
       },
       "contact": {
         "addressLabel": "Office",
@@ -1322,7 +1335,7 @@
     "header": {
       "brand": {
         "eyebrow": "BKS",
-        "title": "Real Estate Hub"
+        "title": "BKS System"
       },
       "nav": {
         "bookings": "My Bookings",
@@ -1333,35 +1346,35 @@
     },
     "home": {
       "hero": {
-        "alt": "Modern real estate development in Vietnam",
-        "badge": "Real estate intelligence",
+        "alt": "Cozy and elegant stay in Vietnam",
+        "badge": "Accommodation Booking Platform",
         "cta": "Explore Now",
-        "description": "Search by province and district to find curated projects, market updates, and the right team to guide your next move.",
-        "title": "Discover trusted developments and investment-ready properties across Vietnam."
+        "description": "Explore verified boutique hotels, charming homestays, and modern serviced apartments with transparent pricing — tailored for every journey.",
+        "title": "Find Your Cozy Sanctuary Anywhere in Vietnam."
       },
       "news": {
         "availableSoon": "News will be available soon.",
-        "badge": "Market pulse",
+        "badge": "Travel Guide",
         "cardLabel": "Read article {{title}}",
-        "ctaLabel": "View News",
-        "description": "Stay informed with curated news across Vietnam’s residential, commercial, and hospitality markets.",
+        "ctaLabel": "View More Guides",
+        "description": "Get local recommendations, travel tips, and inspiration for your next memorable escape.",
         "footerCta": "View More",
-        "heading": "Latest real estate headlines",
+        "heading": "Travel Guides & Insider Stories",
         "latestError": "Unable to load latest news.",
         "latestLoading": "Loading latest news..."
       },
       "partners": {
-        "badge": "Partner",
+        "badge": "Verified Host",
         "cardLabel": "View details for {{name}}",
-        "cta": "View More",
-        "description": "Meet developers and agencies delivering standout residential experiences.",
-        "heading": "Trusted partners",
-        "trust": "Trusted partner"
+        "cta": "View All",
+        "description": "Discover dedicated hosts and premium hospitality brands highly rated by our guest community.",
+        "heading": "Featured Hosts & Stays",
+        "trust": "Verified host"
       },
       "provinceCarousel": {
         "aria": "Featured provinces",
         "cardLabel": "View province {{name}}",
-        "description": "Scan the regions attracting the most attention from residents and investors.",
+        "description": "Discover breathtaking destinations and unique places recommended by fellow travelers — from Hanoi's old quarter to Nha Trang's crystal shores.",
         "heading": "Explore provinces"
       },
       "rooms": {
@@ -1371,6 +1384,7 @@
         "badgeLabel": "Room",
         "beds_one": "{{count}} bed",
         "beds_other": "{{count}} beds",
+        "beds_with_bedrooms": "{{bedrooms}} bedrooms • {{beds}} beds",
         "cardLabel": "View room {{name}}",
         "description": "Explore standout listings in our network across Ho Chi Minh City.",
         "heading": "Featured rooms curated for you",
@@ -1412,14 +1426,16 @@
       },
       "copySuccess": "Link copied",
       "ctaBtn": "Subscribe Now",
-      "ctaDesc": "Don't miss the latest news and updates from us.",
-      "ctaTitle": "Subscribe to Newsletter",
+      "ctaDesc": "Subscribe to our news and get a special discount voucher for your next booking.",
+      "ctaTitle": "Get a Welcome Voucher",
       "errorDesc": "Cannot load news content right now.",
       "errorTitle": "Failed to load news",
       "featured": "Featured",
       "latestHeading": "Latest News",
       "readTime": "min read",
       "share": "Share",
+      "subscribeFailed": "Failed to subscribe. Please try again.",
+      "subscribeSuccess": "Subscribed successfully! Check your email for voucher code.",
       "viewAllNews": "View All"
     },
     "newsList": {
@@ -1704,7 +1720,7 @@
       "interior": "Interior",
       "kitchen": "Kitchen",
       "living_room": "Living Room",
-      "main_room": "Main Room",
+      "main_room": "Main Photo",
       "office": "Office",
       "other": "Other",
       "parking": "Parking",
@@ -1746,8 +1762,16 @@
     "error_getting_rooms": "Error loading rooms list",
     "error_getting_rooms_by_property": "Error getting rooms list",
     "error_updating_room": "Error updating room",
+    "filter_partner": "Partner",
+    "filter_partner_placeholder": "Select partner...",
+    "filter_property": "Property",
+    "filter_property_placeholder": "Select property...",
     "floor_number": "Floor",
     "floor_number_placeholder": "Enter floor number...",
+    "bedrooms_count": "Bedrooms",
+    "bedrooms_count_placeholder": "Enter number of bedrooms...",
+    "beds_count": "Beds",
+    "beds_count_placeholder": "Enter number of beds...",
     "image": "Image",
     "image_header": "Images",
     "images": "Images",
@@ -2093,6 +2117,9 @@
       "slug_required": "Slug is required",
       "status_required": "Status is required",
       "title_required": "Title is required"
+    },
+    "newsletter": {
+      "email_invalid": "Invalid email address"
     },
     "not_negative": "Cannot be less than 0",
     "password": {
