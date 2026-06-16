@@ -33,8 +33,8 @@ import PartnerGrid from "./components/PartnerGrid";
 import NewsGrid from "./components/NewsGrid";
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import { useLatestNewsQuery } from "@/hooks/useNewsQuery";
-import { getRoomFallbackImage, getPartnerFallbackImage } from "@/utils/fallbackImages";
-import { resolveImageUrl } from "@/utils/imageUtils";
+import { getRoomFallbackImage, getPartnerFallbackImage, getProvinceImage } from "@/utils/fallbackImages";
+import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
 
 export const ReviewCardSkeleton = () => (
   <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col justify-between relative">
@@ -60,16 +60,7 @@ export const ReviewCardSkeleton = () => (
   </div>
 );
 
-const PROVINCE_IMAGE_POOL = [
-  "https://images.unsplash.com/photo-1529429617124-aee71981ce52?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1578898887932-990f2fabfc24?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1495435229349-e86db7bfa013?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?auto=format&fit=crop&w=1200&q=80",
-];
+
 
 function normalizeProvinceName(name: string): string {
   return name
@@ -162,7 +153,7 @@ const PublicHome = () => {
 
   const featuredRooms: RoomCard[] = useMemo(() => {
     const rooms = (topRatedRoomsData as any)?.data ?? topRatedRoomsData ?? [];
-    return (rooms as any[]).slice(0, 12).map((room: any) => {
+      return (rooms as any[]).slice(0, 12).map((room: any) => {
       const monthlyPrice = room.cheapest_monthly_price;
       const dailyPrice = room.cheapest_daily_price;
       const priceLabel = monthlyPrice
@@ -176,15 +167,18 @@ const PublicHome = () => {
         name: room.title,
         address: room.property_address || "Đang cập nhật",
         price: priceLabel,
-        image: resolveImageUrl(room.room_image, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getRoomFallbackImage(room.property_type_name, room.title),
+        image: resolveCloudinaryUrl(room.room_image, CLOUDINARY_HEADER_IMAGE_URL) || getRoomFallbackImage(room.property_type_name, room.title),
         area: `${room.area} m²`,
         beds: room.people ?? 0,
+        bedrooms_count: room.bedrooms_count,
+        beds_count: room.beds_count,
         tourist_summary: (room as any).tourist_summary ?? null,
         reviews_count: room.reviews_count ?? 0,
         reviews_avg_rating: room.reviews_avg_rating ?? 0,
         room_type: room.room_type,
         property_type_name: room.property_type_name,
         partner_company_name: room.partner_company_name,
+        rent_type: monthlyPrice ? "monthly" : (dailyPrice ? "daily" : undefined),
       };
     });
   }, [topRatedRoomsData]);
@@ -210,9 +204,11 @@ const PublicHome = () => {
 
         return a.index - b.index;
       })
-      .map(({ province }, index: number) => ({
+      .map(({ province }) => ({
         ...province,
-        image: PROVINCE_IMAGE_POOL[index % PROVINCE_IMAGE_POOL.length],
+        image: province.image
+          ? resolveCloudinaryUrl(province.image, CLOUDINARY_HEADER_IMAGE_URL) || getProvinceImage(province.name)
+          : getProvinceImage(province.name),
       }));
   }, [provincesData]);
 
@@ -391,7 +387,7 @@ const PublicHome = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-slate-100 text-slate-900">
       <PublicHeader />
 
-      <main className="flex flex-col gap-10 pb-14 text-[15px] md:gap-14">
+      <main className="flex flex-col gap-8 pb-14 text-[15px] md:gap-12 lg:gap-14">
         <section
           id="hero"
           className="relative isolate z-[60] min-h-[480px] bg-slate-950 text-white md:h-[560px] lg:h-[600px]"
@@ -456,7 +452,7 @@ const PublicHome = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 md:bg-gradient-to-r md:from-slate-950/80 md:via-slate-900/30 md:to-transparent" />
           </div>
 
-          <div className="relative z-20 mx-auto flex size-full max-w-6xl flex-col justify-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16">
+          <div className="relative z-20 mx-auto flex size-full max-w-7xl lg:max-w-[1360px] flex-col justify-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16">
             <div className="max-w-2xl space-y-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.35em] text-primary-10">
                 {t("public.home.hero.badge")}

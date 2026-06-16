@@ -108,7 +108,7 @@ const QuestionManagerPage = () => {
   return (
     <AdminPageShell>
       <PageBar
-        subtitle={t("questions.subtitle") || "Qu?n lı lu?ng câu h?i và k?ch b?n chatbot t? d?ng."}
+        subtitle={t("questions.subtitle") || "Qu?n lï¿½ lu?ng cï¿½u h?i vï¿½ k?ch b?n chatbot t? d?ng."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

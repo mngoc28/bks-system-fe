@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig } from "axios";
 
 import { useUserStore } from "@/store/useUserStore";
 import { ROUTERS } from "@/constant";
+import { getLanguageStorage } from "@/store/useLanguage";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -22,6 +23,8 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Set Accept-Language header
+    config.headers["Accept-Language"] = getLanguageStorage();
     return config;
   },
   (error) => {

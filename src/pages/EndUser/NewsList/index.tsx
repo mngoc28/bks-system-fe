@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { MapPin, TrendingUp, Sparkles } from "lucide-react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import Pagination from "@/components/Pagination";
+import { resolveImageUrl } from "@/utils/imageUtils";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 8;
@@ -35,6 +36,7 @@ const REGIONS = {
 const NewsList = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const page = Number(searchParams.get("page")) || DEFAULT_PAGE;
   const limit = Number(searchParams.get("limit")) || DEFAULT_LIMIT;
@@ -51,6 +53,29 @@ const NewsList = () => {
   const popularItems = newsListDataResponse?.data?.data || [];
   const totalItems = newsListDataResponse?.data?.total || 0;
   const totalPages = Math.ceil(totalItems / limit);
+
+  const filteredPopularItems = useMemo(() => {
+    if (!selectedCategory) return popularItems;
+    
+    const categoryLower = selectedCategory.toLowerCase();
+    
+    const keywordMap: Record<string, string[]> = {
+      "căn hộ": ["căn hộ", "chung cư", "phòng", "apartment", "nhà", "stay", "villa"],
+      "kinh nghiệm": ["kinh nghiệm", "chia sẻ", "trải nghiệm", "hướng dẫn", "lưu ý"],
+      "mẹo đặt phòng": ["mẹo", "đặt phòng", "booking", "bí quyết", "tips", "hủy phòng", "đặt chỗ"],
+      "review": ["review", "đánh giá", "cảm nhận", "tiện ích", "dịch vụ", "chi tiết"],
+      "thị trường": ["thị trường", "bất động sản", "giá cả", "xu hướng", "2025", "2026", "tổng quan"],
+      "phong cách sống": ["phong cách", "lối sống", "lifestyle", "decor", "thiết kế", "trang trí", "không gian"]
+    };
+    
+    const keywords = keywordMap[categoryLower] || [categoryLower];
+    
+    return popularItems.filter(item => {
+      const titleLower = item.title?.toLowerCase() || "";
+      const summaryLower = item.summary?.toLowerCase() || "";
+      return keywords.some(keyword => titleLower.includes(keyword) || summaryLower.includes(keyword));
+    });
+  }, [popularItems, selectedCategory]);
 
   // Grouped Provinces
   const groupedProvinces = useMemo(() => {
@@ -215,7 +240,7 @@ const NewsList = () => {
                 >
                   <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-100 shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl">
                     <img 
-                      src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : DEFAULT_ROOM_IMAGE} 
+                      src={resolveImageUrl(item.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || DEFAULT_ROOM_IMAGE} 
                       alt={item.title} 
                       className="size-full object-cover transition duration-500 group-hover:scale-105"
                       onError={(e) => {
@@ -246,15 +271,30 @@ const NewsList = () => {
 
         {/* 3. Categories Chips Section */}
         <section id="categories" className="overflow-x-auto border-y border-slate-100 py-6 scrollbar-hide snap-x snap-mandatory">
-          <div className="flex min-w-max items-center gap-4 px-4 sm:px-0">
+          <div className="flex min-w-max items-center gap-2 px-4 sm:px-0">
             <span className="mr-4 text-sm font-black uppercase tracking-widest text-slate-400">
               {t("public.newsList.categories", "Loại")}:
             </span>
-            {["Căn hộ", "Kinh nghiệm", "Mẹo đặt phòng", "Review", "Thị trường", "Phong cách sống"].map((cat) => (
-              <Button key={cat} variant="outline" className="rounded-full border-slate-200 px-6 font-semibold hover:border-sky-500 hover:text-sky-600">
-                {cat}
-              </Button>
-            ))}
+            <Button 
+              variant={selectedCategory === null ? "default" : "outline"} 
+              onClick={() => setSelectedCategory(null)}
+              className={`rounded-full px-6 font-semibold transition-all ${selectedCategory === null ? 'bg-sky-600 hover:bg-sky-500 text-white border-transparent' : 'border-slate-200 hover:border-sky-500 hover:text-sky-600'}`}
+            >
+              Tất cả
+            </Button>
+            {["Căn hộ", "Kinh nghiệm", "Mẹo đặt phòng", "Review", "Thị trường", "Phong cách sống"].map((cat) => {
+              const isActive = selectedCategory === cat;
+              return (
+                <Button 
+                  key={cat} 
+                  variant={isActive ? "default" : "outline"} 
+                  onClick={() => setSelectedCategory(isActive ? null : cat)}
+                  className={`rounded-full px-6 font-semibold transition-all ${isActive ? 'bg-sky-600 hover:bg-sky-500 text-white border-transparent' : 'border-slate-200 hover:border-sky-500 hover:text-sky-600'}`}
+                >
+                  {cat}
+                </Button>
+              );
+            })}
           </div>
         </section>
 
@@ -280,8 +320,19 @@ const NewsList = () => {
                   <Skeleton className="h-4 w-full" />
                 </div>
               ))
+            ) : filteredPopularItems.length === 0 ? (
+              <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+                <p className="font-bold text-slate-400">Không có bài viết nào thuộc danh mục này.</p>
+                <Button 
+                  variant="ghost" 
+                  className="mt-2 text-sky-600 hover:bg-sky-50 rounded-full" 
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  Làm mới bộ lọc
+                </Button>
+              </div>
             ) : (
-              popularItems.map((item) => (
+              filteredPopularItems.map((item) => (
                 <Link 
                   key={item.id} 
                   to={ROUTERS.PUBLIC_NEWS_DETAIL.replace(":newsId", item.id.toString())}
@@ -289,7 +340,7 @@ const NewsList = () => {
                 >
                   <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-100 shadow-sm transition group-hover:shadow-md">
                     <img 
-                      src={item.image_url ? `${CLOUDINARY_HEADER_IMAGE_URL}/${item.image_url}` : DEFAULT_ROOM_IMAGE} 
+                      src={resolveImageUrl(item.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || DEFAULT_ROOM_IMAGE} 
                       alt={item.title} 
                       className="size-full object-cover transition duration-500 group-hover:scale-105"
                       onError={(e) => {

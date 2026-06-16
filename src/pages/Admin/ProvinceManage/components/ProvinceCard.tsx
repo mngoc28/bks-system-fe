@@ -1,9 +1,10 @@
-﻿import React from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Provinces } from "@/dataHelper/province.dataHelper";
-import { MapPin, Building2, Home } from "lucide-react";
+import { Building2, Home, ImageOff, Sparkles } from "lucide-react";
+import { resolveCloudinaryUrl } from "@/utils/imageUtils";
+import { getProvinceImage } from "@/utils/fallbackImages";
+import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 
 interface ProvinceCardProps {
   province: Provinces;
@@ -11,50 +12,97 @@ interface ProvinceCardProps {
 }
 
 /**
- * Province Card
- * A visual summary of a province's data in the management grid, showing associated ward and room counts.
+ * Province Card — premium hero-image style
+ * Text and stats float over the image with a gradient scrim.
+ * Tap / click anywhere to navigate to the detail page.
  */
 const ProvinceCard: React.FC<ProvinceCardProps> = ({ province, onView }) => {
   const { t } = useTranslation();
+  const [imgError, setImgError] = React.useState(false);
+
+  const cloudinarySrc = province.image
+    ? (resolveCloudinaryUrl(province.image, CLOUDINARY_HEADER_IMAGE_URL) ?? undefined)
+    : undefined;
+
+  const fallbackSrc = getProvinceImage(province.name) ?? undefined;
+  const coverSrc = imgError ? fallbackSrc : (cloudinarySrc ?? fallbackSrc);
+  const hasCustomImage = !!province.image;
 
   return (
-    <Card
-      className="glass-card hover-scale group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border-none p-6 transition-all duration-300 animate-in"
+    <article
+      role="button"
+      tabIndex={0}
       onClick={() => onView(province.id)}
+      onKeyDown={(e) => e.key === "Enter" && onView(province.id)}
+      className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner dark:bg-primary/20">
-          <MapPin className="size-5" />
+      {/* ── Background image ── */}
+      {coverSrc ? (
+        <img
+          src={coverSrc}
+          alt={province.name}
+          className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+          <ImageOff className="size-10 text-slate-300 dark:text-slate-600" />
         </div>
-        <Badge className="border-none bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+      )}
+
+      {/* ── Gradient scrim (bottom-heavy) ── */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+      {/* ── Top-right: ID pill ── */}
+      <div className="absolute right-2.5 top-2.5">
+        <span className="rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
           #{province.id}
-        </Badge>
+        </span>
       </div>
 
-      <h3 className="mb-1 text-lg font-black text-slate-800 transition-colors group-hover:text-primary dark:text-slate-100">
-        {province.name}
-      </h3>
-      <p className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">{province.name_en}</p>
-
-      <div className="mt-auto grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-50 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30">
-          <div className="mb-1 flex items-center gap-2">
-            <Building2 className="size-3.5 text-cyan-500" />
-            <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-400">{t("province.ward")}</span>
-          </div>
-          <p className="text-xl font-black text-slate-700 dark:text-slate-200">{province.ward_count}</p>
+      {/* ── Top-left: custom-image badge ── */}
+      {hasCustomImage && (
+        <div className="absolute left-2.5 top-2.5">
+          <span className="flex items-center gap-1 rounded-full bg-emerald-500/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+            <Sparkles className="size-2.5" />
+            Ảnh thật
+          </span>
         </div>
-        <div className="rounded-xl border border-slate-50 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30">
-          <div className="mb-1 flex items-center gap-2">
-            <Home className="size-3.5 text-emerald-500" />
-            <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-400">{t("province.room")}</span>
+      )}
+
+      {/* ── Bottom: name + stats ── */}
+      <div className="absolute inset-x-0 bottom-0 p-4">
+        {/* Province name */}
+        <h3 className="mb-0.5 truncate text-base font-black leading-tight text-white drop-shadow-md">
+          {province.name}
+        </h3>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-white/60">
+          {province.name_en}
+        </p>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 backdrop-blur-sm">
+            <Building2 className="size-3 text-cyan-300" />
+            <span className="text-[11px] font-bold text-white">{province.ward_count}</span>
+            <span className="text-[9px] font-medium uppercase tracking-tight text-white/60">
+              {t("province.ward")}
+            </span>
           </div>
-          <p className="text-xl font-black text-slate-700 dark:text-slate-200">{province.room_count}</p>
+          <div className="flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 backdrop-blur-sm">
+            <Home className="size-3 text-emerald-300" />
+            <span className="text-[11px] font-bold text-white">{province.room_count}</span>
+            <span className="text-[9px] font-medium uppercase tracking-tight text-white/60">
+              {t("province.room")}
+            </span>
+          </div>
         </div>
       </div>
-    </Card>
+
+      {/* ── Hover shine overlay ── */}
+      <div className="absolute inset-0 rounded-2xl opacity-0 ring-inset ring-2 ring-white/20 transition-opacity duration-300 group-hover:opacity-100" />
+    </article>
   );
 };
 
 export default ProvinceCard;
-

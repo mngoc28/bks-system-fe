@@ -27,6 +27,7 @@ export interface PublicRoomListParams {
     price_max?: number;
     amenity_ids?: number[];
     service_ids?: number[];
+    rent_type?: "daily" | "monthly";
 }
 
 export const roomApi = {

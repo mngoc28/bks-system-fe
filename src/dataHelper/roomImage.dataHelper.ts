@@ -45,4 +45,5 @@ export interface SortableItemProps {
   hasPending: boolean;
   oldType: number;
   onResetPending: (imageId: number) => void;
+  filteredTypes?: Array<[string, any]>;
 }

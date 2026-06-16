@@ -12,4 +12,6 @@ export const provinceApi = {
         axiosClient.get('admin/provinces/types'),
     getHomeProvinces: (config?: any): Promise<ApiResponse<ProvinceTypes[]>> =>
         axiosClient.get('home/provinces', config),
+    updateProvince: (id: number, data: { name?: string; name_en?: string; image?: string | null }): Promise<ProvinceDetailApiResponse> =>
+        axiosClient.put(`admin/provinces/${id}`, data),
 }

@@ -9,6 +9,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import ContactCard from "@/components/common/ContactCard";
 import { Spinner } from "@/components/ui/spinner";
 import { Building2, MapPin, ArrowRight } from "lucide-react";
+import { formatProvinceName } from "@/utils/utils";
 
 /**
  * Company Hub Page
@@ -149,7 +150,7 @@ const CompanyHub = () => {
                     onClick={() => handleProvinceSelect(province.name_en)}
                     className="inline-flex min-w-[140px] flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 sm:flex-none sm:text-base"
                   >
-                    {province.name}
+                    {formatProvinceName(province.name)}
                   </button>
                 ))}
               </div>

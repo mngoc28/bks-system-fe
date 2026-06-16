@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users, Star, Heart, Share2, Sparkles, Home, ShieldCheck } from "lucide-react";
+import { Filter, MapPin, SearchX, Users, Star, Heart, Share2, Sparkles, Home, ShieldCheck, BedDouble } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -14,9 +14,9 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import type { Room } from "@/dataHelper/EU/room.dataHelper";
 import { usePaginatedRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
-import { formatPrice, formatProvinceName } from "@/utils/utils";
-import { resolveImageUrl } from "@/utils/imageUtils";
-import { resolveTouristSpotName } from "@/utils/touristSummary";
+import { formatPrice, formatProvinceName, simplifyAddress } from "@/utils/utils";
+import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
+import { getProvinceImage } from "@/utils/fallbackImages";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 
 const DEFAULT_PAGE = 1;
@@ -35,38 +35,6 @@ type RoomWithOptionalStatus = Room & {
   status?: number | string | null;
 };
 
-const getProvinceHeroImage = (provinceName: string | undefined): string => {
-  if (!provinceName) return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80";
-
-  const name = provinceName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  if (name.includes("da nang")) {
-    return "https://images.unsplash.com/photo-1559592442-7486a0952042?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("ha noi")) {
-    return "https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("ho chi minh") || name.includes("sai gon")) {
-    return "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("quang ninh") || name.includes("ha long")) {
-    return "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("nha trang") || name.includes("khanh hoa")) {
-    return "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("lam dong") || name.includes("da lat")) {
-    return "https://images.unsplash.com/photo-1583002621936-e82a0134ba44?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("lao cai") || name.includes("sa pa") || name.includes("sapa")) {
-    return "https://images.unsplash.com/photo-1550950158-d0d960dff51b?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("phu quoc") || name.includes("kien giang")) {
-    return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
-  }
-
-  return "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80";
-};
 
 const RoomByProvince = () => {
   const { t } = useTranslation();
@@ -217,7 +185,7 @@ const RoomByProvince = () => {
         {/* Background Image with elegant overlay */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <img
-            src={getProvinceHeroImage(selectedProvince?.name)}
+            src={selectedProvince?.image ? resolveCloudinaryUrl(selectedProvince.image, CLOUDINARY_HEADER_IMAGE_URL) || getProvinceImage(selectedProvince?.name) : getProvinceImage(selectedProvince?.name)}
             alt={selectedProvince?.name || "Background"}
             className="absolute inset-0 size-full object-cover opacity-60 transition-all duration-700 scale-105"
           />
@@ -244,7 +212,7 @@ const RoomByProvince = () => {
         <div className="absolute top-12 right-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
         <div className="absolute bottom-16 left-1/4 h-3 w-3 rounded-full bg-indigo-400/30 animate-pulse pointer-events-none" />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Column: Title and details */}
             <div className="lg:col-span-7 flex flex-col items-start text-left">
@@ -338,7 +306,7 @@ const RoomByProvince = () => {
       </div>
 
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
@@ -350,7 +318,7 @@ const RoomByProvince = () => {
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:max-w-[1360px] lg:px-8">
         {isInvalidProvince ? (
           <section className="rounded-3xl border border-dashed border-amber-300 bg-amber-50/80 px-6 py-16 text-center">
             <p className="text-lg font-semibold text-amber-800">{t("public.roomByProvince.invalidTitle")}</p>
@@ -467,19 +435,11 @@ const RoomByProvince = () => {
                               {isAvailable ? t("public.roomByProvince.roomStatus.available") : t("public.roomByProvince.roomStatus.private")}
                             </Badge>
                           </div>
-                          
                           <div className="flex flex-col gap-1">
                             <p className="inline-flex items-start gap-2 text-sm text-slate-600">
                               <MapPin className="mt-0.5 size-4 shrink-0 text-sky-500" />
-                              <span className="line-clamp-2">{room.property_address || t("public.roomByProvince.fallbackAddress")}</span>
+                              <span className="line-clamp-1">{simplifyAddress(room.property_address) || t("public.roomByProvince.fallbackAddress")}</span>
                             </p>
-                            {room.tourist_summary?.has_tourist_mapping && resolveTouristSpotName(room.tourist_summary.tourist_spot_name) && (
-                              <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                                <svg className="size-4 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
-                                <span className="font-medium">{resolveTouristSpotName(room.tourist_summary.tourist_spot_name)}</span>
-                                {room.tourist_summary.travel_time_label && <span className="ml-2 text-xs text-slate-400">• {room.tourist_summary.travel_time_label}</span>}
-                              </p>
-                            )}
                           </div>
                         </div>
 
@@ -488,6 +448,12 @@ const RoomByProvince = () => {
                             <Users className="size-4 text-sky-500" />
                             {t("public.roomByProvince.guests", { count: room.people })}
                           </span>
+                          {(room.bedrooms_count !== undefined || room.beds_count !== undefined) && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5">
+                              <BedDouble className="size-4 text-sky-500" />
+                              {room.bedrooms_count || 1} PN • {room.beds_count || 1} giường
+                            </span>
+                          )}
                         </div>
 
                         <div className="mt-auto flex flex-col justify-between gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-center">
@@ -509,7 +475,7 @@ const RoomByProvince = () => {
                               <Share2 className="size-4" />
                             </Button>
                             <Button asChild variant="gradient" className="px-8 rounded-full">
-                              <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}>
+                              <Link to={`${ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}?rent_type=daily`}>
                                 {t("public.roomByProvince.viewDetails")}
                               </Link>
                             </Button>

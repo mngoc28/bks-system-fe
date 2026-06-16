@@ -19,14 +19,28 @@ Avatar.displayName = "Avatar"
 const AvatarImage = React.forwardRef<
   HTMLImageElement,
   React.ImgHTMLAttributes<HTMLImageElement>
->(({ className, ...props }, ref) => (
-  <img
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    alt={props.alt || ""}
-    {...props}
-  />
-))
+>(({ className, src, ...props }, ref) => {
+  const [hasError, setHasError] = React.useState(false)
+
+  React.useEffect(() => {
+    setHasError(false)
+  }, [src])
+
+  if (!src || hasError) {
+    return null
+  }
+
+  return (
+    <img
+      ref={ref}
+      src={src}
+      className={cn("aspect-square h-full w-full", className)}
+      alt={props.alt || ""}
+      onError={() => setHasError(true)}
+      {...props}
+    />
+  )
+})
 AvatarImage.displayName = "AvatarImage"
 
 const AvatarFallback = React.forwardRef<

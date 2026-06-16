@@ -1,4 +1,4 @@
-﻿import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import AdvancedFilterPanel, {
   FilterField,
   FilterSelect,
@@ -7,6 +7,8 @@ import AdvancedFilterPanel, {
 import { PartnerSearchSectionProps } from "@/dataHelper/partner.dataHelper";
 import { useTranslation } from "react-i18next";
 import React from "react";
+import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
+import { useGetWardsByProvinceId } from "@/hooks/useWardQuery";
 
 const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
   open,
@@ -16,6 +18,12 @@ const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+
+  // Fetch provinces and wards data for selects
+  const { data: provincesData } = useGetAllProvincesTypes();
+  const selectedProvince = provincesData?.data?.find((p) => p.name === value.province_name);
+  const selectedProvinceId = selectedProvince?.id || 0;
+  const { data: wardsData } = useGetWardsByProvinceId(selectedProvinceId);
 
   return (
     <AdvancedFilterPanel open={open} onClose={onClose} onReset={onReset}>
@@ -69,20 +77,37 @@ const PartnerSearchSection: React.FC<PartnerSearchSectionProps> = ({
       </FilterField>
 
       <FilterField label={t("partner.search_province_name")}>
-        <Input
+        <FilterSelect
           value={value.province_name || ""}
-          onChange={(e) => onChange({ ...value, province_name: e.target.value })}
+          onValueChange={(next) =>
+            onChange({
+              ...value,
+              province_name: next || undefined,
+              ward_name: undefined,
+            })
+          }
           placeholder={t("partner.search_province_placeholder")}
-          className={filterInputClassName}
+          options={
+            provincesData?.data?.map((p) => ({
+              value: p.name,
+              label: p.name,
+            })) ?? []
+          }
         />
       </FilterField>
 
       <FilterField label={t("partner.search_ward_name")}>
-        <Input
+        <FilterSelect
           value={value.ward_name || ""}
-          onChange={(e) => onChange({ ...value, ward_name: e.target.value })}
+          onValueChange={(next) => onChange({ ...value, ward_name: next || undefined })}
           placeholder={t("partner.search_ward_name_placeholder")}
-          className={filterInputClassName}
+          disabled={!selectedProvinceId}
+          options={
+            wardsData?.data?.map((w) => ({
+              value: w.name,
+              label: w.name,
+            })) ?? []
+          }
         />
       </FilterField>
 

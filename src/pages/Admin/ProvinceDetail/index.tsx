@@ -1,4 +1,4 @@
-import { ROUTERS } from "@/constant";
+import { ROUTERS } from "@/constant"; // kept for potential future use
 import { useProvinceQuery } from "@/hooks/useProvinceQuery";
 import { Spinner } from "@/components/ui/spinner";
 import React from "react";
@@ -23,7 +23,13 @@ const ProvinceDetail: React.FC = () => {
     }, [data]);
 
     const handleCancel = () => {
-        navigate(ROUTERS.PROVINCE_MANAGE);
+        // navigate(-1) restores the exact ProvinceManage URL (with page/filter search params)
+        // so the user returns to the same state they left
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate(ROUTERS.PROVINCE_MANAGE);
+        }
     }
 
     if (isLoading) {

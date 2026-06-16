@@ -147,7 +147,7 @@
     "servicesDescription": "Chọn 1 dịch vụ có sẵn dưới đây để giúp nâng cao trải nghiệm lưu trú.",
     "success": "Đặt phòng thành công!",
     "title": "Yêu cầu đặt phòng",
-    "unit": "/ngày",
+    "unit": "/đêm",
     "validation": {
       "email": {
         "invalid": "Vui lòng nhập địa chỉ email hợp lệ",
@@ -1129,6 +1129,8 @@
     "filter_area": "Diện tích",
     "filter_name": "Tên tòa nhà",
     "filter_name_placeholder": "Nhập tên tòa nhà...",
+    "filter_partner": "Đối tác",
+    "filter_partner_placeholder": "Chọn đối tác...",
     "filter_property_type": "Loại hình",
     "filter_property_type_placeholder": "Chọn loại hình...",
     "filter_province": "Tỉnh/Thành phố",
@@ -1245,37 +1247,48 @@
     "ward": "Phường/Xã",
     "ward_count": "Số huyện/xã",
     "ward_list": "Danh sách phường/xã",
-    "wards": "huyện/xã"
+    "wards": "huyện/xã",
+    "province_image": "Ảnh tỉnh/thành phố",
+    "no_image": "Chưa cấu hình ảnh đại diện",
+    "use_default_image": "(Sử dụng ảnh mặc định của hệ thống)",
+    "upload_image": "Tải ảnh lên",
+    "delete_image": "Xóa ảnh",
+    "search_ward_placeholder": "Tìm kiếm phường/xã...",
+    "search_room_placeholder": "Tìm kiếm số phòng hoặc tiêu đề..."
   },
   "public": {
     "company": {
       "banner": {
-        "alt": "Khách sạn hiện đại",
-        "badge": "Chọn tỉnh/thành",
-        "subtitle": "Chọn một tỉnh/thành để xem các đơn vị lưu trú đang hoạt động tại khu vực bạn quan tâm.",
-        "title": "Đối tác lưu trú theo tỉnh/thành"
+        "alt": "Sảnh khách sạn boutique sang trọng",
+        "badge": "Chọn điểm đến",
+        "subtitle": "Lựa chọn điểm đến lý tưởng để tìm kiếm khách sạn, homestay và căn hộ từ các thương hiệu lưu trú uy tín nhất.",
+        "title": "Khám phá các thương hiệu lưu trú nổi tiếng"
       },
       "list": {
         "breadcrumb": {
-          "current": "Đối tác lưu trú theo tỉnh/thành",
+          "current": "Thương hiệu lưu trú",
           "home": "Trang chủ"
         },
-        "description": "Hãy chọn điểm đến để xem các đối tác lưu trú đang hoạt động tại khu vực bạn quan tâm.",
-        "heading": "Chọn tỉnh/thành"
+        "description": "Khám phá các chuỗi khách sạn và homestay hàng đầu tại địa điểm bạn mong muốn — được tuyển chọn kỹ càng và xác minh bởi BKS System.",
+        "heading": "Chọn điểm đến"
       }
     },
     "contact": {
       "title": "Liên hệ"
     },
     "contactCard": {
-      "cta": "Liên hệ BKS",
-      "description": "Đội ngũ BKS System sẵn sàng hỗ trợ bạn chọn chỗ ở phù hợp. Liên hệ ngay, chúng tôi sẽ phản hồi trong vòng một giờ.",
+      "cta": "Chat với chúng tôi ngay",
+      "description": "Không biết nên chọn homestay hay khách sạn? Phòng nào phù hợp ngân sách? Nhóm trợ lý hành trình của chúng tôi sẵn sàng tư vấn miễn phí — phản hồi trong vòng 30 phút.",
       "emailLabel": "Email",
       "emailValue": "hello@bksstay.vn",
-      "eyebrow": "Cần hỗ trợ?",
+      "eyebrow": "Hỗ trợ hành trình 24/7",
+      "facebookLabel": "Messenger",
+      "facebookValue": "m.me/BKSStay",
       "hotlineLabel": "Hotline",
       "hotlineValue": "+84 333 494 850",
-      "title": "Trao đổi với chuyên gia BKS"
+      "title": "Chúng tôi ở đây cho mọi chuyến đi của bạn",
+      "zaloLabel": "Zalo",
+      "zaloValue": "0333 494 850"
     },
     "footer": {
       "bottom": {
@@ -1333,35 +1346,35 @@
     },
     "home": {
       "hero": {
-        "alt": "Không gian lưu trú hiện đại tại Việt Nam",
+        "alt": "Không gian nghỉ dưỡng ấm cúng và sang trọng tại Việt Nam",
         "badge": "Nền tảng đặt phòng lưu trú",
         "cta": "Khám phá ngay",
-        "description": "Tìm kiếm theo địa điểm để khám phá chỗ ở nổi bật, ưu đãi mới và đối tác lưu trú uy tín.",
-        "title": "Đặt phòng lưu trú đáng tin cậy cho mọi chuyến đi trên khắp Việt Nam."
+        "description": "Khám phá những căn homestay ấm cúng, khách sạn sang trọng và căn hộ dịch vụ tiện nghi với thông tin minh bạch — hoàn hảo cho mọi chuyến đi.",
+        "title": "Tìm kiếm không gian lưu trú hoàn hảo cho kỳ nghỉ tiếp theo của bạn."
       },
       "news": {
         "availableSoon": "Tin tức sẽ sớm được cập nhật.",
-        "badge": "Cẩm nang lưu trú",
+        "badge": "Cẩm nang du lịch",
         "cardLabel": "Đọc bài viết {{title}}",
-        "ctaLabel": "Xem tin tức",
-        "description": "Cập nhật thông tin về xu hướng du lịch, điểm đến và mẹo đặt phòng trên toàn Việt Nam.",
+        "ctaLabel": "Xem thêm cẩm nang",
+        "description": "Khám phá những mẹo hay bỏ túi, các điểm đến hot nhất và câu chuyện du lịch đầy cảm hứng từ cộng đồng du khách Việt Nam.",
         "footerCta": "Xem thêm",
-        "heading": "Tin tức và kinh nghiệm lưu trú mới nhất",
+        "heading": "Cẩm nang du lịch & Nguồn cảm hứng hành trình",
         "latestError": "Không thể tải tin tức mới nhất.",
         "latestLoading": "Đang tải tin tức mới nhất..."
       },
       "partners": {
-        "badge": "Lưu trú",
+        "badge": "Chủ nhà uy tín",
         "cardLabel": "Xem chi tiết {{name}}",
-        "cta": "Xem thêm",
-        "description": "Gặp gỡ các khách sạn, homestay và đơn vị vận hành lưu trú uy tín trong hệ thống BKS System.",
-        "heading": "Đối tác nổi bật",
-        "trust": "Đối tác xác minh"
+        "cta": "Xem tất cả",
+        "description": "Khám phá những thương hiệu lưu trú hàng đầu và những chủ nhà hiếu khách được cộng đồng du khách yêu thích và đánh giá cao nhất.",
+        "heading": "Chủ nhà siêu cấp & Chuỗi lưu trú uy tín",
+        "trust": "Đơn vị xác minh"
       },
       "provinceCarousel": {
         "aria": "Tỉnh/thành nổi bật",
         "cardLabel": "Xem chi tiết {{name}}",
-        "description": "Khám phá những điểm đến đang được du khách yêu thích cho kỳ nghỉ và công tác.",
+        "description": "Khởi hành ngay tới những vùng đất tuyệt đẹp được du khách bình chọn nhiều nhất — từ phố cổ Hà Nội đến biển xanh Nha Trang.",
         "heading": "Khám phá các tỉnh/thành"
       },
       "rooms": {
@@ -1371,6 +1384,7 @@
         "badgeLabel": "Phòng",
         "beds_one": "{{count}} giường",
         "beds_other": "{{count}} giường",
+        "beds_with_bedrooms": "{{bedrooms}} phòng ngủ • {{beds}} giường",
         "cardLabel": "Xem chi tiết {{name}}",
         "description": "Khám phá các lựa chọn lưu trú nổi bật với tiện nghi tốt và giá rõ ràng.",
         "heading": "Phòng nổi bật dành cho bạn",
@@ -1412,14 +1426,16 @@
       },
       "copySuccess": "Đã sao chép liên kết",
       "ctaBtn": "Đăng ký ngay",
-      "ctaDesc": "Đừng bỏ lỡ các tin tức và cập nhật mới nhất từ chúng tôi.",
-      "ctaTitle": "Đăng ký nhận tin tức",
+      "ctaDesc": "Đăng ký nhận tin tức mới nhất từ BKS Stay và nhận ngay voucher ưu đãi đặt phòng.",
+      "ctaTitle": "Nhận mã giảm giá chào mừng",
       "errorDesc": "Không thể tải nội dung tin tức lúc này.",
       "errorTitle": "Lỗi tải tin tức",
       "featured": "Nổi bật",
       "latestHeading": "Tin tức mới nhất",
       "readTime": "phút đọc",
       "share": "Chia sẻ",
+      "subscribeFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+      "subscribeSuccess": "Đăng ký thành công! Hãy kiểm tra email để nhận mã giảm giá.",
       "viewAllNews": "Xem tất cả"
     },
     "newsList": {
@@ -1704,7 +1720,7 @@
       "interior": "Nội thất",
       "kitchen": "Nhà bếp",
       "living_room": "Phòng khách",
-      "main_room": "Phòng chính",
+      "main_room": "Ảnh chính của phòng",
       "office": "Văn phòng",
       "other": "Khác",
       "parking": "Bãi đậu xe",
@@ -1746,8 +1762,16 @@
     "error_getting_rooms": "Lỗi khi tải danh sách phòng",
     "error_getting_rooms_by_property": "Lỗi lấy danh sách phòng",
     "error_updating_room": "Lỗi khi cập nhật phòng",
+    "filter_partner": "Đối tác",
+    "filter_partner_placeholder": "Chọn đối tác...",
+    "filter_property": "Tòa nhà",
+    "filter_property_placeholder": "Chọn tòa nhà...",
     "floor_number": "Số tầng",
     "floor_number_placeholder": "Nhập số tầng...",
+    "bedrooms_count": "Số phòng ngủ",
+    "bedrooms_count_placeholder": "Nhập số phòng ngủ...",
+    "beds_count": "Số giường",
+    "beds_count_placeholder": "Nhập số giường...",
     "image": "Hình ảnh",
     "image_header": "Hình ảnh",
     "images": "Hình ảnh",
@@ -2093,6 +2117,9 @@
       "slug_required": "Slug là bắt buộc",
       "status_required": "Trạng thái là bắt buộc",
       "title_required": "Tiêu đề là bắt buộc"
+    },
+    "newsletter": {
+      "email_invalid": "Địa chỉ email không hợp lệ"
     },
     "not_negative": "Không được bé hơn 0",
     "password": {

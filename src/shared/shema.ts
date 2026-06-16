@@ -226,6 +226,20 @@ export const roomFormSchema = (t: (key: string) => string) =>
       },
       z.number().min(1, { message: t("rooms.people") + " " + t("common.is_required") })
     ),
+    bedrooms_count: z.preprocess(
+      v => {
+        if (v === null || v === undefined || v === "" || isNaN(Number(v))) return 1;
+        return Number(v);
+      },
+      z.number().min(1, { message: t("rooms.bedrooms_count") + " " + t("common.is_required") })
+    ),
+    beds_count: z.preprocess(
+      v => {
+        if (v === null || v === undefined || v === "" || isNaN(Number(v))) return 1;
+        return Number(v);
+      },
+      z.number().min(1, { message: t("rooms.beds_count") + " " + t("common.is_required") })
+    ),
     room_type: z.number().min(1, { message: t("rooms.room_type") + " " + t("common.is_required") }),
     status: z.boolean().default(false),
     description: z.string().optional(),
@@ -236,7 +250,7 @@ export const roomFormSchema = (t: (key: string) => string) =>
         v => (v === null || v === undefined ? 0 : v),
         z.number().min(1, { message: t("rooms.price_package") + " " + t("common.is_required") })
       ),
-      unit: z.enum(["day", "month"], { message: t("rooms.unit") + " " + t("common.is_required") }),
+      unit: z.enum(["night", "month"], { message: t("rooms.unit") + " " + t("common.is_required") }),
       unit_price: z.string().min(1, { message: t("rooms.unit_price") + " " + t("common.is_required") }),
     })).min(1, { message: t("rooms.prices") + " " + t("common.is_required") }),
   });

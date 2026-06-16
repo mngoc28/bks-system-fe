@@ -46,7 +46,7 @@ export interface RoomPrice {
   packageName: string;
   price: number;
   duration: number;
-  unit: 'day' | 'month';
+  unit: 'night' | 'month';
   deposit_amount?: number;
   minimum_stay?: number;
 }
@@ -67,6 +67,8 @@ export interface Room {
   title?: string;
   floor_number?: number;
   people?: number;
+  bedrooms_count?: number;
+  beds_count?: number;
   room_type?: string | number;
   area: number; // m2
   amenities: any[]; 

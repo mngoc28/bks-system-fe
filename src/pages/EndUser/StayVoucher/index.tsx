@@ -7,10 +7,10 @@ import {
   ArrowLeft, 
   Calendar, 
   MapPin, 
-  QrCode,
   ShieldCheck,
   User,
-  Phone
+  Phone,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -85,6 +85,42 @@ const StayVoucher = () => {
             Quay lại lịch sử
           </Link>
         </Button>
+      </div>
+    );
+  }
+
+  const isAuthorized = (booking.status === 1 || booking.status === 3 || booking.status === 4) && 
+                       !(booking.payment_method === "online" && booking.payment_status !== "paid");
+
+  if (!isAuthorized) {
+    let errorMessage = "Không thể phát hành phiếu xác nhận lưu trú.";
+    let errorDesc = "Kỳ nghỉ của bạn hiện không đủ điều kiện để xuất phiếu xác nhận.";
+    
+    if (booking.status === 0) {
+      errorMessage = "Đơn phòng đang chờ xác nhận";
+      errorDesc = "Đối tác chưa phê duyệt đơn đặt phòng này. Vui lòng hoàn tất thanh toán đặt cọc (nếu có) hoặc đợi đối tác xác nhận để nhận phiếu.";
+    } else if (booking.status === 2) {
+      errorMessage = "Đơn đặt phòng đã bị hủy";
+      errorDesc = "Không thể phát hành phiếu xác nhận lưu trú cho đơn phòng đã bị hủy trên hệ thống.";
+    } else if (booking.payment_method === "online" && booking.payment_status !== "paid") {
+      errorMessage = "Chưa hoàn tất thanh toán";
+      errorDesc = "Phương thức thanh toán trực tuyến yêu cầu bạn thanh toán 100% hóa đơn trước khi cấp phiếu xác nhận lưu trú.";
+    }
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-slate-800">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-[28px] p-8 shadow-xl">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+            <AlertCircle className="size-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 mb-2">{errorMessage}</h2>
+          <p className="text-slate-500 font-medium text-sm leading-relaxed mb-6">{errorDesc}</p>
+          <Button asChild className="rounded-xl bg-slate-900 text-white hover:bg-slate-800 w-full h-11 font-bold" variant="default">
+            <Link to={`/bks-stay/bookings/${id}`}>
+              Quay lại chi tiết đơn
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -262,7 +298,11 @@ const StayVoucher = () => {
           {/* Validation QR Mock */}
           <div className="flex flex-col items-center justify-center p-6 border-t border-slate-100/60 bg-slate-50/50 rounded-2xl gap-3">
             <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-inner">
-              <QrCode className="size-20 text-slate-900" />
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(booking.booking_code || id || "")}`}
+                alt="Booking QR Code" 
+                className="size-20 select-none object-contain"
+              />
             </div>
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Xác thực Check-in bằng QR</p>
             <p className="text-xs text-slate-500 font-semibold text-center leading-relaxed max-w-sm">

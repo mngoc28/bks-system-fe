@@ -80,8 +80,11 @@ import {
 } from "@/utils/bookingAmount";
 import {
   BOOKING_DAYS_LABEL,
+  countBookingNights,
   countBookingDaysInclusive,
+  formatBookingNightsCount,
   formatBookingDaysCount,
+  BOOKING_NIGHTS_LABEL,
   formatRoomRentalLineLabel,
 } from "@/utils/dateUtils";
 import { formatPrice } from "@/utils/utils";
@@ -202,6 +205,8 @@ const BookingDetail = () => {
   const [reasonNote, setReasonNote] = useState("");
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
+  const [withdrawCountdown, setWithdrawCountdown] = useState<number | null>(null);
+  const [withdrawIntervalId, setWithdrawIntervalId] = useState<any>(null);
   const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const [paymentMethodSubmitting, setPaymentMethodSubmitting] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
@@ -209,6 +214,7 @@ const BookingDetail = () => {
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
+  const [isRulesDialogOpen, setIsRulesDialogOpen] = useState(false);
 
   const uploadMutation = useUploadImageMutation();
   const [isDragging, setIsDragging] = useState(false);
@@ -438,6 +444,14 @@ const BookingDetail = () => {
     return () => clearInterval(interval);
   }, [booking?.status, id, reloadBookingDetail]);
 
+  useEffect(() => {
+    return () => {
+      if (withdrawIntervalId) {
+        clearInterval(withdrawIntervalId);
+      }
+    };
+  }, [withdrawIntervalId]);
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -513,7 +527,42 @@ const BookingDetail = () => {
     }
   };
 
-  const handleWithdrawCancelRequest = async () => {
+  const handleWithdrawClick = () => {
+    if (!booking) return;
+
+    if (withdrawCountdown !== null) {
+      // User clicked "Hoàn tác" -> Cancel countdown
+      if (withdrawIntervalId) {
+        clearInterval(withdrawIntervalId);
+      }
+      setWithdrawCountdown(null);
+      setWithdrawIntervalId(null);
+      toastSuccess("Đã hoàn tác. Yêu cầu hủy đặt phòng vẫn được giữ lại.");
+      return;
+    }
+
+    // Start 15s countdown
+    setWithdrawCountdown(15);
+    const interval = setInterval(() => {
+      setWithdrawCountdown((prev) => {
+        if (prev === null) {
+          clearInterval(interval);
+          return null;
+        }
+        if (prev <= 1) {
+          clearInterval(interval);
+          setWithdrawIntervalId(null);
+          // Trigger actual withdrawal API call
+          void triggerWithdrawCancelRequest();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    setWithdrawIntervalId(interval);
+  };
+
+  const triggerWithdrawCancelRequest = async () => {
     if (!booking) return;
     setWithdrawSubmitting(true);
     try {
@@ -524,6 +573,7 @@ const BookingDetail = () => {
       toastError("Không thể rút yêu cầu hủy phòng. Vui lòng thử lại sau.");
     } finally {
       setWithdrawSubmitting(false);
+      setWithdrawCountdown(null);
     }
   };
 
@@ -547,13 +597,64 @@ const BookingDetail = () => {
     }
   };
 
-  const handleReschedule = () => {
+  const handleDownloadInvoice = () => {
+    if (!booking) return;
+    const content = `HOA DON DIEN TU BKS STAY
+--------------------------------------------------
+Ma don dat phong: ${booking.id}
+Ma dat phong: ${booking.booking_code || "N/A"}
+Ten phong: ${booking.room?.title || "Phong nghi"}
+Co so luu tru: ${booking.room?.property?.name || "BKS Stay Property"}
+Khach hang: ${userName || "Khach hang"}
+Ngay nhan phong: ${new Date(booking.start_date).toLocaleDateString("vi-VN")}
+Ngay tra phong: ${new Date(booking.end_date).toLocaleDateString("vi-VN")}
+Phuong thuc thanh toan: ${booking.payment_method === "online" ? "Thanh toan truc tuyen" : "Thanh toan tai quay"}
+Trang thai thanh toan: ${booking.payment_status === "paid" ? "Da thanh toan" : "Chua thanh toan"}
+
+CHI TIET THANH TOAN:
+Tien phong: ${formatPrice(booking.price?.price)}
+So dem luu tru: ${bookingDays}
+Tong cong: ${formatPrice(totalAmount)}
+(Da bao gom 10% VAT va phi dich vu)
+
+--------------------------------------------------
+Hoa don nay duoc tao tu dong boi he thong BKS Stay.
+Cam on quy khach da tin tuong va su dung dich vu!
+`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Hoa_Don_BKS_Stay_${booking.id}.txt`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toastSuccess("Hóa đơn điện tử đã được tải xuống!");
+  };
+
+  const handleReschedule = async () => {
+    if (!booking) return;
     if (!newStartDate || !newEndDate) {
       toastError("Vui lòng chọn đầy đủ ngày nhận và trả phòng mới.");
       return;
     }
-    toastInfo("Yêu cầu dời ngày đang được xử lý. Lễ tân sẽ liên hệ xác nhận tình trạng phòng trống.");
-    setIsRescheduleDialogOpen(false);
+    
+    const currentEndDate = booking.end_date;
+    if (newEndDate > currentEndDate && newStartDate === booking.start_date) {
+      try {
+        await stayService.extendBooking(booking.id, newEndDate);
+        toastSuccess(`Yêu cầu gia hạn lưu trú đến ngày ${new Date(newEndDate).toLocaleDateString("vi-VN")} đã được gửi thành công!`);
+        setIsRescheduleDialogOpen(false);
+        await reloadBookingDetail();
+      } catch {
+        toastError("Không thể gửi yêu cầu gia hạn ngày trả phòng. Vui lòng thử lại.");
+      }
+    } else {
+      toastInfo("Yêu cầu thay đổi ngày lưu trú đang được xử lý. Lễ tân sẽ liên hệ xác nhận tình trạng phòng trống.");
+      setIsRescheduleDialogOpen(false);
+    }
   };
 
   const handleSubmitReview = async () => {
@@ -571,8 +672,11 @@ const BookingDetail = () => {
     }
   };
 
-  const bookingDays = countBookingDaysInclusive(booking.start_date, booking.end_date);
   const priceInput = { price: booking.price?.price, unit: booking.price?.unit };
+  const isMonthlyRate = (priceInput.unit ?? "night").toLowerCase() === "month";
+  const bookingDays = isMonthlyRate
+    ? countBookingDaysInclusive(booking.start_date, booking.end_date)
+    : countBookingNights(booking.start_date, booking.end_date);
   const roomStayTotal = computeBookingRoomStayTotal({
     start_date: booking.start_date,
     end_date: booking.end_date,
@@ -644,26 +748,36 @@ const BookingDetail = () => {
             <div className="flex items-center gap-4">
                <AlertCircle className="size-8 shrink-0 text-amber-500 animate-pulse" />
                <div>
-                  <h4 className="font-bold text-amber-950 text-base">Đang chờ xử lý yêu cầu hủy</h4>
+                  <h4 className="font-bold text-amber-950 text-base">
+                     {withdrawCountdown !== null ? "Đang chuẩn bị rút yêu cầu hủy..." : "Đang chờ xử lý yêu cầu hủy"}
+                  </h4>
                   <p className="text-xs font-medium text-amber-800 mt-1 leading-relaxed">
-                     Yêu cầu hủy đặt phòng của bạn đã được tiếp nhận và đang chờ Partner duyệt.
+                     {withdrawCountdown !== null
+                        ? `Hệ thống sẽ gửi yêu cầu rút lại đơn hủy đặt phòng sau ${withdrawCountdown} giây nữa.`
+                        : "Yêu cầu hủy đặt phòng của bạn đã được tiếp nhận và đang chờ Partner duyệt."}
                   </p>
                </div>
             </div>
             <Button
                type="button"
-               variant="outline"
-               onClick={handleWithdrawCancelRequest}
+               variant={withdrawCountdown !== null ? "destructive" : "outline"}
+               onClick={handleWithdrawClick}
                disabled={withdrawSubmitting}
-               className="border-amber-300 text-amber-900 hover:bg-amber-100 hover:text-amber-950 rounded-xl transition-all self-start md:self-center font-bold px-4 h-10 shrink-0"
+               className={`${
+                  withdrawCountdown !== null
+                     ? "bg-rose-600 hover:bg-rose-500 text-white border-transparent"
+                     : "border-amber-300 text-amber-900 hover:bg-amber-100 hover:text-amber-950"
+               } rounded-xl transition-all self-start md:self-center font-bold px-4 h-10 shrink-0`}
             >
                {withdrawSubmitting ? (
                  <span className="flex items-center gap-2">
                    <Spinner size="sm" spinnerClassName="border-y-amber-900" /> Đang rút...
                  </span>
-               ) : (
-                 "Rút yêu cầu hủy"
-               )}
+                ) : withdrawCountdown !== null ? (
+                   `Hoàn tác (${withdrawCountdown}s)`
+                ) : (
+                  "Rút yêu cầu hủy"
+                )}
             </Button>
          </div>
       ) : (
@@ -1194,7 +1308,8 @@ const BookingDetail = () => {
                          {new Date(booking.start_date).toLocaleDateString("vi-VN")} — {new Date(booking.end_date).toLocaleDateString("vi-VN")}
                       </p>
                       <p className="mt-0.5 text-xs font-medium text-slate-500">
-                        {BOOKING_DAYS_LABEL}: {formatBookingDaysCount(bookingDays)}
+                        {isMonthlyRate ? BOOKING_DAYS_LABEL : BOOKING_NIGHTS_LABEL}:{" "}
+                        {isMonthlyRate ? formatBookingDaysCount(bookingDays) : formatBookingNightsCount(bookingDays)}
                       </p>
                     </div>
                   </div>
@@ -1228,7 +1343,7 @@ const BookingDetail = () => {
                       </div>
                       <div className="relative z-10 mt-4 flex items-center justify-between border-t border-white/5 pt-3">
                          <p className="text-[10px] font-medium text-slate-400">Đã bao gồm thuế & phí</p>
-                         <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-sky-400 hover:bg-white/5 hover:text-white" onClick={() => toastSuccess("Đang chuẩn bị hóa đơn điện tử...")}>Tải hóa đơn</Button>
+                         <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-sky-400 hover:bg-white/5 hover:text-white" onClick={handleDownloadInvoice}>Tải hóa đơn</Button>
                       </div>
                    </div>
                 </div>
@@ -1646,22 +1761,27 @@ const BookingDetail = () => {
            <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 text-white shadow-xl shadow-slate-900/20">
               <h3 className="mb-6 text-xl font-bold">Hỗ trợ khẩn cấp</h3>
               <div className="space-y-4">
-                 <Button className="h-16 w-full justify-between gap-4 rounded-2xl border-none bg-white/5 px-6 text-white shadow-none hover:bg-white/10">
-                    <div className="flex items-center gap-4">
-                       <div className="rounded-xl bg-sky-500/20 p-2"><PhoneCall className="size-5 text-sky-400" /></div>
-                       <div className="text-left">
-                          <p className="text-sm font-bold">Lễ tân 24/7</p>
-                          <p className="mt-1 text-[9px] font-black uppercase text-white/40">GỌI MIỄN PHÍ</p>
-                       </div>
-                    </div>
-                    <ChevronRight className="size-4 text-white/20" />
-                 </Button>
-                 <Button className="h-16 w-full justify-between gap-4 rounded-2xl border-none bg-white/5 px-6 text-white shadow-none hover:bg-white/10">
+                  <div className="flex h-16 w-full justify-between items-center gap-4 rounded-2xl bg-white/5 px-6 text-white/70">
+                     <div className="flex items-center gap-4">
+                        <div className="rounded-xl bg-sky-500/20 p-2"><PhoneCall className="size-5 text-sky-400" /></div>
+                        <div className="text-left">
+                           <p className="text-sm font-bold text-white">Lễ tân 24/7</p>
+                           <p className="mt-1 text-[10px] font-semibold text-white/40">
+                             Hotline: {booking.room?.property?.user?.phone || "0333494850"}
+                           </p>
+                        </div>
+                     </div>
+                  </div>
+                 <Button
+                   type="button"
+                   onClick={() => navigate(ROUTERS.BKS_STAY_CHAT)}
+                   className="h-16 w-full justify-between gap-4 rounded-2xl border-none bg-white/5 px-6 text-white shadow-none hover:bg-white/10"
+                 >
                     <div className="flex items-center gap-4">
                        <div className="rounded-xl bg-sky-500/20 p-2"><MessageSquare className="size-5 text-sky-400" /></div>
                        <div className="text-left">
-                          <p className="text-sm font-bold">Trợ lý ảo AI</p>
-                          <p className="mt-1 text-[9px] font-black uppercase text-white/40">PHẢN HỒI NGAY</p>
+                          <p className="text-sm font-bold">Nhắn chủ nhà</p>
+                          <p className="mt-1 text-[9px] font-black uppercase text-white/40">CHAT REALTIME</p>
                        </div>
                     </div>
                     <ChevronRight className="size-4 text-white/20" />
@@ -1677,7 +1797,7 @@ const BookingDetail = () => {
                     <p className="mb-4 text-[11px] leading-relaxed text-slate-500">
                       Vui lòng tham khảo các quy định về giờ giấc và an toàn.
                     </p>
-                    <Button variant="ghost" className="h-auto p-0 text-xs font-bold text-sky-600 hover:bg-transparent">Xem toàn bộ <ChevronRight className="size-3 ml-1" /></Button>
+                     <Button onClick={() => setIsRulesDialogOpen(true)} variant="ghost" className="h-auto p-0 text-xs font-bold text-sky-600 hover:bg-transparent">Xem toàn bộ <ChevronRight className="size-3 ml-1" /></Button>
                  </div>
               </div>
            </Card>
@@ -1696,11 +1816,17 @@ const BookingDetail = () => {
                         <Button
                           type="button"
                           variant="link"
-                          onClick={handleWithdrawCancelRequest}
+                          onClick={handleWithdrawClick}
                           disabled={withdrawSubmitting}
                           className="h-auto p-0 text-xs font-black uppercase tracking-wider text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50"
                         >
-                          {withdrawSubmitting ? "Đang rút..." : "Rút yêu cầu hủy"}
+                          {withdrawSubmitting ? (
+                            "Đang rút..."
+                          ) : withdrawCountdown !== null ? (
+                            `Hoàn tác (${withdrawCountdown}s)`
+                          ) : (
+                            "Rút yêu cầu hủy"
+                          )}
                         </Button>
                       </div>
                     ) : (
@@ -1903,7 +2029,36 @@ const BookingDetail = () => {
               </div>
            </Card>
            )}
-        </div>
+         </div>
+
+         {/* Rules Modal */}
+         <Dialog open={isRulesDialogOpen} onOpenChange={setIsRulesDialogOpen}>
+           <DialogContent className="rounded-[32px] border-none bg-white p-8 max-w-lg shadow-2xl">
+             <DialogHeader className="mb-4 text-left">
+               <DialogTitle className="text-2xl font-black text-slate-900">Nội quy & Chính sách Hủy phòng</DialogTitle>
+               <DialogDescription className="text-sm font-medium text-slate-500">
+                 Vui lòng tuân thủ các nội quy để đảm bảo một kỳ nghỉ tuyệt vời.
+               </DialogDescription>
+             </DialogHeader>
+             <div className="space-y-4 my-2 text-sm leading-relaxed text-slate-600 max-h-[300px] overflow-y-auto pr-2">
+               <div>
+                 <h4 className="font-bold text-slate-900">1. Quy định Nhận & Trả phòng</h4>
+                 <p className="text-xs mt-1">Giờ nhận phòng tiêu chuẩn là từ 14:00. Giờ trả phòng tiêu chuẩn là trước 12:00 trưa. Việc nhận phòng sớm hoặc trả phòng muộn sẽ chịu thêm phí tùy thuộc vào tình trạng phòng trống tại thời điểm đó.</p>
+               </div>
+               <div>
+                 <h4 className="font-bold text-slate-900">2. Quy định Lưu trú & An toàn</h4>
+                 <p className="text-xs mt-1">Không mang theo chất cấm, vũ khí hoặc chất dễ cháy nổ vào khu vực lưu trú. Hãy tôn trọng sự yên tĩnh chung sau 22:00 đêm. Không tự ý thay đổi kết cấu hoặc di chuyển đồ đạc lớn trong phòng.</p>
+               </div>
+               <div>
+                 <h4 className="font-bold text-slate-900">3. Chính sách phạt hủy (Ngắn hạn)</h4>
+                 <p className="text-xs mt-1">Miễn phí hủy đơn trước giờ check-in 7 ngày. Hủy từ 2 đến dưới 7 ngày chịu phí phạt 50% tiền cọc. Hủy dưới 48 giờ trước check-in chịu phạt 100% tiền cọc (không hoàn tiền).</p>
+               </div>
+             </div>
+             <DialogFooter className="mt-6">
+               <Button onClick={() => setIsRulesDialogOpen(false)} className="w-full rounded-2xl bg-slate-900 font-bold text-white">Đã hiểu</Button>
+             </DialogFooter>
+           </DialogContent>
+         </Dialog>
 
       </div>
     </div>

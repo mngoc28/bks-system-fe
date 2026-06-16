@@ -93,6 +93,8 @@ const PropertyRooms: React.FC = () => {
     area: 0,
     floor_number: 1,
     people: 1,
+    bedrooms_count: 1,
+    beds_count: 1,
     room_type: 1,
     status: true,
     amenities: [],
@@ -371,6 +373,8 @@ const PropertyRooms: React.FC = () => {
       area: 25,
       floor_number: 1,
       people: 2,
+      bedrooms_count: 1,
+      beds_count: 1,
       room_type: 1,
       status: true,
       propertyId: propertyId || '',
@@ -413,6 +417,8 @@ const PropertyRooms: React.FC = () => {
           area: formData.area,
           floor_number: formData.floor_number,
           people: formData.people,
+          bedrooms_count: formData.bedrooms_count,
+          beds_count: formData.beds_count,
           room_type: formData.room_type,
           status: payload.status,
           amenities: formData.amenities,
@@ -665,9 +671,14 @@ const PropertyRooms: React.FC = () => {
                     </div>
 
                     <div className="mb-6 flex-1 space-y-3">
-                       <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
+                       <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500">
                           <div className="flex items-center gap-1"><LayoutGrid size={14} className="text-slate-400" /> {room.area}m²</div>
                           <div className="flex items-center gap-1"><ChevronDown size={14} className="text-slate-400" /> Tầng {room.floor_number || 1}</div>
+                          {(room.bedrooms_count !== undefined || room.beds_count !== undefined) && (
+                            <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                              {room.bedrooms_count || 1} PN • {room.beds_count || 1} giường
+                            </div>
+                          )}
                        </div>
                        
                        <div className="mt-4 border-t border-slate-50 pt-3">
@@ -695,7 +706,7 @@ const PropertyRooms: React.FC = () => {
                        <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => { setEditingRoom(room); setFormData(room); setIsRoomPanelOpen(true); }}
+                          onClick={() => { setEditingRoom(room); setFormData({ ...room, bedrooms_count: room.bedrooms_count ?? 1, beds_count: room.beds_count ?? 1 }); setIsRoomPanelOpen(true); }}
                           className="h-9 flex-1 rounded-lg border-slate-200 text-[11px] font-semibold transition-colors hover:border-blue-600 hover:text-blue-600"
                        >
                          <Edit size={14} /> Sửa
@@ -812,7 +823,7 @@ const PropertyRooms: React.FC = () => {
                              } else {
                                // Open edit room
                                const r = rooms.find(it => it.id === room.id);
-                               if (r) { setEditingRoom(r); setFormData(r); setIsRoomPanelOpen(true); }
+                               if (r) { setEditingRoom(r); setFormData({ ...r, bedrooms_count: r.bedrooms_count ?? 1, beds_count: r.beds_count ?? 1 }); setIsRoomPanelOpen(true); }
                              }
                            }}
                            className={`${getOccupancyColor(room.occupancy_status)} group relative flex h-16 cursor-pointer flex-col items-center justify-center rounded-xl border border-black/5 shadow-sm transition-all hover:scale-105 active:scale-95`}
@@ -1053,6 +1064,17 @@ const PropertyRooms: React.FC = () => {
                  </div>
               </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                 <div className="grid gap-2">
+                    <Label className="font-semibold">Số phòng ngủ</Label>
+                    <Input type="number" min={1} value={formData.bedrooms_count || 1} onChange={e => setFormData({...formData, bedrooms_count: Number(e.target.value)})} className="h-11 rounded-xl" />
+                 </div>
+                 <div className="grid gap-2">
+                    <Label className="font-semibold">Số giường</Label>
+                    <Input type="number" min={1} value={formData.beds_count || 1} onChange={e => setFormData({...formData, beds_count: Number(e.target.value)})} className="h-11 rounded-xl" />
+                 </div>
+              </div>
+
               <div className="grid gap-2">
                 <Label className="font-semibold">Tiện nghi (Amenities)</Label>
                 <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-3">
@@ -1187,7 +1209,7 @@ const PropertyRooms: React.FC = () => {
                                       <SelectValue />
                                    </SelectTrigger>
                                    <SelectContent>
-                                      <SelectItem value="day">Theo đêm</SelectItem>
+                                      <SelectItem value="night">Theo đêm</SelectItem>
                                       <SelectItem value="month">Theo tháng</SelectItem>
                                    </SelectContent>
                                 </Select>

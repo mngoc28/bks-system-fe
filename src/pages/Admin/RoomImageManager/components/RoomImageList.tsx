@@ -10,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toastError } from "@/components/ui/toast";
-import { CLOUDINARY_HEADER_IMAGE_URL, ROOM_IMAGE_TYPE } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, ROOM_IMAGE_TYPE, getFilteredRoomImageTypes } from "@/constant";
+import { useRoomQuery } from "@/hooks/useRoomQuery";
 import { RoomImage, RoomImageListProps, SortableItemProps } from "@/dataHelper/roomImage.dataHelper";
 import { useDeleteMultipleRoomImagesMutation, useRoomImagesQuery, useUpdateMultipleRoomImageTypesMutation, useUpdateRoomImageSortMutation } from "@/hooks/useRoomImageQuery";
 
@@ -33,7 +34,8 @@ const SortableItem: React.FC<SortableItemProps> =
     t,
     hasPending,
     oldType,
-    onResetPending
+    onResetPending,
+    filteredTypes
   }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: image.id });
 
@@ -96,7 +98,7 @@ const SortableItem: React.FC<SortableItemProps> =
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(ROOM_IMAGE_TYPE).map(([key, value]) => (
+            {(filteredTypes || Object.entries(ROOM_IMAGE_TYPE)).map(([key, value]) => (
               <SelectItem
                 key={value}
                 value={value.toString()}
@@ -162,6 +164,8 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
   const updateSortMutation = useUpdateRoomImageSortMutation();
 
   const { data: images, isLoading } = useRoomImagesQuery(roomId);
+  const { data: room } = useRoomQuery(roomId);
+  const filteredTypes = getFilteredRoomImageTypes(room?.property_type_id);
   const [_isUpdating, setIsUpdating] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<{ [key: number]: number }>({});
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
@@ -306,6 +310,7 @@ export const RoomImageList: React.FC<RoomImageListProps> = ({ roomId, onSave }) 
                     delete newP[id];
                     return newP
                   })}
+                  filteredTypes={filteredTypes}
                 />
               ))}
             </div>

@@ -5,10 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { t } from "i18next";
 
 // List Partners information
-export const useListPartnerQuery = (params: PartnerFilter) => {
+export const useListPartnerQuery = (params: PartnerFilter, options?: { enabled?: boolean }) => {
     return useQuery<PartnerResponse, Error>({
         queryKey: ["partners", params],
         queryFn: () => partnerApi.getlistPartners(params),
+        ...options,
     });
 }
 

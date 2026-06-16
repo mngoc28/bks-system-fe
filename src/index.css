@@ -574,4 +574,14 @@
   }
 }
 
+/* Splide Carousel Hover Clipping Fix */
+.room-carousel .splide__track,
+.province-carousel .splide__track {
+  padding-top: 12px;
+  padding-bottom: 24px;
+  margin-top: -12px;
+  margin-bottom: -24px;
+}
+
+
 

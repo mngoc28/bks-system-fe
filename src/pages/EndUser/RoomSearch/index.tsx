@@ -1,6 +1,6 @@
 import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow, Star, Heart, Share2, Sparkles, Home, ShieldCheck, Search, Minus, Plus, Square } from "lucide-react";
+import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow, Star, Heart, Share2, Sparkles, Home, ShieldCheck, Search, Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
@@ -19,16 +19,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS, SUGGESTED_ROOM_SPOT_PRIORITY, SUGGESTED_ROOM_SPOT_SLUGS } from "@/constant";
 import DestinationKeywordInput from "@/components/search/DestinationKeywordInput";
 import type { TouristSpotSuggestion } from "@/dataHelper/EU/touristSpot.dataHelper";
-import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
 import { usePaginatedRoomsQuery, usePublicAmenitiesQuery, usePublicServicesQuery } from "@/hooks/EU/useRoomQuery";
 import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { normalizeStayPropertyTypeLabel, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
-import { formatPrice, formatCurrencyInput, parseCurrencyValue, validateCurrencyInput } from "@/utils/utils";
-import { getRoomFallbackImage } from "@/utils/fallbackImages";
+import { formatPrice, formatCurrencyInput, parseCurrencyValue, validateCurrencyInput, simplifyAddress, formatProvinceName } from "@/utils/utils";
+import { countBookingNights } from "@/utils/dateUtils";
+import { getRoomFallbackImage, getProvinceImage } from "@/utils/fallbackImages";
 import { toastSuccess, toastError } from "@/components/ui/toast";
-import { resolveImageUrl } from "@/utils/imageUtils";
+import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
 import {
   Select,
   SelectContent,
@@ -39,7 +39,7 @@ import {
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
-const LIMIT_OPTIONS = [8, 12, 16, 24];
+const LIMIT_OPTIONS = [12, 16, 24, 48];
 const DEFAULT_SORT = "price_asc";
 
 const parsePositiveInt = (value: string | null, fallback: number) => {
@@ -174,38 +174,6 @@ const DiscountBanner = () => {
   );
 };
 
-const getProvinceHeroImage = (provinceName: string | undefined): string => {
-  if (!provinceName) return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80"; // Luxury resort default
-
-  const name = provinceName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  if (name.includes("da nang")) {
-    return "https://images.unsplash.com/photo-1559592442-7486a0952042?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("ha noi")) {
-    return "https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("ho chi minh") || name.includes("sai gon")) {
-    return "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("quang ninh") || name.includes("ha long")) {
-    return "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("nha trang") || name.includes("khanh hoa")) {
-    return "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("lam dong") || name.includes("da lat")) {
-    return "https://images.unsplash.com/photo-1583002621936-e82a0134ba44?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("lao cai") || name.includes("sa pa") || name.includes("sapa")) {
-    return "https://images.unsplash.com/photo-1550950158-d0d960dff51b?auto=format&fit=crop&w=1600&q=80";
-  }
-  if (name.includes("phu quoc") || name.includes("kien giang")) {
-    return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
-  }
-
-  return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80";
-};
 
 const formatRoomAddress = (provinceName: string, propertyAddress: string) => {
   if (!propertyAddress) return provinceName;
@@ -314,12 +282,16 @@ const RoomSearch = () => {
       });
   };
 
-  const handleCardClick = (e: React.MouseEvent, roomId: number) => {
+  const handleCardClick = (e: React.MouseEvent, roomId: number, cardRentType?: string) => {
     const target = e.target as HTMLElement;
     if (target.closest("button") || target.closest("a") || target.closest(".interactive-click")) {
       return;
     }
-    const detailUrl = `${ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString())}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+    const newParams = new URLSearchParams(searchParams);
+    if (cardRentType) {
+      newParams.set("rent_type", cardRentType);
+    }
+    const detailUrl = `${ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString())}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
     navigate(detailUrl);
   };
 
@@ -483,38 +455,97 @@ const RoomSearch = () => {
     return { sort_by: "cheapest_daily_price" as const, sort_direction: "asc" as const };
   }, [sortBy]);
 
+  const showTwoBlocks = selectedPropertyTypeId === null;
+  const isApartmentSegment = useMemo(() => {
+    if (selectedPropertyTypeId === null || !propertyTypesData?.data) return false;
+    const type = propertyTypesData.data.find((t: any) => t.id === selectedPropertyTypeId);
+    return type ? isApartmentSegmentPropertyType(type.name) : false;
+  }, [selectedPropertyTypeId, propertyTypesData]);
+
+  const baseQueryParams = useMemo(() => ({
+    province_id: provinceId || undefined,
+    ward_id: wardId || undefined,
+    keyword: deferredKeyword || undefined,
+    page: requestedPage,
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+    guests: guests || undefined,
+    tourist_spot_slug: touristSpotSlug || undefined,
+    rating_min: ratingMin || undefined,
+    price_min: priceMin || undefined,
+    price_max: priceMax || undefined,
+    amenity_ids: amenityIds.length > 0 ? amenityIds : undefined,
+    service_ids: serviceIds.length > 0 ? serviceIds : undefined,
+    ...roomSortParams,
+  }), [provinceId, wardId, deferredKeyword, requestedPage, startDate, endDate, guests, touristSpotSlug, ratingMin, priceMin, priceMax, amenityIds, serviceIds, roomSortParams]);
+
   const {
-    data: roomsPageData,
-    isLoading,
-    isError,
-    isPlaceholderData,
-    refetch,
+    data: dailyRoomsPageData,
+    isLoading: isLoadingDaily,
+    isError: isErrorDaily,
+    isPlaceholderData: isPlaceholderDataDaily,
+    refetch: refetchDaily,
   } = usePaginatedRoomsQuery(
     {
-      province_id: provinceId || undefined,
-      ward_id: wardId || undefined,
-      property_type_id: selectedPropertyTypeId || undefined,
-      keyword: deferredKeyword || undefined,
-      page: requestedPage,
+      ...baseQueryParams,
+      property_type_id: !showTwoBlocks && !isApartmentSegment ? selectedPropertyTypeId : undefined,
+      rent_type: showTwoBlocks ? "daily" : undefined,
       per_page: limit,
-      start_date: startDate || undefined,
-      end_date: endDate || undefined,
-      guests: guests || undefined,
-      tourist_spot_slug: touristSpotSlug || undefined,
-      rating_min: ratingMin || undefined,
-      price_min: priceMin || undefined,
-      price_max: priceMax || undefined,
-      amenity_ids: amenityIds.length > 0 ? amenityIds : undefined,
-      service_ids: serviceIds.length > 0 ? serviceIds : undefined,
-      ...roomSortParams,
     },
-    { enabled: true },
+    { enabled: showTwoBlocks || !isApartmentSegment },
   );
 
-  const rooms = roomsPageData?.data ?? [];
-  const totalRooms = roomsPageData?.total ?? 0;
-  const totalPages = Math.max(DEFAULT_PAGE, roomsPageData?.last_page ?? DEFAULT_PAGE);
+  const {
+    data: monthlyRoomsPageData,
+    isLoading: isLoadingMonthly,
+    isError: isErrorMonthly,
+    isPlaceholderData: isPlaceholderDataMonthly,
+    refetch: refetchMonthly,
+  } = usePaginatedRoomsQuery(
+    {
+      ...baseQueryParams,
+      property_type_id: !showTwoBlocks && isApartmentSegment ? selectedPropertyTypeId : undefined,
+      rent_type: showTwoBlocks ? "monthly" : undefined,
+      per_page: limit,
+    },
+    { enabled: showTwoBlocks || isApartmentSegment },
+  );
+
+  const dailyRooms = showTwoBlocks 
+    ? (dailyRoomsPageData?.data ?? []) 
+    : (!isApartmentSegment ? (dailyRoomsPageData?.data ?? []) : []);
+  const monthlyRooms = showTwoBlocks 
+    ? (monthlyRoomsPageData?.data ?? []) 
+    : (isApartmentSegment ? (monthlyRoomsPageData?.data ?? []) : []);
+
+  const totalRooms = showTwoBlocks
+    ? (dailyRoomsPageData?.total ?? 0) + (monthlyRoomsPageData?.total ?? 0)
+    : (isApartmentSegment ? (monthlyRoomsPageData?.total ?? 0) : (dailyRoomsPageData?.total ?? 0));
+
+  const totalPages = Math.max(
+    DEFAULT_PAGE,
+    (showTwoBlocks 
+      ? Math.max(dailyRoomsPageData?.last_page ?? 1, monthlyRoomsPageData?.last_page ?? 1)
+      : (isApartmentSegment ? (monthlyRoomsPageData?.last_page ?? 1) : (dailyRoomsPageData?.last_page ?? 1)))
+  );
+
   const page = Math.min(requestedPage, totalPages);
+  const isLoading = (showTwoBlocks && (isLoadingDaily || isLoadingMonthly)) || (!showTwoBlocks && (isApartmentSegment ? isLoadingMonthly : isLoadingDaily));
+  const isError = (showTwoBlocks && (isErrorDaily || isErrorMonthly)) || (!showTwoBlocks && (isApartmentSegment ? isErrorMonthly : isErrorDaily));
+  const isPlaceholderData = showTwoBlocks 
+    ? (isPlaceholderDataDaily || isPlaceholderDataMonthly)
+    : (isApartmentSegment ? isPlaceholderDataMonthly : isPlaceholderDataDaily);
+
+  const refetch = () => {
+    if (showTwoBlocks) {
+      void refetchDaily();
+      void refetchMonthly();
+    } else if (isApartmentSegment) {
+      void refetchMonthly();
+    } else {
+      void refetchDaily();
+    }
+  };
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
@@ -702,7 +733,7 @@ const RoomSearch = () => {
       price_max: null,
       amenity_ids: null,
       service_ids: null,
-    });
+    }, { scroll: false });
   };
 
   const handleSelectTouristSpot = (spot: TouristSpotSuggestion) => {
@@ -713,7 +744,7 @@ const RoomSearch = () => {
       keyword: null,
       provinceId: localProvinceId ? String(localProvinceId) : null,
       wardId: null,
-    });
+    }, { scroll: false });
     setLocalWardId(null);
   };
 
@@ -721,7 +752,7 @@ const RoomSearch = () => {
     updateSearchParams({
       tourist_spot_slug: null,
       page: String(DEFAULT_PAGE),
-    });
+    }, { scroll: false });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -737,7 +768,7 @@ const RoomSearch = () => {
         startDate: localStartDate || null,
         endDate: localEndDate || null,
         guests: (localAdults + localChildren) > 0 ? String(localAdults + localChildren) : null,
-      });
+      }, { scroll: false });
       return;
     }
 
@@ -755,25 +786,72 @@ const RoomSearch = () => {
       guests: (localAdults + localChildren) > 0 ? String(localAdults + localChildren) : null,
       keyword: keyword.trim() || null,
       tourist_spot_slug: null,
-    });
+    }, { scroll: false });
   };
 
-  const dailyRooms = rooms.filter(room => !isApartmentSegmentPropertyType(room.property_type_name));
-  const monthlyRooms = rooms.filter(room => isApartmentSegmentPropertyType(room.property_type_name));
 
   const renderRoomCard = (room: any) => {
-    const hasMonthlyPrice = room.cheapest_monthly_price !== null && room.cheapest_monthly_price !== undefined;
-    const isHotel = room.property_type_name?.toLowerCase().includes("khách sạn") || room.property_type_name?.toLowerCase().includes("hotel");
+    const hasNightlyPrice = room.cheapest_nightly_price !== null && room.cheapest_nightly_price !== undefined && Number(room.cheapest_nightly_price) > 0;
+    const hasMonthlyPrice = room.cheapest_monthly_price !== null && room.cheapest_monthly_price !== undefined && Number(room.cheapest_monthly_price) > 0;
+
+    // 1. Determine stay duration if dates selected
+    const dateSelected = startDate !== "" && endDate !== "";
+    const stayNights = dateSelected ? countBookingNights(startDate, endDate) : 0;
+
+    // 2. Determine primary booking model (monthly vs nightly)
+    const isPrimaryMonthly = dateSelected 
+      ? stayNights >= 30 
+      : isApartmentSegmentPropertyType(room.property_type_name);
+
+    let displayPrice = 0;
+    let displayUnit = "";
+    let badgeText = "";
+    let badgeColorClass = "";
+    let hintText = "";
+
+    if (isPrimaryMonthly) {
+      if (hasMonthlyPrice) {
+        displayPrice = Number(room.cheapest_monthly_price);
+        displayUnit = "/tháng";
+        badgeText = "Thuê dài hạn";
+        badgeColorClass = "bg-sky-500/95 text-white border-sky-400 hover:bg-sky-500";
+        if (hasNightlyPrice) {
+          hintText = "Hỗ trợ thuê theo đêm";
+        }
+      } else {
+        displayPrice = Number(room.cheapest_daily_price);
+        displayUnit = "/đêm";
+        badgeText = "Thuê theo đêm";
+        badgeColorClass = "bg-amber-500/95 text-white border-amber-400 hover:bg-amber-500";
+      }
+    } else {
+      if (hasNightlyPrice) {
+        displayPrice = Number(room.cheapest_nightly_price);
+        displayUnit = "/đêm";
+        badgeText = "Thuê theo đêm";
+        badgeColorClass = "bg-amber-500/95 text-white border-amber-400 hover:bg-amber-500";
+        if (hasMonthlyPrice) {
+          hintText = "Hỗ trợ thuê dài hạn";
+        }
+      } else {
+        displayPrice = Number(room.cheapest_monthly_price);
+        displayUnit = "/tháng";
+        badgeText = "Thuê dài hạn";
+        badgeColorClass = "bg-sky-500/95 text-white border-sky-400 hover:bg-sky-500";
+      }
+    }
+
+    const rentType = (isPrimaryMonthly && hasMonthlyPrice) || (!isPrimaryMonthly && !hasNightlyPrice) ? "monthly" : "daily";
 
     return (
       <div
         key={room.id}
-        onClick={(e) => handleCardClick(e, room.id)}
+        onClick={(e) => handleCardClick(e, room.id, rentType)}
         role="link"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            handleCardClick(e as any, room.id);
+            handleCardClick(e as any, room.id, rentType);
           }
         }}
         className="group h-full cursor-pointer outline-none"
@@ -794,9 +872,9 @@ const RoomSearch = () => {
 
             {/* Left Badges: Types and features */}
             <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5 z-10">
-              {hasMonthlyPrice && (
-                <Badge className={`rounded-full border font-semibold shadow-md backdrop-blur-sm transition-all ${isHotel ? "bg-amber-500/90 text-white border-amber-400 hover:bg-amber-500" : "bg-sky-500/90 text-white border-sky-400 hover:bg-sky-500"}`}>
-                  {isHotel ? "Ưu đãi dài hạn" : "Thuê dài hạn"}
+              {badgeText && (
+                <Badge className={`rounded-full border font-semibold shadow-md backdrop-blur-sm transition-all ${badgeColorClass}`}>
+                  {badgeText}
                 </Badge>
               )}
               <Badge variant="secondary" className="rounded-full border border-slate-200 bg-white/90 text-slate-900 font-semibold shadow-md backdrop-blur-sm hover:bg-white transition-all">
@@ -827,80 +905,78 @@ const RoomSearch = () => {
               </button>
             </div>
           </div>
-          <CardContent className="flex flex-1 flex-col p-4">
-            <div className="mb-2 flex shrink-0 flex-col gap-1">
-              <span
-                onClick={(e) => {
-                  if (room.partner_id) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate(ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id)));
-                  }
-                }}
-                className="interactive-click h-4 truncate text-[10px] font-bold uppercase tracking-widest text-sky-600 transition-colors hover:text-sky-700 hover:underline cursor-pointer"
-              >
-                {room.partner_company_name || "Đối tác BKS"}
-              </span>
+          <CardContent className="flex flex-1 flex-col p-3.5">
+            <div className="mb-1.5 flex shrink-0 flex-col gap-1">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-sky-600">
+                <span
+                  onClick={(e) => {
+                    if (room.partner_id) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id)));
+                    }
+                  }}
+                  className="interactive-click truncate transition-colors hover:text-sky-700 hover:underline cursor-pointer"
+                >
+                  {room.partner_company_name || "Đối tác BKS"}
+                </span>
+                {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
+                  <div className="flex items-center gap-1 text-[0.75rem] font-bold text-amber-500">
+                    <Star className="size-3 fill-amber-500 text-amber-500" />
+                    <span>{room.reviews_avg_rating}</span>
+                    <span className="font-normal text-slate-400">({room.reviews_count})</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-[0.75rem] text-slate-400">
+                    <Star className="size-3 text-slate-300" />
+                    <span className="font-normal text-slate-400">Chưa đánh giá</span>
+                  </div>
+                )}
+              </div>
               <h3 className="line-clamp-1 h-6 font-bold leading-6 text-slate-800 transition-colors group-hover:text-sky-600">
                 {room.title}
               </h3>
-              {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
-                <div className="flex h-5 items-center gap-1 text-[0.75rem] font-bold text-amber-500">
-                  <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                  <span>{room.reviews_avg_rating}</span>
-                  <span className="font-normal text-slate-400">({room.reviews_count})</span>
-                </div>
-              ) : (
-                <div className="flex h-5 items-center gap-1 text-[0.75rem] text-slate-400">
-                  <Star className="size-3.5 text-slate-300" />
-                  <span className="font-normal text-slate-400">Chưa có đánh giá</span>
-                </div>
-              )}
             </div>
 
-            <div className="mb-4 flex flex-1 flex-col gap-2">
-              <div className="flex min-h-[2.5rem] items-start gap-1.5 text-sm text-slate-500">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
-                <span className="line-clamp-2 leading-tight">
-                  {formatRoomAddress(room.province_name, room.property_address)}
+            <div className="mb-3 flex flex-1 flex-col gap-1.5">
+              <div className="flex min-h-[1.25rem] items-start gap-1.5 text-xs text-slate-500">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" />
+                <span className="line-clamp-1 leading-tight">
+                  {simplifyAddress(formatRoomAddress(room.province_name, room.property_address))}
                 </span>
               </div>
-              <div className="flex min-h-[1.25rem] items-center gap-2 text-xs text-slate-400">
-                {room.tourist_summary?.has_tourist_mapping && resolveTouristSpotName(room.tourist_summary.tourist_spot_name) ? (
+
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500">
+                {rentType === "monthly" && (
                   <>
-                    <svg className="size-3 shrink-0 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" /></svg>
-                    <span className="truncate font-medium">{resolveTouristSpotName(room.tourist_summary.tourist_spot_name)}</span>
-                    {room.tourist_summary.travel_time_label && (
-                      <span className="shrink-0">• {room.tourist_summary.travel_time_label}</span>
-                    )}
+                    <span>{room.area}m²</span>
+                    <span className="text-slate-300">•</span>
                   </>
-                ) : null}
-              </div>
-              <div className="flex h-5 items-center gap-4 text-sm text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Square className="h-4 w-4 text-sky-500" />
-                  {room.area}m²
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-sky-500" />
-                  {room.people} người
-                </div>
+                )}
+                <span>{room.people} người</span>
+                <span className="text-slate-300">•</span>
+                <span>{room.bedrooms_count || 1} PN</span>
+                <span className="text-slate-300">•</span>
+                <span>{room.beds_count || 1} giường</span>
               </div>
             </div>
 
-            <div className="mt-auto flex shrink-0 items-center justify-between border-t border-slate-100 pt-4">
-              <div className="flex flex-col">
-                <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Giá từ</span>
+            <div className="mt-auto flex shrink-0 items-center justify-between border-t border-slate-100 pt-3">
+              <div className="flex w-full items-center justify-between">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-extrabold text-sky-600 transition-colors group-hover:text-sky-700">
-                    {hasMonthlyPrice && room.cheapest_monthly_price
-                      ? formatPrice(room.cheapest_monthly_price)
-                      : formatPrice(room.cheapest_daily_price)}
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mr-0.5">Giá từ</span>
+                  <span className="text-lg font-extrabold text-sky-600 transition-colors group-hover:text-sky-700">
+                    {formatPrice(displayPrice)}
                   </span>
                   <span className="text-xs font-medium text-slate-400">
-                    {hasMonthlyPrice && room.cheapest_monthly_price ? "/tháng" : "/đêm"}
+                    {displayUnit}
                   </span>
                 </div>
+                {hintText && (
+                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                    {hintText}
+                  </span>
+                )}
               </div>
             </div>
           </CardContent>
@@ -917,7 +993,7 @@ const RoomSearch = () => {
         {/* Background Image with elegant overlay */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <img
-            src={getProvinceHeroImage(selectedProvince?.name)}
+            src={selectedProvince?.image ? resolveCloudinaryUrl(selectedProvince.image, CLOUDINARY_HEADER_IMAGE_URL) || getProvinceImage(selectedProvince?.name) : getProvinceImage(selectedProvince?.name)}
             alt={selectedProvince?.name || "Background"}
             className="absolute inset-0 size-full object-cover opacity-60 transition-all duration-700 scale-105"
           />
@@ -938,7 +1014,7 @@ const RoomSearch = () => {
         <div className="absolute top-12 right-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
         <div className="absolute bottom-16 left-1/4 h-3 w-3 rounded-full bg-indigo-400/30 animate-pulse pointer-events-none" />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Column: Title and details */}
             <div className="lg:col-span-7 flex flex-col items-start text-left">
@@ -968,7 +1044,7 @@ const RoomSearch = () => {
                       </>
                     ) : selectedProvince?.name ? (
                       <>
-                        Khu vực: <span className="font-semibold text-white">{selectedProvince.name}</span>
+                        Khu vực: <span className="font-semibold text-white">{formatProvinceName(selectedProvince.name)}</span>
                         {selectedWard?.name && (
                           <>
                             <span className="mx-2 text-slate-600">•</span>
@@ -1045,7 +1121,7 @@ const RoomSearch = () => {
       </div>
 
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
@@ -1055,7 +1131,7 @@ const RoomSearch = () => {
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl p-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
         <section className="mb-8">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800">
@@ -1133,7 +1209,7 @@ const RoomSearch = () => {
               value={localStartDate}
               onChange={(val) => {
                 setLocalStartDate(val);
-                if (localEndDate && val > localEndDate) {
+                if (localEndDate && val >= localEndDate) {
                   setLocalEndDate("");
                 }
               }}
@@ -1151,7 +1227,16 @@ const RoomSearch = () => {
               placeholder="Trả phòng"
               value={localEndDate}
               onChange={setLocalEndDate}
-              minDate={localStartDate || format(new Date(), "yyyy-MM-dd")}
+              minDate={(() => {
+                if (!localStartDate) return format(new Date(), "yyyy-MM-dd");
+                const parts = localStartDate.split("-").map(Number);
+                if (parts.length === 3) {
+                  const date = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+                  const pad = (n: number) => n.toString().padStart(2, "0");
+                  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                }
+                return format(new Date(), "yyyy-MM-dd");
+              })()}
               className="space-y-0"
               triggerClassName="h-11 rounded-xl border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-sky-400 focus-visible:ring-1 focus-visible:ring-sky-400"
             />
@@ -1303,7 +1388,7 @@ const RoomSearch = () => {
                     </>
                   ) : selectedProvince?.name ? (
                     <>
-                      <span className="font-semibold text-slate-800">{totalRooms.toLocaleString("vi-VN")}</span> kết quả tại {selectedProvince.name}
+                       <span className="font-semibold text-slate-800">{totalRooms.toLocaleString("vi-VN")}</span> kết quả tại {formatProvinceName(selectedProvince.name)}
                       {selectedWard?.name ? ` - ${selectedWard.name}` : ""}
                     </>
                   ) : (
@@ -1315,7 +1400,7 @@ const RoomSearch = () => {
                     <button
                       type="button"
                       className="interactive-click w-fit rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800"
-                      onClick={() => updateSearchParams({ tourist_spot_slug: null, page: String(DEFAULT_PAGE) })}
+                      onClick={() => updateSearchParams({ tourist_spot_slug: null, page: String(DEFAULT_PAGE) }, { scroll: false })}
                     >
                       Bỏ lọc {touristSpotLabel}
                     </button>

@@ -16,7 +16,7 @@ import { ROUTERS } from "@/constant";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 import { formatPrice } from "@/utils/utils";
 import { computeBookingTotalAmount } from "@/utils/bookingAmount";
-import { countBookingDaysInclusive, formatDate } from "@/utils/dateUtils";
+import { countBookingNights, formatDate } from "@/utils/dateUtils";
 import { useUserStore } from "@/store/useUserStore";
 import stayService, { type BookingDetail } from "@/services/stayService";
 import { bookingApi } from "@/api/EU/bookingApi";
@@ -355,15 +355,18 @@ const MyBookings = () => {
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-lg font-semibold text-slate-900">{booking.roomTitle}</h3>
-                          <Badge className={`rounded-full border-0 ${bookingStatusBadgeClass[booking.status]}`}>
-                            {bookingStatusLabel[booking.status]}
-                          </Badge>
+                          {booking.serverStatus === 4 ? (
+                            <Badge className="rounded-full border-0 bg-orange-100 text-orange-700">
+                              Chờ duyệt hủy
+                            </Badge>
+                          ) : (
+                            <Badge className={`rounded-full border-0 ${bookingStatusBadgeClass[booking.status]}`}>
+                              {bookingStatusLabel[booking.status]}
+                            </Badge>
+                          )}
                           <Badge variant="outline" className="rounded-full border-slate-300 text-slate-600">
                             {booking.source === "stay" ? "BKS Stay" : "Tra cứu"}
                           </Badge>
-                          {booking.serverStatus === 4 && (
-                            <Badge className="rounded-full border-0 bg-violet-100 text-violet-800">Chờ duyệt hủy</Badge>
-                          )}
                         </div>
                         {booking.bookingCode && (
                           <p className="text-xs font-mono text-slate-500">Mã: {booking.bookingCode}</p>
@@ -379,7 +382,7 @@ const MyBookings = () => {
                           <CalendarDays className="size-4 text-sky-500" />
                           {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                         </p>
-                        <BookingDaysRow days={countBookingDaysInclusive(booking.startDate, booking.endDate)} />
+                        <BookingDaysRow days={countBookingNights(booking.startDate, booking.endDate)} />
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
                           <Clock3 className="size-4" />
                           {booking.source === "stay" ? `Cập nhật: ${new Date(booking.createdAt).toLocaleString("vi-VN")}` : "Kết quả tra cứu mới nhất"}

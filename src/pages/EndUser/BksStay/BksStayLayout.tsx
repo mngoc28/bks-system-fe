@@ -14,6 +14,7 @@ import {
   BookOpen,
   ChevronDown,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import { ROUTERS } from "@/constant";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,9 @@ import NotificationBell from "@/components/layout/NotificationBell";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Spinner } from "@/components/ui/spinner";
 import LanguageSwitcher from "@/components/layout/Public/LanguageSwitcher";
+import { toastInfo } from "@/components/ui/toast";
+import { getEcho, getCurrentUserIdFromToken } from "@/lib/echoClient";
+import { mapRealtimeChatMessage } from "@/utils/chatRealtime";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,6 +93,46 @@ const BksStayLayout = () => {
     };
   }, []);
 
+  // Subscribe to real-time chat notifications globally across pages in Stay portal
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+    const userId = getCurrentUserIdFromToken();
+    if (!userId) return;
+
+    const echo = getEcho();
+    if (!echo) return;
+
+    const channelName = `App.Models.User.${userId}`;
+    const channel = echo.private(channelName);
+
+    channel.listen(".MessageSent", (payload: Record<string, unknown>) => {
+      if (location.pathname !== ROUTERS.BKS_STAY_CHAT) {
+        const incoming = mapRealtimeChatMessage(payload);
+        const senderName = incoming.user?.name || "Chủ nhà";
+        const companySuffix = incoming.company_name ? ` - ${incoming.company_name}` : "";
+        toastInfo(`💬 Tin nhắn mới từ ${senderName}${companySuffix}: "${incoming.content}"`, {
+          action: {
+            label: "Mở chat",
+            onClick: () => {
+              navigate(ROUTERS.BKS_STAY_CHAT);
+            },
+          },
+          duration: 8000,
+        });
+      }
+    });
+
+    return () => {
+      try {
+        channel.stopListening(".MessageSent");
+        echo.leave(channelName);
+      } catch {
+        // ignore
+      }
+    };
+  }, [location.pathname, navigate]);
+
   const handleLogout = () => {
     if (logoutMutation.isPending) {
       return;
@@ -109,6 +153,7 @@ const BksStayLayout = () => {
     { id: "services", label: "Dịch vụ phòng", path: ROUTERS.BKS_STAY_SERVICES, icon: <ConciergeBell className="size-5" /> },
     { id: "contracts", label: "Hồ sơ lưu trú & Hợp đồng", path: ROUTERS.BKS_STAY_CONTRACTS, icon: <FileText className="size-5" /> },
     { id: "guide", label: "Hướng dẫn lưu trú", path: ROUTERS.BKS_STAY_GUIDE, icon: <BookOpen className="size-5" /> },
+    { id: "chat", label: "Trò chuyện", path: ROUTERS.BKS_STAY_CHAT, icon: <MessageSquare className="size-5" /> },
     { id: "support", label: "Hỗ trợ", path: ROUTERS.BKS_STAY_SUPPORT, icon: <HelpCircle className="size-5" /> },
   ].filter((item) => isBksStayRouteEnabled(item.path));
 
@@ -214,9 +259,11 @@ const BksStayLayout = () => {
             <div className="rounded-2xl border border-white/5 bg-white/5 p-4">
                 <p className="mb-2 text-[10px] font-black uppercase text-slate-500">Trợ giúp nhanh</p>
                 <p className="mb-3 text-xs leading-relaxed text-slate-400">Bạn gặp khó khăn khi sử dụng dịch vụ? Nhắn cho trợ lý ảo của chúng tôi.</p>
-                <Button variant="outline" className="h-10 w-full justify-start gap-2 rounded-xl border-none border-white/10 bg-white/5 px-3 text-xs text-white hover:bg-white/10">
-                  <Bell className="size-3 text-sky-400" />
-                  Hỗ trợ trực tuyến 24/7
+                <Button asChild variant="outline" className="h-10 w-full justify-start gap-2 rounded-xl border-none border-white/10 bg-white/5 px-3 text-xs text-white hover:bg-white/10">
+                  <Link to={ROUTERS.BKS_STAY_CHAT}>
+                    <Bell className="size-3 text-sky-400" />
+                    Hỗ trợ trực tuyến 24/7
+                  </Link>
                 </Button>
             </div>
           </div>

@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { ROUTERS } from "@/constant";
 import { RoomCarouselItemProps } from "../type";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
-import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { toastSuccess, toastError } from "@/components/ui/toast";
+import { simplifyAddress } from "@/utils/utils";
 
 const shortenPropertyTypeName = (name: string): string => {
   const lower = name.toLowerCase().trim();
@@ -102,13 +102,18 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
 
   const badgeText = getBadgeText();
 
+  const detailUrl = room.rent_type
+    ? `${ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}?rent_type=${room.rent_type}`
+    : ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString());
+
   return (
     <Link
-      to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}
+      to={detailUrl}
       aria-label={t("public.home.rooms.cardLabel", { name: room.name })}
-      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 will-change-transform"
+      style={{ transform: "translateZ(0)" }}
     >
-      <div className="relative h-56 overflow-hidden">
+      <div className="relative h-56 overflow-hidden rounded-t-[22px]">
         <img
           src={room.image || getRoomFallbackImage(room.property_type_name, room.name)}
           alt={room.name}
@@ -120,7 +125,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />
-        
+
         {/* Right Buttons: Wishlist and Share */}
         <div className="absolute right-3 top-3 flex items-center gap-2 z-10">
           <button
@@ -145,7 +150,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
           </button>
         </div>
 
-        <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-sm text-white/90">
+        <div className="absolute inset-x-5 bottom-5 flex items-center text-sm text-white/90">
           {badgeText && (
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-normal">
               <HomeIcon className="size-4" />
@@ -159,7 +164,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
           <span className="text-[10px] font-bold text-sky-600 uppercase tracking-widest truncate block mb-1">
             {room.partner_company_name || "Đối tác BKS"}
           </span>
-          <h3 className="text-[0.95rem] font-semibold text-slate-900 group-hover:text-primary">{room.name}</h3>
+          <h3 className="text-[0.95rem] font-semibold text-slate-900 group-hover:text-primary line-clamp-2 h-10 leading-5">{room.name}</h3>
           {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
             <div className="mt-1 flex items-center gap-1 text-[0.8rem] font-bold text-amber-500">
               <Star className="size-3.5 fill-amber-500 text-amber-500" />
@@ -172,29 +177,32 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
               <span className="font-normal text-slate-400">Chưa có đánh giá</span>
             </div>
           )}
-          <p className="mt-1.5 inline-flex items-center gap-2 text-sm text-slate-600">
-            <MapPinHouse className="size-4 text-primary" />
-            {room.address}
+          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600 overflow-hidden">
+            <MapPinHouse className="size-4 text-primary shrink-0" />
+            <span className="truncate">{simplifyAddress(room.address)}</span>
           </p>
-          {room.tourist_summary?.has_tourist_mapping && resolveTouristSpotName(room.tourist_summary.tourist_spot_name) && (
-            <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-              <svg className="size-4 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
-              <span className="font-medium">{resolveTouristSpotName(room.tourist_summary.tourist_spot_name)}</span>
-              {room.tourist_summary.travel_time_label && <span className="ml-2 text-xs text-slate-400">• {room.tourist_summary.travel_time_label}</span>}
-            </p>
-          )}
+
         </div>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3">
           <span className="text-base font-semibold text-primary">{t("public.home.rooms.price", { price: room.price })}</span>
           <div className="flex items-center gap-3 text-[0.75rem] text-slate-500">
             <span className="inline-flex items-center gap-1">
               <BedDouble className="size-3.5" />
-              {hasNumericBeds ? t("public.home.rooms.beds", { count: bedCount }) : room.beds}
+              {room.bedrooms_count && room.bedrooms_count > 0 ? (
+                t("public.home.rooms.beds_with_bedrooms", {
+                  bedrooms: room.bedrooms_count,
+                  beds: room.beds_count ?? room.beds
+                })
+              ) : (
+                hasNumericBeds ? t("public.home.rooms.beds", { count: bedCount }) : room.beds
+              )}
             </span>
-            <span className="inline-flex items-center gap-1">
-              <Ruler className="size-3.5" />
-              {t("public.home.rooms.area", { area: room.area })}
-            </span>
+            {room.rent_type === "monthly" && (
+              <span className="inline-flex items-center gap-1">
+                <Ruler className="size-3.5" />
+                {t("public.home.rooms.area", { area: room.area })}
+              </span>
+            )}
           </div>
         </div>
       </div>

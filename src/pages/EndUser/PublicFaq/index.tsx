@@ -18,10 +18,11 @@ import {
   BadgeCheck,
   Zap,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toastSuccess } from "@/components/ui/toast";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
+import { useEffect } from "react";
 
 interface FaqItem {
   id: string;
@@ -125,9 +126,17 @@ const faqs: FaqItem[] = [
 ];
 
 const PublicFaq = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Tất cả");
   const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam && CATEGORIES.includes(categoryParam)) {
+      setActiveCategory(categoryParam);
+    }
+  }, [searchParams]);
 
   const filtered = faqs.filter((f) => {
     const matchSearch =

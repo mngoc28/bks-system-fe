@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toastInfo, toastSuccess, toastWarning } from "@/components/ui/toast";
 import { useBookingsRealtime, type BookingEventName, type RealtimeBookingPayload, type RealtimeCancellationRequestPayload } from "@/hooks/Partner/useBookingsRealtime";
 import { ROUTERS } from "@/constant";
@@ -17,6 +17,7 @@ import { ROUTERS } from "@/constant";
  */
 const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [bannerVisible, setBannerVisible] = useState<boolean>(false);
 
   const onEvent = (event: BookingEventName, payload: RealtimeBookingPayload) => {
@@ -55,6 +56,26 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
           action: {
             label: "Xem inbox",
             onClick: () => navigate(ROUTERS.PARTNER_CANCELLATION_REQUESTS),
+          },
+          duration: 8000,
+        });
+      }
+    },
+    onMessageEvent: (msg) => {
+      if (location.pathname !== ROUTERS.PARTNER_CHAT) {
+        const senderName = msg.user?.name || "Khách hàng";
+        let locationSuffix = "";
+        if (msg.room_name && msg.property_name) {
+          locationSuffix = ` - ${msg.room_name} (${msg.property_name})`;
+        } else if (msg.property_name) {
+          locationSuffix = ` - ${msg.property_name}`;
+        } else if (msg.room_name) {
+          locationSuffix = ` - ${msg.room_name}`;
+        }
+        toastInfo(`💬 Tin nhắn mới từ ${senderName}${locationSuffix}: "${msg.content}"`, {
+          action: {
+            label: "Mở chat",
+            onClick: () => navigate(ROUTERS.PARTNER_CHAT),
           },
           duration: 8000,
         });

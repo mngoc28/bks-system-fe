@@ -30,12 +30,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter, 
+  DialogDescription
+} from "@/components/ui/dialog";
 import { ROUTERS } from "@/constant";
 import { BookingDaysInline } from "@/components/common/BookingDaysDisplay";
 import { computeBookingTotalAmount } from "@/utils/bookingAmount";
-import { countBookingDaysInclusive } from "@/utils/dateUtils";
+import { countBookingNights } from "@/utils/dateUtils";
 import { formatPrice } from "@/utils/utils";
-import { toastSuccess, toastError, toastInfo } from "@/components/ui/toast";
+import { toastSuccess, toastError } from "@/components/ui/toast";
 
 import stayService, { BookingDetail } from "@/services/stayService";
 
@@ -48,6 +56,7 @@ const History = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -74,17 +83,33 @@ const History = () => {
       case 3:
         return { label: "Completed", color: "bg-emerald-100 text-emerald-700" };
       case 2:
-      case 4:
         return { label: "Cancelled", color: "bg-rose-100 text-rose-700" };
+      case 4:
+        return { label: "Pending Cancellation", color: "bg-orange-100 text-orange-700" };
       default:
         return { label: "Unknown", color: "bg-slate-100 text-slate-700" };
     }
   };
 
+  const getTabForStatus = (status: number): string => {
+    switch (status) {
+      case 0:
+      case 1:
+      case 4:
+        return "Upcoming";
+      case 3:
+        return "Completed";
+      case 2:
+        return "Cancelled";
+      default:
+        return "Unknown";
+    }
+  };
+
   const processedBookings = useMemo(() => {
     const filtered = bookings.filter(b => {
-      const statusLabel = getStatusInfo(b.status).label;
-      const matchesTab = activeTab === "all" || statusLabel.toLowerCase() === activeTab.toLowerCase();
+      const statusTab = getTabForStatus(b.status);
+      const matchesTab = activeTab === "all" || statusTab.toLowerCase() === activeTab.toLowerCase();
       const matchesSearch = 
         b.room?.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
         b.id.toString().includes(searchQuery) ||
@@ -138,12 +163,57 @@ const History = () => {
     toastSuccess("Báo cáo đã được xuất thành công!");
   };
 
-  const handleDownloadInvoice = (id: string) => {
-    toastSuccess(`Đang tải hóa đơn cho đơn hàng ${id}...`);
+  const handleDownloadInvoice = (booking: BookingDetail) => {
+    const totalAmount = computeBookingTotalAmount({
+      start_date: booking.start_date,
+      end_date: booking.end_date,
+      price: { price: booking.price?.price, unit: booking.price?.unit },
+      services: booking.services,
+      total_amount: booking.total_amount,
+    });
+    const bookingDays = countBookingNights(booking.start_date, booking.end_date);
+    const content = `HOA DON DIEN TU BKS STAY
+--------------------------------------------------
+Ma don dat phong: ${booking.id}
+Ma dat phong: ${booking.booking_code || "N/A"}
+Ten phong: ${booking.room?.title || "Phong nghi"}
+Co so luu tru: ${booking.room?.property?.name || "BKS Stay Property"}
+Ngay nhan phong: ${new Date(booking.start_date).toLocaleDateString("vi-VN")}
+Ngay tra phong: ${new Date(booking.end_date).toLocaleDateString("vi-VN")}
+Phuong thuc thanh toan: ${booking.payment_method === "online" ? "Thanh toan truc tuyen" : "Thanh toan tai quay"}
+
+CHI TIET THANH TOAN:
+Tien phong: ${formatPrice(booking.price?.price)}
+So dem luu tru: ${bookingDays}
+Tong cong: ${formatPrice(totalAmount)}
+(Da bao gom 10% VAT va phi dich vu)
+
+--------------------------------------------------
+Hoa don nay duoc tao tu dong boi he thong BKS Stay.
+Cam on quy khach da tin tuong va su dung dich vu!
+`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Hoa_Don_BKS_Stay_${booking.id}.txt`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toastSuccess("Hóa đơn điện tử đã được tải xuống!");
   };
 
   const handleDeleteBooking = (id: number) => {
-    toastError(`Bạn không thể xóa đơn đặt phòng ${id} đã được hệ thống ghi nhận.`);
+    console.log("Delete booking requested for ID:", id);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const handleShareVoucher = (bookingId: number) => {
+    const url = `${window.location.origin}/bks-stay/bookings/${bookingId}/voucher`;
+    navigator.clipboard.writeText(url);
+    toastSuccess("Đã sao chép liên kết Stay Voucher vào bộ nhớ tạm!");
   };
 
   const openBookingDetail = (bookingId: number) => {
@@ -260,7 +330,7 @@ const History = () => {
                                     <span className="hidden text-slate-200 sm:inline">|</span>
                                     <span className="whitespace-nowrap font-bold text-slate-600">{new Date(booking.start_date).toLocaleDateString("vi-VN")} - {new Date(booking.end_date).toLocaleDateString("vi-VN")}</span>
                                  </div>
-                                 <BookingDaysInline days={countBookingDaysInclusive(booking.start_date, booking.end_date)} />
+                                 <BookingDaysInline days={countBookingNights(booking.start_date, booking.end_date)} />
                                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                                     <Clock className="size-3" />
                                     <span>Thời điểm đặt: <span className="font-bold">{new Date(booking.created_at).toLocaleString("vi-VN")}</span></span>
@@ -289,7 +359,7 @@ const History = () => {
                            </div>
                            <div className="flex items-center gap-2">
                               {statusInfo.label === "Completed" && (
-                                 <Button variant="outline" size="icon" title="Tải hóa đơn" className="size-10 rounded-xl border-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 sm:size-12 sm:rounded-2xl" onClick={() => handleDownloadInvoice(booking.id.toString())}>
+                                 <Button variant="outline" size="icon" title="Tải hóa đơn" className="size-10 rounded-xl border-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 sm:size-12 sm:rounded-2xl" onClick={() => handleDownloadInvoice(booking)}>
                                     <FileText className="size-5" />
                                  </Button>
                               )}
@@ -307,7 +377,7 @@ const History = () => {
                                          <Eye className="size-4 text-sky-500" /> Xem chi tiết
                                       </Link>
                                    </DropdownMenuItem>
-                                   <DropdownMenuItem className="rounded-lg font-bold" onClick={() => toastInfo("Tính năng hỗ trợ đang được kết nối...")}>
+                                   <DropdownMenuItem className="rounded-lg font-bold" onClick={() => handleShareVoucher(booking.id)}>
                                       <Share2 className="size-4 text-indigo-500" /> Chia sẻ hóa đơn
                                    </DropdownMenuItem>
                                    <DropdownMenuSeparator />
@@ -369,9 +439,31 @@ const History = () => {
            </div>
         </div>
       )}
+
+      <Dialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <DialogContent className="sm:max-w-[425px] rounded-[24px]">
+          <DialogHeader className="flex flex-col items-center text-center">
+            <div className="size-12 rounded-full bg-rose-100 flex items-center justify-center mb-2">
+              <AlertCircle className="size-6 text-rose-600" />
+            </div>
+            <DialogTitle className="text-xl font-black text-slate-900">Không thể xóa bản ghi</DialogTitle>
+            <DialogDescription className="text-slate-500 font-medium mt-2">
+              Hệ thống không cho phép xóa lịch sử đặt phòng để đảm bảo tính toàn vẹn dữ liệu kế toán và đối soát thanh toán. Bạn chỉ có thể ẩn hoặc báo cáo sự cố nếu cần.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center mt-4">
+            <Button
+              type="button"
+              className="w-full rounded-xl bg-slate-900 font-bold text-white hover:bg-slate-800"
+              onClick={() => setIsDeleteAlertOpen(false)}
+            >
+              Đã hiểu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default History;
-

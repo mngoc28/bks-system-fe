@@ -62,3 +62,27 @@ export const resolveImageUrl = (
 
   return normalizedPath;
 };
+
+/**
+ * Resolve a Cloudinary-stored image path to a full URL.
+ *
+ * The backend strips the Cloudinary base URL before storing the path
+ * (e.g. stores "/v1748779123/provinces/abc.webp" instead of the full URL).
+ * `resolveImageUrl` incorrectly routes these leading-slash paths to the API
+ * origin. This function always uses the Cloudinary base URL.
+ *
+ * @param imagePath        Relative path (e.g. /v1.../provinces/abc.webp) or absolute URL
+ * @param cloudinaryBaseUrl Cloudinary base URL (e.g. https://res.cloudinary.com/.../image/upload)
+ */
+export const resolveCloudinaryUrl = (
+  imagePath?: string | null,
+  cloudinaryBaseUrl?: string,
+): string | null => {
+  if (!imagePath) return null;
+  const rawPath = imagePath.trim();
+  if (!rawPath) return null;
+  if (DATA_OR_BLOB_URL_REGEX.test(rawPath) || ABSOLUTE_URL_REGEX.test(rawPath)) return rawPath;
+  const base = normalizeBaseUrl(cloudinaryBaseUrl);
+  const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+  return base ? `${base}${path}` : path;
+};

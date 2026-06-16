@@ -171,7 +171,7 @@ const ServiceManagement: React.FC = () => {
     return (
         <AdminPageShell>
             <PageBar
-                subtitle={t("serviceManagement.subtitle") || "Qu?n l danh sch d?ch v? v ti?n ch di km."}
+                subtitle={t("serviceManagement.subtitle") || "Qu?n lï¿½ danh sï¿½ch d?ch v? vï¿½ ti?n ï¿½ch di kï¿½m."}
                 showLayoutToggle={true}
                 viewMode={viewMode}
                 onViewModeChange={handleViewModeChange}

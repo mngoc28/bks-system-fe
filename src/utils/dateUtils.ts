@@ -107,30 +107,57 @@ export const mapDayOfWeek = (dayOfWeek: number) => {
   }
 };
 
-/** Nhãn chuẩn hiển thị số ngày đặt trên toàn bộ luồng EU. */
+/** Nhãn hiển thị — ngắn hạn dùng đêm (REQ-STAY-003). */
+export const BOOKING_NIGHTS_LABEL = "Tổng số đêm";
+
+/** Prorate gói tháng. */
 export const BOOKING_DAYS_LABEL = "Tổng số ngày đặt";
 
+const diffCalendarDaysUtc = (
+  startDate: string | undefined | null,
+  endDate: string | undefined | null,
+): number => {
+  if (!startDate || !endDate) {
+    return 0;
+  }
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return 0;
+  }
+  const d0 = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const d1 = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+
+  return Math.round((d1 - d0) / 86_400_000);
+};
+
 /**
- * Số ngày đặt (bao gồm cả ngày nhận và ngày trả), khớp BE: diffInDays + 1.
+ * Số đêm lưu trú (checkout exclusive) — REQ-STAY-002, khớp BE countStayNights.
+ */
+export function countBookingNights(
+  startDate: string | undefined | null,
+  endDate: string | undefined | null,
+): number {
+  const diff = diffCalendarDaysUtc(startDate, endDate);
+
+  return diff > 0 ? diff : 1;
+}
+
+/**
+ * Số ngày lịch inclusive — prorate gói tháng.
  */
 export function countBookingDaysInclusive(
   startDate: string | undefined | null,
   endDate: string | undefined | null,
 ): number {
-  if (!startDate || !endDate) {
-    return 1;
-  }
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return 1;
-  }
-  const d0 = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
-  const d1 = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
-  const diff = Math.round((d1 - d0) / 86_400_000);
-  const days = diff + 1;
+  const nights = countBookingNights(startDate, endDate);
+  const diff = diffCalendarDaysUtc(startDate, endDate);
 
-  return days > 0 ? days : 1;
+  return diff > 0 ? nights + 1 : 1;
+}
+
+export function formatBookingNightsCount(nights: number): string {
+  return `${nights} đêm`;
 }
 
 export function formatBookingDaysCount(days: number): string {
@@ -138,13 +165,13 @@ export function formatBookingDaysCount(days: number): string {
 }
 
 /** Nhãn dòng phí phòng trong bảng tạm tính / email xác nhận. */
-export function formatRoomRentalLineLabel(days: number, unit?: string | null): string {
+export function formatRoomRentalLineLabel(duration: number, unit?: string | null): string {
   const normalized = (unit ?? "day").toLowerCase();
   if (normalized === "month") {
-    return `Phí thuê phòng (${days} ngày · gói tháng)`;
+    return `Phí thuê phòng (${duration} ngày · gói tháng)`;
   }
 
-  return `Phí thuê phòng (${days} ngày)`;
+  return `Phí thuê phòng (${duration} đêm)`;
 }
 
 export const safeFormatDateTime = (date: string | Date | undefined): string => {
