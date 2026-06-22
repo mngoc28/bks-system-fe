@@ -8,7 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toastError } from "@/components/ui/toast";
-import axiosClient from "@/api/axiosClient";
+import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { resolvePartnerDocumentUrl } from "@/utils/imageUtils";
 import { Spinner } from "@/components/ui/spinner";
 import AdminListLoading from "@/components/admin/AdminListLoading";
 import type { PendingPartnerItem } from "@/api/partnerApprovalApi";
@@ -26,7 +27,6 @@ export default function PartnerApproval() {
   const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
   const [rejectReason, setRejectReason] = useState<string>("");
   const [showRejectForm, setShowRejectForm] = useState<boolean>(false);
-  const [docLoading, setDocLoading] = useState<Record<string, boolean>>({});
 
   const selectedPartner = useMemo(() => {
     if (reviewPartnerId == null) {
@@ -47,31 +47,19 @@ export default function PartnerApproval() {
     setReviewPartnerId(null);
   };
 
-  // Securely download/view files by fetching them as blobs with authorization headers
-  const handleViewPrivateDocument = async (field: string, path: string | undefined) => {
+  const handleViewDocument = (path: string | undefined) => {
     if (!path) {
       toastError("Tài liệu chưa được tải lên.");
       return;
     }
 
-    setDocLoading(prev => ({ ...prev, [field]: true }));
-    try {
-      const response = await axiosClient.get(`documents/view`, {
-        params: { path },
-        responseType: "blob"
-      });
-
-      // Since axiosClient interceptor returns response.data directly,
-      // 'response' is already the Blob object.
-      const objectUrl = URL.createObjectURL(response as any);
-      
-      // Open the private document in a new tab safely
-      window.open(objectUrl, "_blank");
-    } catch (_err) {
-      toastError("Lỗi khi tải tài liệu hoặc bạn không có quyền xem tệp này.");
-    } finally {
-      setDocLoading(prev => ({ ...prev, [field]: false }));
+    const documentUrl = resolvePartnerDocumentUrl(path, CLOUDINARY_HEADER_IMAGE_URL);
+    if (!documentUrl) {
+      toastError("Không thể mở tài liệu.");
+      return;
     }
+
+    window.open(documentUrl, "_blank");
   };
 
   const handleApprove = async () => {
@@ -342,7 +330,7 @@ export default function PartnerApproval() {
                 <div className="rounded-2xl border border-slate-100 p-5 space-y-4">
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <FileText className="size-4 text-blue-500" />
-                    Tài liệu & Hồ sơ đính kèm (Secure Disk)
+                    Tài liệu & Hồ sơ đính kèm (Cloudinary)
                   </h3>
                   <div className="grid grid-cols-1 gap-3">
                     {[
@@ -350,32 +338,25 @@ export default function PartnerApproval() {
                       { field: "ownership_document", label: "Quyền sở hữu / Thuê chỗ nghỉ", path: selectedPartner.partner_info?.ownership_document },
                       { field: "id_card_front", label: "Mặt trước CCCD Đại diện", path: selectedPartner.partner_info?.id_card_front },
                       { field: "id_card_back", label: "Mặt sau CCCD Đại diện", path: selectedPartner.partner_info?.id_card_back },
-                      { field: "bank_statement_image", label: "Sao kê ngân hàng / QR Thẻ", path: selectedPartner.partner_info?.bank_statement_image },
+                      { field: "bank_statement_image", label: "Ảnh xác minh TK thụ hưởng (sao kê / QR)", path: selectedPartner.partner_info?.bank_statement_image },
                       { field: "contract_pdf_path", label: "Hợp đồng nguyên tắc (E-Contract)", path: selectedPartner.partner_info?.contract_pdf_path }
                     ].map((doc) => (
                       <div key={doc.field} className="flex items-center justify-between border border-slate-100 rounded-xl p-3 bg-slate-50/30">
                         <div>
                           <span className="block text-xs font-bold text-slate-800">{doc.label}</span>
                           <span className="text-[10px] text-slate-400 mt-0.5 block">
-                            {doc.path ? "Đã nộp tệp tin riêng tư" : "Chưa tải lên"}
+                            {doc.path ? "Đã nộp tệp tin" : "Chưa tải lên"}
                           </span>
                         </div>
                         {doc.path ? (
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleViewPrivateDocument(doc.field, doc.path)}
-                            disabled={docLoading[doc.field]}
+                            onClick={() => handleViewDocument(doc.path)}
                             className="h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold"
                           >
-                            {docLoading[doc.field] ? (
-                              <Spinner size="sm" />
-                            ) : (
-                              <>
-                                <Eye className="mr-1 size-3" />
-                                Xem tài liệu
-                              </>
-                            )}
+                            <Eye className="mr-1 size-3" />
+                            Xem tài liệu
                           </Button>
                         ) : (
                           <span className="text-xs font-semibold text-slate-400 italic">N/A</span>

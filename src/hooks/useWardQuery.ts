@@ -1,6 +1,7 @@
 import { ApiResponse } from "@/api/types";
 import { WardApi } from "@/api/wardApi";
 import { Ward } from "@/dataHelper/ward.dataHelper";
+import { MASTER_DATA_QUERY_OPTIONS } from "@/lib/queryCache";
 import { useQuery } from "@tanstack/react-query";
 
 // get wards by province id
@@ -12,6 +13,7 @@ export const useGetWardsByProvinceId = (provinceId: number) => {
       return response;
     },
     enabled: !!provinceId,
+    ...MASTER_DATA_QUERY_OPTIONS,
   });
 };
 
@@ -23,5 +25,6 @@ export const useGetHomeWardsByProvinceId = (provinceId: number) => {
       return response;
     },
     enabled: !!provinceId,
+    ...MASTER_DATA_QUERY_OPTIONS,
   });
 };

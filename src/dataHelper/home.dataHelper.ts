@@ -1,3 +1,7 @@
+import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
+import type { PropertyType } from "@/dataHelper/property.dataHelper";
+import type { TouristSpotSuggestion } from "@/dataHelper/EU/touristSpot.dataHelper";
+
 export interface RoomCard {
   id: number | string;
   name: string;
@@ -20,4 +24,12 @@ export interface RoomCard {
   property_type_name?: string;
   partner_company_name?: string;
   rent_type?: "daily" | "monthly";
+  has_nightly_price?: boolean;
+  has_monthly_price?: boolean;
+}
+
+export interface HomeBootstrapMetadata {
+  provinces: ProvinceTypes[];
+  property_types: PropertyType[];
+  tourist_spots: TouristSpotSuggestion[];
 }

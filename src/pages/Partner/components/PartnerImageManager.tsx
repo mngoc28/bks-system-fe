@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Loader2, Image as ImageIcon, Plus } from 'lucide-react';
+import { Trash2, Loader2, Plus } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { partnerService } from '@/services/partnerService';
 import { partnerCloudinaryApi } from '@/api/partnerCloudinaryApi';
 import { toastSuccess, toastError } from '@/components/ui/toast';
+import { CLOUDINARY_HEADER_IMAGE_URL } from '@/constant';
+import { resolveCloudinaryUrl } from '@/utils/imageUtils';
+import PartnerConfirmDialog from './PartnerConfirmDialog';
+import InlineSheet from './InlineSheet';
 
 interface PartnerImageManagerProps {
   isOpen: boolean;
@@ -46,6 +44,8 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
   const [pendingImages, setPendingImages] = useState<PendingImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,6 +60,13 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
       setPendingImages([]);
     }
   }, [isOpen, pendingImages]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDeleteTargetId(null);
+      setIsDeleting(false);
+    }
+  }, [isOpen]);
 
   const fetchImages = async () => {
     setLoading(true);
@@ -173,37 +180,55 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
     }
   };
 
-  const handleDelete = async (imageId: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa ảnh này?')) return;
+  const handleDeleteRequest = (imageId: number) => {
+    setDeleteTargetId(imageId);
+  };
+
+  const executeDelete = async () => {
+    if (deleteTargetId == null) return;
 
     try {
+      setIsDeleting(true);
       if (type === 'property') {
-        await partnerService.deletePropertyImage(targetId, imageId);
+        await partnerService.deletePropertyImage(targetId, deleteTargetId);
       } else {
-        await partnerService.deleteRoomImage(targetId, imageId);
+        await partnerService.deleteRoomImage(targetId, deleteTargetId);
       }
       toastSuccess('Đã xóa ảnh.');
-      setImages(prev => prev.filter(img => img.id !== imageId));
+      setImages((prev) => prev.filter((img) => img.id !== deleteTargetId));
+      setDeleteTargetId(null);
     } catch (error) {
       console.error('Delete error:', error);
       toastError('Xóa ảnh thất bại.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
-        <DialogHeader className="border-b bg-slate-50 p-6">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-              <ImageIcon className="text-blue-600" size={24} />
-              Quản lý hình ảnh - {targetName}
-            </DialogTitle>
-          </div>
-        </DialogHeader>
+  const pendingValidCount = pendingImages.filter((item) => !item.error).length;
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+  return (
+    <>
+    <InlineSheet
+      open={isOpen}
+      onClose={onClose}
+      title={`Quản lý hình ảnh - ${targetName}`}
+      widthClassName="w-full md:max-w-3xl lg:max-w-4xl"
+      footer={(
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Hủy
+          </Button>
+          {pendingValidCount > 0 ? (
+            <Button onClick={handleCommitPendingImages} disabled={saving}>
+              {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
+              Lưu {pendingValidCount} ảnh
+            </Button>
+          ) : null}
+        </div>
+      )}
+    >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {/* Upload Button Card */}
             <div 
               onClick={() => fileInputRef.current?.click()}
@@ -267,15 +292,21 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
               images.map((img) => (
                 <div key={img.id} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-sm">
                   <img 
-                    src={img.image_url} 
+                    src={resolveCloudinaryUrl(img.image_url, CLOUDINARY_HEADER_IMAGE_URL) || '/assets/images/photo_error2.png'} 
                     alt="Property" 
-                    className="size-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      e.currentTarget.src = '/assets/images/photo_error2.png';
+                    }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                     <Button 
                       variant="destructive" 
                       size="sm" 
-                      onClick={() => handleDelete(img.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteRequest(img.id);
+                      }}
                       className="rounded-full shadow-lg"
                     >
                       <Trash2 size={16} />
@@ -289,19 +320,22 @@ const PartnerImageManager: React.FC<PartnerImageManagerProps> = ({
               </div>
             )}
           </div>
-        </div>
+    </InlineSheet>
 
-        <div className="flex justify-end gap-3 border-t bg-gray-50 p-4">
-          {pendingImages.some((item) => !item.error) && (
-            <Button onClick={handleCommitPendingImages} disabled={saving}>
-              {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
-              Lưu {pendingImages.filter((item) => !item.error).length} ảnh
-            </Button>
-          )}
-          <Button variant="outline" onClick={onClose}>Đóng</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <PartnerConfirmDialog
+      open={deleteTargetId != null}
+      onOpenChange={(open) => {
+        if (!open && !isDeleting) setDeleteTargetId(null);
+      }}
+      title="Xác nhận xóa ảnh"
+      description="Bạn có chắc chắn muốn xóa ảnh này? Thao tác này không thể hoàn tác."
+      confirmLabel="Xóa ảnh"
+      cancelLabel="Hủy"
+      destructive
+      isLoading={isDeleting}
+      onConfirm={executeDelete}
+    />
+    </>
   );
 };
 

@@ -115,8 +115,18 @@ const Partners: React.FC = () => {
         });
     };
 
+    const currentPage = Number(paginationData?.current_page ?? filters.page ?? DEFAULT_PAGE);
+    const perPage = Number(paginationData?.per_page ?? filters.per_page ?? DEFAULT_CARD_LIMIT);
     const totalItems = paginationData?.total ?? serverRows.length;
-    const totalPages = paginationData?.last_page ?? Math.max(1, Math.ceil(totalItems / (filters.per_page ?? DEFAULT_CARD_LIMIT)));
+    const totalPages = paginationData?.last_page ?? Math.max(1, Math.ceil(totalItems / perPage));
+
+    const handlePerPageChange = (nextPerPage: number) => {
+        setFilters(prev => ({
+            ...prev,
+            per_page: nextPerPage,
+            page: DEFAULT_PAGE,
+        }));
+    };
 
     return (
         <AdminPageShell>
@@ -168,11 +178,11 @@ const Partners: React.FC = () => {
                             {totalItems > 0 && (
                                 <div className="mt-2 flex justify-center border-t border-slate-100 pt-4">
                                     <Pagination
-                                        currentPage={filters.page ?? DEFAULT_PAGE}
+                                        currentPage={currentPage}
                                         totalPages={totalPages}
                                         onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-                                        perPage={filters.per_page ?? DEFAULT_CARD_LIMIT}
-                                        onPerPageChange={(pp) => setFilters(prev => ({ ...prev, per_page: pp, page: DEFAULT_PAGE }))}
+                                        perPage={perPage}
+                                        onPerPageChange={handlePerPageChange}
                                         totalItems={totalItems}
                                         perPageOptions={[12, 24, 48]}
                                     />
@@ -197,11 +207,11 @@ const Partners: React.FC = () => {
                     {viewMode === "table" && totalItems > 0 && (
                         <div className="p-4">
                             <Pagination
-                                currentPage={filters.page ?? DEFAULT_PAGE}
+                                currentPage={currentPage}
                                 totalPages={totalPages}
                                 onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-                                perPage={filters.per_page ?? DEFAULT_CARD_LIMIT}
-                                onPerPageChange={(pp) => setFilters(prev => ({ ...prev, per_page: pp, page: DEFAULT_PAGE }))}
+                                perPage={perPage}
+                                onPerPageChange={handlePerPageChange}
                                 totalItems={totalItems}
                                 perPageOptions={[12, 24, 48]}
                             />

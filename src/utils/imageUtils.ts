@@ -86,3 +86,8 @@ export const resolveCloudinaryUrl = (
   const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
   return base ? `${base}${path}` : path;
 };
+
+export const resolvePartnerDocumentUrl = (
+  path?: string | null,
+  cloudinaryBaseUrl?: string,
+): string | null => resolveCloudinaryUrl(path, cloudinaryBaseUrl);

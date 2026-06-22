@@ -1,15 +1,30 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Bot, Send, Sparkles, RefreshCcw, X, Loader2, LifeBuoy, Maximize2, Minimize2 } from "lucide-react";
+import { Bot, Send, Sparkles, RefreshCcw, X, Loader2, LifeBuoy, Maximize2, Minimize2, MapPin, Star } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import aiChatbotApi, { AiChatTurn } from "@/api/aiChatbotApi";
-import { ROUTERS } from "@/constant";
+import { CLOUDINARY_HEADER_IMAGE_URL, DEFAULT_ROOM_IMAGE, ROUTERS } from "@/constant";
+import { resolveCloudinaryUrl, resolveImageUrl } from "@/utils/imageUtils";
+import { formatPrice } from "@/utils/utils";
+
+interface ChatbotRoomCard {
+  id: number | string;
+  title: string;
+  imageUrl: string;
+  price?: number | string | null;
+  address?: string | null;
+  rating?: number | string | null;
+  reviewsCount?: number | string | null;
+  partnerName?: string | null;
+  propertyTypeName?: string | null;
+}
 
 interface Message {
   id: string;
   sender: "bot" | "user";
   text: string;
   timestamp: Date;
+  roomCards?: ChatbotRoomCard[];
 }
 
 interface GeminiChatbotProps {
@@ -27,6 +42,181 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
   const [error, setError] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const asArray = (value: any): any[] => {
+    if (Array.isArray(value)) return value;
+    if (Array.isArray(value?.data)) return value.data;
+    if (Array.isArray(value?.data?.data)) return value.data.data;
+    if (Array.isArray(value?.rooms)) return value.rooms;
+    if (Array.isArray(value?.rooms?.data)) return value.rooms.data;
+    if (Array.isArray(value?.results)) return value.results;
+    if (Array.isArray(value?.items)) return value.items;
+    if (Array.isArray(value?.response?.data)) return value.response.data;
+    if (Array.isArray(value?.response?.rooms)) return value.response.rooms;
+    if (Array.isArray(value?.response?.rooms?.data)) return value.response.rooms.data;
+    return [];
+  };
+
+  const parseMaybeJsonArray = (value: any): any[] => {
+    if (Array.isArray(value)) return value;
+    if (Array.isArray(value?.data)) return value.data;
+    if (typeof value !== "string") return [];
+
+    const trimmed = value.trim();
+    if (!trimmed.startsWith("[")) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const isUsableImageValue = (value: any): value is string => {
+    if (typeof value !== "string") return false;
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized || ["null", "undefined", "none", "n/a", "-", "[]", "{}"].includes(normalized)) {
+      return false;
+    }
+
+    return !normalized.includes("photo-1560518883-ce09059eeffa") && !normalized.includes("photo_error2");
+  };
+
+  const getImageValueFromObject = (value: any): string | null => {
+    if (isUsableImageValue(value)) return value.trim();
+    if (!value || typeof value !== "object") return null;
+
+    const imageValue =
+      value.image_url ??
+      value.imageUrl ??
+      value.url ??
+      value.secure_url ??
+      value.full_url ??
+      value.fullUrl ??
+      value.path ??
+      value.image_path ??
+      value.imagePath ??
+      value.file_path ??
+      value.filePath ??
+      value.id_image_cloudinary ??
+      value.src ??
+      value.image;
+
+    return isUsableImageValue(imageValue) ? imageValue.trim() : null;
+  };
+
+  const collectRoomImageCandidates = (room: any) => {
+    const directCandidates = [
+      room?.room_image,
+      room?.cover_image_url,
+      room?.coverImageUrl,
+      room?.thumbnail,
+      room?.thumbnail_url,
+      room?.image_url,
+      room?.imageUrl,
+      room?.image,
+    ];
+
+    const collectionCandidates = [
+      room?.images,
+      room?.room_images,
+      room?.roomImages,
+      room?.gallery,
+      room?.photos,
+      room?.media,
+    ];
+
+    const nestedCandidates = collectionCandidates.flatMap((collection) =>
+      parseMaybeJsonArray(collection)
+        .map(getImageValueFromObject)
+        .filter((value): value is string => Boolean(value)),
+    );
+
+    return [...directCandidates, ...nestedCandidates]
+      .map(getImageValueFromObject)
+      .filter((value): value is string => Boolean(value));
+  };
+
+  const resolveRoomImageUrl = (imagePath: string) => {
+    const trimmed = imagePath.trim();
+    const looksLikeStoragePath = /^(?:\/)?(?:storage\/|images\/|public\/images\/|assets\/)/i.test(trimmed);
+
+    return looksLikeStoragePath
+      ? resolveImageUrl(trimmed, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL })
+      : resolveCloudinaryUrl(trimmed, CLOUDINARY_HEADER_IMAGE_URL) ||
+          resolveImageUrl(trimmed, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+  };
+
+  const getRoomImage = (room: any) => {
+    for (const imageCandidate of collectRoomImageCandidates(room)) {
+      const resolvedUrl = resolveRoomImageUrl(imageCandidate);
+      if (resolvedUrl) return resolvedUrl;
+    }
+
+    return DEFAULT_ROOM_IMAGE;
+  };
+
+  const getRoomPrice = (room: any) => {
+    const price = room?.cheapest_daily_price ?? room?.daily_price ?? room?.price ?? room?.min_price ?? null;
+    if (price === null || price === undefined) return null;
+    if (typeof price === "string" && ["", "null", "undefined", "-"].includes(price.trim().toLowerCase())) {
+      return null;
+    }
+    return price;
+  };
+
+  const toRoomCard = (room: any): ChatbotRoomCard | null => {
+    const id = room?.id ?? room?.room_id ?? room?.roomId;
+    const title = room?.title ?? room?.name ?? room?.room_name ?? room?.roomName;
+
+    if (!id || !title) {
+      return null;
+    }
+
+    return {
+      id,
+      title,
+      imageUrl: getRoomImage(room),
+      price: getRoomPrice(room),
+      address: room?.property_address ?? room?.address ?? room?.province_name ?? null,
+      rating: room?.reviews_avg_rating ?? room?.rating ?? null,
+      reviewsCount: room?.reviews_count ?? room?.review_count ?? null,
+      partnerName: room?.partner_company_name ?? room?.partner_name ?? null,
+      propertyTypeName: room?.property_type_name ?? room?.room_type_name ?? null,
+    };
+  };
+
+  const extractRoomCardsFromHistory = (history?: AiChatTurn[]) => {
+    if (!history?.length) return [];
+
+    const cards: ChatbotRoomCard[] = [];
+    const seen = new Set<string>();
+    const functionParts = history
+      .flatMap((turn) => turn.parts ?? [])
+      .filter((part) => part.functionResponse?.response)
+      .reverse();
+
+    for (const part of functionParts) {
+      const payload = part.functionResponse?.response;
+      const rooms = asArray(payload);
+
+      for (const room of rooms) {
+        const card = toRoomCard(room);
+        if (!card) continue;
+
+        const key = String(card.id);
+        if (seen.has(key)) continue;
+
+        seen.add(key);
+        cards.push(card);
+        if (cards.length >= 5) return cards;
+      }
+    }
+
+    return cards;
+  };
 
   // Normalize user role for API system instruction configuration
   const normalizedRole = (() => {
@@ -122,11 +312,14 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
       });
 
       if (response.status === "success" && response.data?.reply) {
+        const nextHistory = response.data.history ?? [];
+        const newHistoryTurns = nextHistory.slice(apiHistory.length);
         const botMsg: Message = {
           id: `bot-${Date.now()}`,
           sender: "bot",
           text: response.data.reply,
           timestamp: new Date(),
+          roomCards: extractRoomCardsFromHistory(newHistoryTurns),
         };
         setMessages((prev) => [...prev, botMsg]);
         if (response.data.history) {
@@ -141,6 +334,69 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const renderRoomCards = (roomCards?: ChatbotRoomCard[]) => {
+    if (!roomCards?.length) return null;
+
+    return (
+      <div className="mt-3 space-y-2">
+        {roomCards.map((room) => {
+          const detailUrl = ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", String(room.id));
+          const hasRating = room.rating !== null && room.rating !== undefined && Number(room.rating) > 0;
+          const priceLabel = room.price === null || room.price === undefined ? null : formatPrice(room.price);
+
+          return (
+            <Link
+              key={room.id}
+              to={detailUrl}
+              className="group flex gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-2 text-left transition hover:border-cyan-400/50 hover:bg-cyan-400/5"
+            >
+              <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-800">
+                <img
+                  src={room.imageUrl}
+                  alt={room.title}
+                  className="size-full object-cover transition duration-300 group-hover:scale-105"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = DEFAULT_ROOM_IMAGE;
+                  }}
+                />
+              </div>
+              <div className="min-w-0 flex-1 py-0.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="line-clamp-2 text-[13px] font-bold leading-5 text-slate-100 group-hover:text-cyan-300">
+                    {room.title}
+                  </p>
+                  {hasRating && (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
+                      <Star className="size-3 fill-amber-300" />
+                      {room.rating}
+                    </span>
+                  )}
+                </div>
+                {(room.partnerName || room.propertyTypeName) && (
+                  <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-normal text-slate-500">
+                    {room.partnerName || room.propertyTypeName}
+                  </p>
+                )}
+                {room.address && (
+                  <p className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+                    <MapPin className="size-3 shrink-0 text-cyan-400" />
+                    <span className="line-clamp-1">{room.address}</span>
+                  </p>
+                )}
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="text-[13px] font-extrabold text-cyan-300">
+                    {priceLabel && priceLabel !== "-" ? priceLabel : "Xem giá"}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    );
   };
 
   // Render message text with clickable React Router links for markdown links: [Room Name](/rooms/id), bold formatting, and bullet lists
@@ -392,6 +648,7 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
                   }`}
                 >
                   {renderMessageText(msg.text)}
+                  {msg.sender === "bot" && renderRoomCards(msg.roomCards)}
                 </div>
                 <span
                   className={`text-[9px] text-slate-500 px-1 ${

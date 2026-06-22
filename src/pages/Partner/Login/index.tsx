@@ -7,6 +7,7 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { usePartnerLoginMutation } from "@/hooks/useAuthQuery";
 import { loginFormSchema } from "@/shared/shema";
 import { useUserStore } from "@/store/useUserStore";
+import { promptBrowserSavePassword } from "@/utils/credentialStorage";
 import { setAccessToken, setUserEmail, getRememberedEmail, setRememberedEmail, removeRememberedEmail } from "@/utils/storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
@@ -67,7 +68,8 @@ export default function PartnerLogin() {
             // Normalize role to lowercase and save
             const user_role = (userData?.role || 'partner').toLowerCase();
             useUserStore.getState().login(token, values.email, user_role, userData?.name || "");
-            
+
+            void promptBrowserSavePassword(values.email, values.password, userData?.name);
             toastSuccess(t("login.success"));
             // Redirect based on partner activation status
             // status 1 = active partner, otherwise goes to onboarding/approval flow
@@ -152,7 +154,13 @@ export default function PartnerLogin() {
               </div>
 
               <FormProvider {...form}>
-                <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+                <form
+                  method="post"
+                  action={ROUTERS.PARTNER_LOGIN}
+                  autoComplete="on"
+                  className="space-y-6"
+                  onSubmit={form.handleSubmit(onSubmit)}
+                >
                   <FormField
                     control={form.control}
                     name="email"
@@ -162,7 +170,8 @@ export default function PartnerLogin() {
                         <FormControl>
                           <div className="group relative">
                             <Input 
-                              type="email" 
+                              type="email"
+                              autoComplete="username"
                               placeholder={t("login.email_placeholder")} 
                               className="h-12 rounded-xl border-slate-700 bg-slate-800/50 pl-4 text-white transition-all placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20 group-hover:bg-slate-800/80"
                               {...field} 
@@ -183,7 +192,8 @@ export default function PartnerLogin() {
                         <FormControl>
                           <div className="group relative">
                             <Input 
-                              type={showPassword ? "text" : "password"} 
+                              type={showPassword ? "text" : "password"}
+                              autoComplete="current-password"
                               placeholder={t("login.password_placeholder")} 
                               className="h-12 rounded-xl border-slate-700 bg-slate-800/50 pl-4 text-white transition-all placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20 group-hover:bg-slate-800/80"
                               {...field} 

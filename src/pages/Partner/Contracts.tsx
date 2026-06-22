@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Search, Plus, Filter, 
@@ -20,6 +20,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlainTextarea } from "@/components/ui/textarea";
+import {
+  useInvalidatePartnerContracts,
+  usePartnerConfirmedBookingsForContractQuery,
+  usePartnerContractsQuery,
+} from '@/hooks/Partner/usePartnerContractsQuery';
 
 interface Booking {
   id: number;
@@ -46,9 +51,6 @@ interface Contract {
 
 const Contracts: React.FC = () => {
   const navigate = useNavigate();
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Create Modal State
@@ -59,46 +61,12 @@ const Contracts: React.FC = () => {
     content: '',
   });
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchContracts(abortController.signal);
-    fetchConfirmedBookings(abortController.signal);
-    return () => {
-      abortController.abort();
-    };
-  }, []);
+  const { data: contractsRaw, isLoading: loading } = usePartnerContractsQuery();
+  const { data: bookingsRaw = [] } = usePartnerConfirmedBookingsForContractQuery(isCreateOpen);
+  const invalidateContracts = useInvalidatePartnerContracts();
 
-  const fetchContracts = async (signal?: AbortSignal) => {
-    try {
-      setLoading(true);
-      const res: any = await partnerService.getContracts({ signal });
-      setContracts(res?.data || []);
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error('Error fetching contracts:', error);
-      toastError('Không thể tải danh sách hợp đồng.');
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const fetchConfirmedBookings = async (signal?: AbortSignal) => {
-    try {
-      // Pass numeric status 1 for 'confirmed'
-      const res: any = await partnerService.getBookings({ status: 1 }, { signal });
-      const data = res?.data?.data || res?.data || res || [];
-      setBookings(Array.isArray(data) ? data : []);
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error('Error fetching bookings:', error);
-    }
-  };
+  const contracts = (contractsRaw ?? []) as Contract[];
+  const bookings = bookingsRaw as Booking[];
 
   const handleCreateContract = async () => {
     if (!selectedBooking) {
@@ -122,7 +90,7 @@ const Contracts: React.FC = () => {
       setIsCreateOpen(false);
       setFormData({ title: '', content: '' });
       setSelectedBooking(null);
-      fetchContracts();
+      invalidateContracts();
     } catch {
       toastError('Lỗi khi tạo hợp đồng.');
     }
@@ -141,9 +109,14 @@ const Contracts: React.FC = () => {
     }
   };
 
-  const filteredContracts = contracts.filter(c => 
-    c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.booking?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredContracts = useMemo(
+    () =>
+      contracts.filter(
+        (c) =>
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.booking?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [contracts, searchTerm],
   );
 
   if (loading) return (

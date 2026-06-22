@@ -91,6 +91,7 @@ const BksStayGuide = React.lazy(() => import("./pages/EndUser/BksStay/StayGuide"
 const PartnerLayout = React.lazy(() => import("./pages/Partner/PartnerLayout"));
 const PartnerDashboard = React.lazy(() => import("./pages/Partner/Dashboard"));
 const PartnerProperties = React.lazy(() => import("./pages/Partner/Properties"));
+const PartnerUnits = React.lazy(() => import("./pages/Partner/Units"));
 const PartnerBookings = React.lazy(() => import("./pages/Partner/Bookings"));
 const PartnerServices = React.lazy(() => import("./pages/Partner/Services.tsx"));
 const PartnerAmenities = React.lazy(() => import("./pages/Partner/Amenities.tsx"));
@@ -466,10 +467,13 @@ export default function Router() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<PartnerDashboard />} />
+          <Route path="units" element={<PartnerUnits />} />
           <Route path="properties" element={<PartnerProperties />} />
           <Route path="bookings" element={<PartnerBookings />} />
           <Route path="cancellation-requests" element={<PartnerCancellationRequests />} />
-          <Route path="services" element={<PartnerServices />} />
+          <Route path="catalog" element={<Navigate to={ROUTERS.PARTNER_CATALOG_SERVICES} replace />} />
+          <Route path="catalog/:tab" element={<PartnerServices />} />
+          <Route path="services" element={<Navigate to={ROUTERS.PARTNER_CATALOG_SERVICES} replace />} />
           <Route path="amenities" element={<PartnerAmenities />} />
           <Route path="finance" element={<PartnerFinance />} />
           <Route path="news" element={<PartnerNews />} />

@@ -12,16 +12,19 @@ import { useDragScroll } from "@/hooks/useDragScroll";
 interface SuggestedRoomsByTouristSpotProps {
   groups?: SuggestedRoomsByTouristSpotGroup[];
   prioritySpotNames?: readonly string[];
+  prioritySpotSlugs?: readonly string[];
   className?: string;
   loading?: boolean;
 }
 
 function toRoomCard(room: SuggestedRoomsByTouristSpotGroup["rooms"][number]): RoomCard {
   const monthlyPrice = room.cheapest_monthly_price;
-  const dailyPrice = room.cheapest_daily_price;
-  const priceLabel = dailyPrice
+  const dailyPrice = room.cheapest_nightly_price ?? room.cheapest_daily_price;
+  const hasMonthlyPrice = monthlyPrice !== null && monthlyPrice !== undefined && Number(monthlyPrice) > 0;
+  const hasDailyPrice = dailyPrice !== null && dailyPrice !== undefined && Number(dailyPrice) > 0;
+  const priceLabel = hasDailyPrice
     ? `${Number(dailyPrice).toLocaleString("vi-VN")}₫ / đêm`
-    : monthlyPrice
+    : hasMonthlyPrice
       ? `${Number(monthlyPrice).toLocaleString("vi-VN")}₫ / tháng`
       : "Liên hệ";
 
@@ -41,7 +44,9 @@ function toRoomCard(room: SuggestedRoomsByTouristSpotGroup["rooms"][number]): Ro
     room_type: room.room_type,
     property_type_name: room.property_type_name,
     partner_company_name: room.partner_company_name,
-    rent_type: dailyPrice ? "daily" : (monthlyPrice ? "monthly" : undefined),
+    rent_type: hasDailyPrice ? "daily" : (hasMonthlyPrice ? "monthly" : undefined),
+    has_nightly_price: hasDailyPrice,
+    has_monthly_price: hasMonthlyPrice,
   };
 }
 
@@ -57,6 +62,7 @@ function normalizeSpotName(name: string): string {
 const SuggestedRoomsByTouristSpot = ({
   groups = [],
   prioritySpotNames = [],
+  prioritySpotSlugs = [],
   className,
   loading = false,
 }: SuggestedRoomsByTouristSpotProps) => {
@@ -64,21 +70,36 @@ const SuggestedRoomsByTouristSpot = ({
   const scrollRef = useDragScroll();
 
   const orderedGroups = useMemo(() => {
-    const groupMap = new Map(
-      groups.map((group) => [normalizeSpotName(group.tourist_spot_name), group]),
-    );
+    const groupMap = new Map<string, SuggestedRoomsByTouristSpotGroup>();
+
+    groups.forEach((group) => {
+      groupMap.set(normalizeSpotName(group.tourist_spot_name), group);
+      if (group.tourist_spot_slug) {
+        groupMap.set(normalizeSpotName(group.tourist_spot_slug), group);
+      }
+    });
 
     const orderedPriorityGroups = prioritySpotNames.length
-      ? prioritySpotNames.map((spotName) => groupMap.get(normalizeSpotName(spotName))).filter(Boolean) as SuggestedRoomsByTouristSpotGroup[]
+      ? prioritySpotNames.map((spotName, index) => {
+          const spotSlug = prioritySpotSlugs[index] ?? "";
+          return groupMap.get(normalizeSpotName(spotName)) ??
+            (spotSlug ? groupMap.get(normalizeSpotName(spotSlug)) : undefined) ??
+            {
+              tourist_spot_id: null,
+              tourist_spot_name: spotName,
+              tourist_spot_slug: spotSlug,
+              region_label: null,
+              rooms: [],
+            };
+        })
       : groups;
 
     return orderedPriorityGroups
       .map((group) => ({
         ...group,
         rooms: group.rooms.map(toRoomCard),
-      }))
-      .filter((group) => group.rooms.length > 0);
-  }, [groups, prioritySpotNames]);
+      }));
+  }, [groups, prioritySpotNames, prioritySpotSlugs]);
 
   const defaultKey = orderedGroups[0] ? String(orderedGroups[0].tourist_spot_id ?? orderedGroups[0].tourist_spot_slug) : "";
   const currentTabKey = activeTabKey || defaultKey;
@@ -180,7 +201,22 @@ const SuggestedRoomsByTouristSpot = ({
                       </Link>
                     </div>
                   </>
-                ) : null}
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
+                    <h3 className="text-base font-semibold text-slate-900">Chưa có phòng gợi ý cho {group.tourist_spot_name}</h3>
+                    <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600">
+                      Điểm đến này vẫn nằm trong danh sách ưu tiên hiển thị. Khi có phòng được gắn với điểm du lịch này, danh sách sẽ tự động xuất hiện ở đây.
+                    </p>
+                    {group.tourist_spot_slug && (
+                      <Link
+                        to={ctaHref}
+                        className="mt-5 inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95"
+                      >
+                        {ctaLabel}
+                      </Link>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })

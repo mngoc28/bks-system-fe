@@ -4,21 +4,22 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import RealtimeNotifyProvider from './components/RealtimeNotifyProvider';
 import { useGetUserProfileQuery } from '@/hooks/useUserQuery';
-import { LoadingScreen } from '@/components/ui/loading-screen';
 
 const PartnerLayout: React.FC = () => {
-  const { data: profileRes, isLoading } = useGetUserProfileQuery();
+  const [canCheckProfile, setCanCheckProfile] = React.useState(false);
+  const { data: profileRes, isPending } = useGetUserProfileQuery({ enabled: canCheckProfile });
   const user = profileRes?.data;
-  const userStatus = user ? Number(user.status) : 1;
+  const userStatus = user ? Number(user.status) : null;
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
-  if (isLoading) {
-    return <LoadingScreen text="Đang tải dữ liệu đối tác..." />;
-  }
+  React.useEffect(() => {
+    const id = window.setTimeout(() => setCanCheckProfile(true), 2000);
+    return () => window.clearTimeout(id);
+  }, []);
 
-  // Redirect to dedicated onboarding page if partner is not yet active
+  // Redirect only after profile is known — keep Outlet mounted so child pages can fetch in parallel.
   // Status: 0 = email not verified, 2 = incomplete profile, 3 = pending approval, 4 = rejected
-  if (user?.role === 'partner' && userStatus !== 1) {
+  if (!isPending && user?.role === 'partner' && userStatus !== 1) {
     return <Navigate to="/partner/onboarding" replace />;
   }
 

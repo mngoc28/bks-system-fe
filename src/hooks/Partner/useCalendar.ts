@@ -1,4 +1,4 @@
-﻿import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { partnerService } from '@/services/partnerService';
 
 export interface PartnerCalendarBooking {
@@ -88,7 +88,8 @@ export const useCalendar = (params: UseCalendarParams) => {
     queryKey: calendarQueryKey(params),
     queryFn,
     enabled: params.enabled !== false && Boolean(params.from && params.to),
-    staleTime: 30_000,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 };
 

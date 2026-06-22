@@ -27,6 +27,10 @@ import { PlainTextarea } from '@/components/ui/textarea';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { partnerService } from '@/services/partnerService';
 import { isPartner360Enabled } from '@/lib/featureFlags';
+import {
+  useInvalidatePartnerContracts,
+  usePartnerContractDetailQuery,
+} from '@/hooks/Partner/usePartnerContractsQuery';
 
 interface UtilityFee {
   id: number;
@@ -34,35 +38,6 @@ interface UtilityFee {
   calc_method: string;
   unit_price: number | string;
   is_included: boolean | number;
-}
-
-interface ContractBooking {
-  id: number;
-  start_date: string;
-  end_date: string;
-  user?: { id?: number; name?: string; phone?: string; email?: string };
-  room?: {
-    id?: number;
-    title?: string;
-    name?: string;
-    utility_fees?: UtilityFee[];
-    property?: { id?: number; name?: string };
-  };
-  price?: { price?: number };
-}
-
-interface ContractDetailModel {
-  id: number;
-  title: string;
-  content: string;
-  status: number;
-  contract_type: string;
-  signature_date: string | null;
-  renewal_reminder_at: string | null;
-  terminated_at: string | null;
-  termination_reason: string | null;
-  created_at: string;
-  booking?: ContractBooking;
 }
 
 const STATUS_LABEL: Record<number, { label: string; cls: string }> = {
@@ -117,42 +92,24 @@ const ContractDetail: React.FC = () => {
   const navigate = useNavigate();
   const contractId = params.id;
 
-  const [loading, setLoading] = useState(true);
-  const [contract, setContract] = useState<ContractDetailModel | null>(null);
   const [terminateOpen, setTerminateOpen] = useState(false);
   const [terminateReason, setTerminateReason] = useState('');
   const [busy, setBusy] = useState(false);
 
   const partner360 = isPartner360Enabled();
+  const invalidateContracts = useInvalidatePartnerContracts();
+  const {
+    data: contract = null,
+    isLoading: loading,
+    isError,
+    refetch: refetchContract,
+  } = usePartnerContractDetailQuery(contractId);
 
   useEffect(() => {
-    if (!contractId) return;
-    const abortController = new AbortController();
-    void fetchContract(abortController.signal);
-    return () => {
-      abortController.abort();
-    };
-  }, [contractId]);
-
-  const fetchContract = async (signal?: AbortSignal) => {
-    if (!contractId) return;
-    try {
-      setLoading(true);
-      const res: any = await partnerService.getContractDetail(contractId, { signal });
-      const payload = (res?.data?.data ?? res?.data ?? null) as ContractDetailModel | null;
-      setContract(payload);
-    } catch (e: any) {
-      if (e.name === 'CanceledError' || e.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error(e);
+    if (isError) {
       toastError('Không thể tải chi tiết hợp đồng.');
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
     }
-  };
+  }, [isError]);
 
   const handleSetReminder = async () => {
     if (!contractId) return;
@@ -160,7 +117,8 @@ const ContractDetail: React.FC = () => {
       setBusy(true);
       await partnerService.setContractRenewalReminder(contractId);
       toastSuccess('Đã đặt nhắc gia hạn hợp đồng.');
-      await fetchContract();
+      await refetchContract();
+      invalidateContracts();
     } catch (e: any) {
       const message = e?.response?.data?.message ?? 'Không thể đặt nhắc gia hạn.';
       toastError(message);
@@ -182,7 +140,8 @@ const ContractDetail: React.FC = () => {
       toastSuccess('Đã chấm dứt hợp đồng.');
       setTerminateOpen(false);
       setTerminateReason('');
-      await fetchContract();
+      await refetchContract();
+      invalidateContracts();
     } catch (e: any) {
       const message = e?.response?.data?.message ?? 'Không thể chấm dứt hợp đồng.';
       toastError(message);

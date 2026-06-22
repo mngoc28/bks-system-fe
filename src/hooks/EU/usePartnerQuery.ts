@@ -1,6 +1,7 @@
 import { partnerApi } from "@/api/EU/partnerApi";
 import { toastError } from "@/components/ui/toast";
 import { Partner, PartnerDetail } from "@/dataHelper/EU/partner.dataHelper";
+import { HOMEPAGE_QUERY_OPTIONS, PUBLIC_DETAIL_QUERY_OPTIONS, PUBLIC_STATIC_QUERY_OPTIONS } from "@/lib/queryCache";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -21,6 +22,7 @@ export const usePartnerQuery = (province_id: number) => {
             }
         },
         enabled: !!province_id,
+        ...PUBLIC_STATIC_QUERY_OPTIONS,
     });
 };
 
@@ -41,15 +43,18 @@ export const usePartnerDetailQuery = (partner_id: number) => {
             }
         },
         enabled: !!partner_id,
+        ...PUBLIC_DETAIL_QUERY_OPTIONS,
     });
 };
 
-export const useRandomPartnersQuery = () => {
+export const useRandomPartnersQuery = (enabled = true) => {
     return useQuery({
         queryKey: ["home-random-partners"],
         queryFn: async (): Promise<Partner[]> => {
             const response = await partnerApi.getRandomPartners();
             return response.data;
         },
+        enabled,
+        ...HOMEPAGE_QUERY_OPTIONS,
     });
 };

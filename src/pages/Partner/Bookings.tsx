@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   UserX,
   Info,
+  X,
 } from 'lucide-react';
 import { Booking } from './types';
 import { Button } from "@/components/ui/button";
@@ -34,10 +35,17 @@ import {
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  buildPartnerBookingsListParams,
+  useInvalidatePartnerBookings,
+  usePartnerBookingSummaryQuery,
+  usePartnerBookingsListQuery,
+  type PartnerBookingsStatusFilter,
+} from '@/hooks/Partner/usePartnerBookingsQuery';
 
 import Pagination from '@/components/Pagination';
-import { usePartnerStatsQuery } from '@/hooks/usePartnerDashboardQuery';
 import CancelBookingDialog from './components/CancelBookingDialog';
+import { PartnerBookingDetailDialog } from './components/PartnerBookingDetailDialog';
 import { useQuickConfirm } from '@/hooks/Partner/useQuickConfirm';
 import { isPartner360Enabled } from '@/lib/featureFlags';
 import { Undo2, RefreshCw } from 'lucide-react';
@@ -51,8 +59,6 @@ import {
   getPartnerRowDisplayStatus,
   getPartnerStatusSubBadge,
   isPartnerCheckInDepositLocked,
-  normalizePartnerBookingStatusCode,
-  partnerBaseStatusLabel,
 } from '@/utils/partnerBookingDisplay';
 import FrontDeskPanel from './Bookings/FrontDeskPanel';
 import TodayOperationsPanel, { type TodayBookingRow } from './Bookings/TodayOperationsPanel';
@@ -62,18 +68,7 @@ import {
   PartnerSectionHeader,
 } from './components/ResponsiveBlocks';
 
-type BookingStatusFilter =
-  | 'all'
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 'in_stay'
-  | 'no_show'
-  | 'deposit_unpaid'
-  | 'deposit_submitted'
-  | 'payment_unpaid';
+type BookingStatusFilter = PartnerBookingsStatusFilter;
 
 interface BookingRow extends Booking {
   phone?: string;
@@ -89,6 +84,7 @@ interface BookingRow extends Booking {
   cancellation_reason?: string;
   cancelled_at?: string;
   no_show_at?: string;
+  contract_id?: number | null;
   bookingDeposit?: {
     id: number;
     amount: number;
@@ -115,10 +111,8 @@ const parseBookingsStatusFromUrl = (raw: string | null): BookingStatusFilter | n
 
 const Bookings: React.FC = () => {
   const queryClient = useQueryClient();
-  const [searchParams] = useSearchParams();
-  const { data: globalStats, isLoading: statsLoading } = usePartnerStatsQuery();
-  const [bookings, setBookings] = useState<BookingRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const invalidatePartnerBookings = useInvalidatePartnerBookings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [actionLoadingId, setActionLoadingId] = useState<string | number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>(() => {
@@ -128,25 +122,20 @@ const Bookings: React.FC = () => {
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState<Set<number | string>>(new Set());
   const [bulkCancelOpen, setBulkCancelOpen] = useState(false);
   const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false);
   const [bulkResult, setBulkResult] = useState<{ succeeded: number[]; failed: Array<{ id: number; reason: string }> } | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Action Confirmation State
   const [actionConfirmModalOpen, setActionConfirmModalOpen] = useState(false);
   const [actionTargetBooking, setActionTargetBooking] = useState<BookingRow | null>(null);
   const [actionType, setActionType] = useState<'check_in' | 'check_out' | null>(null);
   const [noShowTargetId, setNoShowTargetId] = useState<number | string | null>(null);
-  const [noShowCount, setNoShowCount] = useState(0);
-  const [depositUnpaidCount, setDepositUnpaidCount] = useState(0);
-  const [depositSubmittedCount, setDepositSubmittedCount] = useState(0);
-  const [paymentUnpaidCount, setPaymentUnpaidCount] = useState(0);
   const [todayPanelKey, setTodayPanelKey] = useState(0);
+
+  const { data: bookingSummary, isLoading: summaryLoading } = usePartnerBookingSummaryQuery(todayPanelKey);
 
   // View state & Lightbox state
   const [viewMode, setViewMode] = useState<'list' | 'today' | 'front_desk'>('list');
@@ -156,7 +145,36 @@ const Bookings: React.FC = () => {
   const prevFiltersRef = React.useRef({
     status: statusFilter,
     search: debouncedSearchTerm,
+    roomId: null as string | null,
   });
+
+  const roomIdFromUrl = searchParams.get('room_id');
+  const roomNumberFromUrl = searchParams.get('room_number');
+
+  const listParams = useMemo(
+    () =>
+      buildPartnerBookingsListParams({
+        page: currentPage,
+        pageSize,
+        keyword: debouncedSearchTerm,
+        statusFilter,
+        roomIdFromUrl,
+      }),
+    [currentPage, pageSize, debouncedSearchTerm, statusFilter, roomIdFromUrl],
+  );
+
+  const {
+    data: listData,
+    isLoading: listLoading,
+    isFetching: listFetching,
+    isError: listError,
+  } = usePartnerBookingsListQuery(listParams);
+
+  const bookings = (listData?.bookings ?? []) as BookingRow[];
+  const totalItems = listData?.totalItems ?? 0;
+  const totalPages = listData?.totalPages ?? 1;
+  const loading = listLoading && bookings.length === 0;
+  const isRefreshing = listFetching && !listLoading;
 
   // Debounce search term to avoid excessive API calls
   useEffect(() => {
@@ -185,183 +203,69 @@ const Bookings: React.FC = () => {
   }, [bookingIdFromUrl, bookings]);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    const parseTotal = (res: any): number => {
-      const resBody = res?.data || res;
-      const paginator =
-        resBody?.data && typeof resBody.data === 'object' && !Array.isArray(resBody.data)
-          ? resBody.data
-          : resBody;
-      return Number(paginator.total ?? 0);
-    };
+    if (!roomIdFromUrl) return;
+    setViewMode('list');
+    const statusFromUrl = parseBookingsStatusFromUrl(searchParams.get('status'));
+    if (statusFromUrl !== null) {
+      setStatusFilter(statusFromUrl);
+    }
+  }, [roomIdFromUrl]);
 
-    const loadFinanceCounts = async () => {
-      try {
-        const [noShowRes, depositUnpaidRes, depositSubmittedRes, paymentUnpaidRes] = await Promise.all([
-          partnerService.getBookings(
-            { status: 1, stay_status: 'no_show', per_page: 1, page: 1 },
-            { signal: abortController.signal },
-          ),
-          partnerService.getBookings(
-            { status: 1, deposit_status: 'pending', per_page: 1, page: 1 },
-            { signal: abortController.signal },
-          ),
-          partnerService.getBookings(
-            { status: 1, deposit_status: 'payment_submitted', per_page: 1, page: 1 },
-            { signal: abortController.signal },
-          ),
-          partnerService.getBookings(
-            { payment_status: 'unpaid', per_page: 1, page: 1 },
-            { signal: abortController.signal },
-          ),
-        ]);
-        setNoShowCount(parseTotal(noShowRes));
-        setDepositUnpaidCount(parseTotal(depositUnpaidRes));
-        setDepositSubmittedCount(parseTotal(depositSubmittedRes));
-        setPaymentUnpaidCount(parseTotal(paymentUnpaidRes));
-      } catch (err: any) {
-        if (err.name === 'CanceledError' || err.name === 'AbortError' || abortController.signal.aborted) {
-          return;
-        }
-      }
-    };
-    void loadFinanceCounts();
-    return () => abortController.abort();
-  }, [todayPanelKey, bookings]);
+  const handleClearRoomFilter = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('room_id');
+      next.delete('room_number');
+      return next;
+    });
+  };
+
+  const handleClearAllFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('room_id');
+      next.delete('room_number');
+      next.delete('status');
+      next.delete('id');
+      return next;
+    });
+  };
 
   useEffect(() => {
     const filtersChanged =
       prevFiltersRef.current.status !== statusFilter ||
-      prevFiltersRef.current.search !== debouncedSearchTerm;
+      prevFiltersRef.current.search !== debouncedSearchTerm ||
+      prevFiltersRef.current.roomId !== roomIdFromUrl;
 
     prevFiltersRef.current = {
       status: statusFilter,
       search: debouncedSearchTerm,
+      roomId: roomIdFromUrl,
     };
 
     if (filtersChanged && currentPage !== 1) {
       setCurrentPage(1);
-      return;
     }
+  }, [currentPage, statusFilter, debouncedSearchTerm, roomIdFromUrl]);
 
-    const abortController = new AbortController();
-    fetchBookings(true, abortController.signal);
-
-    return () => {
-      abortController.abort();
-    };
-  }, [currentPage, pageSize, statusFilter, debouncedSearchTerm]);
-
-
-  const normalizeBookings = (rows: any[]): BookingRow[] => {
-    return (rows || []).map((item: any) => {
-      const rawStatus = normalizePartnerBookingStatusCode(item.status ?? item.booking_status);
-
-      return {
-        id: item.id,
-        guestName: item.guestName ?? item.user_name ?? item.customerName ?? '',
-        roomName: item.roomName ?? item.room_name ?? item.room_number ?? '',
-        checkIn: item.checkIn ?? item.start_date ?? item.check_in ?? '',
-        checkOut: item.checkOut ?? item.end_date ?? item.check_out ?? '',
-        totalAmount: Number(item.totalAmount ?? item.price ?? 0),
-        status: partnerBaseStatusLabel(rawStatus),
-        rawStatus,
-        phone: item.phone ?? item.user_phone ?? '',
-        note: item.note ?? '',
-        propertyName: item.propertyName ?? item.property_name ?? item.property_name ?? '',
-        roomId: item.room_id ? Number(item.room_id) : undefined,
-        propertyId: item.property_id != null ? Number(item.property_id) : item.property_id != null ? Number(item.property_id) : undefined,
-        createdAt: item.createdAt ?? item.created_at ?? '',
-        stay_status: item.stay_status || 'pending',
-        deposit_amount: item.deposit_amount != null ? Number(item.deposit_amount) : undefined,
-        deposit_status: item.deposit_status ?? undefined,
-        payment_status: item.payment_status ?? 'unpaid',
-        cancellation_reason: item.cancellation_reason ?? undefined,
-        cancelled_at: item.cancelled_at ?? undefined,
-        no_show_at: item.no_show_at ?? undefined,
-        bookingDeposit: item.booking_deposit ?? item.booking_deposits ?? undefined,
-      };
-    });
-  };
-
-  const fetchBookings = async (showLoading = true, signal?: AbortSignal) => {
-    try {
-      // Use full-page loader only for initial fetch, subtle overlay for updates
-      if (showLoading) {
-        if (loading) setLoading(true);
-        else setIsRefreshing(true);
-      }
-      
-      const params: any = {
-        page: currentPage,
-        per_page: pageSize,
-        keyword: debouncedSearchTerm || undefined,
-      };
-
-      if (statusFilter === 'in_stay') {
-        params.stay_status = 'checked_in';
-        params.status = 1;
-      } else if (statusFilter === 'no_show') {
-        params.stay_status = 'no_show';
-        params.status = 1;
-      } else if (statusFilter === 'deposit_unpaid') {
-        params.status = 1;
-        params.deposit_status = 'pending';
-      } else if (statusFilter === 'deposit_submitted') {
-        params.status = 1;
-        params.deposit_status = 'payment_submitted';
-      } else if (statusFilter === 'payment_unpaid') {
-        params.payment_status = 'unpaid';
-      } else if (statusFilter !== 'all') {
-        params.status = statusFilter;
-      }
-
-      const res: any = await partnerService.getBookings(params, { signal });
-      
-      // Standardize response body access (handle both axios response and direct body)
-      const resBody = res?.data || res;
-      
-      // The actual paginator object returned by Laravel is usually in resBody.data
-      // or resBody itself if the interceptor already stripped the success wrapper.
-      const paginator = resBody?.data && typeof resBody.data === 'object' && !Array.isArray(resBody.data) 
-        ? resBody.data 
-        : resBody;
-
-      const rawData = Array.isArray(paginator.data) ? paginator.data : (Array.isArray(paginator) ? paginator : []);
-      const totalCount = paginator.total ?? rawData.length;
-      const pagesCount = paginator.last_page ?? (paginator.total ? Math.ceil(paginator.total / pageSize) : 1);
-
-      setBookings(normalizeBookings(rawData));
-      setTotalItems(totalCount);
-      setTotalPages(pagesCount);
-      setSelectedIds(new Set());
-      
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error('Error fetching bookings:', error);
+  useEffect(() => {
+    if (listError) {
       toastError('Không thể tải danh sách booking.');
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-        setIsRefreshing(false);
-      }
     }
-  };
+  }, [listError]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [listParams]);
 
   const handleRefresh = async () => {
     try {
-      setIsRefreshing(true);
-      await Promise.all([
-        fetchBookings(false),
-        queryClient.refetchQueries({ queryKey: ["partner-stats"] }),
-      ]);
+      await invalidatePartnerBookings();
       toastSuccess('Đã làm mới dữ liệu.');
     } catch {
       toastError('Không thể làm mới dữ liệu.');
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -421,17 +325,19 @@ const Bookings: React.FC = () => {
   const [cancelTargetId, setCancelTargetId] = useState<number | string | null>(null);
 
   const { confirm: quickConfirm, undo: undoConfirm, isPending: isPendingConfirm, remainingMs } = useQuickConfirm({
-    onOptimisticConfirm: (id) => {
-      setBookings((prev) => prev.map((b) => (
-        b.id === id ? { ...b, status: 'Đã duyệt' as Booking['status'], rawStatus: 1 } : b
-      )));
+    onOptimisticConfirm: () => {
+      // Optimistic UI handled via invalidate after confirm
     },
-    onUndo: () => fetchBookings(false),
+    onUndo: () => {
+      void invalidatePartnerBookings();
+    },
     onConfirmed: () => {
-      fetchBookings(false);
-      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      void invalidatePartnerBookings();
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
     },
-    onConflict: () => fetchBookings(false),
+    onConflict: () => {
+      void invalidatePartnerBookings();
+    },
   });
 
   const handleApprove = (id: string | number) => {
@@ -446,8 +352,8 @@ const Bookings: React.FC = () => {
     if (cancelTargetId === null) return;
     try {
       await partnerService.cancelBooking(cancelTargetId, reason);
-      fetchBookings();
-      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      void invalidatePartnerBookings();
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
       toastSuccess('Đã huỷ booking.');
     } catch (e) {
       toastError('Huỷ booking thất bại.');
@@ -490,8 +396,8 @@ const Bookings: React.FC = () => {
       const res: any = await partnerService.bulkConfirmBookings(selectedIdArray);
       const payload = res?.data?.data ?? res?.data ?? res;
       setBulkResult(payload);
-      fetchBookings();
-      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      void invalidatePartnerBookings();
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
       toastSuccess(`Đã xác nhận ${payload?.succeeded?.length ?? 0}/${selectedIdArray.length} booking.`);
       setIsBulkConfirmOpen(false);
       setSelectedIds(new Set());
@@ -511,8 +417,8 @@ const Bookings: React.FC = () => {
       const res: any = await partnerService.bulkCancelBookings(selectedIdArray, reason);
       const payload = res?.data?.data ?? res?.data ?? res;
       setBulkResult(payload);
-      fetchBookings();
-      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      void invalidatePartnerBookings();
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
       toastSuccess(`Đã huỷ ${payload?.succeeded?.length ?? 0}/${selectedIdArray.length} booking.`);
     } catch (e) {
       toastError('Huỷ hàng loạt thất bại.');
@@ -525,22 +431,17 @@ const Bookings: React.FC = () => {
       setActionLoadingId(id);
       await partnerService.checkIn(id);
       
-      // Update local state immediately for better UX
-      setBookings(prev => prev.map(b => 
-        b.id === id ? { ...b, stay_status: 'checked_in' } : b
-      ));
-      
       toastSuccess('Check-in thành công!');
       
-      // Invalidate stats so the "In Stay" / "Check-in today" cards update
-      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      // Invalidate summary so the "In Stay" / "Check-in today" cards update
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
 
       // Close modal if open
       setActionConfirmModalOpen(false);
       setTodayPanelKey((k) => k + 1);
 
       // Silent refresh to sync all data without showing global loader
-      fetchBookings(false);
+      void invalidatePartnerBookings();
     } catch (error: any) {
       const errMsg = error.response?.data?.message || 'Lỗi khi thực hiện check-in.';
       toastError(errMsg);
@@ -554,22 +455,17 @@ const Bookings: React.FC = () => {
       setActionLoadingId(id);
       await partnerService.checkOut(id);
       
-      // Update local state immediately
-      setBookings(prev => prev.map(b => 
-        b.id === id ? { ...b, stay_status: 'checked_out' } : b
-      ));
-      
       toastSuccess('Check-out hoàn tất!');
       
-      // Invalidate stats
-      queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+      // Invalidate summary
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
 
       // Close modal if open
       setActionConfirmModalOpen(false);
       setTodayPanelKey((k) => k + 1);
 
       // Silent refresh
-      fetchBookings(false);
+      void invalidatePartnerBookings();
     } catch {
       toastError('Lỗi khi thực hiện check-out.');
     } finally {
@@ -596,15 +492,12 @@ const Bookings: React.FC = () => {
     try {
       setActionLoadingId(id);
       await partnerService.noShowBooking(id);
-      setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, stay_status: 'no_show' } : b)),
-      );
       toastSuccess('Đã đánh dấu khách không đến.');
       setNoShowTargetId(null);
       setSelectedBooking(null);
       setTodayPanelKey((k) => k + 1);
-      queryClient.invalidateQueries({ queryKey: ['partner-stats'] });
-      fetchBookings(false);
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
+      void invalidatePartnerBookings();
     } catch (error: any) {
       const errMsg = error?.response?.data?.message || 'Không thể đánh dấu no-show.';
       toastError(errMsg);
@@ -644,20 +537,20 @@ const Bookings: React.FC = () => {
   const displayBookings = filteredBookings;
 
   const statusTabs: Array<{ key: BookingStatusFilter; label: string; count: number }> = [
-    { key: 'all', label: 'Tất cả', count: globalStats?.totalBookingsCount ?? totalItems },
-    { key: 0, label: 'Chờ duyệt', count: globalStats?.pendingBookingsCount ?? 0 },
-    { key: 1, label: 'Đã duyệt', count: globalStats?.confirmedBookingsCount ?? 0 },
-    { key: 'in_stay', label: 'Đang ở', count: globalStats?.inStayCount ?? 0 },
-    { key: 'no_show', label: 'Không đến', count: noShowCount },
-    { key: 4, label: 'Chờ duyệt hủy', count: globalStats?.pendingCancellationCount ?? 0 },
-    { key: 2, label: 'Đã hủy', count: globalStats?.cancelledBookingsCount ?? 0 },
-    { key: 3, label: 'Đã hoàn thành', count: globalStats?.completedBookingsCount ?? 0 },
+    { key: 'all', label: 'Tất cả', count: bookingSummary?.totalBookingsCount ?? totalItems },
+    { key: 0, label: 'Chờ duyệt', count: bookingSummary?.pendingBookingsCount ?? 0 },
+    { key: 1, label: 'Đã duyệt', count: bookingSummary?.confirmedBookingsCount ?? 0 },
+    { key: 'in_stay', label: 'Đang ở', count: bookingSummary?.inStayCount ?? 0 },
+    { key: 'no_show', label: 'Không đến', count: bookingSummary?.noShowCount ?? 0 },
+    { key: 4, label: 'Chờ duyệt hủy', count: bookingSummary?.pendingCancellationCount ?? 0 },
+    { key: 2, label: 'Đã hủy', count: bookingSummary?.cancelledBookingsCount ?? 0 },
+    { key: 3, label: 'Đã hoàn thành', count: bookingSummary?.completedBookingsCount ?? 0 },
   ];
 
   const financeTabs: Array<{ key: BookingStatusFilter; label: string; count: number }> = [
-    { key: 'deposit_unpaid', label: 'Chưa cọc', count: depositUnpaidCount },
-    { key: 'deposit_submitted', label: 'Chờ duyệt biên lai', count: depositSubmittedCount },
-    { key: 'payment_unpaid', label: 'Chưa thanh toán đơn', count: paymentUnpaidCount },
+    { key: 'deposit_unpaid', label: 'Chưa cọc', count: bookingSummary?.depositUnpaidCount ?? 0 },
+    { key: 'deposit_submitted', label: 'Chờ duyệt biên lai', count: bookingSummary?.depositSubmittedCount ?? 0 },
+    { key: 'payment_unpaid', label: 'Chưa thanh toán đơn', count: bookingSummary?.paymentUnpaidCount ?? 0 },
   ];
 
   const exportCsv = () => {
@@ -796,7 +689,7 @@ const Bookings: React.FC = () => {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Chờ duyệt</p>
           <div className="mt-3 flex items-end justify-between">
-            {statsLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-amber-600">{globalStats?.pendingBookingsCount || 0}</h3>}
+            {summaryLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-amber-600">{bookingSummary?.pendingBookingsCount || 0}</h3>}
             <div className="rounded-full bg-amber-50 p-2 text-amber-500">
               <Clock size={20} />
             </div>
@@ -807,7 +700,7 @@ const Bookings: React.FC = () => {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Đang ở</p>
           <div className="mt-3 flex items-end justify-between">
-            {statsLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-violet-600">{globalStats?.inStayCount || 0}</h3>}
+            {summaryLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-violet-600">{bookingSummary?.inStayCount || 0}</h3>}
             <div className="rounded-full bg-violet-50 p-2 text-violet-500">
               <UserCheck size={20} />
             </div>
@@ -818,7 +711,7 @@ const Bookings: React.FC = () => {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Check-in hôm nay</p>
           <div className="mt-3 flex items-end justify-between">
-            {statsLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-emerald-600">{globalStats?.todayCheckInCount || 0}</h3>}
+            {summaryLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-emerald-600">{bookingSummary?.todayCheckInCount || 0}</h3>}
             <div className="rounded-full bg-emerald-50 p-2 text-emerald-500">
               <LogIn size={20} />
             </div>
@@ -829,7 +722,7 @@ const Bookings: React.FC = () => {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Check-out hôm nay</p>
           <div className="mt-3 flex items-end justify-between">
-            {statsLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-blue-600">{globalStats?.todayCheckOutCount || 0}</h3>}
+            {summaryLoading ? <Skeleton className="h-9 w-12" /> : <h3 className="text-3xl font-black text-blue-600">{bookingSummary?.todayCheckOutCount || 0}</h3>}
             <div className="rounded-full bg-blue-50 p-2 text-blue-500">
               <LogOut size={20} />
             </div>
@@ -854,6 +747,23 @@ const Bookings: React.FC = () => {
           </div>
         </div>
 
+        {roomIdFromUrl ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#00668A]/20 bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#00668A]">
+              <Home size={12} aria-hidden />
+              Phòng {roomNumberFromUrl || `#${roomIdFromUrl}`}
+              <button
+                type="button"
+                onClick={handleClearRoomFilter}
+                className="ml-0.5 rounded-full p-0.5 hover:bg-[#00668A]/10"
+                aria-label="Xóa lọc phòng"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          </div>
+        ) : null}
+
         <div className="max-w-lg space-y-2">
           <div className="relative">
             <Search
@@ -868,14 +778,11 @@ const Bookings: React.FC = () => {
               className="h-10 pl-10 pr-3 text-sm"
             />
           </div>
-          {(searchTerm || statusFilter !== 'all') && (
+          {(searchTerm || statusFilter !== 'all' || roomIdFromUrl) && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
-              }}
+              onClick={handleClearAllFilters}
               className="h-8 px-2 text-xs text-slate-500 hover:text-blue-600"
             >
               Xóa bộ lọc
@@ -1351,260 +1258,27 @@ const Bookings: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Chi tiết booking #{selectedBooking?.id}</DialogTitle>
-          </DialogHeader>
-
-          {selectedBooking && (
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs font-bold uppercase text-slate-500">Khách hàng</p>
-                  <p className="mt-1 font-semibold">{selectedBooking.guestName || 'N/A'}</p>
-                  <p className="mt-1 text-slate-500">{selectedBooking.phone || 'Không có số điện thoại'}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs font-bold uppercase text-slate-500">Phòng / Tòa nhà</p>
-                  <p className="mt-1 font-semibold">{selectedBooking.roomName || 'N/A'}</p>
-                  <p className="mt-1 text-slate-500">{selectedBooking.propertyName || 'N/A'}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs font-bold uppercase text-slate-500">Ngày nhận phòng</p>
-                  <p className="mt-1 font-semibold">{formatPartnerBookingDateVi(selectedBooking.checkIn)}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs font-bold uppercase text-slate-500">Ngày trả phòng</p>
-                  <p className="mt-1 font-semibold">{formatPartnerBookingDateVi(selectedBooking.checkOut)}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs font-bold uppercase text-slate-500">Tổng tiền</p>
-                  <p className="mt-1 font-semibold text-blue-700">{(selectedBooking.totalAmount || 0).toLocaleString('vi-VN')} đ</p>
-                </div>
-              </div>
-
-              {(() => {
-                const n = countPartnerBookingNightsExclusive(selectedBooking.checkIn, selectedBooking.checkOut);
-                if (n === null || n <= 0) {
-                  return null;
-                }
-                return (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-center text-sm font-semibold text-slate-700">
-                    {n} đêm lưu trú
-                  </div>
-                );
-              })()}
-
-              {selectedBooking.createdAt && (
-                <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-2.5">
-                  <Clock size={14} className="shrink-0 text-blue-400" />
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-400">Thời gian đặt phòng</p>
-                    <p className="text-sm font-semibold text-blue-700">
-                      {new Date(selectedBooking.createdAt).toLocaleString('vi-VN', {
-                        weekday: 'long',
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="rounded-xl border border-slate-200 p-3">
-                <p className="text-xs font-bold uppercase text-slate-500">Ghi chú khách hàng</p>
-                <p className="mt-1 whitespace-pre-wrap text-slate-700">{selectedBooking.note || 'Không có ghi chú.'}</p>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 p-4 space-y-2">
-                <p className="text-xs font-bold uppercase text-slate-500">Thanh toán đơn</p>
-                {(() => {
-                  const payment = getPartnerPaymentDisplay(
-                    selectedBooking.payment_status,
-                    selectedBooking.totalAmount,
-                  );
-                  return (
-                    <>
-                      <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${payment.badgeClass}`}>
-                        {payment.label}
-                      </Badge>
-                      {payment.hint && (
-                        <p className="text-xs text-slate-500">{payment.hint}</p>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {(selectedBooking.deposit_amount ?? 0) > 0 && (
-                <div className="rounded-xl border border-slate-200 p-4 space-y-3">
-                  <p className="text-xs font-bold uppercase text-slate-500">Thông tin đặt cọc</p>
-                  {(() => {
-                    const deposit = getPartnerDepositDisplay(
-                      selectedBooking.deposit_status,
-                      selectedBooking.deposit_amount,
-                    );
-                    return deposit ? (
-                      <>
-                        <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${deposit.badgeClass}`}>
-                          {deposit.label}
-                        </Badge>
-                        {deposit.hint && (
-                          <p className="text-xs text-slate-500">{deposit.hint}</p>
-                        )}
-                      </>
-                    ) : null;
-                  })()}
-                  {selectedBooking.bookingDeposit?.receipt_path && (
-                    <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
-                      <span className="text-slate-500 font-semibold flex items-center gap-1">
-                        <ImageIcon size={14} className="text-emerald-500" />
-                        Minh chứng chuyển khoản:
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedReceipt(selectedBooking.bookingDeposit?.receipt_path || null)}
-                        className="h-auto p-0 font-bold text-blue-600 hover:text-blue-800 hover:bg-transparent"
-                      >
-                        Xem minh chứng
-                      </Button>
-                    </div>
-                  )}
-                  {selectedBooking.rawStatus === 1 && ['pending', 'payment_submitted'].includes(selectedBooking.deposit_status || '') && (
-                    <Button
-                      size="sm"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                      onClick={async () => {
-                        try {
-                          await partnerService.confirmDeposit(selectedBooking.id);
-                          toastSuccess(`Đã xác thực cọc thành công cho đơn #${selectedBooking.id}`);
-                          setSelectedBooking(null);
-                          setTodayPanelKey((k) => k + 1);
-                          fetchBookings(false);
-                        } catch {
-                          toastError('Xác nhận đặt cọc thất bại.');
-                        }
-                      }}
-                    >
-                      Xác nhận đã nhận cọc
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              {(selectedBooking.rawStatus === 2 || selectedBooking.stay_status === 'no_show') && (
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-2">
-                  <p className="text-xs font-bold uppercase text-slate-500">Giải phóng phòng</p>
-                  {(() => {
-                    const subBadge = getPartnerStatusSubBadge(
-                      selectedBooking.rawStatus,
-                      selectedBooking.stay_status,
-                      selectedBooking.deposit_status,
-                      selectedBooking.cancellation_reason,
-                    );
-                    return subBadge ? (
-                      <>
-                        <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${subBadge.badgeClass}`}>
-                          {subBadge.label}
-                        </Badge>
-                        {subBadge.hint && <p className="text-xs text-slate-600">{subBadge.hint}</p>}
-                      </>
-                    ) : null;
-                  })()}
-                  {selectedBooking.cancellation_reason && (
-                    <p className="text-xs text-slate-600">
-                      <span className="font-semibold text-slate-500">Lý do: </span>
-                      {selectedBooking.cancellation_reason}
-                    </p>
-                  )}
-                  {selectedBooking.cancelled_at && (
-                    <p className="text-xs text-slate-500">
-                      Hủy lúc {new Date(selectedBooking.cancelled_at).toLocaleString('vi-VN')}
-                    </p>
-                  )}
-                  {selectedBooking.no_show_at && (
-                    <p className="text-xs text-slate-500">
-                      Đánh dấu không đến lúc {new Date(selectedBooking.no_show_at).toLocaleString('vi-VN')}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                <div className="flex flex-col items-start gap-1">
-                  <Badge
-                    variant="none"
-                    className={`border px-3 py-1 font-semibold ${getPartnerBookingBadgeClass(
-                      selectedBooking.rawStatus ?? 1,
-                      selectedBooking.stay_status,
-                    )}`}
-                  >
-                    {getPartnerRowDisplayStatus(selectedBooking.rawStatus ?? 1, selectedBooking.stay_status)}
-                  </Badge>
-                  {(() => {
-                    const subBadge = getPartnerStatusSubBadge(
-                      selectedBooking.rawStatus,
-                      selectedBooking.stay_status,
-                      selectedBooking.deposit_status,
-                      selectedBooking.cancellation_reason,
-                    );
-                    return subBadge ? (
-                      <span className={`text-[10px] font-bold ${subBadge.badgeClass.includes('slate') ? 'text-slate-500' : 'text-rose-600'}`}>
-                        {subBadge.label}
-                      </span>
-                    ) : null;
-                  })()}
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedBooking.rawStatus === 0 && (
-                    <>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold" 
-                        onClick={() => handleReject(selectedBooking.id)}
-                      >
-                        Từ chối
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="bg-emerald-600 hover:bg-emerald-700 font-bold shadow-sm" 
-                        onClick={() => handleApprove(selectedBooking.id)}
-                      >
-                        Duyệt booking
-                      </Button>
-                    </>
-                  )}
-                  {canMarkPartnerBookingNoShow(
-                    selectedBooking.rawStatus,
-                    selectedBooking.stay_status,
-                    selectedBooking.checkIn,
-                  ) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1 border-slate-300 font-bold text-slate-700"
-                      onClick={() => setNoShowTargetId(selectedBooking.id)}
-                    >
-                      <UserX size={14} />
-                      Không đến
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PartnerBookingDetailDialog
+        booking={selectedBooking}
+        open={!!selectedBooking}
+        onOpenChange={(open) => !open && setSelectedBooking(null)}
+        mode="full"
+        onViewReceipt={(path) => setSelectedReceipt(path)}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onNoShow={(id) => setNoShowTargetId(id)}
+        onConfirmDeposit={async (id) => {
+          try {
+            await partnerService.confirmDeposit(id);
+            toastSuccess(`Đã xác thực cọc thành công cho đơn #${id}`);
+            setSelectedBooking(null);
+            setTodayPanelKey((k) => k + 1);
+            void invalidatePartnerBookings();
+          } catch {
+            toastError('Xác nhận đặt cọc thất bại.');
+          }
+        }}
+      />
 
       <CancelBookingDialog
         open={cancelTargetId !== null}
@@ -1743,4 +1417,3 @@ const Bookings: React.FC = () => {
 };
 
 export default Bookings;
-

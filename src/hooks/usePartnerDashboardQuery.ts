@@ -19,6 +19,8 @@ export const usePartnerStatsQuery = (propertyId?: PartnerDashboardPropertyScope)
       });
       return response.data;
     },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
@@ -32,6 +34,8 @@ export const usePartnerHeadlineKpisQuery = (propertyId?: PartnerDashboardPropert
       });
       return response.data;
     },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
@@ -45,7 +49,8 @@ export const usePartnerOccupancyChartQuery = (propertyId?: PartnerDashboardPrope
       });
       return response.data;
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
@@ -59,7 +64,8 @@ export const usePartnerGmvChartQuery = (propertyId?: PartnerDashboardPropertySco
       });
       return response.data;
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
@@ -77,6 +83,8 @@ export const usePartnerPendingBookingsQuery = (propertyId?: PartnerDashboardProp
       });
       return response.data;
     },
+    staleTime: 2 * 60_000,
+    gcTime: 5 * 60_000,
   });
 };
 
@@ -90,6 +98,8 @@ export const usePartnerUrgentMaintenancesQuery = () => {
       const response = await partnerDashboardApi.getUrgentMaintenances({ signal });
       return response.data;
     },
+    staleTime: 2 * 60_000,
+    gcTime: 5 * 60_000,
   });
 };
 
@@ -103,5 +113,7 @@ export const usePartnerRevenueAnalyticsQuery = () => {
       const response = await partnerDashboardApi.getRevenueAnalytics({ signal });
       return response.data;
     },
+    staleTime: 24 * 60 * 60_000,
+    gcTime: 24 * 60 * 60_000 + 5 * 60_000,
   });
 };

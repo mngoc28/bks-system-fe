@@ -381,7 +381,7 @@ const RoomByProvince = () => {
                     key={room.id}
                     className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:border-sky-300 hover:shadow-md md:flex-row"
                   >
-                    <div className="relative h-64 shrink-0 overflow-hidden md:h-auto md:w-72 lg:w-96">
+                    <div className="relative h-64 shrink-0 overflow-hidden md:h-80 md:w-72 lg:w-96">
                       <img src={roomImage} alt={room.title} className="size-full object-cover transition duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-900/10 to-transparent md:hidden" />
                       <div className="absolute inset-0 hidden bg-gradient-to-r from-slate-950/20 via-transparent to-transparent md:block" />
@@ -511,4 +511,3 @@ const RoomByProvince = () => {
 };
 
 export default RoomByProvince;
-

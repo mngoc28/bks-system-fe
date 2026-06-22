@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reviewApi, SubmitReviewParams } from "@/api/reviewApi";
 import { toastError, toastSuccess } from "@/components/ui/toast";
+import { HOMEPAGE_QUERY_OPTIONS, PUBLIC_DETAIL_QUERY_OPTIONS } from "@/lib/queryCache";
 
-export const useLandingReviewsQuery = () => {
+export const useLandingReviewsQuery = (enabled = true) => {
   return useQuery({
     queryKey: ["landingReviews"],
     queryFn: async () => {
       const response = await reviewApi.getLandingReviews();
       return response.data;
     },
+    enabled,
+    ...HOMEPAGE_QUERY_OPTIONS,
   });
 };
 
@@ -20,6 +23,7 @@ export const useRoomReviewsQuery = (roomId: number, options?: { enabled?: boolea
       return response.data;
     },
     enabled: (options?.enabled ?? true) && !!roomId,
+    ...PUBLIC_DETAIL_QUERY_OPTIONS,
   });
 };
 
@@ -31,6 +35,7 @@ export const usePartnerReviewsQuery = (partnerId: number, options?: { enabled?: 
       return response.data;
     },
     enabled: (options?.enabled ?? true) && !!partnerId,
+    ...PUBLIC_DETAIL_QUERY_OPTIONS,
   });
 };
 

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 // get user profile
-export const useGetUserProfileQuery = () => {
+export const useGetUserProfileQuery = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ["profile"],
     queryFn: async ({ signal }) => {
@@ -13,6 +13,7 @@ export const useGetUserProfileQuery = () => {
       return response;
     },
     retry: 1,
+    enabled: options?.enabled ?? true,
     staleTime: 60_000,
     gcTime: 5 * 60_000,
   });

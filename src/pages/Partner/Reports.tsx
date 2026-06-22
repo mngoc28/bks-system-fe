@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   XAxis, 
   YAxis, 
@@ -22,40 +22,27 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { partnerService } from '@/services/partnerService';
 import { toastError } from '@/components/ui/toast';
 import { Badge } from '@/components/ui/badge';
 import Pagination from '@/components/Pagination';
+import { usePartnerReportsQuery } from '@/hooks/Partner/usePartnerReportsQuery';
 
 const ReportsPage: React.FC = () => {
-  const [stats, setStats] = useState<any>(null);
   const [timeRange, setTimeRange] = useState('30days');
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
 
+  const { data: stats, isError } = usePartnerReportsQuery(timeRange);
+
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchStats(abortController.signal);
-    return () => {
-      abortController.abort();
-    };
-  }, [timeRange]);
+    if (isError) {
+      toastError('Không thể tải báo cáo phân tích.');
+    }
+  }, [isError]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [timeRange, perPage]);
-
-  const fetchStats = async (signal?: AbortSignal) => {
-    try {
-      const res: any = await partnerService.getPartnerReports({ range: timeRange }, { signal });
-      setStats(res?.data || null);
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      toastError('Không thể tải báo cáo phân tích.');
-    }
-  };
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   const KPI_STYLE: Record<string, { iconBg: string; iconText: string }> = {
