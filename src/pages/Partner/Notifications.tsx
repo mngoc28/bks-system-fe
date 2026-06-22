@@ -15,6 +15,7 @@ import { vi, enUS } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import partnerService from "@/services/partnerService";
+import { PARTNER_OPERATIONAL_QUERY_OPTIONS } from "@/lib/queryCache";
 import { NotificationData } from "@/services/stayService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ const Notifications: React.FC = () => {
     const { data: notificationResponse, isLoading } = useQuery({
         queryKey: ["notifications", "partner", "all", currentPage],
         queryFn: ({ signal }) => partnerService.getNotifications(currentPage, { signal }),
+        ...PARTNER_OPERATIONAL_QUERY_OPTIONS,
     });
 
     const notifications = (notificationResponse as any)?.data?.data || [];

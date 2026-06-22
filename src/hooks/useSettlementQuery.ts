@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { settlementApi } from "@/api/settlementApi";
+import { PARTNER_FINANCE_QUERY_OPTIONS } from "@/lib/queryCache";
 
 // === Admin Hooks ===
 
@@ -98,6 +99,7 @@ export const usePartnerSettlementsQuery = (filters: any) => {
     queryKey: ["partner", "settlements", filters],
     queryFn: () => settlementApi.getPartnerSettlements(filters),
     placeholderData: keepPreviousData,
+    ...PARTNER_FINANCE_QUERY_OPTIONS,
   });
 };
 
@@ -106,6 +108,7 @@ export const usePartnerSettlementDetailQuery = (id: number, enabled = true) => {
     queryKey: ["partner", "settlement-detail", id],
     queryFn: () => settlementApi.getPartnerSettlementDetail(id),
     enabled: enabled && !!id,
+    ...PARTNER_FINANCE_QUERY_OPTIONS,
   });
 };
 
@@ -115,6 +118,7 @@ export const usePartnerSettlementLineItemsQuery = (id: number, filters: any) => 
     queryFn: () => settlementApi.getPartnerSettlementLineItems(id, filters),
     enabled: !!id,
     placeholderData: keepPreviousData,
+    ...PARTNER_FINANCE_QUERY_OPTIONS,
   });
 };
 

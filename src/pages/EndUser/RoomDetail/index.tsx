@@ -27,6 +27,7 @@ import { formatPrice, formatPhoneNumber } from "@/utils/utils";
 import { countBookingNights } from "@/utils/dateUtils";
 import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { RoomTouristSpotsSection } from "@/components/rooms/RoomTouristSpotsSection";
+import { BOOKED_DATES_QUERY_OPTIONS, PUBLIC_DETAIL_QUERY_OPTIONS } from "@/lib/queryCache";
 
 function parseYmdToLocalDate(value: string): Date | undefined {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -66,6 +67,7 @@ const PublicRoomDetail = () => {
       return response.data;
     },
     enabled: !!id,
+    ...PUBLIC_DETAIL_QUERY_OPTIONS,
   });
 
   // Fetch booked dates list
@@ -76,6 +78,7 @@ const PublicRoomDetail = () => {
       return response.data;
     },
     enabled: !!id,
+    ...BOOKED_DATES_QUERY_OPTIONS,
   });
   const bookedDates = bookedDatesResponse || [];
 
@@ -675,6 +678,15 @@ const PublicRoomDetail = () => {
           </button>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">{room?.title || "Chi tiết phòng"}</h1>
           <div className="mt-4 flex flex-col gap-2.5 text-slate-200">
+            {(room?.property_name || propertyTypeLabel) && (
+              <p className="inline-flex items-center gap-2 text-sm sm:text-base text-slate-200/95">
+                <Home className="size-4 text-primary-light shrink-0" />
+                <span className="font-bold text-white">
+                  {[room?.property_name, propertyTypeLabel].filter(Boolean).join(" · ")}
+                </span>
+              </p>
+            )}
+
             <p className="inline-flex items-center gap-2 text-sm sm:text-base">
               <MapPin className="size-4 text-primary-light shrink-0" />
               <span>{room?.property_address || "Đang cập nhật địa chỉ"}</span>

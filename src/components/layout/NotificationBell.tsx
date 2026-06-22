@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bell, Info, CheckCircle, AlertTriangle, AlertCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -30,7 +30,13 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const service = portalType === 'stay' ? stayService : partnerService;
-    const queryKey = ["notifications", portalType];
+    const queryKey = useMemo(() => ["notifications", portalType], [portalType]);
+    const [canLoadNotifications, setCanLoadNotifications] = useState(false);
+
+    useEffect(() => {
+        const id = window.setTimeout(() => setCanLoadNotifications(true), portalType === 'partner' ? 1500 : 0);
+        return () => window.clearTimeout(id);
+    }, [portalType]);
     
     const { data: notifications = [], isLoading } = useQuery<NotificationData[]>({
         queryKey: queryKey,
@@ -39,6 +45,7 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
             // Laravel pagination returns { data: { data: [...] } } via our apiService
             return (res as any).data?.data || [];
         },
+        enabled: canLoadNotifications,
         refetchInterval: 30000, // Poll every 30 seconds
         staleTime: 20_000,
     });
@@ -50,7 +57,7 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
             const res = await partnerService.getCancellationRequests({ status: 'pending', per_page: 1 }, { signal });
             return (res as any)?.data?.meta?.total ?? 0;
         },
-        enabled: portalType === 'partner',
+        enabled: portalType === 'partner' && canLoadNotifications,
         refetchInterval: 60000,
     });
 

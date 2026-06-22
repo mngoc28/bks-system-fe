@@ -18,10 +18,12 @@ interface SuggestedRoomsByProvinceProps {
 
 function toRoomCard(room: SuggestedRoomsByProvinceGroup["rooms"][number]): RoomCard {
   const monthlyPrice = room.cheapest_monthly_price;
-  const dailyPrice = room.cheapest_daily_price;
-  const priceLabel = dailyPrice
+  const dailyPrice = room.cheapest_nightly_price ?? room.cheapest_daily_price;
+  const hasMonthlyPrice = monthlyPrice !== null && monthlyPrice !== undefined && Number(monthlyPrice) > 0;
+  const hasDailyPrice = dailyPrice !== null && dailyPrice !== undefined && Number(dailyPrice) > 0;
+  const priceLabel = hasDailyPrice
     ? `${Number(dailyPrice).toLocaleString("vi-VN")}₫ / đêm`
-    : monthlyPrice
+    : hasMonthlyPrice
       ? `${Number(monthlyPrice).toLocaleString("vi-VN")}₫ / tháng`
       : "Liên hệ";
 
@@ -41,7 +43,9 @@ function toRoomCard(room: SuggestedRoomsByProvinceGroup["rooms"][number]): RoomC
     room_type: room.room_type,
     property_type_name: room.property_type_name,
     partner_company_name: room.partner_company_name,
-    rent_type: dailyPrice ? "daily" : (monthlyPrice ? "monthly" : undefined),
+    rent_type: hasDailyPrice ? "daily" : (hasMonthlyPrice ? "monthly" : undefined),
+    has_nightly_price: hasDailyPrice,
+    has_monthly_price: hasMonthlyPrice,
   };
 }
 

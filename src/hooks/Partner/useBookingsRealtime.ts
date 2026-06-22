@@ -41,6 +41,7 @@ export type RealtimeCancellationRequestPayload = {
 export type BookingRealtimeStatus = "connecting" | "connected" | "disconnected";
 
 type Options = {
+  enabled?: boolean;
   onEvent?: (event: BookingEventName, payload: RealtimeBookingPayload) => void;
   /** BCP: inbox yêu cầu hủy — payload không chứa PII khách. */
   onCancellationRequestEvent?: (payload: RealtimeCancellationRequestPayload) => void;
@@ -66,6 +67,7 @@ const DEFAULT_POLLING_INTERVAL_MS = 30_000;
  */
 export const useBookingsRealtime = (options: Options = {}) => {
   const queryClient = useQueryClient();
+  const enabled = options.enabled ?? true;
   const fallbackThresholdMs = options.fallbackThresholdMs ?? DEFAULT_FALLBACK_THRESHOLD_MS;
   const pollingIntervalMs = options.pollingIntervalMs ?? DEFAULT_POLLING_INTERVAL_MS;
   const optionsRef = useRef(options);
@@ -77,6 +79,12 @@ export const useBookingsRealtime = (options: Options = {}) => {
   const [pollingActive, setPollingActive] = useState<boolean>(!isRealtimeEnabled());
 
   useEffect(() => {
+    if (!enabled) {
+      setStatus("disconnected");
+      setPollingActive(false);
+      return;
+    }
+
     if (!isRealtimeEnabled()) {
       return;
     }
@@ -107,6 +115,9 @@ export const useBookingsRealtime = (options: Options = {}) => {
         // Phase 3: calendar phụ thuộc cùng các event này; invalidate prefix
         // để mọi range đang cache đều refetch.
         queryClient.invalidateQueries({ queryKey: ["partner", "calendar"] });
+        queryClient.invalidateQueries({ queryKey: ["partner", "maintenances"] });
+        queryClient.invalidateQueries({ queryKey: ["partner-urgent-maintenances"] });
+        queryClient.invalidateQueries({ queryKey: ["partner", "properties"] });
         // Phase 5: hợp đồng sắp hết hạn (Alert Center).
         if (eventName === "contract.renewal_reminder") {
           queryClient.invalidateQueries({ queryKey: ["partner", "contracts"] });
@@ -194,12 +205,12 @@ export const useBookingsRealtime = (options: Options = {}) => {
         clearTimeout(disconnectTimer);
       }
     };
-  }, [queryClient, fallbackThresholdMs]);
+  }, [enabled, queryClient, fallbackThresholdMs]);
 
   // Polling fallback. Chạy khi pollingActive=true (thường là sau khi mất Echo
   // > fallbackThresholdMs). Khi Echo reconnect, pollingActive=false → cleanup.
   useEffect(() => {
-    if (!pollingActive) return;
+    if (!enabled || !pollingActive) return;
 
     const tick = () => {
       queryClient.invalidateQueries({ queryKey: ["partner", "bookings"] });
@@ -208,12 +219,15 @@ export const useBookingsRealtime = (options: Options = {}) => {
       queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
       queryClient.invalidateQueries({ queryKey: ["partner-pending-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "maintenances"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-urgent-maintenances"] });
+      queryClient.invalidateQueries({ queryKey: ["partner", "properties"] });
       queryClient.invalidateQueries({ queryKey: ["partner", "cancellation-requests"] });
     };
 
     const intervalId = window.setInterval(tick, pollingIntervalMs);
     return () => window.clearInterval(intervalId);
-  }, [pollingActive, pollingIntervalMs, queryClient]);
+  }, [enabled, pollingActive, pollingIntervalMs, queryClient]);
 
   // Khi unmount toàn app (vd. user logout) FE useUserStore.logout đã gọi
   // disconnectEcho. Hook không tự disconnect để các component khác cũng

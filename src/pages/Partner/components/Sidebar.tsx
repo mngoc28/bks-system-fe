@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
+  DoorOpen,
   ShoppingBag,
   Wrench,
   Newspaper,
@@ -92,8 +93,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMobile }) 
     { name: 'Yêu cầu dịch vụ', path: '/partner/stay-services', icon: Zap },
 
     { name: 'TÀI SẢN', isHeader: true },
+    { name: 'Phòng & Đơn vị', path: '/partner/units', icon: DoorOpen },
     { name: t('menu.properties'), path: '/partner/properties', icon: Building2 },
-    { name: 'Dịch vụ & Tiện ích', path: '/partner/services', icon: Zap },
+    { name: 'Dịch vụ & Tiện ích', path: ROUTERS.PARTNER_CATALOG, icon: Zap },
     { name: 'Hợp đồng', path: '/partner/contracts', icon: FileText },
     { name: t('menu.maintenances'), path: '/partner/maintenances', icon: Wrench },
 
@@ -168,6 +170,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMobile }) 
                 <NavLink
                   to={item.path}
                   onClick={onNavigate}
+                  end={item.path === ROUTERS.PARTNER_CATALOG ? false : true}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-4 overflow-hidden rounded-xl px-4 py-3 transition-all duration-300 ${isActive
                       ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-600/20 to-transparent font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.1)]'

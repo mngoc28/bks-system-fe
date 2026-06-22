@@ -10,7 +10,9 @@ export interface Room {
     beds_count?: number;
     description?: string;
     province_name: string;
+    property_name?: string;
     property_address: string;
+    ward_name?: string | null;
     property_type_name?: string;
     property_type_id?: number;
     cheapest_daily_price: number;
@@ -69,3 +71,10 @@ export interface SuggestedRoomsByTouristSpotParams {
 }
 
 export type PublicRoomPageData = Paginator<Room>;
+
+export type PublicRoomRentSegment = "daily" | "monthly";
+
+export interface PublicRoomSegmentedPageData {
+    daily: PublicRoomPageData;
+    monthly: PublicRoomPageData;
+}

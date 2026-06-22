@@ -12,6 +12,8 @@ import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetWardsByProvinceId } from "@/hooks/useWardQuery";
 import SearchableSelect from "@/components/ui/searchable-select";
 import axiosClient from "@/api/axiosClient";
+import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { resolvePartnerDocumentUrl } from "@/utils/imageUtils";
 import { ProvinceTypes } from "@/dataHelper/province.dataHelper";
 import { Ward } from "@/dataHelper/ward.dataHelper";
 import { useQueryClient } from "@tanstack/react-query";
@@ -47,55 +49,36 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
 
   // Document previews states
   const [docPreviewUrls, setDocPreviewUrls] = useState<Record<string, string>>({});
-  const [docPreviewLoading, setDocPreviewLoading] = useState<Record<string, boolean>>({});
 
   const isPdfFile = (path?: string) => {
     if (!path) return false;
-    return path.toLowerCase().endsWith('.pdf');
+    return path.toLowerCase().includes('.pdf');
   };
 
-  const handleLoadPreview = async (field: string, path: string) => {
-    if (docPreviewUrls[field]) return; // already loaded
-    setDocPreviewLoading(prev => ({ ...prev, [field]: true }));
-    try {
-      const response = await axiosClient.get("documents/view", {
-        params: { path },
-        responseType: "blob"
-      });
-      const objectUrl = URL.createObjectURL(response as any);
-      setDocPreviewUrls(prev => ({ ...prev, [field]: objectUrl }));
-    } catch (err) {
-      console.error(`Failed to load preview for ${field}`, err);
-    } finally {
-      setDocPreviewLoading(prev => ({ ...prev, [field]: false }));
+  const getDocumentUrl = (path?: string) => resolvePartnerDocumentUrl(path, CLOUDINARY_HEADER_IMAGE_URL);
+
+  const handleLoadPreview = (field: string, path: string) => {
+    if (docPreviewUrls[field]) return;
+
+    const documentUrl = getDocumentUrl(path);
+    if (documentUrl) {
+      setDocPreviewUrls((prev) => ({ ...prev, [field]: documentUrl }));
     }
   };
 
-  const handleOpenPrivateDocument = async (field: string, path: string | undefined) => {
+  const handleOpenDocument = (path: string | undefined) => {
     if (!path) {
       toastError("Tài liệu chưa được tải lên.");
       return;
     }
 
-    if (docPreviewUrls[field]) {
-      window.open(docPreviewUrls[field], "_blank");
+    const documentUrl = getDocumentUrl(path);
+    if (!documentUrl) {
+      toastError("Không thể mở tài liệu.");
       return;
     }
 
-    setDocPreviewLoading(prev => ({ ...prev, [field]: true }));
-    try {
-      const response = await axiosClient.get("documents/view", {
-        params: { path },
-        responseType: "blob"
-      });
-      const objectUrl = URL.createObjectURL(response as any);
-      setDocPreviewUrls(prev => ({ ...prev, [field]: objectUrl }));
-      window.open(objectUrl, "_blank");
-    } catch (_err) {
-      toastError("Lỗi khi tải tài liệu hoặc bạn không có quyền xem tệp này.");
-    } finally {
-      setDocPreviewLoading(prev => ({ ...prev, [field]: false }));
-    }
+    window.open(documentUrl, "_blank");
   };
 
   // Autoload image previews on Step 3 mount
@@ -753,7 +736,7 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                           {isPdfFile(partnerInfo.business_license) ? (
                             <button
                               type="button"
-                              onClick={() => handleOpenPrivateDocument("business_license", partnerInfo.business_license)}
+                              onClick={() => handleOpenDocument(partnerInfo.business_license)}
                               className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 text-xs font-bold text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               <FileText className="size-3.5" /> Xem bản PDF đã nộp
@@ -765,13 +748,11 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                                   src={docPreviewUrls["business_license"]} 
                                   alt="GPKD đã nộp" 
                                   className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-all"
-                                  onClick={() => handleOpenPrivateDocument("business_license", partnerInfo.business_license)}
+                                  onClick={() => handleOpenDocument(partnerInfo.business_license)}
                                 />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-[9px] text-slate-500">
-                                    {docPreviewLoading["business_license"] ? "Đang tải..." : "Xem ảnh đã nộp"}
-                                  </span>
+                                  <span className="text-[9px] text-slate-500">Xem ảnh đã nộp</span>
                                 </div>
                               )}
                             </div>
@@ -830,7 +811,7 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                           {isPdfFile(partnerInfo.ownership_document) ? (
                             <button
                               type="button"
-                              onClick={() => handleOpenPrivateDocument("ownership_document", partnerInfo.ownership_document)}
+                              onClick={() => handleOpenDocument(partnerInfo.ownership_document)}
                               className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 text-xs font-bold text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               <FileText className="size-3.5" /> Xem bản PDF đã nộp
@@ -842,13 +823,11 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                                   src={docPreviewUrls["ownership_document"]} 
                                   alt="Quyền sở hữu đã nộp" 
                                   className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-all"
-                                  onClick={() => handleOpenPrivateDocument("ownership_document", partnerInfo.ownership_document)}
+                                  onClick={() => handleOpenDocument(partnerInfo.ownership_document)}
                                 />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-[9px] text-slate-500">
-                                    {docPreviewLoading["ownership_document"] ? "Đang tải..." : "Xem ảnh đã nộp"}
-                                  </span>
+                                  <span className="text-[9px] text-slate-500">Xem ảnh đã nộp</span>
                                 </div>
                               )}
                             </div>
@@ -910,13 +889,11 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                                 src={docPreviewUrls["id_card_front"]} 
                                 alt="CCCD mặt trước" 
                                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-all"
-                                onClick={() => handleOpenPrivateDocument("id_card_front", partnerInfo.id_card_front)}
+                                onClick={() => handleOpenDocument(partnerInfo.id_card_front)}
                               />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[9px] text-slate-500">
-                                  {docPreviewLoading["id_card_front"] ? "Đang tải..." : "Xem ảnh đã nộp"}
-                                </span>
+                                <span className="text-[9px] text-slate-500">Xem ảnh đã nộp</span>
                               </div>
                             )}
                           </div>
@@ -977,13 +954,11 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                                 src={docPreviewUrls["id_card_back"]} 
                                 alt="CCCD mặt sau" 
                                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-all"
-                                onClick={() => handleOpenPrivateDocument("id_card_back", partnerInfo.id_card_back)}
+                                onClick={() => handleOpenDocument(partnerInfo.id_card_back)}
                               />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[9px] text-slate-500">
-                                  {docPreviewLoading["id_card_back"] ? "Đang tải..." : "Xem ảnh đã nộp"}
-                                </span>
+                                <span className="text-[9px] text-slate-500">Xem ảnh đã nộp</span>
                               </div>
                             )}
                           </div>
@@ -1070,7 +1045,7 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                       className="h-12 rounded-xl border-white/5 bg-white/[0.02] text-white"
                       {...register("bank_account_holder", { required: true })}
                     />
-                    {errors.bank_account_holder && <span className="text-xs text-rose-400">Tên chủ thẻ thụ hưởng bắt buộc.</span>}
+                    {errors.bank_account_holder && <span className="text-xs text-rose-400">Tên chủ tài khoản thụ hưởng bắt buộc.</span>}
                   </div>
                 </div>
 
@@ -1078,8 +1053,9 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                   <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] p-6 flex flex-col justify-between items-center text-center min-h-[220px]">
                     <div className="w-full">
                       <UploadCloud className="mx-auto mb-2 size-8 text-slate-500" />
-                      <h4 className="text-sm font-bold mb-1">Ảnh chụp sao kê tài khoản ngân hàng / QR Thụ hưởng</h4>
-                      <p className="text-[10px] font-semibold text-slate-500 mb-2">Để kiểm tra và tăng tốc duyệt tài khoản đối soát thanh toán tự động</p>
+                      <h4 className="text-sm font-bold mb-1">Ảnh xác minh tài khoản thụ hưởng</h4>
+                      <p className="text-[10px] font-semibold text-slate-500 mb-1">Tải sao kê ngân hàng hoặc ảnh mã QR VietQR (chọn một trong hai).</p>
+                      <p className="text-[10px] font-medium text-slate-500 mb-2">Thông tin trong ảnh phải trùng với tài khoản đã nhập phía trên để admin duyệt đối soát.</p>
                       
                       {partnerInfo?.bank_statement_image && !bankStatement && (
                         <div className="mb-3 flex flex-col items-center gap-2">
@@ -1090,15 +1066,13 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                             {docPreviewUrls["bank_statement"] ? (
                               <img 
                                 src={docPreviewUrls["bank_statement"]} 
-                                alt="Sao kê ngân hàng" 
+                                alt="Ảnh xác minh tài khoản thụ hưởng" 
                                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-all"
-                                onClick={() => handleOpenPrivateDocument("bank_statement", partnerInfo.bank_statement_image)}
+                                onClick={() => handleOpenDocument(partnerInfo.bank_statement_image)}
                               />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[9px] text-slate-500">
-                                  {docPreviewLoading["bank_statement"] ? "Đang tải..." : "Xem ảnh đã nộp"}
-                                </span>
+                                <span className="text-[9px] text-slate-500">Xem ảnh đã nộp</span>
                               </div>
                             )}
                           </div>
@@ -1118,7 +1092,7 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                         htmlFor="bank-stmt-file"
                         className="inline-flex h-9 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold px-4 cursor-pointer transition-all border border-white/5"
                       >
-                        {bankStatement ? "Thay đổi tệp sao kê" : partnerInfo?.bank_statement_image ? "Chọn tệp sao kê thay thế" : "Chọn tệp ảnh sao kê"}
+                        {bankStatement ? "Thay đổi ảnh xác minh" : partnerInfo?.bank_statement_image ? "Chọn ảnh xác minh thay thế" : "Chọn ảnh xác minh"}
                       </label>
                       {bankStatement && (
                         <div className="mt-3 flex flex-col items-center gap-2">
@@ -1126,7 +1100,7 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                             <div className="relative group w-24 h-16 rounded overflow-hidden border border-emerald-500/30 bg-slate-950/40">
                               <img 
                                 src={localPreviews.bankStatement} 
-                                alt="Sao kê ngân hàng mới" 
+                                alt="Ảnh xác minh tài khoản mới" 
                                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-all"
                                 onClick={() => window.open(localPreviews.bankStatement, "_blank")}
                               />
@@ -1197,9 +1171,9 @@ export default function PartnerOnboardingWizard({ user }: PartnerOnboardingWizar
                 
                 <h4 className="font-bold text-white mb-2">BÊN A: CÔNG TY CỔ PHẦN CÔNG NGHỆ & DU LỊCH BKS STAY (BKS STAY)</h4>
                 <ul className="list-none pl-4 space-y-1 mb-4 text-xs font-sans">
-                  <li>- Đại diện pháp luật: Nguyễn Thế Minh - Chức vụ: Giám đốc điều hành</li>
-                  <li>- Địa chỉ: Tòa nhà BKS, KĐT Dịch Vọng, Cầu Giấy, Hà Nội, Việt Nam</li>
-                  <li>- Hotline: 1900 6668</li>
+                  <li>- Đại diện pháp luật: Hồ Minh Ngọc - Chức vụ: Giám đốc điều hành</li>
+                  <li>- Địa chỉ: Tòa nhà BKS, 15 Quang Trung, Hải Châu, Đà Nẵng, Việt Nam</li>
+                  <li>- Hotline: 0333494850</li>
                 </ul>
 
                 <h4 className="font-bold text-white mb-2">BÊN B: ĐỐI TÁC THÀNH VIÊN LIÊN KẾT</h4>

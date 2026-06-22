@@ -2,6 +2,7 @@ import { provinceApi } from "@/api/provinceApi";
 import { ApiResponse } from "@/api/types";
 import { toastError, toastSuccess } from "@/components/ui/toast";
 import { ProvinceDetail, ProvinceFilter, ProvinceTypes } from "@/dataHelper/province.dataHelper";
+import { MASTER_DATA_QUERY_OPTIONS } from "@/lib/queryCache";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -53,14 +54,15 @@ export const useGetAllProvinces = (data: ProvinceFilter) => {
 }
 
 // get all provinces types
-export const useGetAllProvincesTypes = () => {
+export const useGetAllProvincesTypes = (options?: { enabled?: boolean }) => {
   return useQuery<ApiResponse<ProvinceTypes[]>, Error>({
     queryKey: ["home-provinces"],
     queryFn: async ({ signal }) => {
       const response = await provinceApi.getHomeProvinces({ signal });
       return response;
     },
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes to prevent duplicate/delayed background refetches
+    enabled: options?.enabled !== false,
+    ...MASTER_DATA_QUERY_OPTIONS,
   });
 };
 
@@ -77,6 +79,7 @@ export const useUpdateProvinceMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["province", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["provinces"] });
       queryClient.invalidateQueries({ queryKey: ["home-provinces"] });
+      queryClient.invalidateQueries({ queryKey: ["home-bootstrap-metadata"] });
       toastSuccess(t("common.update_success"));
     },
     onError: () => {

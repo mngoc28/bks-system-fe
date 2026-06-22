@@ -4,18 +4,29 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ROUTERS } from "@/constant";
 import { toastError } from "@/components/ui/toast";
+import type { ApiResponse } from "@/api/types";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
 import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
+import type { PropertyType } from "@/dataHelper/property.dataHelper";
 import type { Ward } from "@/dataHelper/ward.dataHelper";
 import { normalizeStayPropertyTypeLabel } from "@/utils/stayPropertyType";
 
 export type HeroSearchTab = "daily" | "monthly";
 
-export function useHeroSearch(onSearchSuccess?: () => void) {
+type UseHeroSearchOptions = {
+  onSearchSuccess?: () => void;
+  provincesData?: ApiResponse<ProvinceTypes[]>;
+  isLoadingProvinces?: boolean;
+  propertyTypesData?: ApiResponse<PropertyType[]>;
+  isLoadingPropertyTypes?: boolean;
+};
+
+export function useHeroSearch(options?: UseHeroSearchOptions) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const onSearchSuccess = options?.onSearchSuccess;
 
   const [provinceId, setProvinceId] = useState<number | null>(null);
   const [wardId, setWardId] = useState<number | null>(null);
@@ -26,9 +37,23 @@ export function useHeroSearch(onSearchSuccess?: () => void) {
   const [adults, setAdults] = useState<number>(1);
   const [children, setChildren] = useState<number>(0);
 
-  const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
+  const shouldFetchProvinces = options?.provincesData === undefined;
+  const { data: fetchedProvincesData, isLoading: isLoadingFetchedProvinces } = useGetAllProvincesTypes({
+    enabled: shouldFetchProvinces,
+  });
+  const provincesData = options?.provincesData ?? fetchedProvincesData;
+  const isLoadingProvinces = options?.isLoadingProvinces ?? isLoadingFetchedProvinces;
+
   const { data: wardsData, isLoading: isLoadingWards } = useGetHomeWardsByProvinceId(provinceId ?? 0);
-  const { data: propertyTypesData, isLoading: isLoadingPropertyTypes } = usePropertyTypesQuery();
+
+  const shouldFetchPropertyTypes = options?.propertyTypesData === undefined;
+  const { data: fetchedPropertyTypesData, isLoading: isLoadingFetchedPropertyTypes } = usePropertyTypesQuery(
+    shouldFetchPropertyTypes && searchTab === "monthly",
+  );
+  const propertyTypesData = options?.propertyTypesData ?? fetchedPropertyTypesData;
+  const isLoadingPropertyTypes =
+    options?.isLoadingPropertyTypes ??
+    (shouldFetchPropertyTypes && searchTab === "monthly" ? isLoadingFetchedPropertyTypes : false);
 
   const provinceOptions = useMemo(() => {
     const options =

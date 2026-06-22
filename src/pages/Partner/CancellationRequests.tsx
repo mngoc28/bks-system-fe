@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PARTNER_OPERATIONAL_QUERY_OPTIONS } from "@/lib/queryCache";
 import { ClipboardList, Loader2, RefreshCw, Calendar, Building2, Home, FileText, AlertCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { partnerService } from "@/services/partnerService";
@@ -262,6 +263,7 @@ const CancellationRequests: React.FC = () => {
       const res = await partnerService.getCancellationRequests(params, { signal });
       return parseListResponse(res);
     },
+    ...PARTNER_OPERATIONAL_QUERY_OPTIONS,
   });
 
   const approveMutation = useMutation({

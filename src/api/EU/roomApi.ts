@@ -3,6 +3,7 @@ import type { ApiResponse } from "@/api/types";
 import {
     Room,
     type PublicRoomPageData,
+    type PublicRoomSegmentedPageData,
     type SuggestedRoomsByProvinceParams,
     type SuggestedRoomsByTouristSpotParams,
 } from "@/dataHelper/EU/room.dataHelper";
@@ -28,6 +29,8 @@ export interface PublicRoomListParams {
     amenity_ids?: number[];
     service_ids?: number[];
     rent_type?: "daily" | "monthly";
+    rent_segments?: string;
+    include_tourist_summary?: boolean;
 }
 
 export const roomApi = {
@@ -37,6 +40,19 @@ export const roomApi = {
 
     getPaginatedRoomList: (params: PublicRoomListParams): Promise<ApiResponse<PublicRoomPageData>> => {
         return axiosClient.get<PublicRoomPageData>("rooms/search", { params }) as unknown as Promise<ApiResponse<PublicRoomPageData>>;
+    },
+
+    getSegmentedPaginatedRoomList: (
+        params: Omit<PublicRoomListParams, "rent_type" | "rent_segments"> & {
+            rent_segments?: string;
+        },
+    ): Promise<ApiResponse<PublicRoomSegmentedPageData>> => {
+        return axiosClient.get<PublicRoomSegmentedPageData>("rooms/search", {
+            params: {
+                ...params,
+                rent_segments: params.rent_segments ?? "daily,monthly",
+            },
+        }) as unknown as Promise<ApiResponse<PublicRoomSegmentedPageData>>;
     },
 
     getAmenities: (): Promise<ApiResponse<any>> => {

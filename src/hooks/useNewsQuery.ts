@@ -1,6 +1,7 @@
 import { newsApi } from "@/api/newsApi";
 import { ApiResponse } from "@/api/types";
 import { News, NewsFilters, NewsFormCreate, NewsListDataResponse, PublicNewsItem } from "@/dataHelper/news.dataHelper";
+import { HOMEPAGE_QUERY_OPTIONS, PUBLIC_STATIC_QUERY_OPTIONS } from "@/lib/queryCache";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // get all news
@@ -47,7 +48,7 @@ export const useUpdateNewsMutation = () => {
     });
 }
 
-// delete news 
+// delete news
 export const useDeleteNewsMutation = () => {
     const queryClient = useQueryClient();
     return useMutation<ApiResponse<string>, Error, number>({
@@ -59,10 +60,12 @@ export const useDeleteNewsMutation = () => {
 }
 
 // latest public news
-export const useLatestNewsQuery = (limit = 6) => {
+export const useLatestNewsQuery = (limit = 6, enabled = true) => {
     return useQuery<ApiResponse<PublicNewsItem[]>, Error>({
         queryKey: ['news-latest', limit],
         queryFn: async () => newsApi.getLatestNews({ limit }),
+        enabled,
+        ...HOMEPAGE_QUERY_OPTIONS,
     });
 }
 
@@ -72,6 +75,7 @@ export const useNewsDetailPublicQuery = (id: number) => {
         queryKey: ['news-detail-public', id],
         queryFn: async () => newsApi.getNewsDetailPublic(id),
         enabled: id > 0,
+        ...PUBLIC_STATIC_QUERY_OPTIONS,
     });
 }
 
@@ -80,5 +84,6 @@ export const useListNewsPublicQuery = (data: NewsFilters) => {
     return useQuery<ApiResponse<NewsListDataResponse>, Error>({
         queryKey: ['news-list-public', data],
         queryFn: async () => newsApi.getListNewsPublic(data),
+        ...PUBLIC_STATIC_QUERY_OPTIONS,
     });
 }

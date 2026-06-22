@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import AdminCardCrossNavMenu from "@/components/admin/AdminCardCrossNavMenu";
 import { buildAdminUrl, toBookingsByPartner, toPropertiesByPartner, toRoomsByPartner } from "@/utils/adminNavigation";
 import { resolveImageUrl } from "@/utils/imageUtils";
+import { getPartnerFallbackImage } from "@/utils/fallbackImages";
 import { highlightText } from "@/utils/utils";
 
 interface PartnerCardProps {
@@ -36,7 +37,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner, onView, onEdit, high
   const { t } = useTranslation();
   const navigate = useNavigate();
   const imageUrl = resolveImageUrl(partner.image_1, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
-  const fallbackImage = "/assets/images/photo_error2.png";
+  const fallbackImage = getPartnerFallbackImage();
 
   return (
     <Card

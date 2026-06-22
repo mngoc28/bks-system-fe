@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Zap,
   User,
@@ -22,44 +22,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  useInvalidatePartnerStayServices,
+  usePartnerStayServicesQuery,
+} from '@/hooks/Partner/usePartnerStayServicesQuery';
 
 const StayServiceManagement: React.FC = () => {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchRequests(abortController.signal);
-    return () => {
-      abortController.abort();
-    };
-  }, []);
-
-  const fetchRequests = async (signal?: AbortSignal) => {
-    try {
-      setLoading(true);
-      const res: any = await partnerService.getStayServiceRequests({ signal });
-      setRequests(res.data || []);
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error('Error fetching service requests:', error);
-      toastError('Không thể tải danh sách yêu cầu dịch vụ.');
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  };
+  const { data: requestsData = [], isLoading: loading } = usePartnerStayServicesQuery();
+  const invalidateStayServices = useInvalidatePartnerStayServices();
+  const requests = requestsData as Array<Record<string, any>>;
 
   const handleUpdateStatus = async (id: number | string, status: number) => {
     try {
       await partnerService.updateStayServiceStatus(id, status);
       toastSuccess('Cập nhật trạng thái thành công.');
-      fetchRequests();
+      invalidateStayServices();
     } catch (_error) {
       toastError('Không thể cập nhật trạng thái.');
     }
@@ -114,7 +94,7 @@ const StayServiceManagement: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Yêu cầu dịch vụ lưu trú</h1>
           <p className="mt-1 text-gray-500">Quản lý các yêu cầu từ khách đang lưu trú (Dọn phòng, đồ dùng, sự cố...).</p>
         </div>
-        <Button onClick={() => fetchRequests()} variant="outline" size="sm" className="gap-2">
+        <Button onClick={() => invalidateStayServices()} variant="outline" size="sm" className="gap-2">
             Làm mới
         </Button>
       </div>

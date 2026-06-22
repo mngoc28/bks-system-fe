@@ -57,10 +57,12 @@ export interface GmvChartPoint {
  */
 export interface UrgentMaintenance {
   id: number;
+  roomId?: number;
   roomName: string;
   issueDescription: string;
   customerName: string;
   status: string;
+  maintenanceType?: string;
   createdAt: string;
 }
 

@@ -24,8 +24,14 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
   const userEmail = useUserStore((state) => state.userEmail);
   const logout = useUserStore((state) => state.logout);
   const [showMobileSearch, setShowMobileSearch] = React.useState(false);
+  const [canLoadPartnerProfile, setCanLoadPartnerProfile] = React.useState(false);
 
-  const { data: partnerResponse } = usePartnerProfileQuery();
+  React.useEffect(() => {
+    const id = window.setTimeout(() => setCanLoadPartnerProfile(true), 1200);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const { data: partnerResponse } = usePartnerProfileQuery({ enabled: canLoadPartnerProfile });
   const companyName = partnerResponse?.data?.company_name;
   const userDisplayName = userEmail?.split('@')[0] || "Partner";
 

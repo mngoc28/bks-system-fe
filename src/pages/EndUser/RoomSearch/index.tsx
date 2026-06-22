@@ -1,4 +1,4 @@
-import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow, Star, Heart, Share2, Sparkles, Home, ShieldCheck, Search, Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,7 @@ import DestinationKeywordInput from "@/components/search/DestinationKeywordInput
 import type { TouristSpotSuggestion } from "@/dataHelper/EU/touristSpot.dataHelper";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
-import { usePaginatedRoomsQuery, usePublicAmenitiesQuery, usePublicServicesQuery } from "@/hooks/EU/useRoomQuery";
+import { usePaginatedRoomsQuery, usePublicAmenitiesQuery, usePublicServicesQuery, useSegmentedPaginatedRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { normalizeStayPropertyTypeLabel, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
 import { formatPrice, formatCurrencyInput, parseCurrencyValue, validateCurrencyInput, simplifyAddress, formatProvinceName } from "@/utils/utils";
@@ -230,6 +230,8 @@ const RoomSearch = () => {
   const [localPriceMaxStr, setLocalPriceMaxStr] = useState("");
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
+  const [isAmenitiesServicesFilterOpen, setIsAmenitiesServicesFilterOpen] = useState(false);
+  const roomResultsRef = useRef<HTMLDivElement>(null);
 
   const [wishlist, setWishlist] = useState<number[]>(() => {
     try {
@@ -328,6 +330,9 @@ const RoomSearch = () => {
     return val ? val.split(",").map(Number).filter(Boolean) : [];
   }, [searchParams]);
 
+  const shouldLoadFilterMetadata =
+    isAmenitiesServicesFilterOpen || amenityIds.length > 0 || serviceIds.length > 0;
+
   const hasSecondaryFilters = !!(ratingMin || priceMin || priceMax || amenityIds.length > 0 || serviceIds.length > 0);
 
   const touristSpotLabel = useMemo(() => {
@@ -366,9 +371,13 @@ const RoomSearch = () => {
 
   const { data: provincesData } = useGetAllProvincesTypes();
   const { data: wardsData, isLoading: isLoadingWards } = useGetHomeWardsByProvinceId(localProvinceId ?? provinceId ?? 0);
-  const { data: propertyTypesData } = usePropertyTypesQuery();
-  const { data: publicAmenitiesData } = usePublicAmenitiesQuery();
-  const { data: publicServicesData } = usePublicServicesQuery();
+  const { data: publicAmenitiesData, isLoading: isLoadingAmenities } = usePublicAmenitiesQuery({
+    enabled: shouldLoadFilterMetadata,
+  });
+  const { data: publicServicesData, isLoading: isLoadingServices } = usePublicServicesQuery({
+    enabled: shouldLoadFilterMetadata,
+  });
+  const isLoadingFilterMetadata = shouldLoadFilterMetadata && (isLoadingAmenities || isLoadingServices);
 
   const featuredAmenities = useMemo(() => {
     const list = publicAmenitiesData ?? [];
@@ -456,11 +465,6 @@ const RoomSearch = () => {
   }, [sortBy]);
 
   const showTwoBlocks = selectedPropertyTypeId === null;
-  const isApartmentSegment = useMemo(() => {
-    if (selectedPropertyTypeId === null || !propertyTypesData?.data) return false;
-    const type = propertyTypesData.data.find((t: any) => t.id === selectedPropertyTypeId);
-    return type ? isApartmentSegmentPropertyType(type.name) : false;
-  }, [selectedPropertyTypeId, propertyTypesData]);
 
   const baseQueryParams = useMemo(() => ({
     province_id: provinceId || undefined,
@@ -480,36 +484,56 @@ const RoomSearch = () => {
   }), [provinceId, wardId, deferredKeyword, requestedPage, startDate, endDate, guests, touristSpotSlug, ratingMin, priceMin, priceMax, amenityIds, serviceIds, roomSortParams]);
 
   const {
-    data: dailyRoomsPageData,
-    isLoading: isLoadingDaily,
-    isError: isErrorDaily,
-    isPlaceholderData: isPlaceholderDataDaily,
-    refetch: refetchDaily,
-  } = usePaginatedRoomsQuery(
+    data: segmentedRoomsPageData,
+    isLoading: isLoadingSegmented,
+    isError: isErrorSegmented,
+    isPlaceholderData: isPlaceholderDataSegmented,
+    refetch: refetchSegmented,
+  } = useSegmentedPaginatedRoomsQuery(
     {
       ...baseQueryParams,
-      property_type_id: !showTwoBlocks && !isApartmentSegment ? selectedPropertyTypeId : undefined,
-      rent_type: showTwoBlocks ? "daily" : undefined,
       per_page: limit,
     },
-    { enabled: showTwoBlocks || !isApartmentSegment },
+    { enabled: showTwoBlocks },
   );
 
   const {
-    data: monthlyRoomsPageData,
-    isLoading: isLoadingMonthly,
-    isError: isErrorMonthly,
-    isPlaceholderData: isPlaceholderDataMonthly,
-    refetch: refetchMonthly,
+    data: singleSegmentRoomsPageData,
+    isLoading: isLoadingSingleSegment,
+    isError: isErrorSingleSegment,
+    isPlaceholderData: isPlaceholderDataSingleSegment,
+    refetch: refetchSingleSegment,
   } = usePaginatedRoomsQuery(
     {
       ...baseQueryParams,
-      property_type_id: !showTwoBlocks && isApartmentSegment ? selectedPropertyTypeId : undefined,
-      rent_type: showTwoBlocks ? "monthly" : undefined,
+      property_type_id: !showTwoBlocks
+        ? selectedPropertyTypeId ?? undefined
+        : undefined,
       per_page: limit,
     },
-    { enabled: showTwoBlocks || isApartmentSegment },
+    { enabled: !showTwoBlocks },
   );
+
+  const isLoading = showTwoBlocks
+    ? isLoadingSegmented
+    : isLoadingSingleSegment;
+  const shouldLoadPropertyTypes = selectedPropertyTypeId !== null || !isLoading;
+  const { data: propertyTypesData } = usePropertyTypesQuery(shouldLoadPropertyTypes);
+  const isApartmentSegment = useMemo(() => {
+    if (selectedPropertyTypeId === null || !propertyTypesData?.data) {
+      return false;
+    }
+
+    const type = propertyTypesData.data.find((t: { id: number; name: string }) => t.id === selectedPropertyTypeId);
+    return type ? isApartmentSegmentPropertyType(type.name) : false;
+  }, [selectedPropertyTypeId, propertyTypesData]);
+
+  const dailyRoomsPageData = showTwoBlocks
+    ? segmentedRoomsPageData?.daily
+    : (!isApartmentSegment ? singleSegmentRoomsPageData : undefined);
+  const monthlyRoomsPageData = showTwoBlocks
+    ? segmentedRoomsPageData?.monthly
+    : (isApartmentSegment ? singleSegmentRoomsPageData : undefined);
 
   const dailyRooms = showTwoBlocks 
     ? (dailyRoomsPageData?.data ?? []) 
@@ -530,21 +554,20 @@ const RoomSearch = () => {
   );
 
   const page = Math.min(requestedPage, totalPages);
-  const isLoading = (showTwoBlocks && (isLoadingDaily || isLoadingMonthly)) || (!showTwoBlocks && (isApartmentSegment ? isLoadingMonthly : isLoadingDaily));
-  const isError = (showTwoBlocks && (isErrorDaily || isErrorMonthly)) || (!showTwoBlocks && (isApartmentSegment ? isErrorMonthly : isErrorDaily));
-  const isPlaceholderData = showTwoBlocks 
-    ? (isPlaceholderDataDaily || isPlaceholderDataMonthly)
-    : (isApartmentSegment ? isPlaceholderDataMonthly : isPlaceholderDataDaily);
+  const isError = showTwoBlocks
+    ? isErrorSegmented
+    : isErrorSingleSegment;
+  const isPlaceholderData = showTwoBlocks
+    ? isPlaceholderDataSegmented
+    : isPlaceholderDataSingleSegment;
 
   const refetch = () => {
     if (showTwoBlocks) {
-      void refetchDaily();
-      void refetchMonthly();
-    } else if (isApartmentSegment) {
-      void refetchMonthly();
-    } else {
-      void refetchDaily();
+      void refetchSegmented();
+      return;
     }
+
+    void refetchSingleSegment();
   };
 
   useEffect(() => {
@@ -631,12 +654,23 @@ const RoomSearch = () => {
     }
   };
 
+  const scrollToRoomResults = () => {
+    const resultsSection = roomResultsRef.current;
+    if (!resultsSection) {
+      return;
+    }
+
+    const top = resultsSection.getBoundingClientRect().top + window.scrollY - 16;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  };
+
   const handlePageChange = (nextPage: number) => {
     if (nextPage < 1 || nextPage > totalPages || nextPage === page) {
       return;
     }
 
-    updateSearchParams({ page: String(nextPage) });
+    updateSearchParams({ page: String(nextPage) }, { scroll: false });
+    scrollToRoomResults();
   };
 
   const handlePerPageChange = (nextLimit: number) => {
@@ -647,7 +681,8 @@ const RoomSearch = () => {
     updateSearchParams({
       page: String(DEFAULT_PAGE),
       limit: String(nextLimit),
-    });
+    }, { scroll: false });
+    scrollToRoomResults();
   };
 
   const handlePropertyTypeChange = (propertyTypeId: number | null) => {
@@ -1379,7 +1414,10 @@ const RoomSearch = () => {
           </div>
         ) : (
           <>
-            <div className="mb-6 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between font-sans">
+            <div
+              ref={roomResultsRef}
+              className="mb-6 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between font-sans"
+            >
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-slate-600">
                   {touristSpotLabel ? (
@@ -1557,7 +1595,10 @@ const RoomSearch = () => {
                 </Popover>
 
                 {/* Bộ lọc Tiện nghi & Dịch vụ */}
-                <Popover>
+                <Popover
+                  open={isAmenitiesServicesFilterOpen}
+                  onOpenChange={setIsAmenitiesServicesFilterOpen}
+                >
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -1576,6 +1617,11 @@ const RoomSearch = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[min(340px,calc(100vw-2rem))] max-h-[420px] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900 font-sans custom-scrollbar" align="end">
+                    {isLoadingFilterMetadata ? (
+                      <div className="flex min-h-[160px] items-center justify-center py-6">
+                        <Spinner size="md" showText text="Đang tải tiện ích..." className="text-slate-500" />
+                      </div>
+                    ) : (
                     <div className="space-y-5">
                       {/* Tiện nghi */}
                       <div>
@@ -1695,6 +1741,7 @@ const RoomSearch = () => {
                         </Button>
                       </div>
                     </div>
+                    )}
                   </PopoverContent>
                 </Popover>
 

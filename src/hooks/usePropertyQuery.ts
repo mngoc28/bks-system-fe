@@ -10,6 +10,7 @@ import {
   SearchPropertyRequest,
   UpdatePropertyRequest,
 } from "@/dataHelper/property.dataHelper";
+import { SYSTEM_CONFIG_QUERY_OPTIONS } from "@/lib/queryCache";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { partnerService } from "@/services/partnerService";
@@ -43,10 +44,11 @@ export const usePropertyTypesQuery = (enabled = true) => {
       } as ApiResponse<PropertyType[]>;
     },
     enabled,
+    ...SYSTEM_CONFIG_QUERY_OPTIONS,
   });
 };
 
-export const usePartnerPropertyTypesQuery = () => {
+export const usePartnerPropertyTypesQuery = (enabled = true) => {
   return useQuery<ApiResponse<PropertyType[]>, Error>({
     queryKey: ["property-types-partner"],
     queryFn: async () => {
@@ -63,8 +65,8 @@ export const usePartnerPropertyTypesQuery = () => {
         data: normalized,
       } as ApiResponse<PropertyType[]>;
     },
-    staleTime: 5 * 60_000,
-    gcTime: 30 * 60_000,
+    enabled,
+    ...SYSTEM_CONFIG_QUERY_OPTIONS,
   });
 };
 

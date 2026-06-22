@@ -12,6 +12,7 @@ export const partnerService = {
 
   // --- PROPERTIES (partner) ---
   getProperties: (params?: any, config?: any) => apiService.get(`${BASE_URL}/properties/searchAll`, { params, ...config }),
+  getPropertyById: (id: number | string, config?: any) => apiService.get(`${BASE_URL}/properties/${id}`, config),
   getPropertyNames: (config?: any) => apiService.get(`${BASE_URL}/properties/all`, config),
   getPropertyRoomPreview: (propertyId: number | string, limit = 6, config?: any) =>
     apiService.get(`${BASE_URL}/properties/${propertyId}/rooms/preview`, {
@@ -51,6 +52,10 @@ export const partnerService = {
   },
   bulkUpdateRoomStatus: (ids: (number | string)[], status: number) =>
     apiService.post(`${BASE_URL}/rooms/bulk-update-status`, { ids, status }),
+  updateHousekeepingStatus: (
+    id: number | string,
+    status: 'clean' | 'dirty' | 'inspecting',
+  ) => apiService.patch(`${BASE_URL}/rooms/${id}/housekeeping`, { housekeeping_status: status }),
   deleteRoom: (id: number | string) => apiService.delete(`${BASE_URL}/rooms/${id}`),
   bulkDeleteRooms: (ids: (number | string)[]) =>
     apiService.post(`${BASE_URL}/rooms/bulk-delete`, { ids }),
@@ -84,6 +89,7 @@ export const partnerService = {
 
   // --- BOOKINGS ---
   getBookings: (params?: any, config?: any) => apiService.get(`${BASE_URL}/bookings`, { params, ...config }),
+  getBookingSummary: (config?: any) => apiService.get(`${BASE_URL}/bookings/summary`, config),
   confirmBooking: (id: number | string) => apiService.put(`${BASE_URL}/bookings/${id}/confirm`),
   // Partner Portal 360 Phase 2: quickConfirm là alias rõ nghĩa của confirmBooking,
   // dùng cho quick action trong list/dashboard. Server-side cùng endpoint.
@@ -99,6 +105,8 @@ export const partnerService = {
     apiService.post(`${BASE_URL}/bookings/bulk-cancel`, { ids, reason }),
   confirmDeposit: (id: number | string) =>
     apiService.post(`${BASE_URL}/bookings/${id}/confirm-deposit`),
+  ensureBookingContract: (id: number | string) =>
+    apiService.post(`${BASE_URL}/bookings/${id}/ensure-contract`),
 
   /** BCP — guest cancellation requests (requires `BCP_CANCELLATION_V1` on API). */
   getCancellationRequests: (params?: {
@@ -179,8 +187,18 @@ export const partnerService = {
     apiService.get(`${BASE_URL}/reports/kpis`, { params: { start_date: startDate, end_date: endDate } }),
 
   // --- MAINTENANCE ---
-  getMaintenances: (params?: any, config?: any) => apiService.get(`${BASE_URL}/room-maintenances`, { params, ...config }),
-  createMaintenance: (data: any) => apiService.post(`${BASE_URL}/room-maintenances`, data),
+  getMaintenances: (params?: Record<string, unknown>, config?: object) =>
+    apiService.get(`${BASE_URL}/room-maintenances`, { params, ...config }),
+  getMaintenanceById: (id: number | string, config?: object) =>
+    apiService.get(`${BASE_URL}/room-maintenances/${id}`, config),
+  previewMaintenanceConflicts: (
+    params: { room_id: number | string; start_date: string; end_date: string },
+    config?: object,
+  ) => apiService.get(`${BASE_URL}/room-maintenances/conflict-preview`, { params, ...config }),
+  createMaintenance: (data: Record<string, unknown>) =>
+    apiService.post(`${BASE_URL}/room-maintenances`, data),
+  updateMaintenance: (id: number | string, data: Record<string, unknown>) =>
+    apiService.patch(`${BASE_URL}/room-maintenances/${id}`, data),
 
   // --- STAY SERVICES ---
   getStayServiceRequests: (config?: any) => apiService.get(`${BASE_URL}/stay-services`, config),
@@ -207,4 +225,3 @@ export const partnerService = {
 };
 
 export default partnerService;
-

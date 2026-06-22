@@ -21,6 +21,12 @@ export interface Property {
   type?: string; 
   reviews_count?: number;
   reviews_avg_rating?: number | string;
+  coverImageUrl?: string | null;
+  province_name?: string;
+  ward_name?: string;
+  /** Chưa có từ API list — cần BE bổ sung vacant_rooms_count / vacancy_rate */
+  vacant_rooms_count?: number;
+  vacancy_rate?: number;
 }
 
 export interface Amenity {
@@ -79,9 +85,14 @@ export interface Room {
   cheapest_monthly_price?: number;
   all_prices?: string;
   status: 'Trống' | 'Đang thuê' | 'Đang bảo trì';
+  housekeeping_status?: 'clean' | 'dirty' | 'inspecting';
   reviews_count?: number;
   reviews_avg_rating?: number;
   province_id?: number;
+  partner_phone?: string | null;
+  partner_email?: string | null;
+  support_phone?: string | null;
+  support_email?: string | null;
 }
 
 export interface Booking {
@@ -102,6 +113,7 @@ export interface Booking {
   stay_status?: 'pending' | 'checked_in' | 'checked_out' | 'no_show';
   booking_status?: number;
   status: 'Chờ duyệt' | 'Đã duyệt' | 'Đã hủy' | 'Đã đặt cọc' | 'Đang ở' | 'Đã trả phòng' | 'Đã hoàn thành' | 'Chờ duyệt hủy' | 'Không đến';
+  contract_id?: number | null;
 }
 
 export interface MaintenanceRequest {
@@ -109,11 +121,14 @@ export interface MaintenanceRequest {
   roomName: string;
   roomId?: string | number;
   propertyName?: string;
-  type?: string; 
-  description?: string; 
-  status: 'Đang chờ' | 'Đang xử lý' | 'Đã hoàn thành' | 'Chờ xử lý' | 'Đang sửa';
+  title?: string;
+  type?: string;
+  maintenanceType?: 'scheduled' | 'emergency';
+  description?: string;
+  status: 'Đang chờ' | 'Đang xử lý' | 'Đã hoàn thành' | 'Chờ xử lý' | 'Đang sửa' | 'Đã hủy';
+  rawStatus?: 'planned' | 'in_progress' | 'completed' | 'cancelled';
   createdAt: string;
-  customerName?: string; 
+  customerName?: string;
   issueDescription?: string;
 }
 

@@ -59,8 +59,9 @@ export const enum ROUTERS {
   PARTNER_PROPERTIES = "/partner/properties",
   PARTNER_BOOKINGS = "/partner/bookings",
   PARTNER_CANCELLATION_REQUESTS = "/partner/cancellation-requests",
-  PARTNER_SERVICES = "/partner/services",
-  PARTNER_AMENITIES = "/partner/amenities",
+  PARTNER_CATALOG = "/partner/catalog",
+  PARTNER_CATALOG_SERVICES = "/partner/catalog/services",
+  PARTNER_CATALOG_AMENITIES = "/partner/catalog/amenities",
   PARTNER_NEWS = "/partner/news",
   PARTNER_MAINTENANCE = "/partner/maintenances",
   PARTNER_ROOM_DETAIL = "/partner/rooms/:roomId",
@@ -104,6 +105,11 @@ export const enum ROUTERS {
   BKS_STAY_FORCE_CHANGE_PASSWORD = "/bks-stay/force-change-password",
   BKS_STAY_GUIDE = "/bks-stay/guide",
 }
+
+/** @deprecated dùng ROUTERS.PARTNER_CATALOG_SERVICES */
+export const PARTNER_SERVICES_ROUTE = ROUTERS.PARTNER_CATALOG_SERVICES;
+/** @deprecated dùng ROUTERS.PARTNER_CATALOG_AMENITIES */
+export const PARTNER_AMENITIES_ROUTE = ROUTERS.PARTNER_CATALOG_AMENITIES;
 
 export const STORAGE_VAR = {
   ACCESS_TOKEN: "accessToken",

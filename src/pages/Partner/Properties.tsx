@@ -1,61 +1,80 @@
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Building2,
+  DoorOpen,
+  Edit,
+  Image as ImageIcon,
+  Layers,
+  Loader2,
+  MapPin,
+  MoreHorizontal,
+  Plus,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+  Star,
+  Trash2,
+  TrendingUp,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { PlainTextarea } from "@/components/ui/textarea";
-import { usePartnerPropertyTypesQuery } from '@/hooks/usePropertyQuery';
-import { useGetUserProfileQuery } from '@/hooks/useUserQuery';
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PlainTextarea } from '@/components/ui/textarea';
 import {
-  fetchPartnerPropertyRoomPreview,
-  partnerPropertyRoomPreviewQueryKey,
-  useInvalidatePartnerPropertyQueries,
-  usePartnerPropertiesQuery,
-} from '@/hooks/Partner/usePartnerPropertiesQuery';
-import { partnerService } from '@/services/partnerService';
-import { AirVent, ChevronDown, Edit, Eye, Image as ImageIcon, Layers, Loader2, MapPin, Maximize, Plus, Star, Trash2, Wallet, X, Zap } from 'lucide-react';
-import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useQueries, useQuery } from '@tanstack/react-query';
-import SearchableSelect from '@/components/ui/searchable-select';
-import { formatCurrencyInput, parseCurrencyValue, validateCurrencyInput } from '@/utils/utils';
-import { Property, Room } from './types';
-
-import Pagination from '@/components/Pagination';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toastError, toastSuccess } from '@/components/ui/toast';
+} from '@/components/ui/select';
+import SearchableSelect from '@/components/ui/searchable-select';
+import Pagination from '@/components/Pagination';
+import { MASTER_DATA_QUERY_OPTIONS } from '@/lib/queryCache';
+import { getCurrentUserIdFromToken } from '@/lib/echoClient';
+import {
+  useInvalidatePartnerPropertyQueries,
+  usePartnerPropertiesQuery,
+} from '@/hooks/Partner/usePartnerPropertiesQuery';
+import { usePartnerStatsQuery } from '@/hooks/usePartnerDashboardQuery';
+import { usePartnerPropertyTypesQuery } from '@/hooks/usePropertyQuery';
+import { partnerService } from '@/services/partnerService';
 import { RENT_CATEGORY } from '@/constant';
-import { Filter, RotateCcw, Search } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 import { normalizeStayPropertyTypeLabel } from '@/utils/stayPropertyType';
+import {
+  buildPartnerPropertiesUrlParams,
+  parsePartnerPropertiesUrl,
+  PartnerHasRoomsFilter,
+  PartnerOccupancyFilter,
+  PartnerRatingFilter,
+  ratingFilterToMinRating,
+} from '@/utils/partnerPropertiesUrlParams';
+import { Property } from './types';
 import InlineSheet from './components/InlineSheet';
 import PartnerImageManager from './components/PartnerImageManager';
-import PropertySkeleton from './components/PropertySkeleton';
+import PartnerPropertyAdvancedFilters, {
+  PARTNER_PROPERTY_SORT_PRESETS,
+  PartnerPropertySortOption,
+} from './components/PartnerPropertyAdvancedFilters';
 import { PartnerSectionCard, PartnerSectionHeader } from './components/ResponsiveBlocks';
-
-const PRICE_PACKAGE_LABEL_VI: Record<string, string> = {
-  'super small': 'Siêu nhỏ',
-  small: 'Nhỏ',
-  medium: 'Trung bình',
-  large: 'Lớn',
-};
-
-function formatPricePackageLabel(name: string): string {
-  return PRICE_PACKAGE_LABEL_VI[name] ?? name;
-}
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -66,133 +85,346 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
+const formatPropertyLocation = (property: Property): string => {
+  const parts = [property.ward_name, property.province_name].filter(Boolean);
+  if (parts.length > 0) return parts.join(', ');
+  return property.address || '—';
+};
+
+const getPropertyTypeBadgeClass = (typeName: string): string => {
+  const normalized = typeName.toLowerCase();
+  if (normalized.includes('villa') || normalized.includes('biệt thự')) {
+    return 'bg-violet-100 text-violet-800';
+  }
+  if (normalized.includes('căn hộ') || normalized.includes('apartment')) {
+    return 'bg-indigo-100 text-indigo-800';
+  }
+  return 'bg-[#C4E7FF] text-[#004C69]';
+};
+
+const VacancyCell: React.FC<{ property: Property }> = ({ property }) => {
+  const totalRooms = property.totalRooms || property.rooms_count || 0;
+  const vacantCount = property.vacant_rooms_count;
+  const vacancyRate = property.vacancy_rate;
+
+  if (vacantCount == null && vacancyRate == null) {
+    return <span className="text-xs text-slate-400">—</span>;
+  }
+
+  const rate = vacancyRate ?? (totalRooms > 0 && vacantCount != null
+    ? Math.round((vacantCount / totalRooms) * 100)
+    : 0);
+  const count = vacantCount ?? Math.round((rate / 100) * totalRooms);
+  const barColor = rate >= 30 ? 'bg-emerald-500' : rate >= 15 ? 'bg-[#00A2DA]' : 'bg-amber-500';
+  const textColor = rate >= 30 ? 'text-emerald-600' : rate >= 15 ? 'text-[#00668A]' : 'text-amber-600';
+  const roomLabel = totalRooms > 0 ? `${count}/${totalRooms} phòng` : `${count} phòng`;
+
+  return (
+    <div className="flex min-w-[120px] flex-col gap-1">
+      <div className="flex items-center justify-between text-[11px] font-bold">
+        <span className={textColor}>{rate}%</span>
+        <span className="text-slate-400">{roomLabel}</span>
+      </div>
+      <div className="h-1.5 w-full max-w-[128px] overflow-hidden rounded-full bg-slate-100">
+        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${Math.min(rate, 100)}%` }} />
+      </div>
+    </div>
+  );
+};
+
+const PropertyRatingStars: React.FC<{ rating: number; count?: number }> = ({ rating, count = 0 }) => {
+  if (rating <= 0) {
+    return <span className="text-xs text-slate-400">Chưa có</span>;
+  }
+
+  const fullStars = Math.floor(rating);
+  const hasHalf = rating - fullStars >= 0.5;
+
+  return (
+    <div className="flex items-center gap-0.5 text-amber-400">
+      {Array.from({ length: 5 }).map((_, index) => {
+        const filled = index < fullStars || (index === fullStars && hasHalf);
+        return (
+          <Star
+            key={index}
+            className={`size-3.5 ${filled ? 'fill-amber-400 text-amber-400' : 'text-amber-200'}`}
+          />
+        );
+      })}
+      {count > 0 ? (
+        <span className="ml-1 text-[10px] font-normal text-slate-400">({count})</span>
+      ) : null}
+    </div>
+  );
+};
+
 const Properties: React.FC = () => {
   const navigate = useNavigate();
+  const [urlSearchParams, setUrlSearchParams] = useSearchParams();
+  const initialUrlState = useMemo(() => parsePartnerPropertiesUrl(urlSearchParams), []);
   const { t } = useTranslation();
-  const { data: propertyTypes } = usePartnerPropertyTypesQuery();
-  const { data: profileRes } = useGetUserProfileQuery();
-  const userProfile = (profileRes as any)?.data || profileRes;
-  const { invalidateList, invalidatePreview } = useInvalidatePartnerPropertyQueries();
+  const { invalidateList } = useInvalidatePartnerPropertyQueries();
+  const [canLoadPropertyTypes, setCanLoadPropertyTypes] = useState(false);
 
-  // Pagination & Filters
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchName, setSearchName] = useState('');
-  const [selectedType, setSelectedType] = useState<number | string>(0);
-  const [perPage, setPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(initialUrlState.page);
+  const [searchKeyword, setSearchKeyword] = useState(initialUrlState.keyword);
+  const [selectedType, setSelectedType] = useState<number | string>(initialUrlState.type);
+  const [selectedRentCategory, setSelectedRentCategory] = useState<number | string>(initialUrlState.rent);
+  const [selectedProvinceId, setSelectedProvinceId] = useState(initialUrlState.provinceId);
+  const [selectedWardId, setSelectedWardId] = useState(initialUrlState.wardId);
+  const [sortOption, setSortOption] = useState<PartnerPropertySortOption>(initialUrlState.sort);
+  const [occupancyFilter, setOccupancyFilter] = useState<PartnerOccupancyFilter>(initialUrlState.occupancy);
+  const [ratingFilter, setRatingFilter] = useState<PartnerRatingFilter>(initialUrlState.rating);
+  const [hasRoomsFilter, setHasRoomsFilter] = useState<PartnerHasRoomsFilter>(initialUrlState.hasRooms);
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [perPage, setPerPage] = useState(initialUrlState.perPage);
   const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set());
+
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [expandedPropertyIds, setExpandedPropertyIds] = useState<Set<string>>(new Set());
-  const debouncedSearchName = useDebouncedValue(searchName, 500);
-  const prevFiltersRef = useRef<{ debounced: string; type: number }>({
-    debounced: debouncedSearchName,
+  const [deleteTargetProperty, setDeleteTargetProperty] = useState<Property | null>(null);
+  const [isSingleDeleting, setIsSingleDeleting] = useState(false);
+
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
+  const [imageManagerTarget, setImageManagerTarget] = useState<{ id: string; name: string } | null>(null);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+
+  const debouncedSearchKeyword = useDebouncedValue(searchKeyword, 500);
+  const prevFiltersRef = useRef({
+    debounced: debouncedSearchKeyword,
     type: Number(selectedType),
+    rent: Number(selectedRentCategory),
+    provinceId: selectedProvinceId,
+    wardId: selectedWardId,
+    sort: sortOption,
+    occupancy: occupancyFilter,
+    rating: ratingFilter,
+    hasRooms: hasRoomsFilter,
   });
 
+  const { data: stats, isLoading: statsLoading } = usePartnerStatsQuery();
+
+  const { data: provincesRes } = useQuery({
+    queryKey: ['partner', 'provinces', 'all'],
+    queryFn: () => partnerService.getProvinces(),
+    ...MASTER_DATA_QUERY_OPTIONS,
+  });
+
+  const provinces = useMemo(() => {
+    const raw = (provincesRes as { data?: unknown })?.data ?? provincesRes;
+    return Array.isArray(raw) ? raw : [];
+  }, [provincesRes]);
+
+  const { data: wardsRes } = useQuery({
+    queryKey: ['partner', 'wards', selectedProvinceId],
+    queryFn: () => partnerService.getWardsByProvince(Number(selectedProvinceId)),
+    enabled: !!selectedProvinceId,
+    ...MASTER_DATA_QUERY_OPTIONS,
+  });
+
+  const wards = useMemo(() => {
+    const raw = (wardsRes as { data?: unknown })?.data ?? wardsRes;
+    return Array.isArray(raw) ? raw : [];
+  }, [wardsRes]);
+
+  const selectedProvinceName = useMemo(
+    () => provinces.find((item: { id: number | string }) => String(item.id) === selectedProvinceId)?.name as string | undefined,
+    [provinces, selectedProvinceId],
+  );
+
+  const selectedWardName = useMemo(
+    () => wards.find((item: { id: number | string }) => String(item.id) === selectedWardId)?.name as string | undefined,
+    [wards, selectedWardId],
+  );
+
   const typeNum = Number(selectedType);
+  const rentNum = Number(selectedRentCategory);
+  const minRatingValue = ratingFilterToMinRating(ratingFilter);
+  const hasAdvancedFilters =
+    !!selectedProvinceId
+    || !!selectedWardId
+    || sortOption !== 'id_desc'
+    || !!occupancyFilter
+    || !!ratingFilter
+    || !!hasRoomsFilter;
+  const hasActiveFilters =
+    Boolean(searchKeyword) || typeNum !== 0 || rentNum !== 0 || hasAdvancedFilters;
+
   const listFilters = useMemo(
     () => ({
       page: currentPage,
       perPage,
-      name: debouncedSearchName || undefined,
+      keyword: debouncedSearchKeyword || undefined,
       propertyTypeId: typeNum && typeNum !== 0 ? typeNum : undefined,
+      rentCategory: rentNum && rentNum !== 0 ? rentNum : undefined,
+      provinceName: selectedProvinceName || undefined,
+      wardName: selectedWardName || undefined,
+      sort: PARTNER_PROPERTY_SORT_PRESETS[sortOption],
+      includeCover: true,
+      occupancyFilter: occupancyFilter || undefined,
+      minRating: minRatingValue,
+      hasRooms: hasRoomsFilter !== '' ? (Number(hasRoomsFilter) as 0 | 1) : undefined,
     }),
-    [currentPage, perPage, debouncedSearchName, typeNum],
+    [
+      currentPage,
+      perPage,
+      debouncedSearchKeyword,
+      typeNum,
+      rentNum,
+      selectedProvinceName,
+      selectedWardName,
+      sortOption,
+      occupancyFilter,
+      minRatingValue,
+      hasRoomsFilter,
+    ],
   );
 
   const { data: listData, isLoading, isFetching } = usePartnerPropertiesQuery(listFilters);
+  const { data: propertyTypes } = usePartnerPropertyTypesQuery(canLoadPropertyTypes);
+
   const properties = listData?.items ?? [];
   const totalPages = listData?.lastPage ?? 1;
   const totalItems = listData?.total ?? 0;
   const loading = isLoading && properties.length === 0;
 
+  const propertyTypeNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    (propertyTypes?.data ?? []).forEach((type: { id: number | string; name: string }) => {
+      map[String(type.id)] = normalizeStayPropertyTypeLabel(type.name);
+    });
+    return map;
+  }, [propertyTypes?.data]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setCanLoadPropertyTypes(true);
+      return;
+    }
+    const id = window.setTimeout(() => setCanLoadPropertyTypes(true), 2500);
+    return () => window.clearTimeout(id);
+  }, [isLoading]);
+
   useEffect(() => {
     const filtersChanged =
-      prevFiltersRef.current.debounced !== debouncedSearchName ||
-      prevFiltersRef.current.type !== typeNum;
+      prevFiltersRef.current.debounced !== debouncedSearchKeyword
+      || prevFiltersRef.current.type !== typeNum
+      || prevFiltersRef.current.rent !== rentNum
+      || prevFiltersRef.current.provinceId !== selectedProvinceId
+      || prevFiltersRef.current.wardId !== selectedWardId
+      || prevFiltersRef.current.sort !== sortOption
+      || prevFiltersRef.current.occupancy !== occupancyFilter
+      || prevFiltersRef.current.rating !== ratingFilter
+      || prevFiltersRef.current.hasRooms !== hasRoomsFilter;
 
     if (filtersChanged && currentPage !== 1) {
       setCurrentPage(1);
       return;
     }
 
-    prevFiltersRef.current = { debounced: debouncedSearchName, type: typeNum };
-  }, [debouncedSearchName, typeNum, currentPage]);
+    prevFiltersRef.current = {
+      debounced: debouncedSearchKeyword,
+      type: typeNum,
+      rent: rentNum,
+      provinceId: selectedProvinceId,
+      wardId: selectedWardId,
+      sort: sortOption,
+      occupancy: occupancyFilter,
+      rating: ratingFilter,
+      hasRooms: hasRoomsFilter,
+    };
+  }, [
+    debouncedSearchKeyword,
+    typeNum,
+    rentNum,
+    selectedProvinceId,
+    selectedWardId,
+    sortOption,
+    occupancyFilter,
+    ratingFilter,
+    hasRoomsFilter,
+    currentPage,
+  ]);
 
   useEffect(() => {
-    setExpandedPropertyIds(new Set());
-  }, [debouncedSearchName, typeNum, currentPage, perPage]);
-
-  const propertyNameById = useMemo(() => {
-    const map: Record<string, string> = {};
-    properties.forEach((property) => {
-      map[String(property.id)] = property.name;
+    const nextParams = buildPartnerPropertiesUrlParams({
+      keyword: debouncedSearchKeyword,
+      type: selectedType,
+      rent: selectedRentCategory,
+      provinceId: selectedProvinceId,
+      wardId: selectedWardId,
+      sort: sortOption,
+      page: currentPage,
+      perPage,
+      occupancy: occupancyFilter,
+      rating: ratingFilter,
+      hasRooms: hasRoomsFilter,
     });
-    return map;
-  }, [properties]);
 
-  const expandedArray = useMemo(() => Array.from(expandedPropertyIds), [expandedPropertyIds]);
+    if (nextParams.toString() !== urlSearchParams.toString()) {
+      setUrlSearchParams(nextParams, { replace: true });
+    }
+  }, [
+    debouncedSearchKeyword,
+    selectedType,
+    selectedRentCategory,
+    selectedProvinceId,
+    selectedWardId,
+    sortOption,
+    currentPage,
+    perPage,
+    occupancyFilter,
+    ratingFilter,
+    hasRoomsFilter,
+    setUrlSearchParams,
+    urlSearchParams,
+  ]);
 
-  const previewQueries = useQueries({
-    queries: expandedArray.map((propertyId) => ({
-      queryKey: partnerPropertyRoomPreviewQueryKey(propertyId),
-      queryFn: ({ signal }: { signal?: AbortSignal }) =>
-        fetchPartnerPropertyRoomPreview(propertyId, propertyNameById[propertyId] ?? '', 6, signal),
-      staleTime: 60_000,
-      enabled: !!propertyId,
-    })),
-  });
-
-  const roomsByPropertyId = useMemo(() => {
-    const map: Record<string, Room[]> = {};
-    expandedArray.forEach((propertyId, index) => {
-      map[propertyId] = previewQueries[index]?.data?.rooms ?? [];
-    });
-    return map;
-  }, [expandedArray, previewQueries]);
-
-  const loadingRoomsFor = useMemo(() => {
-    const set = new Set<string>();
-    expandedArray.forEach((propertyId, index) => {
-      const query = previewQueries[index];
-      if (query?.isLoading || (query?.isFetching && !query?.data)) {
-        set.add(propertyId);
-      }
-    });
-    return set;
-  }, [expandedArray, previewQueries]);
+  useEffect(() => {
+    setSelectedPropertyIds(new Set());
+  }, [
+    debouncedSearchKeyword,
+    typeNum,
+    rentNum,
+    selectedProvinceId,
+    selectedWardId,
+    sortOption,
+    occupancyFilter,
+    ratingFilter,
+    hasRoomsFilter,
+    currentPage,
+    perPage,
+  ]);
 
   const reloadPropertyList = () => {
     void invalidateList();
   };
 
-  // Modal States
-  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
-  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
-  const [imageManagerTarget, setImageManagerTarget] = useState<{ type: 'property' | 'room', id: string, name: string } | null>(null);
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
-  const [targetPropertyId, setTargetPropertyId] = useState<string | null>(null);
-
-  const togglePropertyExpand = (id: string) => {
-    const key = String(id);
-    setExpandedPropertyIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
+  const handleClearFilters = () => {
+    setSearchKeyword('');
+    setSelectedType(0);
+    setSelectedRentCategory(0);
+    setSelectedProvinceId('');
+    setSelectedWardId('');
+    setSortOption('id_desc');
+    setOccupancyFilter('');
+    setRatingFilter('');
+    setHasRoomsFilter('');
   };
 
-  const isPropertyExpanded = (id: string) => expandedPropertyIds.has(String(id));
+  const handleResetAdvancedFilters = () => {
+    setSelectedProvinceId('');
+    setSelectedWardId('');
+    setSortOption('id_desc');
+    setOccupancyFilter('');
+    setRatingFilter('');
+    setHasRoomsFilter('');
+  };
 
   const toggleSelectProperty = (id: string, checked: boolean) => {
-    setSelectedPropertyIds(prev => {
+    setSelectedPropertyIds((prev) => {
       const next = new Set(prev);
       if (checked) next.add(id);
       else next.delete(id);
@@ -202,7 +434,7 @@ const Properties: React.FC = () => {
 
   const toggleSelectAllProperties = (checked: boolean) => {
     if (checked) {
-      setSelectedPropertyIds(new Set(properties.map(p => String(p.id))));
+      setSelectedPropertyIds(new Set(properties.map((p) => String(p.id))));
     } else {
       setSelectedPropertyIds(new Set());
     }
@@ -220,7 +452,7 @@ const Properties: React.FC = () => {
     if (deleteConfirmText !== 'XÁC NHẬN XÓA') return;
     try {
       setIsBulkDeleting(true);
-      await Promise.all(Array.from(selectedPropertyIds).map(id => partnerService.deleteProperty(id)));
+      await Promise.all(Array.from(selectedPropertyIds).map((id) => partnerService.deleteProperty(id)));
       toastSuccess(`Đã xóa ${selectedPropertyIds.size} bất động sản.`);
       setSelectedPropertyIds(new Set());
       setIsBulkDeleteOpen(false);
@@ -230,15 +462,6 @@ const Properties: React.FC = () => {
       console.error(error);
     } finally {
       setIsBulkDeleting(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'Trống': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Đang thuê': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Đang bảo trì': return 'bg-amber-100 text-amber-700 border-amber-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -252,68 +475,51 @@ const Properties: React.FC = () => {
     setIsPropertyModalOpen(true);
   };
 
-  const handleDeleteProperty = async (id: string) => {
+  const handleRequestDeleteProperty = (property: Property) => {
+    setDeleteTargetProperty(property);
+  };
+
+  const executeSingleDelete = async () => {
+    if (!deleteTargetProperty) return;
     try {
-      await partnerService.deleteProperty(String(id));
+      setIsSingleDeleting(true);
+      await partnerService.deleteProperty(String(deleteTargetProperty.id));
       toastSuccess('Đã xóa bất động sản.');
+      setDeleteTargetProperty(null);
       reloadPropertyList();
-    } catch {
-      toastError('Không thể xóa bất động sản này.');
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toastError(typeof msg === 'string' ? msg : 'Không thể xóa bất động sản này.');
+    } finally {
+      setIsSingleDeleting(false);
     }
   };
 
-  const handleAddRoom = (propertyId: string) => {
-    setTargetPropertyId(propertyId);
-    setEditingRoom(null);
-    setIsRoomModalOpen(true);
-  };
-
-  const handleEditRoom = (room: Room) => {
-    setEditingRoom(room);
-    setTargetPropertyId(String(room.propertyId));
-    setIsRoomModalOpen(true);
-  };
-
-  const handleDeleteRoom = async (id: string, propertyId: string) => {
-    try {
-      await partnerService.deleteRoom(String(id));
-      toastSuccess('Đã xóa phòng.');
-      void invalidatePreview(propertyId);
-      reloadPropertyList();
-    } catch {
-      toastError('Không thể xóa phòng này.');
-    }
-  };
-
-  const openImageManager = (type: 'property' | 'room', id: string, name: string) => {
-    setImageManagerTarget({ type, id, name });
+  const openImageManager = (property: Property) => {
+    setImageManagerTarget({ id: String(property.id), name: property.name });
     setIsImageManagerOpen(true);
   };
 
-  if (loading && properties.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="mb-8 flex items-center justify-between">
-           <div className="space-y-2">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-96" />
-           </div>
-           <Skeleton className="h-10 w-40" />
-        </div>
-        <PropertySkeleton />
-        <PropertySkeleton />
-      </div>
-    );
-  }
+  const handleRowNavigate = (propertyId: string | number) => {
+    navigate(`/partner/properties/${propertyId}/rooms`);
+  };
+
+  const occupancyPercent = stats?.occupancyRate != null
+    ? Math.round(stats.occupancyRate)
+    : null;
 
   return (
     <div className="space-y-8">
       <PartnerSectionCard className="border-gray-100">
         <PartnerSectionHeader
-          title="Quản lý Dữ liệu Tài sản"
-          description="Quản lý cơ sở lưu trú, căn hộ và phòng dịch vụ của bạn."
+          title="Quản lý Cơ sở"
+          description="Danh sách và quản lý thông tin các cơ sở lưu trú trong hệ thống."
           actions={(
-            <Button type="button" onClick={handleAddProperty} className="flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
+            <Button
+              type="button"
+              onClick={handleAddProperty}
+              className="flex items-center gap-2 bg-[#00A2DA] text-white shadow-sm hover:brightness-110"
+            >
               <Plus size={18} />
               Thêm Bất động sản
             </Button>
@@ -321,455 +527,373 @@ const Properties: React.FC = () => {
         />
       </PartnerSectionCard>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col items-end gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm sm:p-4 md:flex-row">
-        <div className="w-full flex-1 space-y-1.5">
-          <Label htmlFor="search-property" className="text-xs font-semibold uppercase tracking-tighter text-gray-400">Tìm kiếm</Label>
-          <div className="group relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-blue-500" size={18} />
-            <Input 
-              id="search-property"
-              placeholder="Nhập tên bất động sản, khách sạn..." 
-              className="h-11 rounded-lg border-gray-200 px-10 transition-all focus:border-blue-500"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-            />
-            {searchName && (
-              <button 
-                onClick={() => setSearchName('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 transition-colors hover:text-gray-600"
-                title="Xóa tìm kiếm"
-              >
-                <X size={16} />
-              </button>
-            )}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col flex-wrap items-end gap-3 lg:flex-row lg:items-end">
+          <div className="w-full flex-1 space-y-1.5 lg:min-w-[280px]">
+            <Label htmlFor="search-property" className="text-xs font-semibold uppercase tracking-tighter text-gray-400">
+              Tìm kiếm
+            </Label>
+            <div className="group relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#00A2DA]" size={18} />
+              <Input
+                id="search-property"
+                placeholder="Tìm tên cơ sở hoặc địa chỉ..."
+                className="h-11 rounded-xl border-gray-200 pl-10"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+              />
+              {searchKeyword ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchKeyword('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  aria-label="Xóa tìm kiếm"
+                >
+                  <RotateCcw size={14} />
+                </button>
+              ) : null}
+            </div>
           </div>
+
+          <div className="w-full space-y-1.5 md:w-48">
+            <Label htmlFor="type-filter" className="text-xs font-semibold uppercase tracking-tighter text-gray-400">
+              Loại hình
+            </Label>
+            <Select
+              value={String(selectedType)}
+              onValueChange={(val: string) => setSelectedType(val === '0' ? 0 : Number(val))}
+            >
+              <SelectTrigger id="type-filter" className="h-11 rounded-xl border-gray-200">
+                <SelectValue placeholder="Tất cả loại hình" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Tất cả loại hình</SelectItem>
+                {Array.isArray(propertyTypes?.data) && propertyTypes.data.map((type: { id: number | string; name: string }) => (
+                  <SelectItem key={type.id} value={String(type.id)}>
+                    {normalizeStayPropertyTypeLabel(type.name)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full space-y-1.5 md:w-48">
+            <Label htmlFor="rent-filter" className="text-xs font-semibold uppercase tracking-tighter text-gray-400">
+              Hình thức thuê
+            </Label>
+            <Select
+              value={String(selectedRentCategory)}
+              onValueChange={(val: string) => setSelectedRentCategory(val === '0' ? 0 : Number(val))}
+            >
+              <SelectTrigger id="rent-filter" className="h-11 rounded-xl border-gray-200">
+                <SelectValue placeholder="Tất cả hình thức" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Tất cả hình thức</SelectItem>
+                {Object.entries(RENT_CATEGORY).map(([value, labelKey]) => (
+                  <SelectItem key={value} value={value}>
+                    {t(labelKey as string)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {hasActiveFilters ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClearFilters}
+              className="flex h-11 items-center gap-2 rounded-xl px-4 text-gray-500 hover:bg-red-50 hover:text-red-600"
+            >
+              <RotateCcw size={16} />
+              <span className="text-sm font-semibold">Xóa lọc</span>
+            </Button>
+          ) : null}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsAdvancedFiltersOpen((open) => !open)}
+            className={`flex h-11 items-center gap-2 rounded-xl px-4 ${hasAdvancedFilters ? 'border-[#00A2DA]/30 bg-[#EFF6FF] text-[#00668A]' : 'border-gray-200 text-gray-600'}`}
+            aria-expanded={isAdvancedFiltersOpen}
+            aria-controls="partner-property-advanced-filters"
+          >
+            <SlidersHorizontal size={16} />
+            <span className="text-sm font-semibold">Bộ lọc nâng cao</span>
+            {hasAdvancedFilters ? (
+              <span className="rounded-full bg-[#00A2DA] px-1.5 py-0.5 text-[10px] font-bold text-white">!</span>
+            ) : null}
+          </Button>
         </div>
-        <div className="w-full space-y-1.5 md:w-64">
-           <Label htmlFor="type-filter" className="text-xs font-semibold uppercase tracking-tighter text-gray-400">Loại hình</Label>
-           <div className="relative">
-             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <Select 
-                 value={String(selectedType)} 
-                 onValueChange={(val: string) => {
-                   setSelectedType(val === '0' ? 0 : Number(val));
-                 }}
-               >
-                 <SelectTrigger id="type-filter" className="h-11 rounded-lg border-gray-200 pl-9">
-                   <SelectValue placeholder="Tất cả loại hình" />
-                 </SelectTrigger>
-                 <SelectContent>
-                   <SelectItem value="0">Tất cả loại hình</SelectItem>
-                   {Array.isArray(propertyTypes?.data) && propertyTypes.data.map((type: any) => (
-                     <SelectItem key={type.id} value={String(type.id)}>
-                      {normalizeStayPropertyTypeLabel(type.name)}
-                     </SelectItem>
-                   ))}
-                 </SelectContent>
-               </Select>
-           </div>
-        </div>
-         {(searchName || selectedType !== 0) && (
-           <Button 
-             variant="ghost" 
-             onClick={() => { setSearchName(''); setSelectedType(0); }}
-             className="flex h-11 items-center gap-2 rounded-lg border border-transparent px-4 text-gray-500 transition-all hover:border-red-100 hover:bg-red-50 hover:text-red-600"
-             title="Xóa tất cả bộ lọc"
-           >
-             <RotateCcw size={16} />
-             <span className="text-sm font-semibold">Xóa lọc</span>
-           </Button>
-         )}
-         <div className="flex h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-slate-50/50 px-4 md:w-auto">
-            <Checkbox 
-              id="select-all-properties"
-              checked={isAllPropertiesSelected}
-              onCheckedChange={(val: boolean) => toggleSelectAllProperties(val)}
-            />
-            <Label htmlFor="select-all-properties" className="cursor-pointer text-xs font-bold uppercase tracking-tight text-gray-500">Chọn tất cả</Label>
-         </div>
       </div>
 
-      {selectedPropertyIds.size > 0 && (
-        <div className="flex animate-in fade-in slide-in-from-top-2 flex-col items-start justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/80 p-3 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center">
-           <div className="flex items-center gap-3 pl-2">
-             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-md">
-               {selectedPropertyIds.size}
-             </div>
-             <p className="text-sm font-bold text-blue-900">Bất động sản đã chọn</p>
-           </div>
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-             <Button 
-               variant="ghost" 
-               size="sm" 
-               onClick={() => setSelectedPropertyIds(new Set())}
-               className="text-xs font-semibold text-slate-500 hover:bg-white"
-             >
-               Hủy chọn
-             </Button>
-             <Button 
-               variant="destructive" 
-               size="sm" 
-               onClick={handleBulkDeleteProperties}
-               className="h-8 gap-1.5 px-3 text-xs font-bold shadow-sm"
-             >
-               <Trash2 size={14} /> Xóa hàng loạt
-             </Button>
-           </div>
-        </div>
-      )}
+      <div id="partner-property-advanced-filters">
+        <PartnerPropertyAdvancedFilters
+          open={isAdvancedFiltersOpen}
+          onClose={() => setIsAdvancedFiltersOpen(false)}
+          onReset={handleResetAdvancedFilters}
+          provinceId={selectedProvinceId}
+          wardId={selectedWardId}
+          sortOption={sortOption}
+          occupancyFilter={occupancyFilter}
+          ratingFilter={ratingFilter}
+          hasRoomsFilter={hasRoomsFilter}
+          provinces={provinces}
+          wards={wards}
+          onProvinceChange={setSelectedProvinceId}
+          onWardChange={setSelectedWardId}
+          onSortChange={setSortOption}
+          onOccupancyChange={setOccupancyFilter}
+          onRatingChange={setRatingFilter}
+          onHasRoomsChange={setHasRoomsFilter}
+        />
+      </div>
 
-      {isFetching && properties.length > 0 && (
-         <div className="flex justify-start py-2">
-            <Spinner size="sm" showText text="Đang cập nhật danh sách..." className="flex-row items-center gap-2" />
-         </div>
-      )}
-
-      {properties.length > 0 ? properties.map(property => {
-        const propertyId = String(property.id);
-        const propertyRooms = roomsByPropertyId[propertyId] ?? [];
-        const previewRooms = propertyRooms.slice(0, 6);
-        const isRoomPreviewLoading = loadingRoomsFor.has(propertyId);
-        
-        return (
-          <div key={property.id} className="group/property overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-col items-start justify-between gap-4 border-b border-gray-200 bg-white p-5 sm:flex-row sm:items-center">
-              <div 
-                className="flex flex-1 cursor-pointer items-start gap-4 transition-all hover:opacity-80"
-                onClick={() => togglePropertyExpand(String(property.id))}
-              >
-                <div className="flex items-center gap-3">
-                  <Checkbox 
-                    checked={selectedPropertyIds.has(String(property.id))}
-                    onCheckedChange={(val: boolean) => toggleSelectProperty(String(property.id), val)}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  />
-                  <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 transition-transform duration-300 ${isPropertyExpanded(String(property.id)) ? 'rotate-180' : ''}`}>
-                    <ChevronDown size={20} />
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <h2 className="text-xl font-bold text-gray-900">{property.name}</h2>
-                    <div className="flex gap-1.5">
-                      <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100">
-                        {property.rent_category ? t(`RENT_CATEGORY.${property.rent_category}`) : t("common.property")}
-                      </span>
-                      <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 ring-1 ring-indigo-100">
-                        {normalizeStayPropertyTypeLabel(
-                          propertyTypes?.data?.find(type => type.id === property.property_type_id)?.name
-                        ) || property.property_type_id}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin size={14} className="text-blue-500" />
-                      <span>{property.address}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Layers size={14} className="text-slate-400" />
-                      <span><span className="font-bold text-gray-700">{property.totalRooms || 0}</span> đơn vị</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {property.reviews_avg_rating && Number(property.reviews_avg_rating) > 0 ? (
-                        <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                          <Star className="size-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                          <span>{property.reviews_avg_rating}</span>
-                          <span className="font-normal text-slate-400">({property.reviews_count} đánh giá)</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                          <Star className="size-3.5 text-slate-300 shrink-0" />
-                          <span className="font-normal text-slate-400">Chưa có đánh giá</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="mr-2 flex items-center gap-1 rounded-xl border border-slate-100 bg-slate-50/50 p-1">
-                  <Button
-                    type="button" 
-                    onClick={() => handleAddRoom(String(property.id))} 
-                    size="sm" 
-                    className="h-8 gap-1.5 bg-blue-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
-                  >
-                    <Plus size={14} /> Thêm Phòng
-                  </Button>
-                  <Button 
-                    type="button" 
-                    onClick={() => navigate(`/partner/properties/${property.id}/rooms`)} 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 text-xs font-bold text-slate-600 hover:bg-white hover:text-blue-600"
-                  >
-                    Quản lý phòng
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-1 self-end sm:self-auto">
-                  <Button 
-                    type="button" 
-                    onClick={() => handleEditProperty(property)} 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-9 w-9 border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-blue-200 hover:text-blue-600"
-                    title="Chỉnh sửa thông tin cơ bản"
-                  >
-                    <Edit size={16} />
-                  </Button>
-                  <Button 
-                    type="button" 
-                    onClick={() => openImageManager('property', String(property.id), property.name)} 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-9 w-9 border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-orange-200 hover:text-orange-600"
-                    title="Quản lý hình ảnh"
-                  >
-                    <ImageIcon size={16} />
-                  </Button>
-                  <Button 
-                    type="button" 
-                    onClick={() => handleDeleteProperty(String(property.id))} 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-9 w-9 border border-slate-200 bg-white text-red-400 shadow-sm hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                    title="Xóa tài sản"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              </div>
+      {selectedPropertyIds.size > 0 ? (
+        <div className="flex animate-in fade-in slide-in-from-top-2 flex-col items-start justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/80 p-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3 pl-2">
+            <div className="flex size-7 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-md">
+              {selectedPropertyIds.size}
             </div>
+            <p className="text-sm font-bold text-blue-900">Cơ sở đã chọn</p>
+          </div>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedPropertyIds(new Set())}
+              className="text-xs font-semibold text-slate-500 hover:bg-white"
+            >
+              Hủy chọn
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDeleteProperties}
+              className="h-8 gap-1.5 px-3 text-xs font-bold shadow-sm"
+            >
+              <Trash2 size={14} />
+              Xóa hàng loạt
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
-            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isPropertyExpanded(String(property.id)) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-              <div className="p-6">
-              {isRoomPreviewLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Spinner size="sm" showText text="Đang tải phòng..." className="flex-row items-center gap-2" />
-                </div>
-              ) : propertyRooms.length > 0 ? (
-                <>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {previewRooms.map(room => (
-                    <div 
-                      key={room.id} 
-                      className="group/room relative flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
-                      onClick={() => navigate(`/partner/rooms/${room.id}`)}
+      {isFetching && properties.length > 0 ? (
+        <div className="flex justify-start py-1">
+          <Spinner size="sm" showText text="Đang cập nhật danh sách..." className="flex-row items-center gap-2" />
+        </div>
+      ) : null}
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {loading ? (
+          <div className="space-y-3 p-6">
+            {[1, 2, 3, 4].map((row) => (
+              <div key={row} className="h-16 animate-pulse rounded-lg bg-slate-100" />
+            ))}
+          </div>
+        ) : properties.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
+                  <th className="w-10 px-4 py-3">
+                    <Checkbox
+                      checked={isAllPropertiesSelected}
+                      onCheckedChange={(val) => toggleSelectAllProperties(Boolean(val))}
+                      aria-label="Chọn tất cả cơ sở"
+                    />
+                  </th>
+                  <th className="min-w-[240px] px-4 py-3">Cơ sở</th>
+                  <th className="w-[120px] px-4 py-3">Loại hình</th>
+                  <th className="w-[140px] px-4 py-3">Hình thức thuê</th>
+                  <th className="w-[90px] px-4 py-3 text-center">Số phòng</th>
+                  <th className="w-[150px] px-4 py-3">Trống hôm nay</th>
+                  <th className="w-[120px] px-4 py-3">Đánh giá</th>
+                  <th className="w-12 px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {properties.map((property) => {
+                  const propertyId = String(property.id);
+                  const typeName = propertyTypeNameById[String(property.property_type_id)] || property.property_type_name || '—';
+                  const rating = Number(property.reviews_avg_rating ?? 0);
+
+                  return (
+                    <tr
+                      key={propertyId}
+                      className="cursor-pointer transition-colors hover:bg-[#00A2DA]/5"
+                      onClick={() => handleRowNavigate(property.id)}
                     >
-                      <div className="mb-4 flex items-start justify-between">
-                        <div className="max-w-[70%]">
-                          <h3 className="text-lg font-bold text-gray-800 transition-colors group-hover/room:text-blue-600">
-                            {room.name}
-                          </h3>
-                          {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
-                            <div className="mt-1 flex items-center gap-1 text-[11px] font-bold text-amber-500">
-                              <Star className="size-3.5 fill-amber-500 text-amber-500" />
-                              <span>{room.reviews_avg_rating}</span>
-                              <span className="text-slate-400 font-normal">({room.reviews_count} đánh giá)</span>
-                            </div>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedPropertyIds.has(propertyId)}
+                          onCheckedChange={(val) => toggleSelectProperty(propertyId, Boolean(val))}
+                          aria-label={`Chọn ${property.name}`}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-4">
+                          {property.coverImageUrl ? (
+                            <img
+                              src={property.coverImageUrl}
+                              alt=""
+                              className="size-14 shrink-0 rounded-xl border border-slate-200 object-cover shadow-sm"
+                            />
                           ) : (
-                            <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
-                              <Star className="size-3.5 text-slate-300" />
-                              <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+                            <div className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-[#00668A]">
+                              <Building2 size={22} aria-hidden />
                             </div>
                           )}
+                          <div className="min-w-0">
+                            <p className="truncate font-bold text-slate-900">{property.name}</p>
+                            <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                              <MapPin size={12} className="shrink-0 text-slate-400" />
+                              <span className="truncate">{formatPropertyLocation(property)}</span>
+                            </p>
+                          </div>
                         </div>
-                        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm ${getStatusColor(room.status)}`}>
-                          {room.status}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getPropertyTypeBadgeClass(typeName)}`}>
+                          {typeName}
                         </span>
-                      </div>
-                      
-                      <div className="mb-5 flex-1 space-y-3 text-sm text-gray-600">
-                        <div className="flex items-center gap-2.5">
-                          <div className="rounded-md bg-slate-100 p-1.5 text-slate-500 transition-colors group-hover/room:bg-blue-50 group-hover/room:text-blue-500">
-                            <Maximize size={14} />
-                          </div>
-                          <span className="font-medium">Diện tích: <span className="text-gray-900">{room.area} m²</span></span>
-                        </div>
-                        <div className="flex items-start gap-2.5">
-                          <div className="mt-0.5 shrink-0 rounded-md bg-slate-100 p-1.5 text-slate-500 transition-colors group-hover/room:bg-blue-50 group-hover/room:text-blue-500">
-                            <AirVent size={14} />
-                          </div>
-                          <p className="leading-snug">
-                             <span className="font-medium text-gray-500">Tiện ích:</span> {Array.isArray(room.amenities) ? room.amenities.slice(0, 5).join(', ') : 'Trống'}
-                             {room.amenities.length > 5 && (
-                               <span 
-                                 className="ml-1 cursor-pointer text-blue-500 hover:underline"
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   navigate(`/partner/rooms/${room.id}`, { state: { activeTab: 'amenities' } });
-                                 }}
-                               >
-                                 ...xem thêm
-                               </span>
-                             )}
-                          </p>
-                        </div>
-                        <div className="flex items-start gap-2.5">
-                          <div className="mt-0.5 shrink-0 rounded-md bg-slate-100 p-1.5 text-slate-500 transition-colors group-hover/room:bg-blue-50 group-hover/room:text-blue-500">
-                            <Zap size={14} />
-                          </div>
-                          <p className="leading-snug">
-                             <span className="font-medium text-gray-500">Dịch vụ:</span> {Array.isArray(room.services) ? room.services.slice(0, 5).join(', ') : 'Trống'}
-                             {room.services.length > 5 && (
-                               <span 
-                                 className="ml-1 cursor-pointer text-blue-500 hover:underline"
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   navigate(`/partner/rooms/${room.id}`, { state: { activeTab: 'amenities' } });
-                                 }}
-                               >
-                                 ...xem thêm
-                               </span>
-                             )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-auto space-y-2.5 rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all group-hover/room:border-blue-100 group-hover/room:bg-white">
-                        <div className="mb-1 flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
-                          <Wallet size={12} className="text-blue-500" />
-                          Bảng giá gói ưu đãi
-                        </div>
-                        {room.prices && room.prices.length > 0 ? room.prices.map((price, idx) => (
-                          <div key={price.id} className="flex items-center justify-between border-b border-slate-200/50 py-1 text-xs first:pt-0 last:border-0 last:pb-0">
-                            <span className="font-medium text-gray-500">{price.packageName}:</span>
-                            <span className={`font-bold ${idx === 0 ? 'text-gray-900' : 'text-emerald-600'}`}>
-                              {price.price.toLocaleString('vi-VN')} ₫{price.duration > 1 && '/th'}
-                            </span>
-                          </div>
-                        )) : <div className="text-[10px] italic text-gray-400">Chưa cài đặt giá</div>}
-                      </div>
-
-                      <div className="mt-5 flex gap-1.5 border-t border-gray-100 pt-4">
-                        <Button 
-                          type="button" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/partner/rooms/${room.id}`);
-                          }} 
-                          size="sm" 
-                          className="h-9 flex-1 bg-blue-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700"
-                        >
-                           <Eye size={14} className="mr-1" /> Chi tiết
-                        </Button>
-                        <Button 
-                          type="button" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditRoom(room);
-                          }} 
-                          size="sm" 
-                          className="h-9 flex-1 border border-blue-200 bg-blue-50 text-xs font-bold text-blue-600 shadow-sm transition-all hover:border-blue-600 hover:bg-blue-600 hover:text-white"
-                        >
-                           <Edit size={14} className="mr-1" /> Sửa
-                        </Button>
-                        <Button 
-                          type="button" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openImageManager('room', String(room.id), room.name);
-                          }} 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-9 border-orange-200 text-xs font-bold text-orange-600 shadow-sm transition-all hover:bg-orange-600 hover:text-white px-2.5"
-                          title="Quản lý ảnh phòng"
-                        >
-                           <ImageIcon size={14} />
-                        </Button>
-                        <Button 
-                          type="button" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteRoom(String(room.id), propertyId);
-                          }} 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-9 px-2.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          title="Xóa phòng"
-                        >
-                           <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {(property.rooms_count ?? propertyRooms.length) > 6 ? (
-                  <div className="mt-4 flex flex-col gap-2 rounded-lg border border-blue-100 bg-blue-50 p-3 shadow-sm animate-in fade-in slide-in-from-bottom-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-md bg-blue-100 p-1.5">
-                        <Plus size={16} className="text-blue-700" />
-                      </div>
-                      <p className="text-sm text-blue-800">
-                        Tài sản này có <span className="font-bold text-blue-900">{property.rooms_count ?? propertyRooms.length}</span> phòng. Đang hiển thị các phòng gần nhất.
-                      </p>
-                    </div>
-                    <Button 
-                      type="button" 
-                      size="sm" 
-                      className="bg-blue-600 font-medium text-white shadow-sm transition-all hover:translate-x-1 hover:bg-blue-700" 
-                      onClick={() => navigate(`/partner/properties/${property.id}/rooms`)}
-                    >
-                      Xem toàn bộ & quản lý chi tiết
-                    </Button>
-                  </div>
-                ) : null}
-                </>
-              ) : (
-                <div className="rounded-xl border border-dashed border-gray-300 bg-slate-50/50 py-10 text-center">
-                  <p className="italic text-gray-500">Chưa có thông tin phòng cho bất động sản này.</p>
-                  <Button type="button" variant="ghost" onClick={() => handleAddRoom(String(property.id))} className="mt-2 text-blue-600 hover:bg-blue-50">+ Thêm phòng đầu tiên</Button>
-                </div>
-              )}
-            </div>
-            </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-700">
+                        {property.rent_category
+                          ? t(`RENT_CATEGORY.${property.rent_category}`)
+                          : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-center font-semibold text-slate-900">
+                        {property.totalRooms || property.rooms_count || 0}
+                      </td>
+                      <td className="px-4 py-3">
+                        <VacancyCell property={property} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <PropertyRatingStars rating={rating} count={Number(property.reviews_count ?? 0)} />
+                      </td>
+                      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-9 text-slate-500 hover:text-[#00668A]"
+                              aria-label="Thao tác cơ sở"
+                            >
+                              <MoreHorizontal size={18} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem onClick={() => handleRowNavigate(property.id)}>
+                              <DoorOpen size={14} className="mr-2" />
+                              Quản lý phòng
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditProperty(property)}>
+                              <Edit size={14} className="mr-2" />
+                              Sửa
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openImageManager(property)}>
+                              <ImageIcon size={14} className="mr-2" />
+                              Ảnh
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => handleRequestDeleteProperty(property)}
+                            >
+                              <Trash2 size={14} className="mr-2" />
+                              Xóa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        );
-      }) : (
-        <div className="rounded-2xl border border-gray-200 bg-white py-20 text-center shadow-sm">
-           {!searchName && selectedType == 0 ? (
-             <>
-               <div className="mx-auto mb-4 w-fit rounded-full bg-blue-50 p-4 text-blue-600">
-                  <Plus size={32} />
-               </div>
-               <h3 className="text-xl font-bold text-gray-800">Bạn chưa có tài sản nào</h3>
-              <p className="mt-2 text-gray-500">Bắt đầu bằng việc thêm khách sạn, nhà nghỉ, căn hộ / căn hộ dịch vụ hoặc homestay đầu tiên của bạn.</p>
-               <Button type="button" onClick={handleAddProperty} className="mt-6 h-10 bg-blue-600 px-6 font-bold text-white hover:bg-blue-700">Thêm ngay Bất động sản</Button>
-             </>
-           ) : (
-             <>
-               <div className="mx-auto mb-4 w-fit rounded-full bg-gray-50 p-4 text-gray-400">
-                  <Search size={32} />
-               </div>
-               <h3 className="text-xl font-bold text-gray-800">Không tìm thấy kết quả</h3>
-               <p className="mt-2 text-gray-500">Thử thay đổi từ khóa hoặc loại hình tìm kiếm khác.</p>
-               <Button type="button" variant="outline" onClick={() => { setSearchName(''); setSelectedType(0); }} className="mt-6">Xóa bộ lọc</Button>
-             </>
-           )}
-        </div>
-      )}
+        ) : (
+          <div className="py-16 text-center">
+            {!hasActiveFilters ? (
+              <>
+                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-[#EFF6FF] text-[#00668A]">
+                  <Building2 size={28} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">Bạn chưa có cơ sở nào</h3>
+                <p className="mt-2 text-sm text-slate-500">
+                  Bắt đầu bằng việc thêm khách sạn, nhà nghỉ, căn hộ dịch vụ hoặc homestay đầu tiên.
+                </p>
+                <Button type="button" onClick={handleAddProperty} className="mt-6 bg-[#00A2DA] text-white hover:brightness-110">
+                  <Plus size={16} className="mr-1.5" />
+                  Thêm Bất động sản
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-slate-50 text-slate-400">
+                  <Search size={28} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">Không tìm thấy kết quả</h3>
+                <p className="mt-2 text-sm text-slate-500">Thử đổi từ khóa hoặc xóa bộ lọc.</p>
+                <Button type="button" variant="outline" onClick={handleClearFilters} className="mt-6">
+                  Xóa bộ lọc
+                </Button>
+              </>
+            )}
+          </div>
+        )}
 
-      {/* Pagination component */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center pb-8">
-           <Pagination 
-             currentPage={currentPage}
-             totalPages={totalPages}
-             onPageChange={setCurrentPage}
-             perPage={perPage}
-             onPerPageChange={(val) => {
-               setPerPage(val);
-               setCurrentPage(1);
-             }}
-             totalItems={totalItems}
-             perPageOptions={[5, 10, 20, 50]}
-           />
-        </div>
-      )}
+        {totalPages > 1 || totalItems > 0 ? (
+          <div className="border-t border-slate-200 bg-slate-50/60 px-4 py-3">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              perPage={perPage}
+              onPerPageChange={(val) => {
+                setPerPage(val);
+                setCurrentPage(1);
+              }}
+              totalItems={totalItems}
+              perPageOptions={[5, 10, 20, 50]}
+              resultsText={
+                totalItems > 0
+                  ? `Hiển thị ${Math.min((currentPage - 1) * perPage + 1, totalItems)} - ${Math.min(currentPage * perPage, totalItems)} trong số ${totalItems} cơ sở`
+                  : undefined
+              }
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SummaryStatCard
+          label="Tổng số cơ sở"
+          value={stats?.totalProperties ?? totalItems}
+          icon={<Building2 size={20} className="text-[#00668A]" />}
+          iconWrapClass="bg-[#00668A]/10"
+          isLoading={statsLoading}
+        />
+        <SummaryStatCard
+          label="Tổng số phòng"
+          value={stats?.totalRooms ?? 0}
+          icon={<Layers size={20} className="text-emerald-600" />}
+          iconWrapClass="bg-emerald-100"
+          isLoading={statsLoading}
+        />
+        <SummaryStatCard
+          label="Công suất trung bình"
+          value={occupancyPercent != null ? `${occupancyPercent}%` : '—'}
+          icon={<TrendingUp size={20} className="text-amber-600" />}
+          iconWrapClass="bg-amber-100"
+          isLoading={statsLoading}
+        />
+      </div>
 
       <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
         <DialogContent className="sm:max-w-[450px]">
@@ -783,20 +907,14 @@ const Properties: React.FC = () => {
             <div className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
               <p className="font-bold">Cảnh báo hành động nguy hiểm!</p>
               <p className="mt-1 opacity-90">
-                Bạn đang thực hiện xóa <span className="font-bold">{selectedPropertyIds.size}</span> bất động sản. Hành động này sẽ:
+                Bạn đang thực hiện xóa <span className="font-bold">{selectedPropertyIds.size}</span> bất động sản.
               </p>
-              <ul className="mt-2 list-inside list-disc space-y-1 opacity-80">
-                <li>Xóa vĩnh viễn thông tin tài sản</li>
-                <li>Xóa tất cả các loại phòng liên quan</li>
-                <li>Ảnh hưởng đến lịch sử booking (nếu có)</li>
-              </ul>
             </div>
-            
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-500 uppercase">
-                Nhập <span className="text-rose-600">"XÁC NHẬN XÓA"</span> để tiếp tục
+              <Label className="text-xs font-semibold uppercase text-gray-500">
+                Nhập <span className="text-rose-600">&quot;XÁC NHẬN XÓA&quot;</span> để tiếp tục
               </Label>
-              <Input 
+              <Input
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder="Nhập mã xác nhận..."
@@ -805,10 +923,8 @@ const Properties: React.FC = () => {
             </div>
           </div>
           <div className="flex justify-end gap-3 border-t pt-4">
-            <Button variant="ghost" onClick={() => setIsBulkDeleteOpen(false)}>
-              Hủy
-            </Button>
-            <Button 
+            <Button variant="ghost" onClick={() => setIsBulkDeleteOpen(false)}>Hủy</Button>
+            <Button
               variant="destructive"
               disabled={deleteConfirmText !== 'XÁC NHẬN XÓA' || isBulkDeleting}
               onClick={executeBulkDelete}
@@ -821,25 +937,58 @@ const Properties: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {isPropertyModalOpen && (
-        <PropertyModal 
-          isOpen={isPropertyModalOpen} 
-          onClose={() => setIsPropertyModalOpen(false)} 
+      <Dialog open={!!deleteTargetProperty} onOpenChange={(open) => { if (!open) setDeleteTargetProperty(null); }}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-600">
+              <Trash2 size={22} />
+              Xác nhận xóa bất động sản
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
+              <p className="font-bold">Cảnh báo hành động không thể hoàn tác!</p>
+              <p className="mt-1 opacity-90">
+                Bạn sắp xóa <span className="font-bold">{deleteTargetProperty?.name}</span>
+                {deleteTargetProperty?.totalRooms != null && Number(deleteTargetProperty.totalRooms) > 0 ? (
+                  <> — gồm <span className="font-bold">{deleteTargetProperty.totalRooms}</span> phòng liên quan</>
+                ) : null}
+                .
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <Button variant="ghost" onClick={() => setDeleteTargetProperty(null)}>Hủy</Button>
+            <Button
+              variant="destructive"
+              disabled={isSingleDeleting}
+              onClick={executeSingleDelete}
+              className="bg-rose-600 font-bold hover:bg-rose-700"
+            >
+              {isSingleDeleting ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
+              Xác nhận xóa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {isPropertyModalOpen ? (
+        <PropertyModal
+          isOpen={isPropertyModalOpen}
+          onClose={() => setIsPropertyModalOpen(false)}
           property={editingProperty}
           propertyTypes={propertyTypes?.data || []}
           onSave={async (data) => {
             try {
-              // Map address -> address_detail (backend field name)
-              const { address, ...rest } = data as any;
+              const { address, ...rest } = data as Property & { address?: string };
               const mappedData = { ...rest, address_detail: address };
               if (editingProperty) {
                 await partnerService.updateProperty(String(editingProperty.id), mappedData);
               } else {
-                const submitData = {
+                await partnerService.createProperty({
                   ...mappedData,
-                  user_id: userProfile?.id || 0,
-                };
-                await partnerService.createProperty(submitData);
+                  user_id: getCurrentUserIdFromToken() || 0,
+                });
               }
               reloadPropertyList();
               setIsPropertyModalOpen(false);
@@ -849,54 +998,57 @@ const Properties: React.FC = () => {
             }
           }}
         />
-      )}
+      ) : null}
 
-      {isRoomModalOpen && (
-        <RoomModal
-          isOpen={isRoomModalOpen}
-          onClose={() => setIsRoomModalOpen(false)}
-          room={editingRoom}
-          propertyId={targetPropertyId || ''}
-          onSave={async (data) => {
-            try {
-              if (editingRoom) {
-                await partnerService.updateRoom(String(editingRoom.id), data);
-              } else {
-                await partnerService.createRoom(data);
-              }
-              if (targetPropertyId) {
-                void invalidatePreview(targetPropertyId);
-              }
-              reloadPropertyList();
-              setIsRoomModalOpen(false);
-            } catch (error: any) {
-              const msg = error?.response?.data?.message;
-              toastError(typeof msg === 'string' ? msg : 'Lỗi khi lưu thông tin phòng.');
-            }
-          }}
-        />
-      )}
-
-      {/* Image Manager Modal */}
-      {imageManagerTarget && (
+      {imageManagerTarget ? (
         <PartnerImageManager
           isOpen={isImageManagerOpen}
           onClose={() => setIsImageManagerOpen(false)}
-          type={imageManagerTarget.type}
+          type="property"
           targetId={imageManagerTarget.id}
           targetName={imageManagerTarget.name}
         />
-      )}
+      ) : null}
     </div>
   );
 };
 
-const PropertyModal: React.FC<{ 
-  isOpen: boolean, 
-  onClose: () => void, 
-  property: Property | null, 
-  propertyTypes: any[],
-  onSave: (data: Partial<Property>) => void 
+type SummaryStatCardProps = {
+  label: string;
+  value: number | string;
+  icon: React.ReactNode;
+  iconWrapClass: string;
+  isLoading?: boolean;
+};
+
+const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
+  label,
+  value,
+  icon,
+  iconWrapClass,
+  isLoading = false,
+}) => (
+  <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className={`flex size-12 items-center justify-center rounded-full ${iconWrapClass}`}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
+      {isLoading ? (
+        <Loader2 className="mt-2 size-6 animate-spin text-slate-400" />
+      ) : (
+        <p className="text-2xl font-bold text-slate-900">{value}</p>
+      )}
+    </div>
+  </div>
+);
+
+const PropertyModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  property: Property | null;
+  propertyTypes: Array<{ id: number | string; name: string }>;
+  onSave: (data: Partial<Property>) => void;
 }> = ({ isOpen, onClose, property, propertyTypes, onSave }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<Property>>({
@@ -906,24 +1058,22 @@ const PropertyModal: React.FC<{
     ward_id: property?.ward_id || 0,
     property_type_id: property?.property_type_id || 0,
     rent_category: property?.rent_category || 0,
-    description: property?.description || ''
+    description: property?.description || '',
   });
 
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [wards, setWards] = useState<any[]>([]);
+  const [provinces, setProvinces] = useState<Array<{ id: number | string; name: string }>>([]);
+  const [wards, setWards] = useState<Array<{ id: number | string; name: string }>>([]);
 
-  // Fetch all provinces once on mount using partner endpoint
-  React.useEffect(() => {
+  useEffect(() => {
     partnerService.getProvinces()
-      .then((res: any) => {
-        // getAllProvincesTypes returns: { success, data: [...], message }
+      .then((res: { data?: unknown }) => {
         const data = res?.data || [];
         setProvinces(Array.isArray(data) ? data : []);
       })
       .catch(() => {});
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (property) {
       setFormData({
         name: property.name,
@@ -932,21 +1082,28 @@ const PropertyModal: React.FC<{
         ward_id: property.ward_id,
         property_type_id: property.property_type_id,
         rent_category: property.rent_category,
-        description: property.description
+        description: property.description,
       });
     } else {
-      setFormData({ name: '', address: '', province_id: 0, ward_id: 0, property_type_id: 0, rent_category: 0, description: '' });
+      setFormData({
+        name: '',
+        address: '',
+        province_id: 0,
+        ward_id: 0,
+        property_type_id: 0,
+        rent_category: 0,
+        description: '',
+      });
     }
   }, [property, isOpen]);
 
-  // Fetch wards when province changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!formData.province_id) {
       setWards([]);
       return;
     }
     partnerService.getWardsByProvince(Number(formData.province_id))
-      .then((res: any) => {
+      .then((res: { data?: unknown }) => {
         const data = res?.data || [];
         setWards(Array.isArray(data) ? data : []);
       })
@@ -959,293 +1116,93 @@ const PropertyModal: React.FC<{
       onClose={onClose}
       title={property ? 'Cập nhật Bất động sản' : 'Thêm Bất động sản mới'}
       widthClassName="w-full md:max-w-xl"
-      footer={
+      footer={(
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button onClick={() => onSave(formData)} disabled={!formData.name || !formData.province_id || !formData.ward_id || !formData.property_type_id || !formData.rent_category}>Lưu thay đổi</Button>
+          <Button
+            onClick={() => onSave(formData)}
+            disabled={!formData.name || !formData.province_id || !formData.ward_id || !formData.property_type_id || !formData.rent_category}
+          >
+            Lưu thay đổi
+          </Button>
         </div>
-      }
+      )}
     >
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Tên bất động sản</Label>
-            <Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: Khách sạn BKS Central" />
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="province">Tỉnh/Thành phố</Label>
-              <SearchableSelect
-                value={formData.province_id ? String(formData.province_id) : ''}
-                onValueChange={(v) => setFormData({ ...formData, province_id: Number(v), ward_id: 0 })}
-                options={provinces.map((p: any) => ({ value: String(p.id), label: p.name }))}
-                placeholder="Chọn Tỉnh/Thành"
-                searchPlaceholder="Tìm tỉnh/thành..."
-                emptyMessage="Không tìm thấy"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="ward">Phường/Xã</Label>
-              <SearchableSelect
-                value={formData.ward_id ? String(formData.ward_id) : ''}
-                onValueChange={(v) => setFormData({ ...formData, ward_id: Number(v) })}
-                options={wards.map((w: any) => ({ value: String(w.id), label: w.name }))}
-                placeholder="Chọn Phường/Xã"
-                searchPlaceholder="Tìm phường/xã..."
-                emptyMessage="Không tìm thấy"
-                disabled={!formData.province_id}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="address">Địa chỉ chi tiết</Label>
-            <Input id="address" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="VD: 123 Nguyễn Văn Linh..." />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="type">Loại hình</Label>
-              <SearchableSelect
-                value={formData.property_type_id ? String(formData.property_type_id) : ''}
-                onValueChange={(v) => setFormData({ ...formData, property_type_id: Number(v) })}
-                options={propertyTypes.map((type) => ({
-                  value: String(type.id),
-                  label: normalizeStayPropertyTypeLabel(type.name),
-                }))}
-                placeholder="Chọn loại hình"
-                searchPlaceholder="Tìm loại hình..."
-                emptyMessage="Không tìm thấy"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="rent_category">Hình thức cho thuê</Label>
-              <SearchableSelect
-                value={formData.rent_category ? String(formData.rent_category) : ''}
-                onValueChange={(v) => setFormData({ ...formData, rent_category: Number(v) })}
-                options={Object.entries(RENT_CATEGORY).map(([value, labelKey]) => ({
-                  value,
-                  label: t(labelKey as string),
-                }))}
-                placeholder="Chọn hình thức"
-                searchPlaceholder="Tìm hình thức..."
-                emptyMessage="Không tìm thấy"
-              />
-            </div>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="desc">Mô tả ngắn</Label>
-            <PlainTextarea id="desc" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-          </div>
+      <div className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="name">Tên bất động sản</Label>
+          <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="VD: Khách sạn BKS Central" />
         </div>
-    </InlineSheet>
-  );
-};
 
-const createDefaultPriceRow = (packageId = 0) => ({
-  id: 'p' + Date.now(),
-  price_package_id: packageId,
-  packageName: '',
-  price: 0,
-  duration: 1,
-  unit: 'month' as const,
-});
-
-const RoomModal: React.FC<{ isOpen: boolean, onClose: () => void, room: Room | null, propertyId: string, onSave: (data: Partial<Room>) => void }> = ({ isOpen, onClose, room, propertyId, onSave }) => {
-  const { data: pricePackagesRes, isLoading: isPricePackagesLoading } = useQuery({
-    queryKey: ['partner', 'price-packages'],
-    queryFn: () => partnerService.getPricePackages(),
-    enabled: isOpen,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const pricePackages = useMemo(() => {
-    const raw = (pricePackagesRes as any)?.data?.data ?? (pricePackagesRes as any)?.data ?? [];
-    return Array.isArray(raw) ? raw : [];
-  }, [pricePackagesRes]);
-
-  const defaultPackageId = useMemo(() => {
-    const medium = pricePackages.find((pkg: any) => pkg.name === 'medium');
-    return Number(medium?.id ?? pricePackages[0]?.id ?? 0);
-  }, [pricePackages]);
-
-  const [formData, setFormData] = useState<Partial<Room>>({
-    name: room?.name || '',
-    area: room?.area || 0,
-    amenities: room?.amenities || [],
-    services: room?.services || [],
-    propertyId: propertyId,
-    prices: room?.prices || [createDefaultPriceRow()],
-  });
-
-  React.useEffect(() => {
-    if (!isOpen) return;
-    if (room) {
-      setFormData({ ...room, propertyId });
-      return;
-    }
-    setFormData({
-      name: '',
-      area: 0,
-      propertyId,
-      amenities: [],
-      services: [],
-      prices: [createDefaultPriceRow(defaultPackageId || 0)],
-    });
-  }, [room, propertyId, isOpen, defaultPackageId]);
-
-  const pricePackageOptions = useMemo(
-    () =>
-      pricePackages.map((pkg: any) => ({
-        value: String(pkg.id),
-        label: formatPricePackageLabel(pkg.name),
-      })),
-    [pricePackages],
-  );
-
-  const addPrice = () => {
-    setFormData({
-      ...formData,
-      prices: [...(formData.prices || []), createDefaultPriceRow(defaultPackageId || 0)],
-    });
-  };
-
-  return (
-    <InlineSheet
-      open={isOpen}
-      onClose={onClose}
-      title={room ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
-      widthClassName="w-full md:max-w-3xl"
-      footer={
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button onClick={() => onSave(formData)}>Hoàn tất</Button>
-        </div>
-      }
-    >
-        <div className="grid gap-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label>Tên phòng/Số phòng</Label>
-              <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: P.101" />
-            </div>
-            <div className="grid gap-2">
-              <Label>Diện tích (m²)</Label>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="VD: 25"
-                value={formData.area === 0 ? '' : formData.area}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setFormData({ ...formData, area: raw === '' ? 0 : Number(raw) });
-                }}
-              />
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label>Tiện nghi (Ngăn cách bằng dấu phẩy)</Label>
-            <Input 
-              value={formData.amenities?.join(', ')} 
-              onChange={e => setFormData({...formData, amenities: e.target.value.split(',').map(s => s.trim())})} 
-              placeholder="VD: Wifi, Máy lạnh, Giường..."
+            <Label htmlFor="province">Tỉnh/Thành phố</Label>
+            <SearchableSelect
+              value={formData.province_id ? String(formData.province_id) : ''}
+              onValueChange={(v) => setFormData({ ...formData, province_id: Number(v), ward_id: 0 })}
+              options={provinces.map((p) => ({ value: String(p.id), label: p.name }))}
+              placeholder="Chọn Tỉnh/Thành"
+              searchPlaceholder="Tìm tỉnh/thành..."
+              emptyMessage="Không tìm thấy"
             />
           </div>
-
-          <div className="grid gap-2 border-t pt-4">
-            <div className="flex items-center justify-between rounded bg-slate-50 p-2">
-               <Label className="flex items-center gap-2 font-bold"><Wallet size={16} /> Thiết lập giá thuê</Label>
-               <Button variant="outline" size="sm" onClick={addPrice}>+ Thêm gói</Button>
-            </div>
-            <div className="space-y-3">
-              {formData.prices?.map((p, idx) => (
-                <div key={p.id} className="relative rounded-lg border border-gray-100 bg-gray-50 p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-blue-600">Gói #{idx + 1}</span>
-                    {idx > 0 && (
-                      <button type="button" onClick={() => setFormData({...formData, prices: formData.prices?.filter(pr => pr.id !== p.id)})} className="text-red-400 hover:text-red-600">
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-12">
-                    <div className="grid gap-1 md:col-span-5">
-                      <span className="text-[10px] text-gray-500">Gói giá</span>
-                      <Select
-                        value={p.price_package_id ? String(p.price_package_id) : undefined}
-                        onValueChange={(v) => {
-                          const pkg = pricePackages.find((item: any) => String(item.id) === v);
-                          const newPrices = [...(formData.prices || [])];
-                          newPrices[idx] = {
-                            ...newPrices[idx],
-                            price_package_id: Number(v),
-                            packageName: pkg?.name ?? '',
-                          };
-                          setFormData({ ...formData, prices: newPrices });
-                        }}
-                        disabled={isPricePackagesLoading || pricePackageOptions.length === 0}
-                      >
-                        <SelectTrigger className="h-10 text-xs">
-                          <SelectValue placeholder={isPricePackagesLoading ? 'Đang tải...' : 'Chọn gói giá'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pricePackageOptions
-                            .filter(
-                              (opt) =>
-                                !formData.prices?.some(
-                                  (row, rowIdx) => rowIdx !== idx && String(row.price_package_id) === opt.value,
-                                ),
-                            )
-                            .map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-1 md:col-span-4">
-                      <span className="text-[10px] text-gray-500">Giá (VNĐ)</span>
-                      <Input
-                        value={p.price ? formatCurrencyInput(p.price) : ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                          const cleaned = validateCurrencyInput(e.target.value);
-                          if (cleaned === null) return;
-                          const newPrices = [...(formData.prices || [])];
-                          newPrices[idx].price = parseCurrencyValue(cleaned);
-                          setFormData({ ...formData, prices: newPrices });
-                        }}
-                        placeholder="VD: 1.000.000"
-                        className="h-10 text-xs font-bold"
-                      />
-                    </div>
-                    <div className="grid gap-1 md:col-span-3">
-                      <span className="text-[10px] text-gray-500">Tháng</span>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={p.duration === 0 ? '' : p.duration}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                          const raw = e.target.value;
-                          const newPrices = [...(formData.prices || [])];
-                          newPrices[idx].duration = raw === '' ? 0 : Number(raw);
-                          setFormData({ ...formData, prices: newPrices });
-                        }}
-                        className="h-10 text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="ward">Phường/Xã</Label>
+            <SearchableSelect
+              value={formData.ward_id ? String(formData.ward_id) : ''}
+              onValueChange={(v) => setFormData({ ...formData, ward_id: Number(v) })}
+              options={wards.map((w) => ({ value: String(w.id), label: w.name }))}
+              placeholder="Chọn Phường/Xã"
+              searchPlaceholder="Tìm phường/xã..."
+              emptyMessage="Không tìm thấy"
+              disabled={!formData.province_id}
+            />
           </div>
         </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="address">Địa chỉ chi tiết</Label>
+          <Input id="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="VD: 123 Nguyễn Văn Linh..." />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="type">Loại hình</Label>
+            <SearchableSelect
+              value={formData.property_type_id ? String(formData.property_type_id) : ''}
+              onValueChange={(v) => setFormData({ ...formData, property_type_id: Number(v) })}
+              options={propertyTypes.map((type) => ({
+                value: String(type.id),
+                label: normalizeStayPropertyTypeLabel(type.name),
+              }))}
+              placeholder="Chọn loại hình"
+              searchPlaceholder="Tìm loại hình..."
+              emptyMessage="Không tìm thấy"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="rent_category">Hình thức cho thuê</Label>
+            <SearchableSelect
+              value={formData.rent_category ? String(formData.rent_category) : ''}
+              onValueChange={(v) => setFormData({ ...formData, rent_category: Number(v) })}
+              options={Object.entries(RENT_CATEGORY).map(([value, labelKey]) => ({
+                value,
+                label: t(labelKey as string),
+              }))}
+              placeholder="Chọn hình thức"
+              searchPlaceholder="Tìm hình thức..."
+              emptyMessage="Không tìm thấy"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="desc">Mô tả ngắn</Label>
+          <PlainTextarea id="desc" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+        </div>
+      </div>
     </InlineSheet>
   );
 };
 
 export default Properties;
-

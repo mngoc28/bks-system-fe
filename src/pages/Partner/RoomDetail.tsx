@@ -1,20 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ArrowLeft, Home, Square, Users, MapPin, 
-  Wallet, Shield, Wrench, History as HistoryIcon, Image as ImageIcon,
-  Calendar, Phone, Mail, CheckCircle, Clock, AlertCircle,
-  ChevronRight, Star, Plus, Trash2, Edit, Compass
+  Wallet, Shield, Wrench, Star, Trash2, Edit
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { partnerService } from '@/services/partnerService';
 import { useRoomReviewsQuery } from '@/hooks/useReviewQuery';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CLOUDINARY_HEADER_IMAGE_URL } from '@/constant';
-import { resolveImageUrl } from '@/utils/imageUtils';
-import { Room, Booking, MaintenanceRequest } from './types';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import {
   useRoomTouristSpotMapsQuery,
@@ -26,37 +23,86 @@ import { RoomTouristSpotDialog } from './components/RoomTouristSpotDialog';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MaintenanceCancelDialog } from './components/MaintenanceCancelDialog';
+import { MaintenanceCreateDialog } from './components/MaintenanceCreateDialog';
+import { extractMaintenanceApiError } from '@/utils/partnerMaintenanceDisplay';
+import { formatRoomDisplayTitle } from '@/utils/partnerRoomDisplay';
+import { HousekeepingStatusControl } from './components/HousekeepingStatusControl';
+import PartnerRoomFormSheet from './components/PartnerRoomFormSheet';
+import PartnerImageManager from './components/PartnerImageManager';
+
+// Hooks
+import { 
+  useRoomDetailQuery, 
+  useRoomBookingsQuery, 
+  useRoomMaintenancesQuery, 
+  useRoomImagesQuery 
+} from './RoomDetail/hooks/useRoomDetailQueries';
+
+// Tabs
+import { OverviewTab } from './RoomDetail/tabs/OverviewTab';
+import { AmenitiesTab } from './RoomDetail/tabs/AmenitiesTab';
+import { TenantsTab } from './RoomDetail/tabs/TenantsTab';
+import { MaintenanceTab } from './RoomDetail/tabs/MaintenanceTab';
+import { GalleryTab } from './RoomDetail/tabs/GalleryTab';
+import { TouristSpotsTab } from './RoomDetail/tabs/TouristSpotsTab';
+import { ReviewsTab } from './RoomDetail/tabs/ReviewsTab';
+import { MaintenanceRequest } from './types';
 
 const RoomDetail: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [room, setRoom] = useState<Room | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [maintenances, setMaintenances] = useState<MaintenanceRequest[]>([]);
-  const [images, setImages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState((location.state as any)?.activeTab || 'overview');
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const activeTab = searchParams.get('tab') || 'overview';
+  const setActiveTab = (tabId: string) => {
+    setSearchParams({ tab: tabId }, { replace: true });
+  };
 
-  const { data: reviewsData, isLoading: isLoadingReviews } = useRoomReviewsQuery(Number(roomId || 0), {
-    enabled: !!roomId,
-  });
-  const [showAllReviews, setShowAllReviews] = useState(false);
-
-  // Room tourist spot maps query and mutations
-  const { data: spotMaps = [], isLoading: isLoadingSpotMaps } = useRoomTouristSpotMapsQuery(
-    Number(roomId || 0),
-    true, // isPartner
-    { enabled: activeTab === 'tourist_spots' }
+  // Queries
+  const { data: room, isLoading: isLoadingRoom, error: roomError } = useRoomDetailQuery(roomId || '');
+  
+  const { data: bookings = [], isLoading: isLoadingBookings } = useRoomBookingsQuery(
+    roomId || '',
+    activeTab === 'tenants'
   );
 
+  const { data: rawMaintenances = [], isLoading: isLoadingMaintenances } = useRoomMaintenancesQuery(
+    roomId || '',
+    activeTab === 'maintenance'
+  );
+
+  const { data: images = [], isLoading: isLoadingImages } = useRoomImagesQuery(
+    roomId || '',
+    activeTab === 'gallery'
+  );
+
+  const { data: reviewsData, isLoading: isLoadingReviews } = useRoomReviewsQuery(Number(roomId || 0), {
+    enabled: !!roomId && activeTab === 'reviews',
+  });
+
+  const { data: spotMapsData, isLoading: isLoadingSpotMaps } = useRoomTouristSpotMapsQuery(
+    Number(roomId || 0),
+    true, // isPartner
+    { enabled: !!roomId && activeTab === 'tourist_spots' }
+  );
+
+  const spotMaps = spotMapsData || [];
+
+  // Map room name to maintenance requests
+  const maintenances = rawMaintenances.map((item) => ({
+    ...item,
+    roomName: item.roomName || room?.name || '',
+  }));
+
+  // Tourist spot mutations
   const createMapMutation = useCreateRoomTouristSpotMapMutation(true);
   const updateMapMutation = useUpdateRoomTouristSpotMapMutation(true);
   const deleteMapMutation = useDeleteRoomTouristSpotMapMutation(true);
@@ -68,12 +114,28 @@ const RoomDetail: React.FC = () => {
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deleteApplyToAll, setDeleteApplyToAll] = useState(false);
+  const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
+  const [cancelMaintenanceTarget, setCancelMaintenanceTarget] = useState<MaintenanceRequest | null>(null);
+  const [updatingMaintenanceId, setUpdatingMaintenanceId] = useState<number | string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
+
+  const invalidateRoomDetailQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['partnerRoomDetail', roomId] }),
+      queryClient.invalidateQueries({ queryKey: ['partnerRoomImages', roomId] }),
+      queryClient.invalidateQueries({ queryKey: ['partnerRoomBookings', roomId] }),
+    ]);
+  };
+
+  const openMaintenanceDialog = () => {
+    setIsMaintenanceDialogOpen(true);
+  };
 
   const handleSpotDialogSubmit = async (formData: any) => {
     setSubmittingSpot(true);
     try {
       if (selectedSpotMap) {
-        // Edit mode
         await updateMapMutation.mutateAsync({
           id: selectedSpotMap.id,
           roomId: Number(roomId),
@@ -87,7 +149,6 @@ const RoomDetail: React.FC = () => {
           },
         });
       } else {
-        // Create mode
         await createMapMutation.mutateAsync({
           room_id: Number(roomId),
           tourist_spot_id: formData.tourist_spot_id,
@@ -123,81 +184,23 @@ const RoomDetail: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (roomId) {
-      const abortController = new AbortController();
-      fetchData(abortController.signal);
-      return () => {
-        abortController.abort();
-      };
-    }
-  }, [roomId]);
-
-  const fetchData = async (signal?: AbortSignal) => {
+  const handleMaintenanceStatusUpdate = async (
+    id: number | string,
+    status: 'in_progress' | 'completed',
+  ) => {
     try {
-      setLoading(true);
-      setError(null);
+      setUpdatingMaintenanceId(id);
+      await partnerService.updateMaintenance(id, { status });
+      toastSuccess(status === 'in_progress' ? 'Đã tiếp nhận phiếu bảo trì.' : 'Đã hoàn thành phiếu bảo trì.');
       
-      const [roomRes, bookingsRes, maintRes, imagesRes]: any = await Promise.all([
-        partnerService.getRoomDetail(roomId!, { signal }),
-        partnerService.getBookings({ room_id: roomId }, { signal }),
-        partnerService.getMaintenances({ room_id: roomId }, { signal }),
-        partnerService.getRoomImages(roomId!, { signal })
-      ]);
-
-      const rawRoom = roomRes?.status === 'success' ? roomRes.data : (roomRes?.data ?? roomRes);
-      if (!rawRoom) throw new Error('Không tìm thấy thông tin phòng');
-      
-      setRoom({
-        ...rawRoom,
-        id: rawRoom.id,
-        name: rawRoom.name ?? rawRoom.title ?? 'N/A',
-        area: rawRoom.area || 0,
-        floor_number: rawRoom.floor_number || 0,
-        people: rawRoom.people || 0,
-        room_type: rawRoom.room_type || 1,
-        status: rawRoom.status === 1 ? 'Trống' : rawRoom.status === 2 ? 'Đang thuê' : 'Đang bảo trì',
-        amenities: rawRoom.amenities || [],
-        services: rawRoom.services || [],
-        prices: rawRoom.prices || [],
-        reviews_count: rawRoom.reviews_count,
-        reviews_avg_rating: rawRoom.reviews_avg_rating,
-        province_id: rawRoom.province_id
-      });
-
-      const rawBookings = bookingsRes?.data?.data || bookingsRes?.data || (Array.isArray(bookingsRes) ? bookingsRes : []);
-      setBookings(rawBookings.map((b: any) => ({
-        id: b.id,
-        guestName: b.customer_name ?? b.user?.name ?? 'Khách lẻ',
-        checkIn: b.check_in_date ?? b.start_date,
-        checkOut: b.check_out_date ?? b.end_date,
-        totalAmount: b.total_price ?? b.amount ?? 0,
-        status: b.status === 1 ? 'Đã duyệt' : b.status === 0 ? 'Chờ duyệt' : b.status === 2 ? 'Đã hủy' : 'Đã hoàn thành',
-        phone: b.customer_phone ?? b.user?.phone
-      })));
-
-      const rawMaintenances = maintRes?.data?.data || maintRes?.data || (Array.isArray(maintRes) ? maintRes : []);
-      setMaintenances(rawMaintenances.map((m: any) => ({
-        id: m.id,
-        roomName: rawRoom.name,
-        type: m.type || m.maintenance_type || 'Sửa chữa',
-        description: m.description || m.issueDescription,
-        status: m.status === 'completed' || m.status === 'Đã hoàn thành' ? 'Đã hoàn thành' : m.status === 'processing' || m.status === 'Đang xử lý' ? 'Đang xử lý' : 'Chờ xử lý',
-        createdAt: m.created_at || m.createdAt
-      })));
-
-      setImages(imagesRes?.data || []);
-
-    } catch (err: any) {
-      if (err.name === 'CanceledError' || err.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error(err);
-      setError(err.message || 'Lỗi khi tải dữ liệu phòng');
+      // Invalidate queries to refresh data
+      void queryClient.invalidateQueries({ queryKey: ['partnerRoomMaintenances', roomId] });
+      void queryClient.invalidateQueries({ queryKey: ['partnerRoomDetail', roomId] });
+    } catch (err) {
+      const { message } = extractMaintenanceApiError(err);
+      toastError(message);
     } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
+      setUpdatingMaintenanceId(null);
     }
   };
 
@@ -211,7 +214,7 @@ const RoomDetail: React.FC = () => {
     { id: 'reviews', label: 'Đánh giá khách hàng' },
   ];
 
-  if (loading) {
+  if (isLoadingRoom) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <Spinner size="lg" showText text="Đang tải dữ liệu phòng..." />
@@ -219,14 +222,14 @@ const RoomDetail: React.FC = () => {
     );
   }
 
-  if (error || !room) {
+  if (roomError || !room) {
     return (
       <div className="flex h-[80vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <div className="mb-2 rounded-full bg-rose-50 p-4 text-rose-500">
-           <AlertCircle size={48} />
+        <div className="mb-2 rounded-full bg-rose-50 p-4 text-lg font-bold text-rose-500">
+          !
         </div>
         <h2 className="text-2xl font-bold text-slate-800">Oops! Có lỗi xảy ra</h2>
-        <p className="max-w-md text-slate-500">{error}</p>
+        <p className="max-w-md text-slate-500">{(roomError as Error)?.message || 'Lỗi khi tải dữ liệu phòng'}</p>
         <Button onClick={() => navigate(-1)} variant="outline" className="mt-4 gap-2">
            <ArrowLeft size={18} /> Quay lại
         </Button>
@@ -246,20 +249,28 @@ const RoomDetail: React.FC = () => {
            </Button>
            <div>
               <div className="mb-1 flex flex-wrap items-center gap-3">
-                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">Phòng {room.name}</h1>
-                 <div className="flex gap-2">
+                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">{formatRoomDisplayTitle(room.name)}</h1>
+                 <div className="flex flex-wrap items-center gap-2">
                     <Badge className={cn(
-                      "px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider",
+                      "px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider border",
                       room.status === 'Trống' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                       room.status === 'Đang thuê' ? "bg-blue-50 text-blue-700 border-blue-200" :
                       "bg-amber-50 text-amber-700 border-amber-200"
                     )}>
                       {room.status}
                     </Badge>
-                    {reviewsData && reviewsData.total_count > 0 && (
-                       <Badge className="flex items-center gap-1 border border-amber-200 bg-amber-50 px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider text-amber-700">
-                          <Star className="size-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                          {reviewsData.average_rating} ({reviewsData.total_count} đánh giá)
+                    <HousekeepingStatusControl
+                      roomId={room.id}
+                      status={room.housekeeping_status ?? 'clean'}
+                      occupancyStatus={room.status}
+                      onStatusUpdated={() => {
+                        void queryClient.invalidateQueries({ queryKey: ['partnerRoomDetail', roomId] });
+                      }}
+                    />
+                    {room.reviews_avg_rating && room.reviews_avg_rating > 0 && (
+                       <Badge className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                          <Star className="size-3.5 shrink-0 fill-amber-500 text-amber-500" />
+                          {room.reviews_avg_rating} ({room.reviews_count} đánh giá)
                        </Badge>
                     )}
                  </div>
@@ -270,11 +281,32 @@ const RoomDetail: React.FC = () => {
            </div>
         </div>
 
-         <div className="z-10 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
-           <Button size="default" variant="outline" className="w-full rounded-2xl border-2 border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto">
+        <div className="z-10 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
+           <Button
+              size="default"
+              variant="outline"
+              onClick={() => setIsEditOpen(true)}
+              aria-label="Chỉnh sửa phòng"
+              className="w-full rounded-2xl border-2 border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto"
+           >
+              <Edit size={18} className="mr-2 text-blue-500" /> Chỉnh sửa phòng
+           </Button>
+           <Button
+              size="default"
+              variant="outline"
+              onClick={() => navigate('/partner/contracts')}
+              className="w-full rounded-2xl border-2 border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50 sm:w-auto"
+           >
               <Shield size={18} className="mr-2 text-indigo-500" /> Hợp đồng
            </Button>
-           <Button size="default" className="w-full rounded-2xl bg-blue-600 text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto">
+           <Button
+              size="default"
+              onClick={() => {
+                 setActiveTab('maintenance');
+                 openMaintenanceDialog();
+              }}
+              className="w-full rounded-2xl bg-blue-600 text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95 sm:w-auto"
+           >
               <Wrench size={18} className="mr-2" /> Bảo trì
            </Button>
         </div>
@@ -288,7 +320,7 @@ const RoomDetail: React.FC = () => {
            { icon: <Home size={20} />, label: "Loại phòng", value: room.room_type === 1 ? "Phòng đơn" : room.room_type === 2 ? "Phòng đôi" : "Căn hộ", color: "bg-amber-50 text-amber-600" },
            { icon: <Wallet size={20} />, label: "Giá thuê từ", value: `${Number(room.prices[0]?.price || 0).toLocaleString()}đ`, color: "bg-emerald-50 text-emerald-600" },
          ].map((card, i) => (
-           <Card key={i} className="overflow-hidden rounded-2xl border-none shadow-sm transition-transform duration-300 hover:scale-105">
+           <Card key={i} className="overflow-hidden rounded-2xl border-none bg-white shadow-sm transition-transform duration-300 hover:scale-105">
               <CardContent className="p-4 sm:p-6">
                  <div className={`mb-4 w-fit rounded-2xl p-3 ${card.color}`}>{card.icon}</div>
                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{card.label}</p>
@@ -320,491 +352,93 @@ const RoomDetail: React.FC = () => {
 
       {/* Tab Content */}
       <div className="mt-8 transition-all duration-300">
-         {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 gap-6 animate-in fade-in slide-in-from-bottom-4 lg:grid-cols-2">
-               <Card className="overflow-hidden rounded-2xl border-2 border-slate-100 shadow-sm">
-                  <CardHeader className="border-b border-white bg-slate-50/50 p-4 sm:p-6 lg:p-8">
-                     <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900">
-                        <Wallet className="text-blue-500" size={20} /> Biểu giá thuê hiện tại
-                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4 p-4 sm:p-6 lg:p-8">
-                     {room.prices.length > 0 ? room.prices.map((p, i) => (
-                        <div key={i} className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-6 transition-all duration-300 hover:border-blue-200 hover:bg-white hover:shadow-lg hover:shadow-blue-50">
-                           <div className="space-y-1">
-                              <p className="text-lg font-bold uppercase tracking-tight text-slate-800 transition-colors group-hover:text-blue-600">{p.packageName || p.name || 'Gói chuẩn'}</p>
-                              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                                 <Clock size={12} /> {p.duration || 1} tháng thuê cố định
-                              </p>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-2xl font-bold text-blue-600">{Number(p.price || 0).toLocaleString()} <span className="text-sm">đ</span></p>
-                              <p className="text-[10px] font-semibold uppercase text-slate-400">mỗi kỳ thanh toán</p>
-                           </div>
-                        </div>
-                     )) : (
-                        <div className="py-12 text-center font-medium italic text-slate-400">Chưa có bảng giá được cấu hình cho phòng này</div>
-                     )}
-                  </CardContent>
-               </Card>
-
-               <Card className="overflow-hidden rounded-2xl border-2 border-slate-100 shadow-sm">
-                  <CardHeader className="border-b border-white bg-slate-50/50 p-4 sm:p-6 lg:p-8">
-                     <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900">
-                        <Phone className="text-indigo-500" size={20} /> Hỗ trợ & Thông tin liên lạc
-                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-4 sm:p-6 lg:p-8">
-                     <div className="space-y-4">
-                        <div className="flex items-center gap-6 rounded-xl border border-indigo-50 bg-indigo-50/30 p-6 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-50">
-                           <div className="rounded-2xl bg-indigo-500 p-4 text-white shadow-lg shadow-indigo-100"><Phone size={24} /></div>
-                           <div>
-                              <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-400">Tổng đài hỗ trợ 24/7</p>
-                              <p className="text-2xl font-bold text-slate-800">1900 8888</p>
-                           </div>
-                        </div>
-                        <div className="flex items-center gap-6 rounded-xl border border-slate-100 bg-slate-50 p-6 transition-all duration-300 hover:shadow-xl hover:shadow-slate-50">
-                           <div className="rounded-2xl bg-slate-800 p-4 text-white shadow-lg shadow-slate-200"><Mail size={24} /></div>
-                           <div>
-                              <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-400">Email quản trị viên</p>
-                              <p className="overflow-hidden text-ellipsis text-2xl font-bold text-slate-800">admin@bkstay.vn</p>
-                           </div>
-                        </div>
-                     </div>
-                  </CardContent>
-               </Card>
-            </div>
-         )}
-
-         {activeTab === 'amenities' && (
-            <div className="grid grid-cols-1 gap-12 animate-in fade-in slide-in-from-bottom-4 md:grid-cols-2">
-               <div className="space-y-8">
-                  <div className="flex items-center justify-between px-4">
-                     <h3 className="flex items-center gap-3 text-xl font-bold uppercase tracking-tighter text-slate-900">
-                        <div className="h-8 w-2 rounded-full bg-amber-500" /> Tiện ích nội thất
-                     </h3>
-                     <Badge variant="outline" className="border-amber-100 font-semibold text-amber-600">{room.amenities.length} items</Badge>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                     {room.amenities.length > 0 ? room.amenities.map((a: any, i) => (
-                        <div key={i} className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-300 hover:border-amber-100 hover:shadow-lg">
-                           <div className="rounded-2xl bg-amber-50 p-3 text-amber-500 transition-transform group-hover:scale-110"><CheckCircle size={20} /></div>
-                           <span className="text-sm font-bold uppercase tracking-tight text-slate-700">{a.name}</span>
-                        </div>
-                     )) : <div className="col-span-full rounded-xl border-2 border-dashed border-slate-100 py-12 text-center italic text-slate-400">Chưa cấu hình tiện ích</div>}
-                  </div>
-               </div>
-
-               <div className="space-y-8">
-                  <div className="flex items-center justify-between px-4">
-                     <h3 className="flex items-center gap-3 text-xl font-bold uppercase tracking-tighter text-slate-900">
-                        <div className="h-8 w-2 rounded-full bg-blue-500" /> Dịch vụ tòa nhà
-                     </h3>
-                     <Badge variant="outline" className="border-blue-100 font-semibold text-blue-600">{room.services.length} items</Badge>
-                  </div>
-                  <div className="space-y-4">
-                     {room.services.length > 0 ? room.services.map((s: any, i) => (
-                        <div key={i} className="group flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-100 hover:shadow-xl">
-                           <div className="flex items-center gap-4">
-                              <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-blue-500 shadow-sm">{s.unit || 'Tháng'}</div>
-                              <span className="text-base font-bold tracking-tight text-slate-800">{s.name}</span>
-                           </div>
-                           <span className="text-xl font-bold text-blue-600 transition-transform group-hover:scale-110">{Number(s.price || 0).toLocaleString()} <span className="text-xs">đ</span></span>
-                        </div>
-                     )) : <div className="rounded-xl border-2 border-dashed border-slate-100 py-12 text-center italic text-slate-400">Chưa có dịch vụ nào</div>}
-                  </div>
-               </div>
-            </div>
-         )}
-
-         {activeTab === 'tenants' && (
-            <Card className="overflow-hidden rounded-2xl border-2 border-slate-100 shadow-xl shadow-slate-200/20 animate-in fade-in slide-in-from-bottom-4">
-               <div className="space-y-3 p-3 md:hidden">
-                  {bookings.length > 0 ? bookings.map((b) => (
-                    <div key={`mobile-booking-${b.id}`} className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="font-bold text-slate-900">{b.guestName}</p>
-                      <p className="text-xs text-slate-500">{b.phone || 'N/A'}</p>
-                      <p className="mt-2 text-xs text-slate-600">
-                        {b.checkIn ? new Date(b.checkIn).toLocaleDateString('vi-VN') : '-'} → {b.checkOut ? new Date(b.checkOut).toLocaleDateString('vi-VN') : '-'}
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-slate-900">{Number(b.totalAmount || 0).toLocaleString()} đ</p>
-                      <Badge className="mt-2">{b.status}</Badge>
-                    </div>
-                  )) : (
-                    <div className="py-10 text-center text-sm text-slate-400">Phòng này chưa có lịch sử cư dân</div>
-                  )}
-               </div>
-               <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full">
-                     <thead>
-                        <tr className="bg-slate-900 text-white">
-                           <th className="px-10 py-6 text-left text-[10px] font-bold uppercase tracking-widest opacity-60">Khách thuê / Cư dân</th>
-                           <th className="px-10 py-6 text-left text-[10px] font-bold uppercase tracking-widest opacity-60">Thời gian ở</th>
-                           <th className="px-10 py-6 text-left text-[10px] font-bold uppercase tracking-widest opacity-60">Giá trị hợp đồng</th>
-                           <th className="px-10 py-6 text-right text-[10px] font-bold uppercase tracking-widest opacity-60">Trạng thái</th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-slate-100">
-                        {bookings.length > 0 ? bookings.map((b) => (
-                           <tr key={b.id} className="transition-colors hover:bg-slate-50">
-                              <td className="px-10 py-8">
-                                 <div className="flex items-center gap-5">
-                                    <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-lg font-bold text-white shadow-lg">
-                                       {b.guestName?.[0] || 'U'}
-                                    </div>
-                                    <div className="space-y-1">
-                                       <p className="text-base font-bold text-slate-900">{b.guestName}</p>
-                                       <p className="text-xs font-semibold tracking-tight text-slate-400">{b.phone || 'N/A'}</p>
-                                    </div>
-                                 </div>
-                              </td>
-                              <td className="px-10 py-8">
-                                 <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                                    <span className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1">{b.checkIn ? new Date(b.checkIn).toLocaleDateString('vi-VN') : '-'}</span>
-                                    <ChevronRight size={14} className="text-slate-300" />
-                                    <span className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-1">{b.checkOut ? new Date(b.checkOut).toLocaleDateString('vi-VN') : '-'}</span>
-                                 </div>
-                              </td>
-                              <td className="px-10 py-8">
-                                 <p className="text-lg font-bold text-slate-900">{Number(b.totalAmount || 0).toLocaleString()} <span className="text-xs">đ</span></p>
-                              </td>
-                              <td className="px-10 py-8 text-right">
-                                 <Badge className={cn(
-                                    "px-4 py-1.5 rounded-full font-bold text-[9px] uppercase tracking-widest",
-                                    b.status === 'Đã duyệt' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-                                    b.status === 'Chờ duyệt' ? "bg-amber-50 text-amber-700 border-amber-100" : 
-                                    "bg-rose-50 text-rose-700 border-rose-100"
-                                 )}>
-                                    {b.status}
-                                 </Badge>
-                              </td>
-                           </tr>
-                        )) : (
-                           <tr>
-                              <td colSpan={4} className="px-10 py-20 text-center">
-                                 <div className="flex flex-col items-center gap-4">
-                                    <div className="rounded-full bg-slate-50 p-6 text-slate-200"><HistoryIcon size={48} /></div>
-                                    <p className="text-xs font-bold uppercase italic tracking-widest text-slate-400">Phòng này chưa có lịch sử cư dân</p>
-                                 </div>
-                              </td>
-                           </tr>
-                        )}
-                     </tbody>
-                  </table>
-               </div>
-            </Card>
-         )}
-
+         {activeTab === 'overview' && <OverviewTab room={room} />}
+         
+         {activeTab === 'amenities' && <AmenitiesTab room={room} />}
+         
+         {activeTab === 'tenants' && <TenantsTab bookings={bookings} isLoading={isLoadingBookings} />}
+         
          {activeTab === 'maintenance' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-               {maintenances.length > 0 ? maintenances.map((m) => (
-                  <Card key={m.id} className="overflow-hidden rounded-2xl border-2 border-none border-slate-50 shadow-xl shadow-slate-200/30 transition-all duration-500 hover:shadow-blue-100/50">
-                     <CardContent className="flex flex-col items-start justify-between gap-4 p-4 sm:p-6 md:flex-row md:items-center md:gap-8 lg:p-8">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
-                           <div className={cn(
-                              "p-6 rounded-[1.75rem] shadow-lg",
-                              m.status === 'Đã hoàn thành' ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-amber-500 text-white shadow-amber-100'
-                           )}>
-                              <Wrench size={32} />
-                           </div>
-                           <div className="space-y-3">
-                              <div className="flex flex-wrap items-center gap-3">
-                                 <h4 className="text-xl font-bold uppercase tracking-tight text-slate-800">{m.type}</h4>
-                                 <Badge variant="outline" className={cn(
-                                    "text-[9px] uppercase font-bold px-4 py-1 rounded-full",
-                                    m.status === 'Đã hoàn thành' ? "text-emerald-600 border-emerald-200 bg-emerald-50" : "text-amber-600 border-amber-200 bg-amber-50"
-                                 )}>{m.status}</Badge>
-                              </div>
-                              <p className="max-w-2xl text-base font-medium leading-relaxed text-slate-500">{m.description || 'Sự cố đã được ghi nhận và xử lý.'}</p>
-                              <div className="flex items-center gap-4">
-                                 <span className="flex items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase text-slate-400 shadow-sm">
-                                    <Calendar size={14} className="text-blue-500" /> Báo lỗi: {new Date(m.createdAt).toLocaleDateString('vi-VN')}
-                                 </span>
-                                 <span className="text-[11px] font-semibold italic text-slate-300">Ref ID: #{String(m.id).padStart(5, '0')}</span>
-                              </div>
-                           </div>
-                        </div>
-                        <Button className="h-14 rounded-2xl border-2 border-slate-100 bg-white px-8 text-xs font-bold uppercase text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:bg-slate-50 hover:text-blue-600">
-                           Chi tiết biên bản
-                        </Button>
-                     </CardContent>
-                  </Card>
-               )) : (
-                  <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-24 text-center">
-                     <Wrench className="mx-auto mb-6 text-slate-200" size={64} />
-                     <p className="text-xs font-bold uppercase italic tracking-[0.2em] text-slate-400">Phòng này trong tình trạng bảo trì hoàn hảo</p>
-                  </div>
-               )}
-            </div>
+           <MaintenanceTab 
+             maintenances={maintenances} 
+             isLoading={isLoadingMaintenances} 
+             openMaintenanceDialog={openMaintenanceDialog}
+             handleMaintenanceStatusUpdate={handleMaintenanceStatusUpdate}
+             updatingMaintenanceId={updatingMaintenanceId}
+             setCancelMaintenanceTarget={setCancelMaintenanceTarget}
+           />
          )}
-
+         
          {activeTab === 'gallery' && (
-            <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-               {images.length > 0 ? images.map((img: any) => (
-                  <div key={img.id} className="group aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border-4 border-white shadow-2xl shadow-slate-300/30 transition-all duration-500 hover:-translate-y-2">
-                     <img 
-                        src={resolveImageUrl(img.image_url, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || '/assets/images/photo_error2.png'} 
-                        alt="Room Showcase" 
-                        className="size-full object-cover transition-transform duration-700 group-hover:scale-110"
-                     />
-                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  </div>
-               )) : (
-                  <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-24 text-center">
-                     <ImageIcon className="mx-auto mb-6 text-slate-200" size={64} />
-                     <p className="text-xs font-bold uppercase italic tracking-[0.2em] text-slate-400">Chưa có bộ sưu tập hình ảnh cho phòng này</p>
-                  </div>
-               )}
-            </div>
+           <GalleryTab
+             images={images}
+             isLoading={isLoadingImages}
+             onManageImages={() => setIsImageManagerOpen(true)}
+           />
          )}
-
+         
          {activeTab === 'tourist_spots' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                     <h3 className="text-lg font-bold uppercase tracking-tighter text-slate-900 sm:text-xl">
-                        Địa điểm du lịch lân cận
-                     </h3>
-                     <p className="mt-1 text-xs text-slate-500">
-                        Quản lý danh sách các địa điểm du lịch xung quanh phòng này và thông tin di chuyển.
-                     </p>
-                  </div>
-                  <Button
-                     onClick={() => {
-                        setSelectedSpotMap(null);
-                        setIsSpotDialogOpen(true);
-                     }}
-                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-xs font-bold uppercase tracking-wider text-white shadow-sm hover:bg-blue-700 sm:w-auto"
-                  >
-                     <Plus size={16} /> Gán địa điểm mới
-                  </Button>
-               </div>
-
-               {isLoadingSpotMaps ? (
-                  <div className="py-12 text-center">
-                     <Spinner size="lg" showText text="Đang tải danh sách địa điểm..." />
-                  </div>
-               ) : spotMaps.length === 0 ? (
-                  <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-20 text-center animate-in fade-in">
-                     <Compass className="mx-auto mb-6 text-slate-200" size={64} />
-                     <p className="text-xs font-bold uppercase italic tracking-[0.2em] text-slate-400">
-                        Chưa gán địa điểm du lịch nào cho phòng này
-                     </p>
-                  </div>
-               ) : (
-                  <Card className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                     <div className="space-y-3 p-3 md:hidden">
-                        {spotMaps.map((item: any) => (
-                          <div key={`mobile-spot-${item.id}`} className="rounded-xl border border-slate-200 p-4">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="font-bold text-slate-900">{item.tourist_spot?.name}</p>
-                                {item.note && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{item.note}</p>}
-                              </div>
-                              {item.is_primary && (
-                                <Badge className="shrink-0 rounded-full border-amber-200 bg-amber-50 text-[9px] font-bold uppercase text-amber-700">Chính</Badge>
-                              )}
-                            </div>
-                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                              <div className="rounded-lg bg-slate-50 p-2 text-center">
-                                <p className="text-slate-400">Khoảng cách</p>
-                                <p className="font-bold text-slate-700">{item.distance_km != null ? `${item.distance_km} km` : '-'}</p>
-                              </div>
-                              <div className="rounded-lg bg-slate-50 p-2 text-center">
-                                <p className="text-slate-400">Thời gian</p>
-                                <p className="font-bold text-slate-700">{item.travel_time_minutes} phút</p>
-                              </div>
-                            </div>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              <Button variant="outline" size="sm" onClick={() => { setSelectedSpotMap(item); setIsSpotDialogOpen(true); }} className="h-8 flex-1 text-xs sm:flex-none">
-                                <Edit size={14} className="mr-1" /> Sửa
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => handleSpotDelete(item.id)} className="h-8 flex-1 text-xs text-rose-600 sm:flex-none">
-                                <Trash2 size={14} className="mr-1" /> Xóa
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                     </div>
-                     <div className="hidden overflow-x-auto md:block">
-                        <table className="w-full">
-                           <thead>
-                              <tr className="bg-slate-900 text-white text-xs uppercase tracking-wider">
-                                 <th className="px-6 py-4 text-left font-bold opacity-80">Địa điểm du lịch</th>
-                                 <th className="px-6 py-4 text-center font-bold opacity-80">Khoảng cách</th>
-                                 <th className="px-6 py-4 text-center font-bold opacity-80">Thời gian đi</th>
-                                 <th className="px-6 py-4 text-center font-bold opacity-80">Nguồn dữ liệu</th>
-                                 <th className="px-6 py-4 text-right font-bold opacity-80">Thao tác</th>
-                              </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-100 text-sm">
-                              {spotMaps.map((item: any) => (
-                                 <tr key={item.id} className="transition-colors hover:bg-slate-50">
-                                    <td className="px-6 py-5">
-                                       <div className="flex items-center gap-3">
-                                          <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-sm">
-                                             <MapPin size={18} />
-                                          </div>
-                                          <div>
-                                             <div className="flex items-center gap-2">
-                                                <span className="font-bold text-slate-800">
-                                                   {item.tourist_spot?.name}
-                                                </span>
-                                                {item.is_primary && (
-                                                   <Badge className="bg-amber-50 text-amber-700 border-amber-200 rounded-full font-bold text-[9px] uppercase tracking-wider flex items-center gap-1">
-                                                      <Star size={10} className="fill-amber-500 text-amber-500 shrink-0" />
-                                                      Chính
-                                                   </Badge>
-                                                )}
-                                             </div>
-                                             {item.note && (
-                                                <p className="text-xs text-slate-400 mt-0.5 max-w-sm line-clamp-1">
-                                                   {item.note}
-                                                </p>
-                                             )}
-                                          </div>
-                                       </div>
-                                    </td>
-                                    <td className="px-6 py-5 text-center font-semibold text-slate-700">
-                                       {item.distance_km != null ? `${item.distance_km} km` : '-'}
-                                    </td>
-                                    <td className="px-6 py-5 text-center font-semibold text-slate-700">
-                                       {item.travel_time_minutes} phút
-                                    </td>
-                                    <td className="px-6 py-5 text-center">
-                                       <Badge className={cn(
-                                          "px-2.5 py-1 rounded-full font-bold text-[9px] uppercase tracking-widest border border-slate-200/50 shadow-none",
-                                          item.source_type === 'estimated'
-                                             ? "bg-slate-50 text-slate-600 border-slate-200"
-                                             : "bg-blue-50 text-blue-700 border-blue-200"
-                                       )}>
-                                          {item.source_type === 'estimated' ? 'Ước lượng' : 'Thủ công'}
-                                       </Badge>
-                                    </td>
-                                    <td className="px-6 py-5 text-right">
-                                       <div className="flex justify-end gap-2">
-                                          <Button
-                                             variant="outline"
-                                             size="sm"
-                                             onClick={() => {
-                                                setSelectedSpotMap(item);
-                                                setIsSpotDialogOpen(true);
-                                             }}
-                                             className="h-8 border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 rounded-lg text-xs"
-                                          >
-                                             <Edit size={14} className="mr-1" /> Sửa
-                                          </Button>
-                                          <Button
-                                             variant="outline"
-                                             size="sm"
-                                             onClick={() => handleSpotDelete(item.id)}
-                                             className="h-8 border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-lg text-xs"
-                                          >
-                                             <Trash2 size={14} className="mr-1" /> Xóa
-                                          </Button>
-                                       </div>
-                                    </td>
-                                 </tr>
-                              ))}
-                           </tbody>
-                        </table>
-                     </div>
-                  </Card>
-               )}
-            </div>
+           <TouristSpotsTab 
+             spotMaps={spotMaps} 
+             isLoadingSpotMaps={isLoadingSpotMaps} 
+             setSelectedSpotMap={setSelectedSpotMap}
+             setIsSpotDialogOpen={setIsSpotDialogOpen}
+             handleSpotDelete={handleSpotDelete}
+           />
          )}
-
-         {activeTab === 'reviews' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-               <Card className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
-                  <CardContent className="space-y-6 p-4 sm:space-y-8 sm:p-6 lg:p-8">
-                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-100 pb-6">
-                        <div>
-                           <h2 className="text-2xl font-bold text-slate-900">Nhận xét từ khách hàng</h2>
-                           <p className="text-sm text-slate-500 mt-1">Đánh giá thực tế về phòng này do khách thuê trải nghiệm và chia sẻ</p>
-                        </div>
-                        {reviewsData && reviewsData.total_count > 0 ? (
-                           <div className="flex items-center gap-6 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-sm">
-                              <div className="text-center md:text-right">
-                                 <div className="text-4xl font-black text-slate-900 flex items-center gap-2 justify-center md:justify-end">
-                                    <Star className="size-8 text-amber-500 fill-amber-500 shrink-0" />
-                                    {reviewsData.average_rating}
-                                 </div>
-                                 <span className="text-xs font-bold text-slate-400">Trên tổng số {reviewsData.total_count} đánh giá</span>
-                              </div>
-                           </div>
-                        ) : null}
-                     </div>
-
-                     {isLoadingReviews ? (
-                        <div className="py-12 text-center">
-                           <Spinner size="lg" showText text="Đang tải danh sách đánh giá..." />
-                        </div>
-                     ) : !reviewsData || reviewsData.reviews.length === 0 ? (
-                        <div className="py-16 text-center text-slate-400 text-sm italic">
-                           Chưa có đánh giá nào cho phòng này.
-                        </div>
-                     ) : (
-                        <>
-                           <div className="divide-y divide-slate-100">
-                              {reviewsData.reviews.slice(0, showAllReviews ? undefined : 5).map((review) => (
-                                 <div key={review.id} className="py-6 first:pt-0 last:pb-0 space-y-4">
-                                    <div className="flex items-start justify-between gap-4">
-                                       <div className="flex items-center gap-4">
-                                          <div className="size-12 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-sm animate-in zoom-in-75">
-                                             {review.user?.avatar ? (
-                                                <img src={review.user.avatar} alt={review.user.name} className="size-full object-cover" />
-                                             ) : (
-                                                <Users className="size-6 text-slate-400" />
-                                             )}
-                                          </div>
-                                          <div className="space-y-1">
-                                             <h4 className="text-base font-bold text-slate-800">{review.user?.name || "Khách hàng ẩn danh"}</h4>
-                                             <span className="text-xs font-medium text-slate-400">{new Date(review.created_at).toLocaleDateString("vi-VN")}</span>
-                                          </div>
-                                       </div>
-                                       <div className="flex items-center gap-1 rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 shadow-sm">
-                                          {[...Array(5)].map((_, i) => (
-                                             <Star
-                                                key={i}
-                                                className={`size-3.5 ${
-                                                   i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"
-                                                }`}
-                                             />
-                                          ))}
-                                       </div>
-                                    </div>
-                                    {review.comment ? (
-                                       <div className="rounded-2xl bg-slate-50/50 border border-slate-100 p-5 pl-6 italic text-slate-600 leading-relaxed text-sm">
-                                          "{review.comment}"
-                                       </div>
-                                    ) : (
-                                       <div className="text-sm italic text-slate-400 pl-6">
-                                          Khách hàng không để lại nhận xét bằng lời.
-                                       </div>
-                                    )}
-                                 </div>
-                              ))}
-                           </div>
-
-                           {reviewsData.reviews.length > 5 && (
-                              <div className="mt-8 flex justify-center border-t border-slate-100 pt-6">
-                                 <Button
-                                    variant="outline"
-                                    className="rounded-xl border-2 border-slate-100 px-8 py-5 transition-all hover:bg-slate-50 font-bold uppercase tracking-wider text-xs text-slate-700 shadow-sm"
-                                    onClick={() => setShowAllReviews(!showAllReviews)}
-                                 >
-                                    {showAllReviews ? "Thu gọn nhận xét" : `Xem thêm ${reviewsData.reviews.length - 5} nhận xét`}
-                                 </Button>
-                              </div>
-                           )}
-                        </>
-                     )}
-                  </CardContent>
-               </Card>
-            </div>
-         )}
+         
+         {activeTab === 'reviews' && <ReviewsTab reviewsData={reviewsData} isLoading={isLoadingReviews} />}
       </div>
+
+      <PartnerRoomFormSheet
+        open={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        propertyId={String(room.propertyId)}
+        room={room}
+        onSaved={async () => {
+          await invalidateRoomDetailQueries();
+          setIsEditOpen(false);
+        }}
+      />
+
+      <PartnerImageManager
+        isOpen={isImageManagerOpen}
+        onClose={() => {
+          setIsImageManagerOpen(false);
+          void queryClient.invalidateQueries({ queryKey: ['partnerRoomImages', roomId] });
+          void queryClient.invalidateQueries({ queryKey: ['partnerRoomDetail', roomId] });
+        }}
+        type="room"
+        targetId={String(room.id)}
+        targetName={room.name}
+      />
+
+      <MaintenanceCreateDialog
+        open={isMaintenanceDialogOpen}
+        onOpenChange={setIsMaintenanceDialogOpen}
+        roomId={roomId!}
+        propertyId={room.propertyId}
+        roomLabel={room.name}
+        onCreated={async () => {
+          void queryClient.invalidateQueries({ queryKey: ['partnerRoomMaintenances', roomId] });
+          void queryClient.invalidateQueries({ queryKey: ['partnerRoomDetail', roomId] });
+          setActiveTab('maintenance');
+        }}
+      />
+
+      <MaintenanceCancelDialog
+        open={Boolean(cancelMaintenanceTarget)}
+        onOpenChange={(open) => {
+          if (!open) setCancelMaintenanceTarget(null);
+        }}
+        maintenanceId={cancelMaintenanceTarget?.id}
+        maintenanceTitle={cancelMaintenanceTarget?.title || cancelMaintenanceTarget?.type}
+        onCancelled={() => {
+          setCancelMaintenanceTarget(null);
+          void queryClient.invalidateQueries({ queryKey: ['partnerRoomMaintenances', roomId] });
+          void queryClient.invalidateQueries({ queryKey: ['partnerRoomDetail', roomId] });
+        }}
+      />
 
       <RoomTouristSpotDialog
          open={isSpotDialogOpen}
@@ -825,20 +459,20 @@ const RoomDetail: React.FC = () => {
               </span>
               Xác nhận xóa liên kết
             </DialogTitle>
-            <DialogDescription className="text-slate-500 pt-2 text-sm leading-relaxed">
+            <DialogDescription className="pt-2 text-sm leading-relaxed text-slate-500">
               Bạn có chắc chắn muốn xóa liên kết với địa điểm du lịch này? Thao tác này không thể hoàn tác.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center space-x-2.5 py-3 border-t border-b border-slate-100 my-2">
+          <div className="my-2 flex items-center space-x-2.5 border-y border-slate-100 py-3">
             <Checkbox
               id="delete-apply-all-checkbox"
               checked={deleteApplyToAll}
-              onCheckedChange={(checked) => setDeleteApplyToAll(!!checked)}
+              onCheckedChange={(checked: boolean | 'indeterminate') => setDeleteApplyToAll(checked === true)}
             />
             <label
               htmlFor="delete-apply-all-checkbox"
-              className="text-xs font-bold text-slate-600 cursor-pointer select-none uppercase tracking-wider"
+              className="cursor-pointer select-none text-xs font-bold uppercase tracking-wider text-slate-600"
             >
               Áp dụng cho tất cả các phòng khác thuộc cùng tòa nhà
             </label>
@@ -860,7 +494,7 @@ const RoomDetail: React.FC = () => {
                   executeDelete(deleteTargetId, deleteApplyToAll);
                 }
               }}
-              className="bg-rose-600 hover:bg-rose-700 text-white min-w-[100px]"
+              className="min-w-[100px] bg-rose-600 text-white hover:bg-rose-700"
             >
               Xác nhận xóa
             </Button>

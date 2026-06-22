@@ -12,15 +12,17 @@ import "@splidejs/splide/css";
 import "./lib/changeLanguageUtils";
 
 import { provinceApi } from "./api/provinceApi";
+import { MASTER_DATA_QUERY_OPTIONS } from "./lib/queryCache";
 
 const queryClient = new QueryClient();
 
-// Prefetch critical province data immediately on app load to prioritize it in the network waterfall
-queryClient.prefetchQuery({
-  queryKey: ["home-provinces"],
-  queryFn: () => provinceApi.getHomeProvinces(),
-  staleTime: 10 * 60 * 1000,
-});
+if (!window.location.pathname.startsWith("/partner")) {
+  queryClient.prefetchQuery({
+    queryKey: ["home-provinces"],
+    queryFn: () => provinceApi.getHomeProvinces(),
+    ...MASTER_DATA_QUERY_OPTIONS,
+  });
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

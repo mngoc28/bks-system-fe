@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Plus, 
   TrendingUp, 
@@ -34,10 +34,12 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
+import {
+  useInvalidatePartnerPriceRules,
+  usePartnerPriceRulesQuery,
+} from '@/hooks/Partner/usePartnerPriceRulesQuery';
 
 const PriceRulesPage: React.FC = () => {
-  const [rules, setRules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   
@@ -51,30 +53,9 @@ const PriceRulesPage: React.FC = () => {
     is_active: true
   });
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchRules(abortController.signal);
-    return () => {
-      abortController.abort();
-    };
-  }, []);
-
-  const fetchRules = async (signal?: AbortSignal) => {
-    try {
-      setLoading(true);
-      const res: any = await partnerService.getPriceRules(undefined, { signal });
-      setRules(res?.data || []);
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      toastError('Không thể tải danh sách quy tắc giá.');
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  };
+  const { data: rulesData = [], isLoading: loading } = usePartnerPriceRulesQuery();
+  const rules = rulesData as Array<Record<string, any>>;
+  const invalidatePriceRules = useInvalidatePartnerPriceRules();
 
   const handleOpenCreate = () => {
     setEditingRule(null);
@@ -114,7 +95,7 @@ const PriceRulesPage: React.FC = () => {
         toastSuccess('Đã thêm quy tắc giá mới.');
       }
       setIsModalOpen(false);
-      fetchRules();
+      invalidatePriceRules();
     } catch {
       toastError('Lỗi khi lưu quy tắc giá.');
     }
@@ -125,7 +106,7 @@ const PriceRulesPage: React.FC = () => {
     try {
       await partnerService.deletePriceRule(id);
       toastSuccess('Đã xóa quy tắc giá.');
-      fetchRules();
+      invalidatePriceRules();
     } catch {
       toastError('Lỗi khi xóa quy tắc giá.');
     }
@@ -138,7 +119,7 @@ const PriceRulesPage: React.FC = () => {
         is_active: !rule.is_active 
       });
       toastSuccess(`Đã ${rule.is_active ? 'tắt' : 'bật'} quy tắc giá.`);
-      fetchRules();
+      invalidatePriceRules();
     } catch {
       toastError('Lỗi khi cập nhật trạng thái.');
     }

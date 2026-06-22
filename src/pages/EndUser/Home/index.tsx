@@ -17,10 +17,12 @@ import { useLandingReviewsQuery } from "@/hooks/useReviewQuery";
 import { Skeleton } from "@/components/ui/skeleton";
 import FeaturedRoomCarousel from "@/components/rooms/FeaturedRoomCarousel";
 import ContactCard from "@/components/common/ContactCard";
-import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
+import { useHomeBootstrapMetadataQuery } from "@/hooks/EU/useHomeQuery";
 import { useTopRatedRoomsQuery, useSuggestedRoomsByProvinceQuery, useSuggestedRoomsByTouristSpotQuery } from "@/hooks/EU/useRoomQuery";
 import { useRandomPartnersQuery } from "@/hooks/EU/usePartnerQuery";
+import type { ApiResponse } from "@/api/types";
 import type { ProvinceTypes } from "@/dataHelper/province.dataHelper";
+import type { PropertyType } from "@/dataHelper/property.dataHelper";
 import type { RoomCard } from "@/dataHelper/home.dataHelper";
 import ProvinceCarousel from "./components/ProvinceCarousel";
 import HeroSearchForm from "./components/HeroSearchForm";
@@ -111,7 +113,6 @@ function getAvatarColors(name: string): string {
 const PublicHome = () => {
   const { t } = useTranslation();
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
-  const heroSearch = useHeroSearch(() => setSearchSheetOpen(false));
   const videoRef1 = useRef<HTMLVideoElement>(null);
   const videoRef2 = useRef<HTMLVideoElement>(null);
   const videoRef3 = useRef<HTMLVideoElement>(null);
@@ -144,21 +145,92 @@ const PublicHome = () => {
     setActiveVideo(1);
   };
 
-  const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
-  const { data: latestNewsData, isLoading: isLoadingNews, isError: isErrorNews } = useLatestNewsQuery(6);
+  const { data: bootstrapData, isLoading: isLoadingBootstrap } = useHomeBootstrapMetadataQuery();
 
+  const provincesData = useMemo((): ApiResponse<ProvinceTypes[]> | undefined => {
+    const provinces = bootstrapData?.data?.provinces;
+    if (!provinces) {
+      return undefined;
+    }
+
+    return {
+      status: bootstrapData?.status ?? "success",
+      message: bootstrapData?.message ?? "",
+      errors: bootstrapData?.errors ?? {},
+      data: provinces,
+    };
+  }, [bootstrapData]);
+
+  const propertyTypesData = useMemo((): ApiResponse<PropertyType[]> | undefined => {
+    const rawTypes = bootstrapData?.data?.property_types;
+    if (!rawTypes) {
+      return undefined;
+    }
+
+    return {
+      status: bootstrapData?.status ?? "success",
+      message: bootstrapData?.message ?? "",
+      errors: bootstrapData?.errors ?? {},
+      data: rawTypes.map((item: PropertyType & { value?: number; label?: string }) => ({
+        id: Number(item.id ?? item.value ?? 0),
+        name: String(item.name ?? item.label ?? ""),
+        slug: String(item.slug ?? ""),
+      })),
+    };
+  }, [bootstrapData]);
+
+  const heroSearch = useHeroSearch({
+    onSearchSuccess: () => setSearchSheetOpen(false),
+    provincesData,
+    isLoadingProvinces: isLoadingBootstrap,
+    propertyTypesData,
+    isLoadingPropertyTypes: isLoadingBootstrap,
+  });
   const { data: topRatedRoomsData, isLoading: isLoadingRooms } = useTopRatedRoomsQuery();
-  const { data: randomPartnersData, isLoading: isLoadingPartners } = useRandomPartnersQuery();
-  const { data: landingReviewsData, isLoading: isLoadingReviews } = useLandingReviewsQuery();
+
+  const suggestedProvinceIds = useMemo(() => {
+    const provinces = provincesData?.data ?? [];
+    const orderedPriorityNames = SUGGESTED_ROOM_CITY_PRIORITY.map(normalizeProvinceName);
+    const matchedProvinceIds: number[] = [];
+
+    orderedPriorityNames.forEach((priorityName) => {
+      const matchedProvince = provinces.find((province: ProvinceTypes) => normalizeProvinceName(province.name).includes(priorityName));
+      if (matchedProvince && !matchedProvinceIds.includes(matchedProvince.id)) {
+        matchedProvinceIds.push(matchedProvince.id);
+      }
+    });
+
+    return matchedProvinceIds;
+  }, [provincesData]);
+
+  const { data: suggestedRoomsBySpotData, isLoading: isLoadingSuggestedSpotRooms } = useSuggestedRoomsByTouristSpotQuery(
+    { tourist_spot_slugs: [...SUGGESTED_ROOM_SPOT_SLUGS], limit: 12 },
+    { enabled: HOMEPAGE_SUGGESTIONS_BY_SPOT },
+  );
+
+  const { data: suggestedRoomsByProvinceData, isLoading: isLoadingSuggestedRooms } = useSuggestedRoomsByProvinceQuery(
+    { province_ids: suggestedProvinceIds, limit: 12 },
+    { enabled: !HOMEPAGE_SUGGESTIONS_BY_SPOT && suggestedProvinceIds.length > 0 },
+  );
+
+  const isBelowFoldContentReady = !isLoadingRooms && (
+    HOMEPAGE_SUGGESTIONS_BY_SPOT ? !isLoadingSuggestedSpotRooms : !isLoadingSuggestedRooms
+  );
+
+  const { data: latestNewsData, isLoading: isLoadingNews, isError: isErrorNews } = useLatestNewsQuery(6, isBelowFoldContentReady);
+  const { data: randomPartnersData, isLoading: isLoadingPartners } = useRandomPartnersQuery(isBelowFoldContentReady);
+  const { data: landingReviewsData, isLoading: isLoadingReviews } = useLandingReviewsQuery(isBelowFoldContentReady);
 
   const featuredRooms: RoomCard[] = useMemo(() => {
     const rooms = (topRatedRoomsData as any)?.data ?? topRatedRoomsData ?? [];
       return (rooms as any[]).slice(0, 12).map((room: any) => {
       const monthlyPrice = room.cheapest_monthly_price;
-      const dailyPrice = room.cheapest_daily_price;
-      const priceLabel = monthlyPrice
+      const dailyPrice = room.cheapest_nightly_price ?? room.cheapest_daily_price;
+      const hasMonthlyPrice = monthlyPrice !== null && monthlyPrice !== undefined && Number(monthlyPrice) > 0;
+      const hasDailyPrice = dailyPrice !== null && dailyPrice !== undefined && Number(dailyPrice) > 0;
+      const priceLabel = hasMonthlyPrice
         ? `${Number(monthlyPrice).toLocaleString('vi-VN')}₫ / tháng`
-        : dailyPrice
+        : hasDailyPrice
           ? `${Number(dailyPrice).toLocaleString('vi-VN')}₫ / đêm`
           : "Liên hệ";
 
@@ -178,7 +250,9 @@ const PublicHome = () => {
         room_type: room.room_type,
         property_type_name: room.property_type_name,
         partner_company_name: room.partner_company_name,
-        rent_type: monthlyPrice ? "monthly" : (dailyPrice ? "daily" : undefined),
+        rent_type: hasMonthlyPrice ? "monthly" : (hasDailyPrice ? "daily" : undefined),
+        has_nightly_price: hasDailyPrice,
+        has_monthly_price: hasMonthlyPrice,
       };
     });
   }, [topRatedRoomsData]);
@@ -211,31 +285,6 @@ const PublicHome = () => {
           : getProvinceImage(province.name),
       }));
   }, [provincesData]);
-
-  const suggestedProvinceIds = useMemo(() => {
-    const provinces = provincesData?.data ?? [];
-    const orderedPriorityNames = SUGGESTED_ROOM_CITY_PRIORITY.map(normalizeProvinceName);
-    const matchedProvinceIds: number[] = [];
-
-    orderedPriorityNames.forEach((priorityName) => {
-      const matchedProvince = provinces.find((province: ProvinceTypes) => normalizeProvinceName(province.name).includes(priorityName));
-      if (matchedProvince && !matchedProvinceIds.includes(matchedProvince.id)) {
-        matchedProvinceIds.push(matchedProvince.id);
-      }
-    });
-
-    return matchedProvinceIds;
-  }, [provincesData]);
-
-  const { data: suggestedRoomsByProvinceData, isLoading: isLoadingSuggestedRooms } = useSuggestedRoomsByProvinceQuery(
-    { province_ids: suggestedProvinceIds, limit: 12 },
-    { enabled: !HOMEPAGE_SUGGESTIONS_BY_SPOT && suggestedProvinceIds.length > 0 },
-  );
-
-  const { data: suggestedRoomsBySpotData, isLoading: isLoadingSuggestedSpotRooms } = useSuggestedRoomsByTouristSpotQuery(
-    { tourist_spot_slugs: [...SUGGESTED_ROOM_SPOT_SLUGS], limit: 12 },
-    { enabled: HOMEPAGE_SUGGESTIONS_BY_SPOT },
-  );
 
   const orderedSuggestedRoomsBySpotData = useMemo(() => {
     const groups = suggestedRoomsBySpotData ?? [];
@@ -307,6 +356,7 @@ const PublicHome = () => {
           property_address: room.property_address,
           cheapest_daily_price: room.cheapest_daily_price,
           cheapest_monthly_price: room.cheapest_monthly_price,
+          cheapest_nightly_price: room.cheapest_nightly_price,
           room_image: room.room_image,
           area: room.area,
           tourist_summary: room.tourist_summary ?? null,
@@ -481,7 +531,7 @@ const PublicHome = () => {
           provinces={featuredProvinces}
           ctaLabel="Xem tất cả điểm đến"
           ctaHref={ROUTERS.SEARCH_ROOMS}
-          loading={isLoadingProvinces}
+          loading={isLoadingBootstrap}
         />
 
         <FeaturedRoomCarousel
@@ -499,6 +549,7 @@ const PublicHome = () => {
             className={PUBLIC_PAGE_SECTION_CLASS}
             groups={orderedSuggestedRoomsBySpotData}
             prioritySpotNames={SUGGESTED_ROOM_SPOT_PRIORITY}
+            prioritySpotSlugs={SUGGESTED_ROOM_SPOT_SLUGS}
             loading={isLoadingSuggestedSpotRooms || isLoadingRooms}
           />
         ) : (
@@ -506,7 +557,7 @@ const PublicHome = () => {
             className={PUBLIC_PAGE_SECTION_CLASS}
             groups={mergedSuggestedRoomsByProvinceData}
             priorityProvinceNames={SUGGESTED_ROOM_CITY_PRIORITY}
-            loading={isLoadingSuggestedRooms || isLoadingProvinces || isLoadingRooms}
+            loading={isLoadingSuggestedRooms || isLoadingBootstrap || isLoadingRooms}
           />
         )}
 

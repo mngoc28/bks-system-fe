@@ -101,6 +101,14 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
   };
 
   const badgeText = getBadgeText();
+  const hasMonthlyPrice = room.has_monthly_price === true;
+  const hasNightlyPrice = room.has_nightly_price === true;
+  const secondaryRentHint =
+    room.rent_type === "daily" && hasMonthlyPrice
+      ? "Hỗ trợ thuê dài hạn"
+      : room.rent_type === "monthly" && hasNightlyPrice
+        ? "Hỗ trợ thuê theo đêm"
+        : "";
 
   const detailUrl = room.rent_type
     ? `${ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", room.id.toString())}?rent_type=${room.rent_type}`
@@ -184,7 +192,14 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
 
         </div>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3">
-          <span className="text-base font-semibold text-primary">{t("public.home.rooms.price", { price: room.price })}</span>
+          <div className="min-w-0">
+            <span className="text-base font-semibold text-primary">{t("public.home.rooms.price", { price: room.price })}</span>
+            {secondaryRentHint && (
+              <span className="mt-1 inline-flex w-fit rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                {secondaryRentHint}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-3 text-[0.75rem] text-slate-500">
             <span className="inline-flex items-center gap-1">
               <BedDouble className="size-3.5" />

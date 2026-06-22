@@ -7,6 +7,7 @@ import { toastError, toastSuccess } from "@/components/ui/toast";
 import { useLoginMutation } from "@/hooks/useAuthQuery";
 import { loginFormSchema } from "@/shared/shema";
 import { useUserStore } from "@/store/useUserStore";
+import { promptBrowserSavePassword } from "@/utils/credentialStorage";
 import { setAccessToken, setUserEmail, getRememberedEmail, setRememberedEmail, removeRememberedEmail } from "@/utils/storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, UserCog, ArrowRight } from "lucide-react";
@@ -68,7 +69,8 @@ export default function Login() {
             // Pass the role to useUserStore
             const role = userData?.role || "admin";
             useUserStore.getState().login(token, values.email, role, userData?.name || "");
-            
+
+            void promptBrowserSavePassword(values.email, values.password, userData?.name);
             toastSuccess(t("login.success"));
             navigate(ROUTERS.CONTROL);
           } else {
@@ -154,7 +156,13 @@ export default function Login() {
               </div>
 
               <FormProvider {...form}>
-                <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+                <form
+                  method="post"
+                  action={ROUTERS.LOGIN}
+                  autoComplete="on"
+                  className="space-y-6"
+                  onSubmit={form.handleSubmit(onSubmit)}
+                >
                   <FormField
                     control={form.control}
                     name="email"
@@ -164,6 +172,7 @@ export default function Login() {
                         <FormControl>
                           <Input
                             type="email"
+                            autoComplete="username"
                             placeholder={t("login.email_placeholder")}
                             className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 text-white transition-all placeholder:text-slate-600 hover:bg-white/[0.04] focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
                             {...field}
@@ -184,6 +193,7 @@ export default function Login() {
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
+                              autoComplete="current-password"
                               placeholder={t("login.password_placeholder")}
                               className="h-13 rounded-2xl border-white/5 bg-white/[0.02] pl-5 pr-12 text-white transition-all placeholder:text-slate-600 hover:bg-white/[0.04] focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
                               {...field}

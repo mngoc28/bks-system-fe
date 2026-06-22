@@ -19,6 +19,12 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const navigate = useNavigate();
   const location = useLocation();
   const [bannerVisible, setBannerVisible] = useState<boolean>(false);
+  const [realtimeEnabled, setRealtimeEnabled] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    const id = window.setTimeout(() => setRealtimeEnabled(true), 3000);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const onEvent = (event: BookingEventName, payload: RealtimeBookingPayload) => {
     const detail = { event, payload };
@@ -40,6 +46,7 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const { isPolling } = useBookingsRealtime({
+    enabled: realtimeEnabled,
     onEvent,
     onCancellationRequestEvent: (p: RealtimeCancellationRequestPayload) => {
       window.dispatchEvent(new CustomEvent("partner:realtime-cancellation-request", { detail: p }));

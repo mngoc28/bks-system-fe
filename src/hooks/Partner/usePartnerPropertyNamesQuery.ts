@@ -13,7 +13,8 @@ export const usePartnerPropertyNamesQuery = (enabled = true) => {
   return useQuery({
     queryKey: partnerPropertyNamesQueryKey,
     queryFn: ({ signal }) => fetchPartnerPropertyNames(signal),
-    staleTime: 5 * 60_000,
+    staleTime: 24 * 60 * 60_000,
+    gcTime: 24 * 60 * 60_000 + 5 * 60_000,
     enabled,
   });
 };

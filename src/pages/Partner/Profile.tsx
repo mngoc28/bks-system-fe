@@ -29,6 +29,10 @@ import { useGetHomeWardsByProvinceId } from "@/hooks/useWardQuery";
 import { ProvinceTypes } from "@/dataHelper/province.dataHelper";
 import { Ward } from "@/dataHelper/ward.dataHelper";
 import { useUserStore } from "@/store/useUserStore";
+import { CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import PartnerPublicImageDialog, { PARTNER_PUBLIC_IMAGE_SLOTS } from "./components/PartnerPublicImageDialog";
+import { PartnerSectionCard, PartnerSectionHeader } from "./components/ResponsiveBlocks";
 
 const Profile = () => {
   const { data: profileResponse, isLoading: isProfileLoading } = useGetUserProfileQuery();
@@ -47,6 +51,7 @@ const Profile = () => {
     provinceId: 0,
     wardId: 0
   });
+  const [isPublicImageDialogOpen, setIsPublicImageDialogOpen] = useState(false);
 
   const { t } = useTranslation();
   const { data: provincesData, isLoading: isLoadingProvinces } = useGetAllProvincesTypes();
@@ -127,24 +132,33 @@ const Profile = () => {
   const partnerDetail = partnerResponse?.data;
 
   return (
-    <div className="space-y-6 pb-20 duration-500 animate-in fade-in slide-in-from-bottom-4 sm:space-y-8">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-           <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Thông tin cá nhân</h1>
-           <p className="mt-1 text-sm text-slate-500">Quản lý thông tin hồ sơ và bảo mật tài khoản đối tác của bạn.</p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PartnerSectionCard>
+        <PartnerSectionHeader
+          title="Thông tin cá nhân"
+          description="Quản lý thông tin hồ sơ và bảo mật tài khoản đối tác của bạn."
+          actions={(
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsPublicImageDialogOpen(true)}
+            >
+              Quản lý ảnh đối tác
+            </Button>
+          )}
+        />
+      </PartnerSectionCard>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-           {/* Profile Header Card */}
-           <Card className="relative overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
-              <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90" />
-              <CardContent className="relative z-10 -mt-12 p-6 pt-0 md:-mt-16 md:p-8">
+           <Card className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="h-24 border-b border-amber-100 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50" />
+              <CardContent className="relative z-10 -mt-10 p-6 md:-mt-12 md:p-8">
                  <div className="mb-8 flex flex-col items-center gap-4 md:flex-row md:items-end md:gap-6">
                     <div className="group relative">
-                       <div className="size-32 rounded-[40px] bg-white p-1 shadow-2xl">
-                          <div className="flex size-full items-center justify-center overflow-hidden rounded-[38px] bg-slate-100 text-4xl font-black text-slate-400">
+                       <div className="size-28 rounded-2xl bg-white p-1 shadow-md ring-1 ring-slate-200 md:size-32">
+                          <div className="flex size-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-4xl font-bold text-slate-400">
                              <img 
                               src={profile?.avatar || `https://ui-avatars.com/api/?name=${profile?.name}&background=random`} 
                               alt="Avatar" 
@@ -152,14 +166,14 @@ const Profile = () => {
                             />
                           </div>
                        </div>
-                       <button className="absolute bottom-2 right-2 rounded-2xl border-2 border-white bg-slate-900 p-2 text-white shadow-lg transition-transform hover:scale-110">
+                       <button className="absolute bottom-1 right-1 rounded-lg border border-white bg-amber-600 p-2 text-white shadow-sm transition-colors hover:bg-amber-700">
                           <Camera className="size-4" />
                        </button>
                     </div>
                     <div className="flex-1 pb-2">
                        <div className="flex items-center gap-3">
-                          <h2 className="text-2xl font-black leading-none text-slate-900">{profile?.name || "Đối tác BKS"}</h2>
-                          <Badge className="rounded-full border-none bg-blue-100 px-3 font-bold text-blue-700 hover:bg-blue-100 uppercase tracking-wider">
+                          <h2 className="text-2xl font-bold leading-none text-slate-900">{profile?.name || "Đối tác BKS"}</h2>
+                          <Badge className="rounded-full border-amber-100 bg-amber-50 px-3 font-semibold text-amber-700 hover:bg-amber-50 uppercase tracking-wider">
                             {partnerDetail?.company_name || "Đối tác chính thức"}
                           </Badge>
                        </div>
@@ -171,7 +185,7 @@ const Profile = () => {
 
                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                       <label htmlFor="name" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Họ và tên</label>
+                       <label htmlFor="name" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Họ và tên</label>
                        <div className="relative">
                           <User className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
                           <Input 
@@ -179,12 +193,12 @@ const Profile = () => {
                              value={formData.name} 
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("name", e.target.value)}
                             placeholder="Nhập họ và tên"
-                            className="h-12 rounded-2xl border-slate-100 bg-slate-50 pl-12 font-bold transition-all focus:bg-white" 
+                            className="h-11 rounded-lg border-slate-200 bg-white pl-12 font-medium transition-all focus:bg-white" 
                           />
                        </div>
                     </div>
                     <div className="space-y-2">
-                       <label htmlFor="companyName" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Tên công ty</label>
+                       <label htmlFor="companyName" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Tên công ty</label>
                        <div className="relative">
                           <BadgeCheck className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
                           <Input 
@@ -192,19 +206,19 @@ const Profile = () => {
                              value={formData.companyName} 
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("companyName", e.target.value)}
                             placeholder="Nhập tên công ty"
-                            className="h-12 rounded-2xl border-slate-100 bg-slate-50 pl-12 font-bold transition-all focus:bg-white" 
+                            className="h-11 rounded-lg border-slate-200 bg-white pl-12 font-medium transition-all focus:bg-white" 
                           />
                        </div>
                     </div>
                     <div className="space-y-2">
-                       <label htmlFor="email" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Email (Không thể thay đổi)</label>
+                       <label htmlFor="email" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Email (Không thể thay đổi)</label>
                        <div className="relative">
                           <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
-                          <Input id="email" value={profile?.email} disabled className="h-12 rounded-2xl border-slate-100 bg-slate-100/50 pl-12 font-bold text-slate-500 cursor-not-allowed" />
+                          <Input id="email" value={profile?.email} disabled className="h-11 rounded-lg border-slate-200 bg-slate-50 pl-12 font-medium text-slate-500 cursor-not-allowed" />
                        </div>
                     </div>
                     <div className="space-y-2">
-                       <label htmlFor="phone" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Số điện thoại</label>
+                       <label htmlFor="phone" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Số điện thoại</label>
                        <div className="relative">
                           <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
                           <Input 
@@ -212,12 +226,12 @@ const Profile = () => {
                              value={formData.phone} 
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("phone", e.target.value)}
                             placeholder="Nhập số điện thoại"
-                            className="h-12 rounded-2xl border-slate-100 bg-slate-50 pl-12 font-bold transition-all focus:bg-white" 
+                            className="h-11 rounded-lg border-slate-200 bg-white pl-12 font-medium transition-all focus:bg-white" 
                           />
                        </div>
                     </div>
                     <div className="space-y-2">
-                       <label htmlFor="website" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Website công ty</label>
+                       <label htmlFor="website" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Website công ty</label>
                        <div className="relative">
                           <Globe className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
                           <Input 
@@ -225,12 +239,12 @@ const Profile = () => {
                              value={formData.website} 
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("website", e.target.value)}
                             placeholder="https://congty.com"
-                            className="h-12 rounded-2xl border-slate-100 bg-slate-50 pl-12 font-bold transition-all focus:bg-white" 
+                            className="h-11 rounded-lg border-slate-200 bg-white pl-12 font-medium transition-all focus:bg-white" 
                           />
                        </div>
                     </div>
                     <div className="col-span-full space-y-2">
-                       <label htmlFor="description" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Mô tả công ty</label>
+                       <label htmlFor="description" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Mô tả công ty</label>
                        <div className="relative">
                           <AlignLeft className="absolute left-4 top-4 size-4 text-slate-300" />
                           <Textarea 
@@ -238,7 +252,7 @@ const Profile = () => {
                              value={formData.description} 
                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("description", e.target.value)}
                             placeholder="Nhập mô tả ngắn về công ty của bạn..." 
-                            className="min-h-[120px] rounded-2xl border-slate-100 bg-slate-50 pl-12 pt-3 font-bold transition-all focus:bg-white" 
+                            className="min-h-[120px] rounded-lg border-slate-200 bg-white pl-12 pt-3 font-medium transition-all focus:bg-white" 
                           />
                        </div>
                     </div>
@@ -246,7 +260,7 @@ const Profile = () => {
                     {/* Địa điểm chi tiết */}
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                        <div className="space-y-2">
-                          <label className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">{t("register.province_name")}</label>
+                          <label className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">{t("register.province_name")}</label>
                           <SearchableSelect
                              value={formData.provinceId?.toString() || ""}
                              onValueChange={(value) => handleInputChange("provinceId", Number(value))}
@@ -261,11 +275,11 @@ const Profile = () => {
                              loading={isLoadingProvinces}
                              icon={<MapPin className="size-4 text-slate-300" />}
                              showSearch={true}
-                             triggerClassName="h-12 bg-slate-50 border-slate-100 text-slate-700 rounded-2xl focus:ring-blue-500/20 font-bold"
+                             triggerClassName="h-11 bg-white border-slate-200 text-slate-700 rounded-lg focus:ring-amber-500/20 font-medium"
                           />
                        </div>
                        <div className="space-y-2">
-                          <label className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">{t("register.ward_name")}</label>
+                          <label className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">{t("register.ward_name")}</label>
                           <SearchableSelect
                              value={formData.wardId?.toString() || ""}
                              onValueChange={(value) => handleInputChange("wardId", Number(value))}
@@ -280,13 +294,13 @@ const Profile = () => {
                              loading={isLoadingWards}
                              icon={<MapPin className="size-4 text-slate-300" />}
                              showSearch={true}
-                             triggerClassName="h-12 bg-slate-50 border-slate-100 text-slate-700 rounded-2xl focus:ring-blue-500/20 font-bold"
+                             triggerClassName="h-11 bg-white border-slate-200 text-slate-700 rounded-lg focus:ring-amber-500/20 font-medium"
                           />
                        </div>
                     </div>
 
                     <div className="col-span-full space-y-2">
-                       <label htmlFor="address" className="ml-1 text-xs font-black uppercase tracking-widest text-slate-400">Địa chỉ cụ thể (Số nhà, tên đường...)</label>
+                       <label htmlFor="address" className="ml-1 text-xs font-bold uppercase tracking-wider text-slate-600">Địa chỉ cụ thể (Số nhà, tên đường...)</label>
                        <div className="relative">
                           <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
                           <Input 
@@ -294,14 +308,14 @@ const Profile = () => {
                              value={formData.address} 
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("address", e.target.value)}
                             placeholder="Nhập địa chỉ văn phòng" 
-                            className="h-12 rounded-2xl border-slate-100 bg-slate-50 pl-12 font-bold transition-all focus:bg-white" 
+                            className="h-11 rounded-lg border-slate-200 bg-white pl-12 font-medium transition-all focus:bg-white" 
                           />
                        </div>
                     </div>
                  </div>
                  <div className="mt-8 flex justify-end">
                   <Button 
-                      className="h-12 rounded-2xl bg-blue-600 px-10 font-black shadow-xl shadow-blue-600/20 transition-all active:scale-95 hover:bg-blue-700" 
+                      className="h-11 rounded-lg bg-amber-600 px-8 font-semibold hover:bg-amber-700" 
                       onClick={handleSaveProfile}
                       disabled={updateProfileMutate.isPending || updatePartnerProfileMutate.isPending}
                     >
@@ -312,12 +326,15 @@ const Profile = () => {
            </Card>
 
            {/* Security Settings */}
-           <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+           <Card className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <CardContent className="p-4 sm:p-6 lg:p-8">
-                 <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                    <Lock className="size-5 text-blue-600" /> Bảo mật & Mật khẩu
+                 <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600">
+                      <Lock className="size-4" />
+                    </span>
+                    Bảo mật & Mật khẩu
                  </h3>
-                 <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-6">
+                 <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
                     <div className="flex items-center gap-4">
                        <div className="rounded-xl bg-white p-3 shadow-sm"><ShieldCheck className="size-6 text-emerald-500" /></div>
                        <div>
@@ -325,7 +342,7 @@ const Profile = () => {
                           <p className="text-xs text-slate-400">Thay đổi mật khẩu định kỳ để bảo vệ tài khoản của bạn.</p>
                        </div>
                     </div>
-                    <Button variant="outline" className="h-11 rounded-xl border-slate-200 px-6 font-bold transition-all hover:bg-slate-900 hover:text-white">Thay đổi</Button>
+                    <Button variant="outline" className="h-10 rounded-lg border-slate-200 px-5 font-semibold">Thay đổi</Button>
                  </div>
               </CardContent>
            </Card>
@@ -333,37 +350,86 @@ const Profile = () => {
 
         {/* Sidebar Info */}
         <div className="space-y-6">
-           <Card className="group relative overflow-hidden rounded-[32px] border-none bg-slate-900 p-4 text-white shadow-lg sm:p-6 lg:p-8">
-              <div className="absolute right-0 top-0 p-4 opacity-10 transition-transform duration-500 group-hover:scale-125">
-                 <BadgeCheck className="size-24 text-blue-400" />
+           <PartnerSectionCard className="relative overflow-hidden">
+              <div className="absolute right-0 top-0 p-4 opacity-10">
+                 <BadgeCheck className="size-20 text-amber-500" />
               </div>
-              <h3 className="relative z-10 mb-4 text-xl font-bold">Hợp tác tin cậy</h3>
-              <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-400">
+              <h3 className="relative z-10 mb-3 text-lg font-bold text-slate-900">Hợp tác tin cậy</h3>
+              <p className="relative z-10 mb-5 text-sm leading-relaxed text-slate-500">
                  BKS cam kết mang lại giải pháp quản lý tài sản tối ưu và minh bạch cho các đối tác.
               </p>
-              <div className="relative z-10 space-y-4">
+              <div className="relative z-10 space-y-3">
                  {[
                    "Minh bạch dòng tiền",
                    "Hỗ trợ kỹ thuật 24/7",
                    "Báo cáo chi tiết hàng tháng",
                    "Mở rộng mạng lưới khách hàng"
                  ].map((benefit, i) => (
-                   <div key={i} className="flex items-center gap-3 text-xs font-bold text-blue-400">
-                      <BadgeCheck className="size-4" /> {benefit}
+                   <div key={i} className="flex items-center gap-3 text-xs font-semibold text-amber-700">
+                      <BadgeCheck className="size-4 shrink-0" /> {benefit}
                    </div>
                  ))}
               </div>
-           </Card>
+           </PartnerSectionCard>
 
-           <Card className="overflow-hidden rounded-[32px] border-none bg-white p-4 shadow-xl shadow-slate-200/50 sm:p-6 lg:p-8">
-              <CardContent className="p-0">
-                 <div className="mb-6 flex items-center justify-between">
-                    <h3 className="flex items-center gap-2 text-lg font-bold">
-                       <Fingerprint className="size-5 text-blue-600" /> Xác thực
-                    </h3>
-                    <Badge variant="outline" className="border-blue-100 bg-blue-50 px-3 text-blue-600">VERIFIED</Badge>
+           <PartnerSectionCard>
+                 <div className="mb-6 flex items-center justify-between gap-3">
+                    <div>
+                       <h3 className="text-lg font-bold text-slate-900">Ảnh giới thiệu đối tác</h3>
+                       <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                          Ba ảnh thương hiệu đối tác hiển thị trên trang chủ và trang chi tiết đối tác. Không trùng với ảnh đại diện tài khoản người quản lý.
+                       </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-200"
+                      onClick={() => setIsPublicImageDialogOpen(true)}
+                    >
+                      Chỉnh sửa
+                    </Button>
                  </div>
-                 <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+
+                 <div className="grid grid-cols-3 gap-3">
+                    {PARTNER_PUBLIC_IMAGE_SLOTS.map((slot) => {
+                      const imageUrl = resolveImageUrl(partnerDetail?.[slot.field], { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL });
+
+                      return (
+                        <div key={slot.field}>
+                          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt="Ảnh giới thiệu đối tác"
+                                className="aspect-[4/3] w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/assets/images/photo_error2.png";
+                                }}
+                              />
+                            ) : (
+                              <div className="flex aspect-[4/3] items-center justify-center px-3 text-center text-xs font-semibold text-slate-400">
+                                Chưa tải ảnh
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                 </div>
+           </PartnerSectionCard>
+
+           <PartnerSectionCard>
+                 <div className="mb-6 flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                       <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600">
+                         <Fingerprint className="size-4" />
+                       </span>
+                       Xác thực
+                    </h3>
+                    <Badge variant="outline" className="border-amber-100 bg-amber-50 px-3 text-amber-700">VERIFIED</Badge>
+                 </div>
+                 <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-slate-400">
                        <CreditCard className="size-6" />
                     </div>
@@ -374,10 +440,15 @@ const Profile = () => {
                        </p>
                     </div>
                  </div>
-              </CardContent>
-           </Card>
+           </PartnerSectionCard>
         </div>
       </div>
+
+      <PartnerPublicImageDialog
+        open={isPublicImageDialogOpen}
+        onOpenChange={setIsPublicImageDialogOpen}
+        partnerDetail={partnerDetail}
+      />
     </div>
   );
 };

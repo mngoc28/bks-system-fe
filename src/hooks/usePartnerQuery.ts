@@ -39,12 +39,13 @@ export const useUpdatePartnerQuery = () => {
 }
 
 // Get logged-in partner profile
-export const usePartnerProfileQuery = () => {
+export const usePartnerProfileQuery = (options?: { enabled?: boolean }) => {
     return useQuery<PartnerDetailResponse, Error>({
         queryKey: ["partner-profile"],
         queryFn: ({ signal }) => partnerApi.getPartnerProfile({ signal }),
-        staleTime: 60_000,
-        gcTime: 5 * 60_000,
+        staleTime: 24 * 60 * 60_000,
+        gcTime: 24 * 60 * 60_000 + 5 * 60_000,
+        enabled: options?.enabled ?? true,
     });
 }
 
