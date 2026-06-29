@@ -222,7 +222,7 @@ export default function BookingManagePage() {
   return (
     <AdminPageShell>
       <PageBar
-        subtitle={t("bookings.subtitle") || "Theo d?i v? qu?n l? c?c lu?t d?t ph?ng c?a kh?ch h?ng."}
+        subtitle={t("bookings.subtitle") || "Theo dõi và quản lý các lượt đặt phòng của khách hàng."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

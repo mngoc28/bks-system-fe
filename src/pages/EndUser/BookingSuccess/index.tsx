@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Clock, Mail, KeyRound, CreditCard, LogIn, AlertCircle } from "lucide-react";
 
@@ -6,6 +7,7 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ROUTERS } from "@/constant";
 import { getAccessToken } from "@/utils/storage";
 import { bookingApi } from "@/api/EU/bookingApi";
@@ -26,6 +28,7 @@ type BookingSuccessState = {
 };
 
 const BookingSuccess = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -50,7 +53,7 @@ const BookingSuccess = () => {
 
   const handleUpdateEmail = async () => {
     if (!newEmail || !newEmail.includes("@")) {
-      setUpdateError("Vui lòng nhập email hợp lệ.");
+      setUpdateError(t("public.bookingSuccess.emailInvalid"));
       return;
     }
     setUpdateError("");
@@ -63,16 +66,16 @@ const BookingSuccess = () => {
         new_email: newEmail.trim()
       }) as any;
       if (res?.success || res?.status === "success") {
-        setUpdateSuccess("Cập nhật email thành công! Một email kích hoạt mới đã được gửi đi.");
+        setUpdateSuccess(t("public.bookingSuccess.emailUpdateSuccess"));
         setBookingData((prev: any) => prev ? { ...prev, guestEmail: newEmail.trim() } : null);
         setIsEditingEmail(false);
         setNewEmail("");
       } else {
-        setUpdateError(res?.message || "Cập nhật email thất bại.");
+        setUpdateError(res?.message || t("public.bookingSuccess.emailUpdateFailed"));
       }
     } catch (err: any) {
       console.error(err);
-      setUpdateError(err?.response?.data?.message || "Cập nhật email thất bại.");
+      setUpdateError(err?.response?.data?.message || t("public.bookingSuccess.emailUpdateFailed"));
     } finally {
       setIsUpdating(false);
     }
@@ -158,7 +161,7 @@ const BookingSuccess = () => {
         <main className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="size-12 rounded-full border-4 border-sky-200 border-t-sky-600 animate-spin" />
-            <p className="text-sm font-semibold text-slate-600">Đang tải thông tin đặt phòng...</p>
+            <p className="text-sm font-semibold text-slate-600">{t("public.bookingSuccess.loading")}</p>
           </div>
         </main>
         <PublicFooter />
@@ -171,22 +174,22 @@ const BookingSuccess = () => {
       <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
         <PublicHeader />
         <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
-          <p className="text-slate-700 font-medium">Không có thông tin đặt phòng trên phiên này.</p>
+          <p className="text-slate-700 font-medium">{t("public.bookingSuccess.emptyTitle")}</p>
           <p className="mt-3 text-sm text-slate-600 max-w-lg mx-auto">
-            Nếu bạn vừa đặt phòng, hãy kiểm tra email xác nhận (kèm mã đặt). Bạn có thể tra cứu đơn bằng email và mã đặt trên trang{" "}
+            {t("public.bookingSuccess.emptyDescriptionBefore")}{" "}
             <Link to={ROUTERS.MY_BOOKINGS} className="font-semibold text-sky-600 underline-offset-2 hover:underline">
-              Đặt phòng của tôi
+              {t("public.myBookings.title")}
             </Link>
-            , hoặc{" "}
+            {t("public.bookingSuccess.emptyDescriptionAfter")}{" "}
             <Link to={ROUTERS.BKS_STAY_LOGIN} className="font-semibold text-sky-600 underline-offset-2 hover:underline">
-              đăng nhập BKS Stay
-            </Link>{" "}
-            nếu đã có tài khoản.
+              {t("public.bookingSuccess.signInBksStay")}
+            </Link>
+            {t("public.bookingSuccess.emptyDescriptionEnd")}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Button onClick={() => navigate(ROUTERS.MY_BOOKINGS)} className="rounded-full">Tra cứu đơn</Button>
+            <Button onClick={() => navigate(ROUTERS.MY_BOOKINGS)} className="rounded-full">{t("public.bookingSuccess.actions.lookupBooking")}</Button>
             <Button variant="secondary" className="border border-slate-300 bg-white text-slate-700 rounded-full" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
-              Tìm phòng khác
+              {t("public.bookingSuccess.actions.searchOtherRooms")}
             </Button>
           </div>
         </main>
@@ -195,61 +198,40 @@ const BookingSuccess = () => {
     );
   }
 
-  const codeLabel = bookingData.bookingCode?.trim() || (bookingData.bookingId != null ? `Mã đặt phòng #${bookingData.bookingId}` : "—");
+  const codeLabel = bookingData.bookingCode?.trim() || (bookingData.bookingId != null ? t("public.bookingSuccess.codeFallback", { id: bookingData.bookingId }) : "—");
   const isLoggedIn = !!getAccessToken() && !!userEmail && userEmail.toLowerCase() === bookingData.guestEmail?.toLowerCase();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
       <PublicHeader />
 
-      <section className="relative overflow-hidden bg-slate-950 text-white">
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1600&q=75"
-            alt="hero background"
-            className="h-full w-full object-cover"
-            style={{ opacity: 0.35 }}
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
-        <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-emerald-600/15 blur-3xl" />
-        <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-sky-500/15 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
-        <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
-          <CheckCircle2 className="mx-auto size-14 text-emerald-400 animate-bounce" />
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl text-[#10b981]">Đặt phòng thành công</h1>
-          <div className="mt-6 inline-flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm max-w-3xl mx-auto">
-            <p className="text-base sm:text-lg text-slate-100 leading-relaxed">
-              Yêu cầu của bạn đã được ghi nhận trên hệ thống. Chúng tôi đã gửi thông tin xác nhận chi tiết về email mà bạn đã đăng ký.
-            </p>
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <p className="text-sm sm:text-base text-slate-300">
-              <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider mr-2">
-                Quan trọng
-              </span>
-              Vui lòng kiểm tra kỹ hộp thư đến và cả thư mục <span className="font-semibold text-sky-400 italic">Spam (Thư rác)</span> nếu không thấy email.
-            </p>
-          </div>
-        </div>
-      </section>
-
+      {/* Breadcrumb */}
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
-              { label: "Trang chủ", href: ROUTERS.HOME },
-              { label: "Đặt phòng thành công" },
+              { label: t("common.home"), href: ROUTERS.HOME },
+              { label: t("public.bookingSuccess.breadcrumb") },
             ]}
             className="text-sm"
           />
         </div>
+      </div>
+
+      {/* Title & Description Section on clean white layout */}
+      <div className="mx-auto w-full max-w-[1440px] px-4 pt-8 sm:px-6 lg:px-8 space-y-2">
+        <Badge className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200 transition-all duration-300">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 animate-bounce" />
+          {t("public.bookingSuccess.badge")}
+        </Badge>
+        
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          {t("public.bookingSuccess.title")}
+        </h1>
+        
+        <p className="text-sm text-slate-500 max-w-4xl leading-relaxed">
+          {t("public.bookingSuccess.subtitle")}
+        </p>
       </div>
 
       <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
@@ -257,14 +239,14 @@ const BookingSuccess = () => {
           <CardContent className="space-y-8 p-0">
             {/* Minimal booking confirmation */}
             <div className="flex flex-col items-center text-center space-y-3 pb-6 border-b border-slate-100">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mã đặt phòng của bạn</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("public.bookingSuccess.bookingCodeLabel")}</span>
               <span className="text-xl font-mono font-black text-slate-900 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 select-all">
                 {codeLabel}
               </span>
               {bookingData.guestEmail && (
                 <div className="flex flex-col items-center gap-2">
                   <p className="text-xs font-semibold text-slate-500">
-                    Thông tin chi tiết đã được gửi tới: <span className="text-sky-600 font-bold">{bookingData.guestEmail}</span>
+                    {t("public.bookingSuccess.emailSentTo", { email: bookingData.guestEmail })}
                   </p>
                   
                   {!isLoggedIn && (
@@ -273,7 +255,7 @@ const BookingSuccess = () => {
                         <div className="flex flex-col sm:flex-row items-center gap-2 max-w-sm w-full">
                           <input
                             type="email"
-                            placeholder="Nhập lại email đúng..."
+                            placeholder={t("public.bookingSuccess.emailPlaceholder")}
                             value={newEmail}
                             onChange={(e) => setNewEmail(e.target.value)}
                             className="h-8 text-xs px-3 border border-slate-300 rounded-lg focus:outline-none focus:border-sky-500 w-full"
@@ -284,7 +266,7 @@ const BookingSuccess = () => {
                               disabled={isUpdating}
                               className="h-8 text-[10px] px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-bold"
                             >
-                              {isUpdating ? "Đang lưu..." : "Xác nhận"}
+                              {isUpdating ? t("public.bookingSuccess.saving") : t("public.bookingSuccess.confirmEmail")}
                             </Button>
                             <Button 
                               onClick={() => {
@@ -294,7 +276,7 @@ const BookingSuccess = () => {
                               variant="secondary"
                               className="h-8 text-[10px] px-3 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 rounded-lg"
                             >
-                              Hủy
+                              {t("common.cancel")}
                             </Button>
                           </div>
                         </div>
@@ -303,7 +285,7 @@ const BookingSuccess = () => {
                           onClick={() => setIsEditingEmail(true)} 
                           className="text-[11px] text-amber-600 hover:text-amber-700 font-bold underline underline-offset-2 transition-colors"
                         >
-                          Bạn không nhận được email? Nhấp để sửa lại email nhận tin
+                          {t("public.bookingSuccess.fixEmailPrompt")}
                         </button>
                       )}
                       
@@ -329,10 +311,10 @@ const BookingSuccess = () => {
                   <div className="rounded-2xl border border-emerald-100 bg-[#f0fdf4] p-6 text-center space-y-3 shadow-sm">
                     <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold">
                       <CheckCircle2 className="size-5 animate-pulse" />
-                      <span>Trạng thái: Đã xác nhận &amp; Đã thanh toán</span>
+                      <span>{t("public.bookingSuccess.status.confirmedPaid")}</span>
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-                      Cảm ơn bạn! Giao dịch thanh toán trực tuyến đã thành công. Yêu cầu đặt phòng của bạn đã được xác nhận giữ chỗ chính thức.
+                      {t("public.bookingSuccess.status.confirmedPaidDesc")}
                     </p>
                   </div>
                 );
@@ -343,10 +325,10 @@ const BookingSuccess = () => {
                   <div className="rounded-2xl border border-blue-100 bg-[#eff6ff] p-6 text-center space-y-3 shadow-sm">
                     <div className="flex items-center justify-center gap-2 text-blue-600 font-bold">
                       <Clock className="size-5" />
-                      <span>Trạng thái: Đã xác nhận giữ phòng (Thanh toán tại quầy)</span>
+                      <span>{t("public.bookingSuccess.status.payAtCounter")}</span>
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-                      Yêu cầu giữ phòng của bạn đã được ghi nhận. Vui lòng thanh toán trực tiếp tại quầy lễ tân khi làm thủ tục nhận phòng.
+                      {t("public.bookingSuccess.status.payAtCounterDesc")}
                     </p>
                   </div>
                 );
@@ -359,21 +341,21 @@ const BookingSuccess = () => {
                     <>
                       <div className="flex items-center justify-center gap-2 text-rose-600 font-bold">
                         <Clock className="size-5 animate-pulse" />
-                        <span>Trạng thái: Chờ thanh toán đặt cọc</span>
+                        <span>{t("public.bookingSuccess.status.pendingDeposit")}</span>
                       </div>
                       {qPaymentStatus === "failed" && (
                         <div className="inline-flex items-center gap-1.5 rounded-lg bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
                           <AlertCircle className="size-4" />
-                          <span>Thanh toán trực tuyến thất bại hoặc bị hủy</span>
+                          <span>{t("public.bookingSuccess.status.paymentFailed")}</span>
                         </div>
                       )}
                       <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-                        Đơn đặt phòng của bạn đang chờ đặt cọc để hoàn tất giữ chỗ. Vui lòng truy cập trang quản lý Stay Portal để tiến hành thanh toán cọc.
+                        {t("public.bookingSuccess.status.pendingDepositDesc")}
                       </p>
                       <div className="py-1 max-w-xs mx-auto">
                         <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-sky-600 font-bold text-white shadow-md hover:from-sky-600 hover:to-sky-700 transition-all h-10">
                           <Link to={`/bks-stay/bookings/${bookingData.bookingId}`}>
-                            Thanh toán đặt cọc trên Stay Portal
+                            {t("public.bookingSuccess.actions.payDepositPortal")}
                           </Link>
                         </Button>
                       </div>
@@ -381,23 +363,23 @@ const BookingSuccess = () => {
                         {formatTime(timeLeft)}
                       </div>
                       <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
-                        Thời gian thanh toán còn lại (Grace Period)
+                        {t("public.bookingSuccess.gracePayment")}
                       </p>
                     </>
                   ) : (
                     <>
                       <div className="flex items-center justify-center gap-2 text-amber-600 font-bold">
                         <AlertCircle className="size-5 animate-pulse" />
-                        <span>Trạng thái: Chờ xác thực email để cọc phòng</span>
+                        <span>{t("public.bookingSuccess.status.pendingEmailVerify")}</span>
                       </div>
                       <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-                        Để đảm bảo tính xác thực và an toàn tài chính, hệ thống yêu cầu xác thực email trước khi thanh toán cọc. Vui lòng mở email kích hoạt gửi tới <strong className="text-slate-900 font-bold">{bookingData.guestEmail}</strong> để truy cập Stay Portal và tiến hành cọc giữ phòng.
+                        {t("public.bookingSuccess.status.pendingEmailVerifyDesc", { email: bookingData.guestEmail })}
                       </p>
                       <div className="inline-block bg-slate-900 text-white font-mono text-2xl font-black px-6 py-2 rounded-xl tracking-wider shadow-inner">
                         {formatTime(timeLeft)}
                       </div>
                       <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
-                        Thời gian cọc còn lại (Grace Period)
+                        {t("public.bookingSuccess.graceDeposit")}
                       </p>
                     </>
                   )}
@@ -409,23 +391,22 @@ const BookingSuccess = () => {
             <div className="space-y-4">
               <h3 className="text-base font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                 <CheckCircle2 className="size-5 text-emerald-500" />
-                Hướng dẫn các bước tiếp theo
+                {t("public.bookingSuccess.nextSteps")}
               </h3>
 
               {isLoggedIn ? (
                 <>
-                  {/* Step 1 — Go to details */}
                   <div className="relative flex gap-4 p-4 rounded-2xl bg-sky-50 border-2 border-sky-300 shadow-sm">
                     <div className="absolute -top-2.5 left-4 text-[10px] font-black uppercase tracking-widest text-sky-600 bg-sky-50 px-2">
-                      Bước 1 — Xem chi tiết
+                      {t("public.bookingSuccess.steps.loggedIn.step1Badge")}
                     </div>
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
                       <LogIn className="size-5" />
                     </div>
                     <div className="space-y-1 text-sm">
-                      <p className="font-bold text-slate-900">Đi tới trang quản lý đặt phòng</p>
+                      <p className="font-bold text-slate-900">{t("public.bookingSuccess.steps.loggedIn.step1Title")}</p>
                       <p className="text-xs leading-relaxed text-slate-600">
-                        Tài khoản của bạn đã được đăng nhập. Hãy nhấn nút <span className="font-bold text-sky-700">"Xem chi tiết đặt phòng (đã đăng nhập)"</span> ở bên dưới để đi đến Portal lưu trú.
+                        {t("public.bookingSuccess.steps.loggedIn.step1Desc")}
                       </p>
                     </div>
                   </div>
@@ -442,9 +423,9 @@ const BookingSuccess = () => {
                             <CreditCard className="size-5" />
                           </div>
                           <div className="space-y-1 text-sm text-slate-500">
-                            <p className="font-bold text-slate-700">Nhận phiếu lưu trú &amp; ký hợp đồng điện tử</p>
+                            <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.loggedIn.step2VoucherTitle")}</p>
                             <p className="text-xs leading-relaxed">
-                              Tại trang quản lý đặt phòng, bạn có thể tải ngay <strong>Stay Voucher (Phiếu lưu trú)</strong> đã được phát hành hoặc thực hiện ký hợp đồng thuê điện tử.
+                              {t("public.bookingSuccess.steps.loggedIn.step2VoucherDesc")}
                             </p>
                           </div>
                         </div>
@@ -458,9 +439,9 @@ const BookingSuccess = () => {
                             <CreditCard className="size-5" />
                           </div>
                           <div className="space-y-1 text-sm text-slate-500">
-                            <p className="font-bold text-slate-700">Thanh toán và làm thủ tục khi nhận phòng</p>
+                            <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.loggedIn.step2CounterTitle")}</p>
                             <p className="text-xs leading-relaxed">
-                              Mang theo giấy tờ tùy thân và thực hiện thanh toán trực tiếp cho lễ tân khi check-in để nhận phòng.
+                              {t("public.bookingSuccess.steps.loggedIn.step2CounterDesc")}
                             </p>
                           </div>
                         </div>
@@ -473,9 +454,9 @@ const BookingSuccess = () => {
                           <CreditCard className="size-5" />
                         </div>
                         <div className="space-y-1 text-sm text-slate-500">
-                          <p className="font-bold text-slate-700">Hoàn tất đặt cọc &amp; nhận phiếu lưu trú</p>
+                          <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.loggedIn.step2DepositTitle")}</p>
                           <p className="text-xs leading-relaxed">
-                            Vào trang quản lý đặt phòng của bạn để thanh toán cọc trực tuyến và nhận <strong>Stay Voucher</strong>.
+                            {t("public.bookingSuccess.steps.loggedIn.step2DepositDesc")}
                           </p>
                         </div>
                       </div>
@@ -487,31 +468,29 @@ const BookingSuccess = () => {
                   {/* Step 1 — Email (highlighted as mandatory) */}
                   <div className="relative flex gap-4 p-4 rounded-2xl bg-sky-50 border-2 border-sky-300 shadow-sm">
                     <div className="absolute -top-2.5 left-4 text-[10px] font-black uppercase tracking-widest text-sky-600 bg-sky-50 px-2">
-                      Bước 1 — Bắt buộc
+                      {t("public.bookingSuccess.steps.guest.step1Badge")}
                     </div>
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
                       <Mail className="size-5" />
                     </div>
                     <div className="space-y-1 text-sm">
-                      <p className="font-bold text-slate-900">Mở hộp thư điện tử ngay bây giờ</p>
+                      <p className="font-bold text-slate-900">{t("public.bookingSuccess.steps.guest.step1Title")}</p>
                       <p className="text-xs leading-relaxed text-slate-600">
-                        Chúng tôi đã gửi email xác nhận kèm{" "}
-                        <span className="font-bold text-sky-700">đường dẫn kích hoạt tài khoản</span> đến{" "}
-                        <span className="font-bold text-slate-800">{bookingData.guestEmail || "email đăng ký"}</span>.{" "}
-                        Kiểm tra cả thư mục <span className="italic font-semibold">Spam</span> nếu không thấy email.
+                        {t("public.bookingSuccess.steps.guest.step1Desc", {
+                          email: bookingData.guestEmail || t("public.bookingSuccess.registeredEmail"),
+                        })}
                       </p>
                     </div>
                   </div>
 
-                  {/* Step 2 — Activate */}
                   <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
                       <KeyRound className="size-5" />
                     </div>
                     <div className="space-y-1 text-sm text-slate-500">
-                      <p className="font-bold text-slate-700">Nhấn liên kết trong email → Tạo mật khẩu → Đăng nhập</p>
+                      <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.guest.step2Title")}</p>
                       <p className="text-xs leading-relaxed">
-                        Nếu đây là lần đầu đặt phòng, click vào liên kết thiết lập mật khẩu trong email để kích hoạt tài khoản BKS Stay Portal.
+                        {t("public.bookingSuccess.steps.guest.step2Desc")}
                       </p>
                     </div>
                   </div>
@@ -528,9 +507,9 @@ const BookingSuccess = () => {
                             <CreditCard className="size-5" />
                           </div>
                           <div className="space-y-1 text-sm text-slate-500">
-                            <p className="font-bold text-slate-700">Nhận phiếu lưu trú &amp; ký hợp đồng điện tử</p>
+                            <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.guest.step3VoucherTitle")}</p>
                             <p className="text-xs leading-relaxed">
-                              Đăng nhập vào hệ thống để kiểm tra <strong>Stay Voucher</strong> đã được phát hành hoặc thực hiện ký hợp đồng thuê điện tử (nếu có yêu cầu từ chủ nhà).
+                              {t("public.bookingSuccess.steps.guest.step3VoucherDesc")}
                             </p>
                           </div>
                         </div>
@@ -544,9 +523,9 @@ const BookingSuccess = () => {
                             <CreditCard className="size-5" />
                           </div>
                           <div className="space-y-1 text-sm text-slate-500">
-                            <p className="font-bold text-slate-700">Thanh toán và làm thủ tục khi nhận phòng</p>
+                            <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.guest.step3CounterTitle")}</p>
                             <p className="text-xs leading-relaxed">
-                              Mang theo giấy tờ tùy thân và thực hiện thanh toán trực tiếp cho lễ tân khi check-in để nhận phòng.
+                              {t("public.bookingSuccess.steps.guest.step3CounterDesc")}
                             </p>
                           </div>
                         </div>
@@ -559,10 +538,9 @@ const BookingSuccess = () => {
                           <CreditCard className="size-5" />
                         </div>
                         <div className="space-y-1 text-sm text-slate-500">
-                          <p className="font-bold text-slate-700">Hoàn tất đặt cọc &amp; nhận phiếu lưu trú</p>
+                          <p className="font-bold text-slate-700">{t("public.bookingSuccess.steps.guest.step3DepositTitle")}</p>
                           <p className="text-xs leading-relaxed">
-                            Sau khi đăng nhập, vào <strong>Chi tiết đặt phòng</strong> để thanh toán cọc và tải{" "}
-                            <strong>Stay Voucher</strong> hoặc ký hợp đồng điện tử.
+                            {t("public.bookingSuccess.steps.guest.step3DepositDesc")}
                           </p>
                         </div>
                       </div>
@@ -578,13 +556,13 @@ const BookingSuccess = () => {
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-center">
                 {isLoggedIn ? (
                   <p className="text-xs font-bold text-emerald-700">
-                    ✅ Tài khoản của bạn đã được đăng nhập. Bạn có thể xem ngay chi tiết đặt phòng bên dưới.
+                    ✅ {t("public.bookingSuccess.alerts.loggedInReady")}
                   </p>
                 ) : (
                   <p className="text-xs font-bold text-amber-700">
                     {bookingData.paymentMethod === "online" && bookingData.status !== 1
-                      ? "⚠️ Bạn cần kích hoạt tài khoản qua email trước khi có thể đăng nhập và thanh toán cọc."
-                      : "⚠️ Bạn cần kích hoạt tài khoản qua email để có thể đăng nhập quản lý đặt phòng và ký hợp đồng lưu trú."}
+                      ? `⚠️ ${t("public.bookingSuccess.alerts.needActivateDeposit")}`
+                      : `⚠️ ${t("public.bookingSuccess.alerts.needActivateManage")}`}
                   </p>
                 )}
               </div>
@@ -594,7 +572,7 @@ const BookingSuccess = () => {
                 <Button asChild variant="outline" className="h-11 w-full rounded-2xl font-bold border-sky-300 text-sky-700 hover:bg-sky-50 gap-2">
                   <Link to={`/bks-stay/bookings/${bookingData.bookingId}`}>
                     <LogIn className="size-4" />
-                    <span>Xem chi tiết đặt phòng (đã đăng nhập)</span>
+                    <span>{t("public.bookingSuccess.actions.viewBookingLoggedIn")}</span>
                   </Link>
                 </Button>
               )}
@@ -602,12 +580,12 @@ const BookingSuccess = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild variant="secondary" className="h-12 flex-1 rounded-2xl border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50">
                   <Link to={ROUTERS.HOME}>
-                    Về trang chủ BKS
+                    {t("public.bookingSuccess.actions.backHome")}
                   </Link>
                 </Button>
                 <Button asChild variant="secondary" className="h-12 flex-1 rounded-2xl border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50">
                   <Link to={ROUTERS.SEARCH_ROOMS}>
-                    Tiếp tục tìm phòng
+                    {t("public.bookingSuccess.actions.continueSearch")}
                   </Link>
                 </Button>
               </div>

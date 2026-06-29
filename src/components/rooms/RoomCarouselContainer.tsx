@@ -71,7 +71,7 @@ const RoomCarouselContainer = ({
         <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="mb-2 inline-flex rounded-full bg-amber-400 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-950">
-              Gợi ý hôm nay
+              {t("public.home.rooms.badge")}
             </p>
             {headingText && <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">{headingText}</h2>}
             {descriptionText && <p className="mt-2 text-sm text-slate-600 md:text-base">{descriptionText}</p>}

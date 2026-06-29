@@ -162,3 +162,12 @@ export const useAdminDashboardStatsQuery = () => {
     ...dashboardQueryDefaults,
   });
 };
+
+export const useAdminDashboardConsolidatedQuery = (startDate?: string, endDate?: string) => {
+  return useQuery<ApiResponse<any>, Error>({
+    queryKey: ["dashboard", "consolidated", startDate ?? null, endDate ?? null],
+    queryFn: async () => dashboardApi.getConsolidated(startDate, endDate),
+    staleTime: DASHBOARD_OPS_STALE_MS,
+    ...dashboardQueryDefaults,
+  });
+};

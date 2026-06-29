@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CalendarDays, CheckCircle2, Clock3, MapPin, SearchX } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,12 +44,6 @@ type UserBooking = {
   stayBookingId?: number;
 };
 
-const bookingStatusLabel: Record<BookingStatus, string> = {
-  upcoming: "Sắp tới",
-  completed: "Hoàn thành",
-  cancelled: "Đã hủy",
-};
-
 const bookingStatusBadgeClass: Record<BookingStatus, string> = {
   upcoming: "bg-amber-100 text-amber-700",
   completed: "bg-emerald-100 text-emerald-700",
@@ -67,13 +62,13 @@ function mapServerStatusToTab(status: number): BookingStatus {
   return "upcoming";
 }
 
-function mapStayBooking(b: BookingDetail): UserBooking {
+function mapStayBooking(b: BookingDetail, roomFallback: string): UserBooking {
   const addr = b.room?.property?.address || "";
   return {
     id: `stay-${b.id}`,
     source: "stay",
     roomId: 0,
-    roomTitle: b.room?.title || "Phòng",
+    roomTitle: b.room?.title || roomFallback,
     address: addr,
     startDate: formatYmd(b.start_date),
     endDate: formatYmd(b.end_date),
@@ -111,8 +106,11 @@ function mapLookupSummary(s: PublicBookingSummary): UserBooking {
 }
 
 const MyBookings = () => {
+  const { t } = useTranslation();
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
   const queryClient = useQueryClient();
+
+  const getStatusLabel = (status: BookingStatus) => t(`public.myBookings.status.${status}`);
 
   const [tab, setTab] = useState<BookingStatus>("upcoming");
   const [lookupEmail, setLookupEmail] = useState("");
@@ -145,7 +143,11 @@ const MyBookings = () => {
     },
   });
 
-  const stayCards = useMemo(() => (stayQuery.data ?? []).map(mapStayBooking), [stayQuery.data]);
+  const roomFallback = t("public.myBookings.roomFallback");
+  const stayCards = useMemo(
+    () => (stayQuery.data ?? []).map((b) => mapStayBooking(b, roomFallback)),
+    [stayQuery.data, roomFallback],
+  );
 
   const allBookings = useMemo(() => {
     const merged = [...stayCards];
@@ -161,7 +163,7 @@ const MyBookings = () => {
     const email = lookupEmail.trim();
     const code = lookupCode.trim();
     if (!email || !code) {
-      toastError("Vui lòng nhập email và mã đặt phòng.");
+      toastError(`${t("common.email")} ${t("validation.required")}`);
       return;
     }
     setLookupLoading(true);
@@ -174,10 +176,10 @@ const MyBookings = () => {
         const booking = mapLookupSummary(res.data);
         setLookupHit(booking);
         setTab(booking.status);
-        toastSuccess(res.message || "Đã tìm thấy đơn đặt phòng.");
+        toastSuccess(res.message || t("public.myBookings.lookupSuccess"));
       } else {
         setLookupHit(null);
-        toastError("Không tìm thấy đơn khớp với thông tin đã nhập.");
+        toastError(t("public.myBookings.lookupNotFound"));
       }
     } catch (e: unknown) {
       setLookupHit(null);
@@ -185,7 +187,7 @@ const MyBookings = () => {
         typeof e === "object" && e !== null && "response" in e
           ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
           : undefined;
-      toastError(msg || "Tra cứu thất bại. Vui lòng thử lại.");
+      toastError(msg || t("public.myBookings.lookupFailed"));
     } finally {
       setLookupLoading(false);
     }
@@ -195,73 +197,50 @@ const MyBookings = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
       <PublicHeader />
 
-      <section className="relative overflow-hidden bg-slate-950 text-white">
-        {/* Background scenic image */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=75"
-            alt="hero background"
-            className="h-full w-full object-cover"
-            style={{ opacity: 0.35 }}
-          />
-        </div>
-        {/* Multi-layer overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
-        {/* Ambient glow orbs */}
-        <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-sky-600/15 blur-3xl" />
-        <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl" />
-        {/* Dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
-            Quản lý đặt phòng
-          </p>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Đặt phòng của tôi</h1>
-          <p className="mt-3 max-w-2xl text-slate-200">
-            Dữ liệu lấy từ hệ thống BKS: tra cứu công khai bằng email + mã đặt (trong email xác nhận), hoặc danh sách đặt qua cổng BKS Stay khi bạn đã đăng nhập.
-          </p>
-          <p className="mt-2 max-w-2xl text-sm text-slate-300">
-            Đăng nhập để xem toàn bộ lịch sử và chi tiết lưu trú:{" "}
-            <Link
-              to={ROUTERS.BKS_STAY_LOGIN}
-              className="font-semibold text-sky-300 underline-offset-2 hover:underline"
-            >
-              BKS Stay
-            </Link>
-            .
-          </p>
-        </div>
-      </section>
-
+      {/* Breadcrumb */}
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
-              { label: "Trang chủ", href: ROUTERS.HOME },
-              { label: "Đặt phòng của tôi" },
+              { label: t("common.home"), href: ROUTERS.HOME },
+              { label: t("public.myBookings.breadcrumb") },
             ]}
             className="text-sm"
           />
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Title & Description Section on clean white layout */}
+      <div className="mx-auto w-full max-w-[1440px] px-4 pt-8 sm:px-6 lg:px-8 space-y-2">
+        <span className="text-[10px] uppercase tracking-[0.25em] font-extrabold text-sky-600 block">
+          {t("public.myBookings.badge")}
+        </span>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t("public.myBookings.title")}</h1>
+        <p className="text-sm text-slate-500 max-w-4xl leading-relaxed">
+          {t("public.myBookings.description")}
+        </p>
+        <p className="text-xs text-slate-400">
+          {t("public.myBookings.signInHint")}{" "}
+          <Link
+            to={ROUTERS.BKS_STAY_LOGIN}
+            className="font-semibold text-sky-600 underline hover:text-sky-700 transition-colors"
+          >
+            BKS Stay
+          </Link>
+          .
+        </p>
+      </div>
+
+      <main className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
         <Card className="mb-8 rounded-3xl border-slate-200 shadow-sm">
           <CardContent className="space-y-4 p-6">
-            <h2 className="text-lg font-semibold text-slate-900">Tra cứu đơn (không cần đăng nhập)</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t("public.myBookings.lookupTitle")}</h2>
             <p className="text-sm text-slate-600">
-              Nhập email đã dùng khi đặt và mã đặt phòng (dạng RM-YYYY-XXXXXX) trong email xác nhận.
+              {t("public.myBookings.lookupDescription")}
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="lookup-email">Email</Label>
+                <Label htmlFor="lookup-email">{t("common.email")}</Label>
                 <Input
                   id="lookup-email"
                   type="email"
@@ -273,7 +252,7 @@ const MyBookings = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lookup-code">Mã đặt phòng</Label>
+                <Label htmlFor="lookup-code">{t("public.myBookings.bookingCode", { code: "" }).replace(/:\s*$/, "")}</Label>
                 <Input
                   id="lookup-code"
                   placeholder="RM-2026-000042"
@@ -288,15 +267,15 @@ const MyBookings = () => {
                 {lookupLoading ? (
                   <>
                     <Spinner size="sm" className="inline-block mr-2" spinnerClassName="border-y-white" />
-                    Đang tra cứu…
+                    {t("public.myBookings.lookupLoading")}
                   </>
                 ) : (
-                  "Tra cứu"
+                  t("public.myBookings.lookupSubmit")
                 )}
               </Button>
               {lookupHit && (
                 <Button type="button" variant="secondary" className="rounded-full" onClick={() => setLookupHit(null)}>
-                  Xóa kết quả tra cứu
+                  {t("public.myBookings.clearLookup")}
                 </Button>
               )}
             </div>
@@ -308,12 +287,12 @@ const MyBookings = () => {
         {isAuthenticated && stayQuery.isLoading && (
           <div className="mb-6 flex items-center gap-2 text-sm text-slate-600">
             <Spinner size="sm" className="inline-block" />
-            Đang tải đơn từ BKS Stay…
+            {t("public.myBookings.stayLoading")}
           </div>
         )}
 
         {isAuthenticated && stayQuery.isError && (
-          <p className="mb-6 text-sm text-rose-600">Không tải được danh sách BKS Stay. Bạn vẫn có thể tra cứu đơn bằng form phía trên.</p>
+          <p className="mb-6 text-sm text-rose-600">{t("public.myBookings.stayError")}</p>
         )}
 
         <div className="mb-6 overflow-x-auto pb-1 scrollbar-hide">
@@ -327,7 +306,7 @@ const MyBookings = () => {
                 tab === status ? "bg-sky-600 text-white" : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              {bookingStatusLabel[status]}
+              {getStatusLabel(status)}
             </button>
           ))}
           </div>
@@ -336,12 +315,12 @@ const MyBookings = () => {
         {filteredBookings.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-14 text-center">
             <SearchX className="mx-auto mb-3 size-8 text-slate-400" />
-            <p className="text-base font-semibold text-slate-700">Chưa có đơn đặt phòng nào ở mục này</p>
+            <p className="text-base font-semibold text-slate-700">{t("public.myBookings.emptyTitle")}</p>
             <p className="mt-2 text-sm text-slate-500">
-              Thử tra cứu bằng email và mã đặt, hoặc đăng nhập BKS Stay để xem lịch sử đầy đủ.
+              {t("public.myBookings.emptyDescription")}
             </p>
             <Button asChild variant="gradient" className="mt-5 rounded-full">
-              <Link to={ROUTERS.SEARCH_ROOMS}>Tìm phòng ngay</Link>
+              <Link to={ROUTERS.SEARCH_ROOMS}>{t("public.myBookings.emptyCta")}</Link>
             </Button>
           </div>
         ) : (
@@ -357,26 +336,26 @@ const MyBookings = () => {
                           <h3 className="text-lg font-semibold text-slate-900">{booking.roomTitle}</h3>
                           {booking.serverStatus === 4 ? (
                             <Badge className="rounded-full border-0 bg-orange-100 text-orange-700">
-                              Chờ duyệt hủy
+                              {t("public.myBookings.cancelPending")}
                             </Badge>
                           ) : (
                             <Badge className={`rounded-full border-0 ${bookingStatusBadgeClass[booking.status]}`}>
-                              {bookingStatusLabel[booking.status]}
+                              {getStatusLabel(booking.status)}
                             </Badge>
                           )}
                           <Badge variant="outline" className="rounded-full border-slate-300 text-slate-600">
-                            {booking.source === "stay" ? "BKS Stay" : "Tra cứu"}
+                            {booking.source === "stay" ? "BKS Stay" : t("public.myBookings.lookupTag")}
                           </Badge>
                         </div>
                         {booking.bookingCode && (
-                          <p className="text-xs font-mono text-slate-500">Mã: {booking.bookingCode}</p>
+                          <p className="text-xs font-mono text-slate-500">{t("public.myBookings.bookingCode", { code: booking.bookingCode })}</p>
                         )}
                         {booking.source === "stay" && booking.stayBookingId != null && (
-                          <p className="text-xs text-slate-500">Mã đơn hệ thống: #{booking.stayBookingId}</p>
+                          <p className="text-xs text-slate-500">{t("public.myBookings.systemId", { id: booking.stayBookingId })}</p>
                         )}
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                           <MapPin className="size-4 text-sky-500" />
-                          {booking.address || "Đang cập nhật địa chỉ"}
+                          {booking.address || t("public.myBookings.addressUpdating")}
                         </p>
                         <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                           <CalendarDays className="size-4 text-sky-500" />
@@ -385,24 +364,26 @@ const MyBookings = () => {
                         <BookingDaysRow days={countBookingNights(booking.startDate, booking.endDate)} />
                         <p className="inline-flex items-center gap-2 text-sm text-slate-500">
                           <Clock3 className="size-4" />
-                          {booking.source === "stay" ? `Cập nhật: ${new Date(booking.createdAt).toLocaleString("vi-VN")}` : "Kết quả tra cứu mới nhất"}
+                          {booking.source === "stay"
+                            ? t("public.myBookings.updatedAt", { date: new Date(booking.createdAt).toLocaleString() })
+                            : t("public.myBookings.lookupResult")}
                         </p>
                       </div>
 
                       <div className="space-y-3 md:text-right">
-                        <p className="text-sm text-slate-500">Tổng tạm tính</p>
+                        <p className="text-sm text-slate-500">{t("public.myBookings.totalEstimate")}</p>
                         <p className="text-2xl font-bold text-sky-600">{formatPrice(booking.totalPrice)}</p>
                         <div className="flex flex-wrap gap-2 md:justify-end">
                           {booking.source === "lookup" && booking.roomId > 0 && (
                             <Button asChild variant="secondary" className="rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-                              <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>Xem phòng</Link>
+                              <Link to={ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", booking.roomId.toString())}>{t("public.myBookings.viewRoom")}</Link>
                             </Button>
                           )}
                           {booking.source === "stay" && booking.stayBookingId != null && (
                             <Button asChild variant="gradient" className="rounded-full">
                               <Link to={ROUTERS.BKS_STAY_DETAILS.replace(":id", String(booking.stayBookingId))}>
                                 <CheckCircle2 className="mr-1 size-4" />
-                                Chi tiết Stay
+                                {t("public.myBookings.viewBooking")}
                               </Link>
                             </Button>
                           )}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTERS, CLOUDINARY_HEADER_IMAGE_URL } from "@/constant";
 import RoomCarouselContainer, { RoomCardSkeleton } from "@/components/rooms/RoomCarouselContainer";
 import type { RoomCard } from "@/dataHelper/home.dataHelper";
@@ -8,6 +9,7 @@ import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { resolveCloudinaryUrl } from "@/utils/imageUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDragScroll } from "@/hooks/useDragScroll";
+import { resolveRoomRentDisplayFromCard } from "../utils/homeDisplayUtils";
 
 interface SuggestedRoomsByTouristSpotProps {
   groups?: SuggestedRoomsByTouristSpotGroup[];
@@ -17,22 +19,14 @@ interface SuggestedRoomsByTouristSpotProps {
   loading?: boolean;
 }
 
-function toRoomCard(room: SuggestedRoomsByTouristSpotGroup["rooms"][number]): RoomCard {
-  const monthlyPrice = room.cheapest_monthly_price;
-  const dailyPrice = room.cheapest_nightly_price ?? room.cheapest_daily_price;
-  const hasMonthlyPrice = monthlyPrice !== null && monthlyPrice !== undefined && Number(monthlyPrice) > 0;
-  const hasDailyPrice = dailyPrice !== null && dailyPrice !== undefined && Number(dailyPrice) > 0;
-  const priceLabel = hasDailyPrice
-    ? `${Number(dailyPrice).toLocaleString("vi-VN")}₫ / đêm`
-    : hasMonthlyPrice
-      ? `${Number(monthlyPrice).toLocaleString("vi-VN")}₫ / tháng`
-      : "Liên hệ";
+function toRoomCard(room: SuggestedRoomsByTouristSpotGroup["rooms"][number], t: ReturnType<typeof useTranslation>["t"]): RoomCard {
+  const rentDisplay = resolveRoomRentDisplayFromCard(t, room);
 
   return {
     id: room.id,
     name: room.title,
-    address: room.property_address || "Đang cập nhật",
-    price: priceLabel,
+    address: room.property_address || "",
+    price: rentDisplay.priceLabel,
     image: resolveCloudinaryUrl(room.room_image, CLOUDINARY_HEADER_IMAGE_URL) || getRoomFallbackImage(room.property_type_name, room.title),
     area: `${room.area ?? 0} m²`,
     beds: room.people ?? 0,
@@ -44,9 +38,9 @@ function toRoomCard(room: SuggestedRoomsByTouristSpotGroup["rooms"][number]): Ro
     room_type: room.room_type,
     property_type_name: room.property_type_name,
     partner_company_name: room.partner_company_name,
-    rent_type: hasDailyPrice ? "daily" : (hasMonthlyPrice ? "monthly" : undefined),
-    has_nightly_price: hasDailyPrice,
-    has_monthly_price: hasMonthlyPrice,
+    rent_type: rentDisplay.rent_type,
+    has_nightly_price: rentDisplay.has_nightly_price,
+    has_monthly_price: rentDisplay.has_monthly_price,
   };
 }
 
@@ -66,8 +60,19 @@ const SuggestedRoomsByTouristSpot = ({
   className,
   loading = false,
 }: SuggestedRoomsByTouristSpotProps) => {
+  const { t } = useTranslation();
   const [activeTabKey, setActiveTabKey] = useState<string>("");
   const scrollRef = useDragScroll();
+
+  const getSpotDisplayName = (group: Pick<SuggestedRoomsByTouristSpotGroup, "tourist_spot_name" | "tourist_spot_slug">) => {
+    if (group.tourist_spot_slug) {
+      return t(`public.home.suggestedRooms.spots.${group.tourist_spot_slug}`, {
+        defaultValue: group.tourist_spot_name,
+      });
+    }
+
+    return group.tourist_spot_name;
+  };
 
   const orderedGroups = useMemo(() => {
     const groupMap = new Map<string, SuggestedRoomsByTouristSpotGroup>();
@@ -97,9 +102,9 @@ const SuggestedRoomsByTouristSpot = ({
     return orderedPriorityGroups
       .map((group) => ({
         ...group,
-        rooms: group.rooms.map(toRoomCard),
+        rooms: group.rooms.map((room) => toRoomCard(room, t)),
       }));
-  }, [groups, prioritySpotNames, prioritySpotSlugs]);
+  }, [groups, prioritySpotNames, prioritySpotSlugs, t]);
 
   const defaultKey = orderedGroups[0] ? String(orderedGroups[0].tourist_spot_id ?? orderedGroups[0].tourist_spot_slug) : "";
   const currentTabKey = activeTabKey || defaultKey;
@@ -119,11 +124,11 @@ const SuggestedRoomsByTouristSpot = ({
       <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl">
           <p className="mb-2 inline-flex w-fit rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
-            Gợi ý theo điểm du lịch
+            {t("public.home.suggestedRooms.badge")}
           </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Phòng được gợi ý theo từng điểm đến</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">{t("public.home.suggestedRooms.heading")}</h2>
           <p className="mt-2 text-sm text-slate-600 md:text-base">
-            Mỗi điểm du lịch có một nhóm phòng gợi ý riêng để bạn xem nhanh các lựa chọn phù hợp tại nơi muốn đi.
+            {t("public.home.suggestedRooms.description")}
           </p>
         </div>
         {activeGroup && (
@@ -131,7 +136,7 @@ const SuggestedRoomsByTouristSpot = ({
             to={`${ROUTERS.SEARCH_ROOMS}?tourist_spot_slug=${encodeURIComponent(activeGroup.tourist_spot_slug)}`}
             className="hidden sm:inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 shrink-0"
           >
-            Xem tất cả
+            {t("public.home.suggestedRooms.cta")}
           </Link>
         )}
       </div>
@@ -159,7 +164,7 @@ const SuggestedRoomsByTouristSpot = ({
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                {group.tourist_spot_name}
+                {getSpotDisplayName(group)}
               </button>
             );
           })
@@ -178,8 +183,9 @@ const SuggestedRoomsByTouristSpot = ({
             const key = String(group.tourist_spot_id ?? group.tourist_spot_slug);
             if (currentTabKey !== key) return null;
 
-            const ctaLabel = "Xem tất cả";
+            const ctaLabel = t("public.home.suggestedRooms.cta");
             const ctaHref = `${ROUTERS.SEARCH_ROOMS}?tourist_spot_slug=${encodeURIComponent(group.tourist_spot_slug)}`;
+            const spotName = getSpotDisplayName(group);
 
             return (
               <div key={key} className="space-y-4">
@@ -203,9 +209,9 @@ const SuggestedRoomsByTouristSpot = ({
                   </>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-                    <h3 className="text-base font-semibold text-slate-900">Chưa có phòng gợi ý cho {group.tourist_spot_name}</h3>
+                    <h3 className="text-base font-semibold text-slate-900">{t("public.home.suggestedRooms.emptyTitle", { name: spotName })}</h3>
                     <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600">
-                      Điểm đến này vẫn nằm trong danh sách ưu tiên hiển thị. Khi có phòng được gắn với điểm du lịch này, danh sách sẽ tự động xuất hiện ở đây.
+                      {t("public.home.suggestedRooms.emptyDescription")}
                     </p>
                     {group.tourist_spot_slug && (
                       <Link

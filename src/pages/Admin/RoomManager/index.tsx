@@ -227,7 +227,7 @@ const RoomManager: React.FC = () => {
   return (
     <AdminPageShell>
       <PageBar
-        subtitle={t("rooms.room_list_subtitle") || "Qu?n l? danh s?ch ph?ng v? tr?ng th?i luu tr?."}
+        subtitle={t("rooms.room_list_subtitle") || "Quản lý danh sách phòng và trạng thái lưu trú."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

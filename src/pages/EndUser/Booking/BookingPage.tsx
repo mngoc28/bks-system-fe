@@ -30,7 +30,7 @@ import { resolveImageUrl } from "@/utils/imageUtils";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { ServiceItem } from "@/dataHelper/EU/booking.dataHelper";
 import { PublicFooter, PublicHeader } from "@/components/layout/Public";
@@ -40,7 +40,7 @@ import { DatePickerField } from "@/components/ui/date-picker-field";
 import { bookingUserFormSchema } from "@/shared/shema";
 import type { z } from "zod";
 import { ROUTERS } from "@/constant";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { 
     Wifi, Tv, Refrigerator, WashingMachine, Utensils, Mountain, Shield, 
     AirVent, Coffee, Sparkles, Eraser, Zap, Stethoscope, Printer, 
@@ -115,6 +115,7 @@ const BookingPage = () => {
     const endDate = watch("end_date");
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
     const [previewData, setPreviewData] = useState<BookingFormData | null>(null);
+    const bookingContentRef = useRef<HTMLDivElement>(null);
 
     const { data: rawRoom, isLoading } = useQuery({
         queryKey: ["room", id],
@@ -262,6 +263,12 @@ const BookingPage = () => {
         }
         setPreviewData(data);
         setCurrentStep(2);
+        setTimeout(() => {
+            if (bookingContentRef.current) {
+                const top = bookingContentRef.current.getBoundingClientRect().top + window.scrollY - 20;
+                window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+            }
+        }, 50);
     });
 
     const services: ServiceItem[] = useMemo(() => {
@@ -348,7 +355,7 @@ const BookingPage = () => {
             const today = new Date();
             const diffHours = (checkInDate.getTime() - today.getTime()) / (1000 * 60 * 60);
             if (diffHours <= 24) {
-                reasons.push("Đặt phòng sát giờ (trong vòng 24h)");
+                reasons.push(t("booking.checkout.lastMinuteReason"));
             }
 
             const start = new Date(startDate);
@@ -396,13 +403,17 @@ const BookingPage = () => {
         } else if (room.deposit !== undefined && room.deposit !== null && Number(room.deposit) > 0) {
             baseDeposit = Number(room.deposit);
         } else {
-            const isLastMinute = depositRequirements.reasons.some(r => r.includes("sát giờ"));
+            const checkInDate = new Date(startDate);
+            const todayDate = new Date();
+            const isLastMinute = (checkInDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60) <= 24;
             baseDeposit = isLastMinute ? totalRoomPrice : Math.round(totalRoomPrice * 0.5);
         }
 
         // If deposit is required but baseDeposit is 0 or less, force the policy minimums
         if (isDepositRequired && baseDeposit <= 0) {
-            const isLastMinute = depositRequirements.reasons.some(r => r.includes("sát giờ"));
+            const checkInDate = new Date(startDate);
+            const todayDate = new Date();
+            const isLastMinute = (checkInDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60) <= 24;
             baseDeposit = isLastMinute ? totalRoomPrice : Math.round(totalRoomPrice * 0.5);
         }
 
@@ -535,60 +546,9 @@ const BookingPage = () => {
         <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
             <PublicHeader/>
 
-            {/* Booking Header */}
-            <div className="relative overflow-hidden bg-slate-950 text-white">
-                {/* Background scenic image */}
-                <div className="absolute inset-0 -z-10 overflow-hidden">
-                  <img
-                    src={roomImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=75"}
-                    alt="hero background"
-                    className="h-full w-full object-cover"
-                    style={{ opacity: 0.35 }}
-                  />
-                </div>
-                {/* Multi-layer overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
-                {/* Ambient glow orbs */}
-                <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-sky-600/15 blur-3xl" />
-                <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl" />
-                {/* Dot pattern */}
-                <div
-                  className="absolute inset-0 opacity-[0.07]"
-                  style={{
-                    backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
-                    backgroundSize: '16px 16px',
-                  }}
-                />
-                <div className="relative mx-auto w-full max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
-                    {/* Main Title */}
-                    <h1 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                        {t("booking.title")}
-                    </h1>
-
-                    {/* Room Subtitle */}
-                    <p className="mx-auto mb-5 max-w-3xl text-xl font-semibold text-sky-200 sm:text-2xl">
-                        {room?.title || "Loading..."}
-                    </p>
-
-                    {/* Price and Location */}
-                    <div className="mb-4 flex flex-wrap items-center justify-center gap-4 text-slate-200">
-                        <div className="flex items-center gap-2">
-                            <MapPin className="size-5 text-sky-300" />
-                            <p className="text-base text-slate-100 sm:text-lg">
-                                {room?.property_address || "Loading..."}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Decorative line */}
-                    <div className="mx-auto h-1 w-24 rounded-full bg-sky-300/70"></div>
-                </div>
-            </div>
-
             {/* Breadcrumb */}
             <div className="border-b border-slate-200 bg-slate-50">
-                <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
                     <Breadcrumb
                         items={[
                             { label: t("breadcrumb.home"), href: "/" },
@@ -603,9 +563,23 @@ const BookingPage = () => {
                 </div>
             </div>
 
-            <div className="flex flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+            {/* Title & Description Section on clean white layout */}
+            <div className="mx-auto w-full max-w-[1440px] px-4 pt-8 sm:px-6 lg:px-8 space-y-2">
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                    {t("booking.title")}
+                </h1>
 
-                <div className="mx-auto mb-6 flex w-full max-w-7xl flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-4 text-xs pt-1 text-slate-500">
+                    <div className="flex items-center gap-1.5">
+                        <MapPin className="size-3.5 text-sky-500" />
+                        <span>{room?.property_address || "Loading..."}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div ref={bookingContentRef} className="mx-auto w-full max-w-[1440px] flex flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+
+                <div className="mx-auto mb-6 flex w-full max-w-[1440px] flex-wrap items-center gap-3">
                     <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${currentStep === 1 ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>
                         <span className="inline-flex size-5 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
                         Thông tin
@@ -668,7 +642,7 @@ const BookingPage = () => {
                                         <div className="mt-2">
                                             {hasStayDates ? (
                                               <>
-                                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tổng tạm tính</p>
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("booking.checkout.estimatedTotal")}</p>
                                                 <p className="text-2xl font-bold text-sky-600">
                                                   {formatCurrencyInput(estimatedTotal.toString())}{" "}
                                                   <span className="text-base font-bold uppercase">{t("booking.money_unit")}</span>
@@ -681,12 +655,12 @@ const BookingPage = () => {
                                               </>
                                             ) : (
                                               <>
-                                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Đơn giá thuê</p>
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("booking.checkout.rentUnitPrice")}</p>
                                                 <p className="text-2xl font-bold text-sky-600">
                                                   {formatCurrencyInput(String(unitPrice))}{" "}
                                                   <span className="text-base font-normal text-slate-500">/ {formatPriceUnitLabel(priceUnit)}</span>
                                                 </p>
-                                                <p className="mt-1 text-sm text-slate-500">Chọn ngày nhận/trả phòng để xem tổng tạm tính</p>
+                                                <p className="mt-1 text-sm text-slate-500">{t("booking.checkout.pickDatesTotalHint")}</p>
                                               </>
                                             )}
                                         </div>
@@ -793,7 +767,7 @@ const BookingPage = () => {
                                                             </div>
                                                             <div className="flex flex-col">
                                                                 <span className="text-sm font-bold text-slate-900">{service.name}</span>
-                                                                <span className="text-xs text-slate-500">Dịch vụ bổ sung</span>
+                                                                <span className="text-xs text-slate-500">{t("booking.checkout.extraServices")}</span>
                                                             </div>
                                                         </div>
                                                         <span className={`text-sm font-bold ${isSelected ? "text-sky-700" : "text-slate-600"}`}>
@@ -848,15 +822,7 @@ const BookingPage = () => {
                                 </div>
                                 <div className="mt-4 rounded-2xl bg-slate-50 border border-slate-100 p-4">
                                     <p className="text-xs text-slate-500 leading-relaxed italic">
-                                        {isVi ? (
-                                            <>
-                                                <strong>Lưu ý về quy định hoàn trả:</strong> Các mốc thời gian hoàn cọc trên được thiết lập nhằm đảm bảo sự cân bằng giữa quyền lợi giữ phòng của quý khách và kế hoạch chuẩn bị đón tiếp từ phía chủ nhà. Kính mong quý khách hàng thông cảm và cân nhắc kỹ kế hoạch di chuyển trước khi thực hiện đặt phòng.
-                                            </>
-                                        ) : (
-                                            <>
-                                                <strong>Note on Refund Policy:</strong> The tiered refund schedules above are established to balance the booking rights of our guests with the hosts' preparation schedules. We kindly request your understanding and suggest verifying your travel plan before booking.
-                                            </>
-                                        )}
+                                        {t("booking.checkout.refundPolicyNote")}
                                     </p>
                                 </div>
                                 {isDepositRequired && (
@@ -901,7 +867,7 @@ const BookingPage = () => {
                                 {currentStep === 1 && (
                                     <div className="mb-8 overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/50 shadow-sm transition-all hover:shadow-md">
                                         <div className="bg-sky-600 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white flex items-center justify-between">
-                                            <span>Tóm tắt đơn hàng</span>
+                                            <span>{t("booking.checkout.orderSummary")}</span>
                                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px]">
                                                 {hasStayDates
                                                     ? (durationMode === "nights"
@@ -918,25 +884,25 @@ const BookingPage = () => {
                                                         <div className="flex items-center gap-2">
                                                             <Calendar className="size-4 text-sky-500 shrink-0" />
                                                             <div className="flex flex-col">
-                                                                <span className="text-[10px] uppercase font-bold text-slate-400">Nhận phòng</span>
+                                                                <span className="text-[10px] uppercase font-bold text-slate-400">{t("booking.checkout.checkIn")}</span>
                                                                 <span className="text-sm font-semibold text-slate-700 mt-0.5">{formatDate(startDate)}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
                                                             <Calendar className="size-4 text-sky-500 shrink-0" />
                                                             <div className="flex flex-col">
-                                                                <span className="text-[10px] uppercase font-bold text-slate-400">Trả phòng</span>
+                                                                <span className="text-[10px] uppercase font-bold text-slate-400">{t("booking.checkout.checkOut")}</span>
                                                                 <span className="text-sm font-semibold text-slate-700 mt-0.5">{formatDate(endDate)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <p className="text-xs text-slate-500">Chọn ngày nhận và trả phòng để tính phí lưu trú.</p>
+                                                <p className="text-xs text-slate-500">{t("booking.checkout.pickDatesHint")}</p>
                                             )}
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex justify-between text-slate-600">
-                                                    <span>Đơn giá</span>
+                                                    <span>{t("booking.checkout.unitPrice")}</span>
                                                     <span className="font-medium text-slate-800">
                                                         {formatCurrencyInput(String(unitPrice))}{" "}
                                                         / {formatPriceUnitLabel(priceUnit)}
@@ -969,7 +935,7 @@ const BookingPage = () => {
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between text-slate-600">
-                                                        <span>Còn lại (Thanh toán sau tại chỗ/hợp đồng)</span>
+                                                        <span>{t("booking.checkout.remainingDue")}</span>
                                                         <span className="font-semibold text-slate-700">
                                                             {formatCurrencyInput(Math.max(0, estimatedTotal - depositAmount).toString())} {t("booking.money_unit")}
                                                         </span>
@@ -979,7 +945,7 @@ const BookingPage = () => {
 
                                             <div className="border-t border-sky-100 pt-4 flex items-center justify-between">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">Tổng cộng toàn bộ kỳ nghỉ</span>
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">{t("booking.checkout.grandTotal")}</span>
                                                     <span className="text-2xl font-black text-sky-600">
                                                         {hasStayDates ? (
                                                             <>
@@ -1142,8 +1108,11 @@ const BookingPage = () => {
                                                     <div className="rounded-xl border border-orange-200 bg-orange-50/50 p-4 flex items-start gap-3">
                                                         <AlertCircle className="size-5 text-orange-600 shrink-0 mt-0.5" />
                                                         <p className="text-xs text-orange-800 leading-relaxed">
-                                                            Yêu cầu đặt cọc giữ chỗ do: <strong className="text-orange-950 font-bold">{depositRequirements.reasons.join(", ")}</strong>. 
-                                                            Không áp dụng giữ phòng 0đ cọc để đảm bảo giữ chỗ. <strong>Bạn cần hoàn tất thanh toán cọc trực tuyến để xác nhận đơn phòng, phần còn lại có thể thanh toán sau.</strong>
+                                                            Yêu cầu đặt cọc giữ chỗ do: <strong className="text-orange-950 font-bold">{depositRequirements.reasons.join(", ")}</strong>.{" "}
+                                                            <Trans
+                                                                i18nKey="booking.checkout.depositNote"
+                                                                components={{ strong: <strong className="text-orange-950 font-bold" /> }}
+                                                            />
                                                         </p>
                                                     </div>
                                                 )}
@@ -1233,29 +1202,29 @@ const BookingPage = () => {
                                 ) : (
                                     <div className="space-y-5">
                                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Thông tin khách hàng</h3>
+                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">{t("booking.checkout.customerInfo")}</h3>
                                             <div className="mt-3 space-y-2 text-sm text-slate-700">
-                                                <p><span className="font-semibold">Họ tên:</span> {previewData?.name}</p>
-                                                <p><span className="font-semibold">Email:</span> {previewData?.email}</p>
-                                                <p><span className="font-semibold">Số điện thoại:</span> {previewData?.phone}</p>
-                                                <p><span className="font-semibold">Nhận phòng:</span> {previewData?.start_date}</p>
-                                                <p><span className="font-semibold">Trả phòng:</span> {previewData?.end_date}</p>
-                                                <p><span className="font-semibold">Hình thức thanh toán:</span> {previewData?.payment_method === 'online' ? 'Thanh toán trực tuyến' : 'Thanh toán tại quầy'}</p>
+                                                <p><span className="font-semibold">{t("booking.checkout.fullName")}:</span> {previewData?.name}</p>
+                                                <p><span className="font-semibold">{t("booking.checkout.email")}:</span> {previewData?.email}</p>
+                                                <p><span className="font-semibold">{t("booking.checkout.phone")}:</span> {previewData?.phone}</p>
+                                                <p><span className="font-semibold">{t("booking.checkout.checkIn")}:</span> {previewData?.start_date}</p>
+                                                <p><span className="font-semibold">{t("booking.checkout.checkOut")}:</span> {previewData?.end_date}</p>
+                                                <p><span className="font-semibold">{t("booking.checkout.paymentMethod")}:</span> {previewData?.payment_method === 'online' ? t("booking.checkout.paymentOnline") : t("booking.checkout.paymentAtCounter")}</p>
                                                 {previewData?.start_date && previewData?.end_date ? (
                                                     <BookingDaysRow
                                                         days={bookingDays}
                                                         mode={durationMode}
                                                     />
                                                 ) : null}
-                                                {previewData?.note ? <p><span className="font-semibold">Yêu cầu:</span> {previewData.note}</p> : null}
+                                                {previewData?.note ? <p><span className="font-semibold">{t("booking.checkout.previewNote")}:</span> {previewData.note}</p> : null}
                                             </div>
                                         </div>
 
                                         <div className="rounded-xl border border-slate-200 bg-white p-4">
-                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Tạm tính</h3>
+                                            <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">{t("booking.checkout.previewTotal")}</h3>
                                             <div className="mt-3 space-y-2 text-sm text-slate-700">
                                                 <div className="flex items-center justify-between text-slate-600">
-                                                    <span>Đơn giá</span>
+                                                    <span>{t("booking.checkout.unitPrice")}</span>
                                                     <span className="font-medium">
                                                         {formatCurrencyInput(String(unitPrice))} / {formatPriceUnitLabel(priceUnit)}
                                                     </span>
@@ -1265,11 +1234,11 @@ const BookingPage = () => {
                                                     <span className="font-semibold">{formatCurrencyInput(roomTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <span>Dịch vụ bổ sung</span>
+                                                    <span>{t("booking.checkout.additionalServices")}</span>
                                                     <span className="font-semibold">{formatCurrencyInput(serviceTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                                 <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2 text-base">
-                                                    <span className="font-semibold">Tổng cộng</span>
+                                                    <span className="font-semibold">{t("booking.checkout.total")}</span>
                                                     <span className="font-bold text-sky-600">{formatCurrencyInput(estimatedTotal.toString())} {t("booking.money_unit")}</span>
                                                 </div>
                                                 {isDepositRequired && (
@@ -1281,7 +1250,7 @@ const BookingPage = () => {
                                                             </span>
                                                         </div>
                                                         <div className="flex justify-between text-slate-600">
-                                                            <span>Còn lại (Thanh toán sau)</span>
+                                                            <span>{t("booking.checkout.remainingDueShort")}</span>
                                                             <span className="font-semibold text-slate-700">
                                                                 {formatCurrencyInput(Math.max(0, estimatedTotal - depositAmount).toString())} {t("booking.money_unit")}
                                                             </span>
@@ -1293,7 +1262,7 @@ const BookingPage = () => {
 
                                         {selectedServices.length > 0 ? (
                                             <div className="rounded-xl border border-slate-200 bg-white p-4">
-                                                <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">Dịch vụ đã chọn</h3>
+                                                <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600">{t("booking.checkout.selectedServices")}</h3>
                                                 <ul className="mt-3 space-y-2 text-sm text-slate-700">
                                                     {selectedServices.map((service) => (
                                                         <li key={service.id} className="flex items-center justify-between">
@@ -1312,7 +1281,7 @@ const BookingPage = () => {
                                             </h3>
                                             <p className="mt-2 text-xs leading-relaxed text-amber-700">
                                                 {isLeaseBooking ? (
-                                                    "Đây là loại hình lưu trú dài hạn. Sau khi đối tác xác nhận, bạn sẽ nhận được thông báo yêu cầu ký Hợp đồng thuê nhà điện tử tại mục 'Hồ sơ lưu trú' để hoàn tất thủ tục."
+                                                    t("booking.checkout.longTermNotice")
                                                 ) : (
                                                     "Bằng việc xác nhận, bạn đồng ý với các Điều khoản & Điều kiện lưu trú ngắn hạn của hệ thống và đối tác."
                                                 )}
@@ -1328,6 +1297,12 @@ const BookingPage = () => {
                                                     const latestData = getValues();
                                                     setPreviewData(latestData);
                                                     setCurrentStep(1);
+                                                    setTimeout(() => {
+                                                        if (bookingContentRef.current) {
+                                                            const top = bookingContentRef.current.getBoundingClientRect().top + window.scrollY - 20;
+                                                            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+                                                        }
+                                                    }, 50);
                                                 }}
                                             >
                                                 Quay lại chỉnh sửa

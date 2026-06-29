@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users, Star, Heart, Share2, Sparkles, Home, ShieldCheck, BedDouble } from "lucide-react";
+import { Filter, MapPin, SearchX, Users, Star, Heart, Share2, Sparkles, BedDouble } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Breadcrumb from "@/components/common/Breadcrumb";
@@ -15,9 +15,8 @@ import type { Room } from "@/dataHelper/EU/room.dataHelper";
 import { usePaginatedRoomsQuery } from "@/hooks/EU/useRoomQuery";
 import { useGetAllProvincesTypes } from "@/hooks/useProvinceQuery";
 import { formatPrice, formatProvinceName, simplifyAddress } from "@/utils/utils";
-import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
-import { getProvinceImage } from "@/utils/fallbackImages";
-import { toastSuccess, toastError } from "@/components/ui/toast";
+import { resolveImageUrl } from "@/utils/imageUtils";
+import { usePublicRoomActions } from "@/hooks/usePublicRoomActions";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 9;
@@ -40,57 +39,7 @@ const RoomByProvince = () => {
   const { t } = useTranslation();
   const { provinceId: provinceIdParam } = useParams<{ provinceId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem("bks_wishlist");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("bks_wishlist", JSON.stringify(wishlist));
-  }, [wishlist]);
-
-  const handleToggleWishlist = (e: React.MouseEvent, roomId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setWishlist((prev) => {
-      const isAlreadyWishlisted = prev.includes(roomId);
-      if (isAlreadyWishlisted) {
-        toastSuccess("Đã xóa khỏi danh sách yêu thích");
-        return prev.filter((id) => id !== roomId);
-      } else {
-        toastSuccess("Đã thêm vào danh sách yêu thích");
-        return [...prev, roomId];
-      }
-    });
-  };
-
-  const handleShareRoom = (e: React.MouseEvent, roomId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const url = window.location.origin + ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString());
-    navigator.clipboard.writeText(url)
-      .then(() => {
-        toastSuccess("Đã sao chép liên kết phòng!");
-      })
-      .catch(() => {
-        const textArea = document.createElement("textarea");
-        textArea.value = url;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand("copy");
-          toastSuccess("Đã sao chép liên kết phòng!");
-        } catch {
-          toastError("Không thể sao chép liên kết!");
-        }
-        document.body.removeChild(textArea);
-      });
-  };
+  const { wishlist, handleToggleWishlist, handleShareRoom } = usePublicRoomActions();
 
   const provinceId = parsePositiveInt(provinceIdParam ?? null, 0);
   const rawPage = parsePositiveInt(searchParams.get("page"), DEFAULT_PAGE);
@@ -181,132 +130,9 @@ const RoomByProvince = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
       <PublicHeader />
 
-      <div className="relative isolate overflow-hidden bg-slate-950 py-10 text-white sm:py-12 lg:py-16">
-        {/* Background Image with elegant overlay */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src={selectedProvince?.image ? resolveCloudinaryUrl(selectedProvince.image, CLOUDINARY_HEADER_IMAGE_URL) || getProvinceImage(selectedProvince?.name) : getProvinceImage(selectedProvince?.name)}
-            alt={selectedProvince?.name || "Background"}
-            className="absolute inset-0 size-full object-cover opacity-60 transition-all duration-700 scale-105"
-          />
-          {/* Lighter gradients to make the background image much clearer while preserving text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-slate-950/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
-        </div>
-
-        {/* Glow ambient background effects */}
-        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-sky-500/10 blur-[100px] pointer-events-none" />
-        <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-indigo-500/15 blur-[120px] pointer-events-none" />
-        <div className="absolute left-1/3 top-1/4 h-64 w-64 rounded-full bg-blue-600/5 blur-[90px] pointer-events-none" />
-
-        {/* Dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.07] pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
-        
-        {/* Decorative elements: floating circles */}
-        <div className="absolute top-12 right-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
-        <div className="absolute bottom-16 left-1/4 h-3 w-3 rounded-full bg-indigo-400/30 animate-pulse pointer-events-none" />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left Column: Title and details */}
-            <div className="lg:col-span-7 flex flex-col items-start text-left">
-              <Badge className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300 border border-sky-500/20 backdrop-blur-md transition-all duration-300 hover:bg-sky-500/20">
-                <Sparkles className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
-                {t("public.roomByProvince.badge")}
-              </Badge>
-              
-              <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl leading-[1.15] text-white">
-                {selectedProvince?.name ? (
-                  <>
-                    Phòng lưu trú tại <br />
-                    <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                      {formatProvinceName(selectedProvince.name)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                    {t("public.roomByProvince.titleFallback")}
-                  </span>
-                )}
-              </h1>
-              
-              <p className="mt-6 text-base text-slate-300 max-w-2xl leading-relaxed">
-                {t("public.roomByProvince.subtitle")}
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 px-4 py-2.5 text-sm backdrop-blur-md shadow-inner text-slate-200">
-                  <MapPin className="h-4.5 w-4.5 text-sky-400 shrink-0" />
-                  <span>
-                    Khu vực: <span className="font-semibold text-white">
-                      {selectedProvince?.name ? formatProvinceName(selectedProvince.name) : t("public.roomByProvince.breadcrumb.current")}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Visual Dashboard / Metrics (Hidden on Mobile/Tablet to keep search flow compact) */}
-            <div className="lg:col-span-5 relative mt-6 lg:mt-0 hidden lg:block">
-              <div className="relative mx-auto max-w-md lg:max-w-none">
-                {/* Background glow behind cards */}
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-indigo-500/10 rounded-3xl blur-2xl pointer-events-none" />
-                
-                {/* Metrics Grid */}
-                <div className="relative grid grid-cols-2 gap-4">
-                  {/* Card 1: Total items found */}
-                  <div className="col-span-2 rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 border border-slate-800/80 p-6 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300">
-                          <Home className="h-5.5 w-5.5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Chỗ ở tại Việt Nam</p>
-                          <h3 className="text-2xl font-bold mt-0.5 text-white">
-                            1.000+
-                          </h3>
-                        </div>
-                      </div>
-                      <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold px-2 py-0.5">
-                        Tin cậy
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Support */}
-                  <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 border border-slate-800/80 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] group">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-slate-950 transition-all duration-300">
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                    <h4 className="mt-4 text-sm font-bold text-white">Xác thực 100%</h4>
-                    <p className="mt-1 text-xs text-slate-400 leading-normal">Mọi phòng đều được kiểm định chất lượng thực tế</p>
-                  </div>
-
-                  {/* Card 3: Free changes / Best Price */}
-                  <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 border border-slate-800/80 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] group">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all duration-300">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                    <h4 className="mt-4 text-sm font-bold text-white">Giá tốt nhất</h4>
-                    <p className="mt-1 text-xs text-slate-400 leading-normal">BKS cam kết mức giá ưu đãi và minh bạch nhất</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
+      {/* Breadcrumb */}
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
+        <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
@@ -318,7 +144,43 @@ const RoomByProvince = () => {
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:max-w-[1360px] lg:px-8">
+      {/* Title & Description Section on clean white layout */}
+      <div className="mx-auto w-full max-w-[1440px] px-4 pt-8 sm:px-6 lg:px-8 space-y-2">
+        <Badge className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 border border-sky-200 transition-all duration-300">
+          <Sparkles className="h-3.5 w-3.5 text-sky-600 animate-pulse" />
+          {t("public.roomByProvince.badge")}
+        </Badge>
+        
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          {selectedProvince?.name ? (
+            <>
+              Phòng lưu trú tại{" "}
+              <span className="text-sky-600">
+                {formatProvinceName(selectedProvince.name)}
+              </span>
+            </>
+          ) : (
+            <span className="text-sky-600">
+              {t("public.roomByProvince.titleFallback")}
+            </span>
+          )}
+        </h1>
+        
+        <p className="text-sm text-slate-500 max-w-4xl leading-relaxed">
+          {t("public.roomByProvince.subtitle")}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2 text-slate-500 text-xs pt-1">
+          <MapPin className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+          <span>
+            Khu vực: <span className="font-semibold text-slate-700">
+              {selectedProvince?.name ? formatProvinceName(selectedProvince.name) : t("public.roomByProvince.breadcrumb.current")}
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
         {isInvalidProvince ? (
           <section className="rounded-3xl border border-dashed border-amber-300 bg-amber-50/80 px-6 py-16 text-center">
             <p className="text-lg font-semibold text-amber-800">{t("public.roomByProvince.invalidTitle")}</p>
@@ -410,11 +272,11 @@ const RoomByProvince = () => {
                                   to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))}
                                   className="text-[10px] font-bold text-sky-600 uppercase tracking-widest truncate block mb-0.5 hover:text-sky-700 hover:underline transition-colors"
                                 >
-                                  {room.partner_company_name || "Đối tác BKS"}
+                                  {room.partner_company_name || t("public.home.partners.trust")}
                                 </Link>
                               ) : (
                                 <span className="text-[10px] font-bold text-sky-600 uppercase tracking-widest truncate block mb-0.5">
-                                  {room.partner_company_name || "Đối tác BKS"}
+                                  {room.partner_company_name || t("public.home.partners.trust")}
                                 </span>
                               )}
                               <h3 className="line-clamp-2 text-xl font-bold text-slate-900 transition-colors group-hover:text-sky-600">{room.title}</h3>

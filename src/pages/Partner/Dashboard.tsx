@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, CalendarClock, History, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useIsFetching } from '@tanstack/react-query';
-import {
-  usePartnerStatsQuery,
-  usePartnerPendingBookingsQuery,
-  usePartnerUrgentMaintenancesQuery,
-  usePartnerHeadlineKpisQuery,
-  usePartnerOccupancyChartQuery,
-  usePartnerGmvChartQuery,
-} from '@/hooks/usePartnerDashboardQuery';
+import { usePartnerDashboardConsolidatedQuery } from '@/hooks/usePartnerDashboardQuery';
 import { usePartnerDashboardRefresh } from '@/hooks/usePartnerDashboardRefresh';
 import { useDashboardPropertyFilter } from '@/hooks/Partner/useDashboardPropertyFilter';
 import { buildPartnerDashboardLink } from '@/utils/partnerDashboardLinks';
@@ -39,12 +32,21 @@ const Dashboard: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = usePartnerStatsQuery(propertyId);
-  const { data: pendingBookings, isLoading: bookingsLoading } = usePartnerPendingBookingsQuery(propertyId);
-  const { data: urgentMaintenances, isLoading: maintenanceLoading } = usePartnerUrgentMaintenancesQuery();
-  const { data: headlineKpis, isLoading: kpisLoading } = usePartnerHeadlineKpisQuery(propertyId);
-  const { data: occupancyChart, isLoading: occupancyChartLoading } = usePartnerOccupancyChartQuery(propertyId);
-  const { data: gmvChart, isLoading: gmvChartLoading } = usePartnerGmvChartQuery(propertyId);
+  const { data: consolidatedData, isLoading: consolidatedLoading } = usePartnerDashboardConsolidatedQuery(propertyId);
+
+  const stats = consolidatedData?.stats ?? undefined;
+  const pendingBookings = consolidatedData?.pendingBookings ?? undefined;
+  const urgentMaintenances = consolidatedData?.urgentMaintenances ?? undefined;
+  const headlineKpis = consolidatedData?.kpis ?? undefined;
+  const occupancyChart = consolidatedData?.occupancyChart ?? undefined;
+  const gmvChart = consolidatedData?.gmvChart ?? undefined;
+
+  const statsLoading = consolidatedLoading;
+  const bookingsLoading = consolidatedLoading;
+  const maintenanceLoading = consolidatedLoading;
+  const kpisLoading = consolidatedLoading;
+  const occupancyChartLoading = consolidatedLoading;
+  const gmvChartLoading = consolidatedLoading;
 
   const dashboardFetching = useIsFetching({
     predicate: (query) =>

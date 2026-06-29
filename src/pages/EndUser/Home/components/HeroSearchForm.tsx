@@ -32,10 +32,8 @@ const HeroSearchForm = ({ search, variant = "inline", className }: HeroSearchFor
     setStartDate,
     endDate,
     setEndDate,
-    adults,
-    setAdults,
-    children,
-    setChildren,
+    guests,
+    setGuests,
     provinceOptions,
     wardOptions,
     propertyTypeOptions,
@@ -171,9 +169,7 @@ const HeroSearchForm = ({ search, variant = "inline", className }: HeroSearchFor
                 >
                   <Users className="mr-2 size-5 shrink-0 text-slate-500" />
                   <span className="truncate">
-                    {children > 0
-                      ? `${adults} ${t("public.home.search.adults").toLowerCase()}, ${children} ${t("public.home.search.children").toLowerCase()}`
-                      : `${adults} ${t("public.home.search.guests")}`}
+                    {`${guests} ${t("public.home.search.guests")}`}
                   </span>
                 </button>
               </PopoverTrigger>
@@ -187,59 +183,26 @@ const HeroSearchForm = ({ search, variant = "inline", className }: HeroSearchFor
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-sm">{t("public.home.search.adults")}</span>
-                      <span className="text-xs text-slate-400">{t("public.home.search.adultsLabel")}</span>
-                    </div>
+                    <span className="font-semibold text-sm">{t("public.home.search.selectGuests")}</span>
                     <div className="flex items-center gap-3">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="size-8 rounded-full border-slate-300"
-                        disabled={adults <= 1}
-                        onClick={() => setAdults(adults - 1)}
+                        disabled={guests <= 1}
+                        onClick={() => setGuests(guests - 1)}
                       >
                         <Minus className="size-4" />
                       </Button>
-                      <span className="w-6 text-center font-bold">{adults}</span>
+                      <span className="w-6 text-center font-bold">{guests}</span>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="size-8 rounded-full border-slate-300"
-                        disabled={adults >= 10}
-                        onClick={() => setAdults(adults + 1)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-sm">{t("public.home.search.children")}</span>
-                      <span className="text-xs text-slate-400">{t("public.home.search.childrenLabel")}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="size-8 rounded-full border-slate-300"
-                        disabled={children <= 0}
-                        onClick={() => setChildren(children - 1)}
-                      >
-                        <Minus className="size-4" />
-                      </Button>
-                      <span className="w-6 text-center font-bold">{children}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="size-8 rounded-full border-slate-300"
-                        disabled={children >= 10}
-                        onClick={() => setChildren(children + 1)}
+                        disabled={guests >= 10}
+                        onClick={() => setGuests(guests + 1)}
                       >
                         <Plus className="size-4" />
                       </Button>

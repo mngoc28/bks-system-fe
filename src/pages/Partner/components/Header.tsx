@@ -24,14 +24,9 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
   const userEmail = useUserStore((state) => state.userEmail);
   const logout = useUserStore((state) => state.logout);
   const [showMobileSearch, setShowMobileSearch] = React.useState(false);
-  const [canLoadPartnerProfile, setCanLoadPartnerProfile] = React.useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    const id = window.setTimeout(() => setCanLoadPartnerProfile(true), 1200);
-    return () => window.clearTimeout(id);
-  }, []);
-
-  const { data: partnerResponse } = usePartnerProfileQuery({ enabled: canLoadPartnerProfile });
+  const { data: partnerResponse } = usePartnerProfileQuery({ enabled: isAccountMenuOpen });
   const companyName = partnerResponse?.data?.company_name;
   const userDisplayName = userEmail?.split('@')[0] || "Partner";
 
@@ -79,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
             </div>
           </div>
 
-          <DropdownMenu>
+          <DropdownMenu open={isAccountMenuOpen} onOpenChange={setIsAccountMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button className="group relative flex items-center focus:outline-none" aria-label="Mở menu tài khoản">
                 <div className="rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-blue-500/20 transition-transform group-hover:scale-105 group-active:scale-95">
@@ -94,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
                 <p className="text-xs font-medium text-slate-400">Tài khoản</p>
                 <p className="truncate text-sm font-bold text-slate-900">{userEmail}</p>
                 {companyName && (
-                  <p className="mt-0.5 truncate text-[10px] font-bold text-blue-600 uppercase tracking-tight">{companyName}</p>
+                  <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-tight text-blue-600">{companyName}</p>
                 )}
               </div>
               <DropdownMenuSeparator className="bg-slate-50" />

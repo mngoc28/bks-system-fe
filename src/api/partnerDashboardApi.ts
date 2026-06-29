@@ -110,4 +110,19 @@ export const partnerDashboardApi = {
    */
   getRevenueAnalytics: (config?: any): Promise<ApiResponse<RevenueByMonthResponse>> => 
     axiosClient.get("/partner/dashboard/revenue-analytics", config),
+
+  /**
+   * Get consolidated partner dashboard data in a single request.
+   */
+  getConsolidated: (params?: PartnerDashboardQueryParams): Promise<ApiResponse<PartnerDashboardConsolidatedData>> =>
+    axiosClient.get("/partner/dashboard/consolidated", buildDashboardParams({ ...params, limit: params?.limit ?? 10 })),
 };
+
+export interface PartnerDashboardConsolidatedData {
+  stats: PartnerStats | null;
+  kpis: PartnerHeadlineKpis | null;
+  occupancyChart: OccupancyChartPoint[] | null;
+  gmvChart: GmvChartPoint[] | null;
+  pendingBookings: RecentBooking[] | null;
+  urgentMaintenances: UrgentMaintenance[] | null;
+}

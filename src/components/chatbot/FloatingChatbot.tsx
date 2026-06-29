@@ -1,19 +1,33 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, Sparkles } from "lucide-react";
 import GeminiChatbot from "./GeminiChatbot";
+import { useTranslation } from "react-i18next";
 
-const CHATBOT_GREETINGS = [
-  "Xin chào, mình có thể giúp gì?",
-  "Chào bạn, cần hỗ trợ đặt phòng không?",
-  "Hello, hỏi mình bất cứ điều gì nhé",
-  "Mình ở đây để hỗ trợ bạn 24/7",
-  "Cần tìm phòng đẹp, mình lo được",
-];
 
 const GREETING_VISIBLE_MS = 2400;
 const GREETING_HIDDEN_MS = 10500;
 
 const FloatingChatbot = () => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language.startsWith("vi");
+  const chatbotGreetings = useMemo(
+    () => (isVi
+      ? [
+          "Xin chào, mình có thể giúp gì?",
+          "Chào bạn, cần hỗ trợ đặt phòng không?",
+          "Hello, hỏi mình bất cứ điều gì nhé!",
+          "Mình ở đây để hỗ trợ bạn 24/7",
+          "Cần tìm phòng đẹp, mình lo được",
+        ]
+      : [
+          "Hi, how can I help you?",
+          "Need help booking a room?",
+          "Ask me anything anytime",
+          "I am here to support you 24/7",
+          "Looking for a great place to stay?",
+        ]),
+    [isVi],
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [greetingIndex, setGreetingIndex] = useState(0);
@@ -37,7 +51,7 @@ const FloatingChatbot = () => {
 
       greetingTimerRef.current = window.setTimeout(() => {
         setIsGreetingVisible(false);
-        setGreetingIndex((prev) => (prev + 1) % CHATBOT_GREETINGS.length);
+        setGreetingIndex((prev) => (prev + 1) % chatbotGreetings.length);
         scheduleGreetingCycle();
       }, GREETING_VISIBLE_MS);
     }, GREETING_HIDDEN_MS);
@@ -151,7 +165,7 @@ const FloatingChatbot = () => {
         }}
         className="chatbot-premium-trigger group relative"
         aria-expanded={isOpen}
-        aria-label={isOpen ? "Đóng chatbot" : "Mở chatbot"}
+        aria-label={isOpen ? t("publicChatbot.actions.close") : (isVi ? "Mở chatbot" : "Open chatbot")}
       >
         {!isOpen && (
           <span
@@ -159,7 +173,7 @@ const FloatingChatbot = () => {
               isGreetingVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
             }`}
           >
-            {CHATBOT_GREETINGS[greetingIndex]}
+            {chatbotGreetings[greetingIndex]}
           </span>
         )}
         <span className="relative flex size-7 items-center justify-center">

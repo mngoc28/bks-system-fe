@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect } from "react";
+import { useTranslation, Trans } from "react-i18next";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus, RotateCcw, BedDouble, Shield, PawPrint, Cigarette, PartyPopper, Volume2, LockKeyhole, Package, Accessibility, Home } from "lucide-react";
+import { MapPin, Users, Ruler, CalendarDays, ArrowLeft, FileText, CreditCard, Zap, Droplets, Info, Star, Building2, Phone, Mail, UserCheck, Plus, RotateCcw, BedDouble, Shield, PawPrint, Cigarette, PartyPopper, Volume2, LockKeyhole, Package, Accessibility, Home } from "lucide-react";
 import { useRoomReviewsQuery } from "@/hooks/useReviewQuery";
 import { resolveCloudinaryUrl } from "@/utils/imageUtils";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
@@ -25,7 +26,6 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { normalizeStayPropertyTypeLabel, supportsElectronicContractByPropertyType, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
 import { formatPrice, formatPhoneNumber } from "@/utils/utils";
 import { countBookingNights } from "@/utils/dateUtils";
-import { resolveTouristSpotName } from "@/utils/touristSummary";
 import { RoomTouristSpotsSection } from "@/components/rooms/RoomTouristSpotsSection";
 import { BOOKED_DATES_QUERY_OPTIONS, PUBLIC_DETAIL_QUERY_OPTIONS } from "@/lib/queryCache";
 
@@ -51,6 +51,8 @@ function formatTimeLabel(value: unknown): string {
 }
 
 const PublicRoomDetail = () => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language.startsWith("vi");
   const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -59,6 +61,8 @@ const PublicRoomDetail = () => {
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showAllServices, setShowAllServices] = useState(false);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
   const { data: room, isLoading, isError } = useQuery({
     queryKey: ["public-room-detail", id],
@@ -203,11 +207,14 @@ const PublicRoomDetail = () => {
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  const DURATION_PRESETS = [
-    { label: "1 tháng", months: 1, days: 30 },
-    { label: "3 tháng", months: 3, days: 90 },
-    { label: "6 tháng", months: 6, days: 180 },
-  ] as const;
+  const DURATION_PRESETS = useMemo(
+    () => [
+      { label: t("public.roomDetail.preset1Month"), months: 1, days: 30 },
+      { label: t("public.roomDetail.preset3Months"), months: 3, days: 90 },
+      { label: t("public.roomDetail.preset6Months"), months: 6, days: 180 },
+    ] as const,
+    [t],
+  );
 
   const handleDurationPreset = (days: number) => {
     const tomorrow = new Date();
@@ -312,12 +319,19 @@ const PublicRoomDetail = () => {
     } catch { return []; }
   }, [room]);
 
-  const isLongTerm = useMemo(() => {
-    const isApartment = room?.property_type_name ? isApartmentSegmentPropertyType(room.property_type_name) : false;
-    const hasMonthPrice = allPrices.some((p: any) => p.unit === 'month');
-    const hasDayPrice = allPrices.some((p: any) => p.unit === 'night');
-    return isApartment || (hasMonthPrice && !hasDayPrice);
-  }, [room, allPrices]);
+  const hasNightPrice = useMemo(
+    () => allPrices.some((p: any) => p.unit === "night"),
+    [allPrices],
+  );
+  const hasMonthPrice = useMemo(
+    () => allPrices.some((p: any) => p.unit === "month"),
+    [allPrices],
+  );
+
+  const isLongTerm = useMemo(
+    () => hasMonthPrice && !hasNightPrice,
+    [hasMonthPrice, hasNightPrice],
+  );
 
   const selectedNights = useMemo(() => {
     if (checkin && checkout) {
@@ -332,19 +346,28 @@ const PublicRoomDetail = () => {
     }
 
     const rentTypeParam = searchParams.get("rent_type");
-    if (rentTypeParam === "monthly") {
+    if (rentTypeParam === "monthly" && hasMonthPrice) {
       return "month";
     }
-    if (rentTypeParam === "daily") {
+    if (rentTypeParam === "daily" && hasNightPrice) {
       return "night";
     }
 
     if (allPrices.length === 1) {
       return allPrices[0].unit;
     }
+
+    if (hasNightPrice) {
+      return "night";
+    }
+
+    if (hasMonthPrice) {
+      return "month";
+    }
+
     const isApartment = room?.property_type_name ? isApartmentSegmentPropertyType(room.property_type_name) : false;
     return isApartment ? "month" : "night";
-  }, [selectedNights, room, allPrices, searchParams]);
+  }, [selectedNights, room, allPrices, searchParams, hasNightPrice, hasMonthPrice]);
 
   useEffect(() => {
     if (selectedNights !== null) {
@@ -386,13 +409,19 @@ const PublicRoomDetail = () => {
       const minNights = isMonth ? matchedRow.minimum_stay * 30 : matchedRow.minimum_stay;
       if (nights < minNights) {
         return {
-          message: `Thời gian lưu trú tối thiểu cho gói này là ${matchedRow.minimum_stay} ${isMonth ? 'tháng' : 'đêm'} (${minNights} ngày). Quý khách đã chọn ${nights} đêm.`,
-          minNights
+          message: t("public.roomDetail.minStayError", {
+            min: matchedRow.minimum_stay,
+            unit: isMonth ? t("public.roomDetail.unitMonth") : t("public.roomDetail.unitNight"),
+            minDays: minNights,
+            selected: nights,
+            nightUnit: t("public.roomDetail.unitNight"),
+          }),
+          minNights,
         };
       }
     }
     return null;
-  }, [checkin, checkout, allPrices]);
+  }, [checkin, checkout, allPrices, t]);
 
   const initialPaymentBreakdown = useMemo(() => {
     if (!checkin || !checkout || !allPrices.length || validationError) return null;
@@ -415,7 +444,7 @@ const PublicRoomDetail = () => {
       depositAmount = nightPrice.deposit_amount || 0;
     }
 
-    return { rentTotal, depositAmount, total: rentTotal + depositAmount, nights };
+    return { rentTotal, depositAmount, total: rentTotal + depositAmount, nights, isMonthly: nights >= 30 && allPrices.some((p: any) => p.unit === "month") };
   }, [checkin, checkout, allPrices, validationError]);
 
   const roomRules = useMemo(() => ({
@@ -433,23 +462,73 @@ const PublicRoomDetail = () => {
     is_ground_floor: Boolean(room?.is_ground_floor),
   }), [room]);
 
+  const handleTabChange = (unit: "night" | "month") => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("rent_type", unit === "month" ? "monthly" : "daily");
+    if (checkin && checkout) {
+      const nights = countBookingNights(checkin, checkout);
+      if (unit === "month" && nights < 30) {
+        newParams.delete("startDate");
+        newParams.delete("endDate");
+      } else if (unit === "night" && nights >= 30) {
+        newParams.delete("startDate");
+        newParams.delete("endDate");
+      }
+    }
+    setSearchParams(newParams);
+  };
+
   const renderBookingCard = () => {
+    const hasNightPrice = allPrices.some((p: any) => p.unit === 'night');
+    const hasMonthPrice = allPrices.some((p: any) => p.unit === 'month');
+    const showPriceTabs = hasNightPrice && hasMonthPrice;
+
+    const displayedPrices = showPriceTabs
+      ? allPrices.filter((price: any) => price.unit === activeUnit)
+      : allPrices;
+
     const pricesSection = (
       <div className="space-y-4">
-        {allPrices.map((price: any, index: number) => {
+        {showPriceTabs && (
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/60 shadow-inner">
+            <button
+              type="button"
+              onClick={() => handleTabChange("night")}
+              className={`flex-1 text-center py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
+                activeUnit === "night"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              {t("public.home.search.tabDaily")}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange("month")}
+              className={`flex-1 text-center py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
+                activeUnit === "month"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              {t("public.home.search.tabMonthly")}
+            </button>
+          </div>
+        )}
+        {displayedPrices.map((price: any, index: number) => {
           const isMonth = price.unit === 'month';
           const isDay = price.unit === 'night';
 
-          let unitTitle = "Thuê theo đêm";
-          let unitLabel = "đêm";
+          let unitTitle = t("public.home.search.tabDaily");
+          let unitLabel = t("public.roomDetail.unitNight");
           if (isMonth) {
-            unitTitle = "Thuê dài hạn";
-            unitLabel = "tháng";
+            unitTitle = t("public.home.search.tabMonthly");
+            unitLabel = t("public.roomDetail.unitMonth");
           } else if (isDay) {
-            unitTitle = "Thuê ngắn hạn";
-            unitLabel = "đêm";
+            unitTitle = t("public.home.search.tabDaily");
+            unitLabel = t("public.roomDetail.unitNight");
           } else if (price.unit) {
-            unitTitle = `Thuê theo ${price.unit}`;
+            unitTitle = `${t("public.roomDetail.rentType")}: ${price.unit}`;
             unitLabel = price.unit;
           }
 
@@ -459,7 +538,7 @@ const PublicRoomDetail = () => {
             <div
               key={index}
               className={`p-4 rounded-2xl border transition-all duration-300 ${
-                isActive
+                isActive || showPriceTabs
                   ? "border-sky-500 bg-sky-50/70 shadow-sm ring-1 ring-sky-500"
                   : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/30"
               }`}
@@ -480,7 +559,7 @@ const PublicRoomDetail = () => {
               {isMonth && (
                 <p className="text-[9.5px] text-slate-500 mt-2 font-medium flex items-center gap-1.5 bg-slate-50/50 p-1.5 rounded-lg border border-slate-100">
                   <Info className="size-3 text-slate-400 shrink-0" />
-                  <span>* Thuê lẻ ngày được tính chia đều theo tỷ lệ tháng (Giá tháng / 30).</span>
+                  <span>{t("public.roomDetail.dailyRateNote")}</span>
                 </p>
               )}
             </div>
@@ -488,9 +567,9 @@ const PublicRoomDetail = () => {
         })}
         {!allPrices.length && (
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Giá từ</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{t("public.roomDetail.priceFrom")}</p>
             <p className="mt-2 text-3xl font-bold text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</p>
-            <p className="text-sm text-slate-500">/ đêm, chưa bao gồm dịch vụ bổ sung</p>
+            <p className="text-sm text-slate-500">/ {t("public.roomDetail.unitNight")}</p>
           </div>
         )}
       </div>
@@ -498,10 +577,10 @@ const PublicRoomDetail = () => {
 
     const dateSection = (
       <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-        <h4 className="text-sm font-bold text-slate-800">Thời gian lưu trú</h4>
-        {isLongTerm && (
+        <h4 className="text-sm font-bold text-slate-800">{t("public.roomDetail.stayDuration")}</h4>
+        {hasMonthPrice && activeUnit === "month" && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chọn nhanh:</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("public.roomDetail.quickSelect")}</span>
             {DURATION_PRESETS.map((preset) => (
               <button
                 key={preset.label}
@@ -516,17 +595,17 @@ const PublicRoomDetail = () => {
         )}
         <div className="grid grid-cols-2 gap-3">
           <DatePickerField
-            label="Nhận phòng"
+            label={t("public.home.search.checkIn")}
             value={checkin}
             onChange={handleStartDateChange}
             minDate={todayStr}
             excludeDates={bookedDates}
             triggerClassName="h-9 px-2 text-xs rounded-md"
             labelClassName="text-[10px] font-bold text-slate-500"
-            placeholder="Chọn ngày"
+            placeholder={t("public.home.search.checkIn")}
           />
           <DatePickerField
-            label="Trả phòng"
+            label={t("public.home.search.checkOut")}
             value={checkout}
             onChange={handleEndDateChange}
             minDate={(() => {
@@ -542,7 +621,7 @@ const PublicRoomDetail = () => {
             excludeDates={bookedDates}
             triggerClassName="h-9 px-2 text-xs rounded-md"
             labelClassName="text-[10px] font-bold text-slate-500"
-            placeholder="Chọn ngày"
+            placeholder={t("public.home.search.checkOut")}
             disabled={!checkin}
           />
         </div>
@@ -555,7 +634,7 @@ const PublicRoomDetail = () => {
         {initialPaymentBreakdown && (
           <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-2.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">
-              Tạm tính thanh toán ban đầu
+              {initialPaymentBreakdown.isMonthly ? "Tạm tính thanh toán ban đầu" : "Tạm tính chi phí phòng"}
             </p>
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-slate-700">
@@ -564,12 +643,12 @@ const PublicRoomDetail = () => {
               </div>
               {initialPaymentBreakdown.depositAmount > 0 && (
                 <div className="flex justify-between text-slate-700">
-                  <span>Tiền đặt cọc bảo đảm</span>
+                  <span>{t("public.roomDetail.depositSecurity")}</span>
                   <span className="font-semibold text-amber-700">{formatPrice(initialPaymentBreakdown.depositAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-slate-900 border-t border-indigo-200 pt-2 mt-2">
-                <span>Tổng thanh toán đợt 1</span>
+                <span>{initialPaymentBreakdown.isMonthly ? "Tổng thanh toán đợt 1" : "Tổng tiền thanh toán"}</span>
                 <span className="text-primary text-base">{formatPrice(initialPaymentBreakdown.total)}</span>
               </div>
             </div>
@@ -596,12 +675,12 @@ const PublicRoomDetail = () => {
         </Button>
       ) : (
         <Button asChild variant="gradient" className="w-full rounded-full">
-          <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>Đặt phòng ngay</Link>
+          <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>{t("public.roomDetail.bookNow")}</Link>
         </Button>
       )
     ) : (
       <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 cursor-not-allowed">
-        Vui lòng chọn ngày để đặt
+        {t("public.roomDetail.noDateSelected")}
       </Button>
     );
 
@@ -624,9 +703,9 @@ const PublicRoomDetail = () => {
       <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
         <PublicHeader />
         <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
-          <p className="text-slate-600">Không tìm thấy phòng hợp lệ.</p>
+          <p className="text-slate-600">{t("public.roomDetail.invalidRoom")}</p>
           <Button className="mt-5 rounded-full" onClick={() => navigate(ROUTERS.SEARCH_ROOMS)}>
-            Quay lại tìm phòng
+            {t("public.roomByProvince.breadcrumb.search")}
           </Button>
         </main>
         <PublicFooter />
@@ -638,187 +717,286 @@ const PublicRoomDetail = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900 pb-20 lg:pb-0">
       <PublicHeader />
 
-      <section className="relative overflow-hidden bg-slate-950 text-white">
-        {/* Background scenic image */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src={roomImages[0] || getRoomFallbackImage(room?.property_type_name, room?.title)}
-            alt="hero background"
-            className="h-full w-full object-cover"
-            style={{ opacity: 0.35 }}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.onerror = null;
-              target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
-            }}
-          />
-        </div>
-        {/* Multi-layer overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
-        {/* Ambient glow orbs */}
-        <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-sky-600/15 blur-3xl" />
-        <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl" />
-        {/* Dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary-light transition hover:bg-white/20"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="size-3.5" />
-            Quay lại
-          </button>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">{room?.title || "Chi tiết phòng"}</h1>
-          <div className="mt-4 flex flex-col gap-2.5 text-slate-200">
-            {(room?.property_name || propertyTypeLabel) && (
-              <p className="inline-flex items-center gap-2 text-sm sm:text-base text-slate-200/95">
-                <Home className="size-4 text-primary-light shrink-0" />
-                <span className="font-bold text-white">
-                  {[room?.property_name, propertyTypeLabel].filter(Boolean).join(" · ")}
-                </span>
-              </p>
-            )}
 
-            <p className="inline-flex items-center gap-2 text-sm sm:text-base">
-              <MapPin className="size-4 text-primary-light shrink-0" />
-              <span>{room?.property_address || "Đang cập nhật địa chỉ"}</span>
-            </p>
-
-            {room && (room.partner_company_name || room.partner_name) && (
-              <p className="inline-flex items-center gap-2 text-sm sm:text-base text-slate-200/95">
-                <Building2 className="size-4 text-primary-light shrink-0" />
-                <span>
-                  Đơn vị vận hành:{" "}
-                  {room.partner_id ? (
-                    <Link
-                      to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))}
-                      className="font-bold text-sky-300 hover:text-white hover:underline transition-all duration-200 inline-flex items-center gap-1.5"
-                    >
-                      {room.partner_company_name || room.partner_name}
-                      <CheckCircle2 className="size-4 text-sky-400 shrink-0" />
-                    </Link>
-                  ) : (
-                    <span className="font-bold text-white">{room.partner_company_name || room.partner_name}</span>
-                  )}
-                </span>
-              </p>
-            )}
-
-            {reviewsData && reviewsData.total_count > 0 && (
-              <p className="inline-flex items-center gap-2 text-sm sm:text-base text-slate-200/95">
-                <span className="inline-flex items-center gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`size-4 ${i < Math.round(reviewsData.average_rating)
-                          ? "fill-amber-400 text-amber-400"
-                          : "text-slate-500"
-                        }`}
-                    />
-                  ))}
-                </span>
-                <span className="font-bold text-amber-400">{reviewsData.average_rating}</span>
-                <span className="text-slate-300">({reviewsData.total_count} đánh giá)</span>
-              </p>
-            )}
-
-            {room?.tourist_summary?.has_tourist_mapping && resolveTouristSpotName(room.tourist_summary.tourist_spot_name) && (
-              <p className="inline-flex items-center gap-2 text-sm text-primary-light/95">
-                <MapPin className="size-4 shrink-0 text-amber-200" aria-hidden />
-                <span className="font-medium">{resolveTouristSpotName(room.tourist_summary.tourist_spot_name)}</span>
-                {room.tourist_summary.travel_time_label && (
-                  <span className="text-slate-300 font-normal">• {room.tourist_summary.travel_time_label}</span>
-                )}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
 
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
-              { label: "Trang chủ", href: ROUTERS.HOME },
-              { label: "Tìm phòng", href: ROUTERS.SEARCH_ROOMS },
-              { label: room?.title || "Chi tiết phòng" },
+              { label: t("breadcrumb.home"), href: ROUTERS.HOME },
+              { label: t("public.roomByProvince.breadcrumb.search"), href: ROUTERS.SEARCH_ROOMS },
+              { label: room?.title || t("breadcrumb.roomDetail") },
             ]}
             className="text-sm"
           />
         </div>
       </div>
 
-      <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:px-8 lg:py-4">
+      <main className="mx-auto grid max-w-[1440px] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:px-8 lg:py-4">
         <section className="space-y-6">
           {isLoading ? (
             <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
-              <Spinner size="lg" showText text="Đang tải chi tiết phòng..." className="text-slate-500 font-bold" />
+              <Spinner size="lg" showText text={t("public.roomDetail.loading")} className="text-slate-500 font-bold" />
             </div>
           ) : isError || !room ? (
             <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/90 px-6 py-12 text-center text-rose-600">
-              Không thể tải thông tin phòng. Vui lòng thử lại.
+              {t("common.loading_error")}
             </div>
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div 
-                  className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white sm:col-span-2 cursor-pointer group"
-                  onClick={() => {
-                    setLightboxIndex(0);
-                    setLightboxOpen(true);
-                  }}
-                >
-                  <img
-                    src={roomImages[0] || getRoomFallbackImage(room?.property_type_name, room?.title)}
-                    alt={room.title}
-                    className="h-[320px] w-full object-cover sm:h-[420px] transition-transform duration-300 group-hover:scale-[1.02]"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm shadow-md">
-                      Xem tất cả ảnh
-                    </span>
-                  </div>
-                </div>
-                {roomImages.slice(1, 5).map((image, index) => (
-                  <div 
-                    key={`${image}-${index}`} 
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white cursor-pointer group relative"
-                    onClick={() => {
-                      setLightboxIndex(index + 1);
-                      setLightboxOpen(true);
-                    }}
+              {/* Title & Metadata Section */}
+              <div className="space-y-3 pb-4 border-b border-slate-100">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">{room?.title || t("breadcrumb.roomDetail")}</h1>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm transition hover:bg-slate-50 hover:border-slate-300"
+                    onClick={() => navigate(-1)}
                   >
-                    <img 
-                      src={image} 
-                      alt={`${room.title}-${index + 2}`} 
-                      className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null;
-                        target.src = getRoomFallbackImage(room?.property_type_name, room?.title);
-                      }}
-                    />
-                    <div className={`absolute inset-0 transition-opacity duration-300 flex items-center justify-center ${index === Math.min(roomImages.length - 2, 3) && roomImages.length > 5 ? "bg-black/45 opacity-100" : "bg-black/20 opacity-0 group-hover:opacity-100"}`}>
-                      <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                        {index === Math.min(roomImages.length - 2, 3) && roomImages.length > 5 ? "Xem tất cả ảnh" : "Phóng to"}
+                    <ArrowLeft className="size-3.5 text-slate-400" />
+                    {t("common.back")}
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm text-slate-500">
+                  {reviewsData && reviewsData.total_count > 0 && (
+                    <span className="flex items-center gap-1 font-bold text-amber-500">
+                      <Star className="size-4 fill-amber-500 text-amber-500 shrink-0" />
+                      {reviewsData.average_rating}
+                      <span className="text-slate-400 font-normal">{t("public.home.rooms.reviewsCount", { count: reviewsData.total_count })}</span>
+                    </span>
+                  )}
+
+                  {(room?.property_name || propertyTypeLabel) && (
+                    <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                      <Home className="size-4 text-sky-600 shrink-0" />
+                      {[room?.property_name, propertyTypeLabel].filter(Boolean).join(" · ")}
+                    </span>
+                  )}
+
+                  <span className="flex items-center gap-1.5 text-slate-600">
+                    <MapPin className="size-4 text-slate-400 shrink-0" />
+                    {room?.property_address || t("public.roomDetail.addressUpdating")}
+                  </span>
+
+                  {room && (room.partner_company_name || room.partner_name) && (
+                    <span className="flex items-center gap-1.5 text-slate-600">
+                      <Building2 className="size-4 text-slate-400 shrink-0" />
+                      <span>
+                        Đơn vị vận hành:{" "}
+                        {room.partner_id ? (
+                          <Link
+                            to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))}
+                            className="font-bold text-sky-600 hover:text-sky-700 hover:underline transition-colors"
+                          >
+                            {room.partner_company_name || room.partner_name}
+                          </Link>
+                        ) : (
+                          <span className="font-bold">{room.partner_company_name || room.partner_name}</span>
+                        )}
                       </span>
-                    </div>
-                  </div>
-                ))}
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {/* Lưới hình ảnh động tối ưu không gian */}
+              {(() => {
+                const imageCount = roomImages.length;
+                const fallbackImg = getRoomFallbackImage(room?.property_type_name, room?.title);
+                
+                const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = fallbackImg;
+                };
+
+                if (imageCount === 0) return null;
+
+                if (imageCount === 1) {
+                  return (
+                    <div 
+                      className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white cursor-pointer group"
+                      onClick={() => {
+                        setLightboxIndex(0);
+                        setLightboxOpen(true);
+                      }}
+                    >
+                      <img
+                        src={roomImages[0]}
+                        alt={room.title}
+                        className="h-[320px] w-full object-cover sm:h-[420px] transition-transform duration-300 group-hover:scale-[1.01]"
+                        onError={handleImgError}
+                      />
+                    </div>
+                  );
+                }
+
+                if (imageCount === 2) {
+                  return (
+                    <div className="grid gap-3 grid-cols-2">
+                      {roomImages.map((image, index) => (
+                        <div 
+                          key={index}
+                          className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white cursor-pointer group h-[200px] sm:h-[300px] lg:h-[380px]"
+                          onClick={() => {
+                            setLightboxIndex(index);
+                            setLightboxOpen(true);
+                          }}
+                        >
+                          <img
+                            src={image}
+                            alt={`${room.title}-${index + 1}`}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={handleImgError}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                if (imageCount === 3) {
+                  return (
+                    <div className="grid gap-3 grid-cols-3 h-[220px] sm:h-[320px] lg:h-[400px]">
+                      <div 
+                        className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white col-span-2 h-full cursor-pointer group min-h-0"
+                        onClick={() => {
+                          setLightboxIndex(0);
+                          setLightboxOpen(true);
+                        }}
+                      >
+                        <img
+                          src={roomImages[0]}
+                          alt={room.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+                          onError={handleImgError}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-3 h-full min-h-0">
+                        {roomImages.slice(1, 3).map((image, index) => (
+                          <div 
+                            key={index}
+                            className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white flex-1 h-[calc(50%-6px)] cursor-pointer group"
+                            onClick={() => {
+                              setLightboxIndex(index + 1);
+                              setLightboxOpen(true);
+                            }}
+                          >
+                            <img
+                              src={image}
+                              alt={`${room.title}-${index + 2}`}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              onError={handleImgError}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (imageCount === 4) {
+                  return (
+                    <div className="grid gap-3 grid-cols-4 h-[220px] sm:h-[320px] lg:h-[400px]">
+                      <div 
+                        className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white col-span-2 h-full cursor-pointer group min-h-0"
+                        onClick={() => {
+                          setLightboxIndex(0);
+                          setLightboxOpen(true);
+                        }}
+                      >
+                        <img
+                          src={roomImages[0]}
+                          alt={room.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+                          onError={handleImgError}
+                        />
+                      </div>
+                      <div 
+                        className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white col-span-1 h-full cursor-pointer group min-h-0"
+                        onClick={() => {
+                          setLightboxIndex(1);
+                          setLightboxOpen(true);
+                        }}
+                      >
+                        <img
+                          src={roomImages[1]}
+                          alt={room.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={handleImgError}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-3 h-full col-span-1 min-h-0">
+                        {roomImages.slice(2, 4).map((image, index) => (
+                          <div 
+                            key={index}
+                            className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white flex-1 h-[calc(50%-6px)] cursor-pointer group"
+                            onClick={() => {
+                              setLightboxIndex(index + 2);
+                              setLightboxOpen(true);
+                            }}
+                          >
+                            <img
+                              src={image}
+                              alt={`${room.title}-${index + 3}`}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              onError={handleImgError}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Default >= 5 images (Airbnb style 5-photo grid)
+                return (
+                  <div className="grid gap-3 grid-cols-4 grid-rows-2 h-[220px] sm:h-[320px] lg:h-[400px]">
+                    <div 
+                      className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white col-span-2 row-span-2 h-full cursor-pointer group min-h-0"
+                      onClick={() => {
+                        setLightboxIndex(0);
+                        setLightboxOpen(true);
+                      }}
+                    >
+                      <img
+                        src={roomImages[0]}
+                        alt={room.title}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+                        onError={handleImgError}
+                      />
+                    </div>
+                    {roomImages.slice(1, 5).map((image, index) => {
+                      const isLast = index === 3;
+                      const hasMore = roomImages.length > 5;
+                      return (
+                        <div 
+                          key={index}
+                          className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white cursor-pointer group h-full min-h-0"
+                          onClick={() => {
+                            setLightboxIndex(index + 1);
+                            setLightboxOpen(true);
+                          }}
+                        >
+                          <img
+                            src={image}
+                            alt={`${room.title}-${index + 2}`}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={handleImgError}
+                          />
+                          {isLast && hasMore && (
+                            <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                +{roomImages.length - 5} ảnh
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {lightboxOpen && (
                 <ImageLightbox
@@ -843,44 +1021,44 @@ const PublicRoomDetail = () => {
                         Hỗ trợ Hợp đồng điện tử
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="rounded-full bg-emerald-100 text-emerald-700 font-bold">Phòng sẵn sàng</Badge>
+                    <Badge variant="secondary" className="rounded-full bg-emerald-100 text-emerald-700 font-bold">{t("public.roomDetail.readyBadge")}</Badge>
                     <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700">{room.province_name || "Việt Nam"}</Badge>
                   </div>
 
-                  <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Sức chứa</p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <Users className="size-4 text-primary" />
-                        {room.people || 0} khách
+                  <div className="grid grid-cols-2 sm:grid-cols-4 rounded-2xl border border-slate-200 bg-slate-50/50 overflow-hidden">
+                    <div className="flex flex-col items-center justify-center p-3 text-center bg-white/40 border-r border-b sm:border-b-0 border-slate-200/80">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("public.roomDetail.capacity")}</p>
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-800">
+                        <Users className="size-3.5 text-sky-600" />
+                        {t("public.roomByProvince.guests", { count: room.people || 0 })}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Diện tích</p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <Ruler className="size-4 text-primary" />
+                    <div className="flex flex-col items-center justify-center p-3 text-center bg-white/40 border-b sm:border-b-0 sm:border-r border-slate-200/80">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("public.roomDetail.roomArea")}</p>
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-800">
+                        <Ruler className="size-3.5 text-sky-600" />
                         {room.area || "--"} m2
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Cấu trúc</p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <BedDouble className="size-4 text-primary" />
-                        {room.bedrooms_count || 1} PN • {room.beds_count || 1} giường
+                    <div className="flex flex-col items-center justify-center p-3 text-center bg-white/40 border-r sm:border-r border-slate-200/80">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("public.roomDetail.roomLayout")}</p>
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-800">
+                        <BedDouble className="size-3.5 text-sky-600" />
+                        {t("public.home.rooms.beds_with_bedrooms", { bedrooms: room.bedrooms_count || 1, beds: room.beds_count || 1 })}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Hình thức thuê</p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                    <div className="flex flex-col items-center justify-center p-3 text-center bg-white/40">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("public.roomDetail.rentType")}</p>
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-800">
                         {isLongTerm ? (
                           <>
-                            <FileText className="size-4 text-primary" />
-                            Thuê dài hạn
+                            <FileText className="size-3.5 text-sky-600" />
+                            {t("public.home.search.tabMonthly")}
                           </>
                         ) : (
                           <>
-                            <CalendarDays className="size-4 text-primary" />
-                            Đặt theo ngày
+                            <CalendarDays className="size-3.5 text-sky-600" />
+                            {t("public.home.search.tabDaily")}
                           </>
                         )}
                       </p>
@@ -889,7 +1067,7 @@ const PublicRoomDetail = () => {
 
                   {room.description && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Mô tả phòng</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">{t("public.roomDetail.description")}</h2>
                       <p className="mt-2 whitespace-pre-line text-sm leading-7 text-slate-600">{room.description}</p>
                     </div>
                   )}
@@ -898,14 +1076,25 @@ const PublicRoomDetail = () => {
 
                   {amenities.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Tiện nghi nổi bật</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">{t("public.roomDetail.featuredAmenities")}</h2>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {amenities.map((amenity: string) => (
-                          <Badge key={amenity} variant="secondary" className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                        {(showAllAmenities ? amenities : amenities.slice(0, 8)).map((amenity: string) => (
+                          <Badge key={amenity} variant="secondary" className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 text-xs font-medium">
                             {amenity}
                           </Badge>
                         ))}
                       </div>
+                      {amenities.length > 8 && (
+                        <div className="mt-3 text-left">
+                          <button
+                            type="button"
+                            onClick={() => setShowAllAmenities(!showAllAmenities)}
+                            className="text-xs font-bold text-sky-600 hover:text-sky-700 transition-colors bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100"
+                          >
+                            {showAllAmenities ? "Thu gọn tiện nghi" : `Xem thêm ${amenities.length - 8} tiện nghi`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -913,11 +1102,11 @@ const PublicRoomDetail = () => {
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3">
                         <Shield className="size-5 text-primary" />
-                        Quy định & Nội quy chỗ ở
+                        {t("public.roomDetail.roomRules")}
                       </h2>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Thú cưng</p>
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">{t("public.roomDetail.pets")}</p>
                           <div className="mt-2 space-y-1.5">
                             <div className={`flex items-center gap-2 text-sm font-semibold ${
                               roomRules.pet_policy === "allowed" ? "text-emerald-700" :
@@ -925,9 +1114,9 @@ const PublicRoomDetail = () => {
                             }`}>
                               <PawPrint className="size-4 text-primary shrink-0" />
                               <span>
-                                {roomRules.pet_policy === "allowed" ? "Được phép mang thú cưng" :
-                                 roomRules.pet_policy === "conditional" ? "Có điều kiện" :
-                                 "Không cho mang thú cưng"}
+                                {roomRules.pet_policy === "allowed" ? t("public.roomDetail.petsAllowed") :
+                                 roomRules.pet_policy === "conditional" ? t("public.roomDetail.notAllowed") :
+                                 t("public.roomDetail.petsNotAllowed")}
                               </span>
                             </div>
                             {roomRules.pet_policy_note && (
@@ -937,25 +1126,25 @@ const PublicRoomDetail = () => {
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Hút thuốc</p>
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">{t("public.roomDetail.smoking")}</p>
                           <div className={`mt-2 flex items-center gap-2 text-sm font-semibold ${roomRules.smoking_allowed ? "text-emerald-700" : "text-rose-700"}`}>
                             <Cigarette className="size-4 text-primary shrink-0" />
-                            <span>{roomRules.smoking_allowed ? "Cho phép hút thuốc" : "Cấm hút thuốc"}</span>
+                            <span>{roomRules.smoking_allowed ? t("public.roomDetail.partiesAllowed") : t("public.roomDetail.notAllowed")}</span>
                           </div>
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Tiệc tùng / Sự kiện</p>
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">{t("public.roomDetail.parties")}</p>
                           <div className="mt-2 space-y-1.5">
                             <div className={`flex items-center gap-2 text-sm font-semibold ${roomRules.parties_allowed ? "text-emerald-700" : "text-rose-700"}`}>
                               <PartyPopper className="size-4 text-primary shrink-0" />
-                              <span>{roomRules.parties_allowed ? "Được phép tổ chức" : "Không được tổ chức"}</span>
+                              <span>{roomRules.parties_allowed ? t("public.roomDetail.partiesAllowed") : t("public.roomDetail.partiesNotAllowed")}</span>
                             </div>
                             {roomRules.quiet_hours_start && roomRules.quiet_hours_end && (
                               <div className="flex items-center gap-1.5 text-xs text-slate-500">
                                 <Volume2 className="size-3.5 text-slate-400 shrink-0" />
                                 <span>
-                                  Giờ yên lặng: {formatTimeLabel(roomRules.quiet_hours_start)} – {formatTimeLabel(roomRules.quiet_hours_end)}
+                                  {isVi ? `Giờ yên lặng: ${formatTimeLabel(roomRules.quiet_hours_start)} – ${formatTimeLabel(roomRules.quiet_hours_end)}` : `Quiet hours: ${formatTimeLabel(roomRules.quiet_hours_start)} – ${formatTimeLabel(roomRules.quiet_hours_end)}`}
                                 </span>
                               </div>
                             )}
@@ -963,7 +1152,7 @@ const PublicRoomDetail = () => {
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Nhận / Trả phòng</p>
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">{t("public.roomDetail.checkInOut")}</p>
                           <div className="mt-2 space-y-1.5">
                             <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                               {roomRules.checkin_method === "smart_lock" ? (
@@ -976,16 +1165,19 @@ const PublicRoomDetail = () => {
                                 <UserCheck className="size-4 text-primary shrink-0" />
                               )}
                               <span>
-                                {roomRules.checkin_method === "smart_lock" ? "Tự nhận phòng (Smart Lock)" :
-                                 roomRules.checkin_method === "lockbox" ? "Hộp chìa khóa (Lockbox)" :
-                                 roomRules.checkin_method === "reception_24h" ? "Lễ tân 24/7" :
-                                 "Gặp trực tiếp chủ nhà"}
+                                {roomRules.checkin_method === "smart_lock"
+                                  ? (isVi ? "Tự nhận phòng (Smart Lock)" : "Self check-in (Smart Lock)")
+                                  : roomRules.checkin_method === "lockbox"
+                                    ? (isVi ? "Hộp chứa khóa (Lockbox)" : "Lockbox")
+                                    : roomRules.checkin_method === "reception_24h"
+                                      ? (isVi ? "Lễ tân 24/7" : "24/7 front desk")
+                                      : (isVi ? "Gặp trực tiếp chủ nhà" : "Meet the host in person")}
                               </span>
                             </div>
                             {(roomRules.standard_checkin_start || roomRules.standard_checkout_end) && (
                               <p className="text-xs text-slate-500">
-                                {roomRules.standard_checkin_start && `Nhận phòng: từ ${formatTimeLabel(roomRules.standard_checkin_start)}`}
-                                {roomRules.standard_checkout_end && ` • Trả phòng: trước ${formatTimeLabel(roomRules.standard_checkout_end)}`}
+                                {roomRules.standard_checkin_start && (isVi ? `Nhận phòng: từ ${formatTimeLabel(roomRules.standard_checkin_start)}` : `Check-in: from ${formatTimeLabel(roomRules.standard_checkin_start)}`)}
+                                {roomRules.standard_checkout_end && (isVi ? ` | Trả phòng: trước ${formatTimeLabel(roomRules.standard_checkout_end)}` : ` | Check-out: before ${formatTimeLabel(roomRules.standard_checkout_end)}`)}
                               </p>
                             )}
                           </div>
@@ -996,25 +1188,25 @@ const PublicRoomDetail = () => {
                         <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                             <Accessibility className="size-3.5 text-primary shrink-0" />
-                            <span>Tiện ích tiếp cận</span>
+                            <span>{t("public.roomDetail.accessibility")}</span>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {roomRules.has_elevator ? (
                               <Badge variant="secondary" className="gap-1.5 px-3 py-1">
                                 <Building2 className="size-3 shrink-0" />
-                                Có thang máy
+                                {isVi ? "Có thang máy" : "Elevator"}
                               </Badge>
                             ) : null}
                             {roomRules.has_step_free_access ? (
                               <Badge variant="secondary" className="gap-1.5 px-3 py-1">
                                 <Accessibility className="size-3 shrink-0" />
-                                Lối đi xe lăn
+                                {isVi ? "Lối đi xe lăn" : "Wheelchair access"}
                               </Badge>
                             ) : null}
                             {roomRules.is_ground_floor ? (
                               <Badge variant="secondary" className="gap-1.5 px-3 py-1">
                                 <Home className="size-3 shrink-0" />
-                                Tầng trệt
+                                {isVi ? "Tầng trệt" : "Ground floor"}
                               </Badge>
                             ) : null}
                           </div>
@@ -1026,8 +1218,8 @@ const PublicRoomDetail = () => {
                   {utilityFees.length > 0 && (
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                        Phụ phí & Tiền cọc
-                        <Badge variant="outline" className="rounded-full text-[10px] uppercase font-bold text-amber-700 border-amber-100 bg-amber-50">Bắt buộc</Badge>
+                        {t("common.price")}
+                        <Badge variant="outline" className="rounded-full text-[10px] uppercase font-bold text-amber-700 border-amber-100 bg-amber-50">{t("public.roomDetail.required")}</Badge>
                       </h2>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {utilityFees.map((fee: any, index: number) => (
@@ -1037,21 +1229,21 @@ const PublicRoomDetail = () => {
                                 {fee.type === 'electricity' && <Zap className="size-4 text-yellow-500" />}
                                 {fee.type === 'water' && <Droplets className="size-4 text-sky-500" />}
                                 {fee.type === 'service' && <Info className="size-4 text-indigo-500" />}
-                                {fee.type === 'electricity' ? 'Tiền điện' : fee.type === 'water' ? 'Tiền nước' : 'Phí dịch vụ'}
+                                {fee.type === 'electricity' ? t("public.roomDetail.feeElectricity") : fee.type === 'water' ? t("public.roomDetail.feeWater") : t("public.roomDetail.feeService")}
                               </span>
                               {fee.included ? (
-                                <Badge className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px]">Đã bao gồm</Badge>
+                                <Badge className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px]">{t("public.roomDetail.included")}</Badge>
                               ) : (
                                 <span className="text-sm font-bold text-sky-600">
                                   {formatPrice(fee.price)}
                                   <span className="text-[10px] text-slate-400 font-normal ml-1">
-                                    /{fee.method === 'per_unit' ? 'số' : fee.method === 'per_person' ? 'người' : 'tháng'}
+                                    /{fee.method === 'per_unit' ? t("public.roomDetail.unitMeter") : fee.method === 'per_person' ? t("public.roomDetail.unitPerson") : t("public.roomDetail.unitMonth")}
                                   </span>
                                 </span>
                               )}
                             </div>
                             <p className="text-[11px] text-slate-500 italic">
-                              {fee.method === 'per_unit' ? 'Tính theo chỉ số đồng hồ thực tế' : fee.method === 'per_person' ? 'Chia đều theo số người lưu trú' : 'Cố định hàng tháng'}
+                              {fee.method === 'per_unit' ? t("public.roomDetail.feeMethodPerUnit") : fee.method === 'per_person' ? t("public.roomDetail.feeMethodPerPerson") : t("public.roomDetail.feeMethodFixedMonthly")}
                             </p>
                           </div>
                         ))}
@@ -1065,29 +1257,33 @@ const PublicRoomDetail = () => {
                         <CreditCard className="size-5 text-sky-600" />
                       </div>
                       <div className="space-y-1.5 flex-1">
-                        <h4 className="text-sm font-bold text-sky-900">Chính sách tiền cọc</h4>
+                        <h4 className="text-sm font-bold text-sky-900">{t("public.roomDetail.depositPolicy")}</h4>
                         <div className="text-xs text-sky-700 leading-relaxed space-y-1">
-                          <p>Đối với hợp đồng lưu trú, quý khách cần đặt cọc khoản phí để bảo đảm tình trạng phòng:</p>
+                          <p>{t("public.roomDetail.depositPolicyDesc")}</p>
                           <ul className="list-disc pl-4 space-y-1 mt-1 font-medium">
                             {allPrices
                               .filter((p: any) => p.deposit_amount > 0)
                               .map((p: any, idx: number) => {
-                                let unitLabel = "ngày";
+                                let unitLabel = t("public.roomDetail.unitNight");
                                 if (p.unit === 'month') {
-                                  unitLabel = "tháng";
+                                  unitLabel = t("public.roomDetail.unitMonth");
                                 } else if (p.unit === 'night') {
-                                  unitLabel = "đêm";
+                                  unitLabel = t("public.roomDetail.unitNight");
                                 } else if (p.unit) {
                                   unitLabel = p.unit;
                                 }
                                 return (
                                   <li key={idx}>
-                                    Gói thuê theo {unitLabel}: Tiền cọc là <span className="font-bold underline">{formatPrice(p.deposit_amount)}</span>.
+                                    <Trans
+                                      i18nKey="public.roomDetail.depositPackageLine"
+                                      values={{ unit: unitLabel, amount: formatPrice(p.deposit_amount) }}
+                                      components={{ amount: <span className="font-bold underline" /> }}
+                                    />
                                   </li>
                                 );
                               })}
                           </ul>
-                          <p className="text-[10px] text-sky-600/90 italic mt-1.5">Tiền cọc sẽ được hoàn trả đầy đủ sau khi kết thúc hợp đồng và bàn giao phòng.</p>
+                          <p className="text-[10px] text-sky-600/90 italic mt-1.5">{t("public.roomDetail.depositNote")}</p>
                         </div>
                       </div>
                     </div>
@@ -1095,18 +1291,29 @@ const PublicRoomDetail = () => {
 
                   {services.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900">Dịch vụ bổ sung (Tùy chọn)</h2>
-                      <div className="mt-3 grid gap-2">
-                        {services.map((service) => (
-                          <div key={service.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                            <span className="inline-flex items-center gap-2 text-slate-700 font-medium">
-                              <Plus className="size-4 text-slate-400" />
+                      <h2 className="text-lg font-semibold text-slate-900">{t("public.roomDetail.extraServices")}</h2>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {(showAllServices ? services : services.slice(0, 4)).map((service) => (
+                          <div key={service.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-2.5 text-sm bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                            <span className="inline-flex items-center gap-2 text-slate-700 font-medium text-xs sm:text-sm">
+                              <Plus className="size-3.5 text-slate-400" />
                               {service.name}
                             </span>
-                            <span className="font-semibold text-primary">{formatPrice(service.price)}</span>
+                            <span className="font-semibold text-primary text-xs sm:text-sm">{formatPrice(service.price)}</span>
                           </div>
                         ))}
                       </div>
+                      {services.length > 4 && (
+                        <div className="mt-3 text-left">
+                          <button
+                            type="button"
+                            onClick={() => setShowAllServices(!showAllServices)}
+                            className="text-xs font-bold text-sky-600 hover:text-sky-700 transition-colors bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100"
+                          >
+                            {showAllServices ? "Thu gọn dịch vụ" : `Xem thêm ${services.length - 4} dịch vụ`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -1119,9 +1326,9 @@ const PublicRoomDetail = () => {
                     <div>
                       <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <CalendarDays className="size-5 text-primary" />
-                        Lịch trống & Đặt phòng
+                        {t("public.roomDetail.stayDuration")}
                       </h2>
-                      <p className="text-xs text-slate-500 mt-1">Chọn ngày nhận và trả phòng trực tiếp trên lịch</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("public.roomDetail.calendarHint")}</p>
                     </div>
                     {(checkin || checkout) && (
                       <Button
@@ -1161,21 +1368,21 @@ const PublicRoomDetail = () => {
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-600 justify-center sm:justify-start pt-2">
                     <div className="flex items-center gap-2">
                       <span className="h-3.5 w-3.5 rounded bg-blue-600 block"></span>
-                      <span>Ngày chọn của bạn</span>
+                      <span>{t("public.roomDetail.calendarLegendSelected")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-3.5 w-3.5 rounded bg-slate-200/80 border border-slate-300 block"></span>
-                      <span>Hôm nay</span>
+                      <span>{t("public.roomDetail.calendarLegendToday")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-3.5 w-3.5 rounded bg-white border border-slate-200 block"></span>
-                      <span>Còn trống</span>
+                      <span>{t("public.roomDetail.calendarLegendAvailable")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-3.5 w-3.5 rounded bg-slate-50 border border-slate-200 relative overflow-hidden block">
                         <span className="absolute inset-0 bg-slate-300 h-[1px] top-1/2 -translate-y-1/2 rotate-45 block text-slate-300"></span>
                       </span>
-                      <span className="line-through text-slate-400">Đã được đặt / Khóa</span>
+                      <span className="line-through text-slate-400">{t("public.roomDetail.calendarBooked")}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -1193,16 +1400,16 @@ const PublicRoomDetail = () => {
                     <div className="border-b border-slate-100 pb-4">
                       <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <Building2 className="size-5 text-primary" />
-                        Thông tin nhà cung cấp
+                        {t("public.roomDetail.companyName")}
                       </h2>
-                      <p className="text-xs text-slate-500 mt-1">Đơn vị vận hành và quản lý căn hộ/phòng</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("public.roomDetail.operatorSubtitle")}</p>
                     </div>
 
                     <div className="grid gap-6 md:grid-cols-2">
                       <div className="space-y-4">
                         {room.partner_company_name && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Tên doanh nghiệp / Đơn vị</p>
+                        {t("public.roomDetail.companyName")}
                             {room.partner_id ? (
                               <Link
                                 to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))}
@@ -1218,7 +1425,7 @@ const PublicRoomDetail = () => {
 
                         {room.partner_name && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Người đại diện</p>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">{t("public.roomDetail.representative")}</p>
                             {room.partner_id ? (
                               <Link
                                 to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))}
@@ -1238,7 +1445,7 @@ const PublicRoomDetail = () => {
 
                         {room.partner_address && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Địa chỉ văn phòng</p>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">{t("public.roomDetail.companyAddress")}</p>
                             <p className="mt-1 text-sm text-slate-700 flex items-start gap-2 leading-relaxed break-words">
                               <MapPin className="size-4.5 text-slate-400 mt-0.5 shrink-0" />
                               <span className="font-medium">{room.partner_address}</span>
@@ -1250,7 +1457,7 @@ const PublicRoomDetail = () => {
                       <div className="space-y-4">
                         {room.partner_phone && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Số điện thoại liên hệ</p>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">{t("public.roomDetail.companyPhone")}</p>
                             <p className="mt-1 text-sm text-slate-700 flex items-center gap-2 font-bold">
                               <Phone className="size-4 text-sky-500" />
                               <a href={`tel:${room.partner_phone}`} className="transition-colors duration-200 hover:text-primary">
@@ -1262,7 +1469,7 @@ const PublicRoomDetail = () => {
 
                         {room.partner_email && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Email liên hệ</p>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">{t("public.roomDetail.companyEmail")}</p>
                             <p className="mt-1 text-sm text-slate-700 flex items-center gap-2 font-medium">
                               <Mail className="size-4 text-sky-500" />
                               <a href={`mailto:${room.partner_email}`} className="transition-colors duration-200 hover:text-primary underline decoration-slate-200 hover:decoration-primary">
@@ -1274,7 +1481,7 @@ const PublicRoomDetail = () => {
 
                         {room.partner_description && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">Giới thiệu</p>
+                            <p className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">{t("public.roomDetail.companyIntro")}</p>
                             <p className="mt-1 text-sm text-slate-600 italic leading-relaxed">
                               "{room.partner_description}"
                             </p>
@@ -1291,8 +1498,8 @@ const PublicRoomDetail = () => {
                 <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-900">Đánh giá từ khách hàng</h2>
-                      <p className="text-xs text-slate-500 mt-1">Trải nghiệm thực tế từ các vị khách đã lưu trú</p>
+                      <h2 className="text-xl font-bold text-slate-900">{t("public.roomDetail.reviewsHeading")}</h2>
+                      <p className="text-xs text-slate-500 mt-1">{t("public.roomDetail.reviewsSubtitle")}</p>
                     </div>
                     {reviewsData && reviewsData.total_count > 0 && (
                       <div className="flex items-center gap-3">
@@ -1301,7 +1508,7 @@ const PublicRoomDetail = () => {
                             <Star className="size-5 text-amber-500 fill-amber-500 shrink-0" />
                             {reviewsData.average_rating}
                           </div>
-                          <span className="text-[11px] font-bold text-slate-400">/ {reviewsData.total_count} đánh giá</span>
+                          <span className="text-[11px] font-bold text-slate-400">{t("public.home.rooms.reviewsCount", { count: reviewsData.total_count })}</span>
                         </div>
                       </div>
                     )}
@@ -1313,7 +1520,7 @@ const PublicRoomDetail = () => {
                     </div>
                   ) : !reviewsData || reviewsData.reviews.length === 0 ? (
                     <div className="py-8 text-center text-slate-400 text-sm">
-                      Chưa có đánh giá nào cho phòng này. Hãy là người đầu tiên trải nghiệm và chia sẻ cảm nhận!
+                      {t("public.home.rooms.noReviews")}
                     </div>
                   ) : (
                     <>
@@ -1330,7 +1537,7 @@ const PublicRoomDetail = () => {
                                   )}
                                 </div>
                                 <div>
-                                  <h4 className="text-sm font-bold text-slate-800">{review.user?.name || "Khách hàng"}</h4>
+                                  <h4 className="text-sm font-bold text-slate-800">{review.user?.name || t("public.home.reviews.guestFallback")}</h4>
                                   <span className="text-[10px] text-slate-400">{new Date(review.created_at).toLocaleDateString("vi-VN")}</span>
                                 </div>
                               </div>
@@ -1355,7 +1562,7 @@ const PublicRoomDetail = () => {
                       {reviewsData.reviews.length > 5 && (
                         <div className="mt-6 flex justify-center border-t border-slate-100 pt-4">
                           <ReviewsModal
-                            title="Đánh giá về phòng"
+                            title={t("public.roomDetail.reviewsAboutRoom")}
                             reviews={reviewsData.reviews}
                             averageRating={reviewsData.average_rating}
                             totalCount={reviewsData.total_count}
@@ -1387,19 +1594,19 @@ const PublicRoomDetail = () => {
 
       {/* Sticky Bottom Bar for Mobile & Tablet */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Giá từ</span>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{t("public.roomDetail.priceFrom")}</span>
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-black text-primary">{formatPrice(room?.cheapest_daily_price || 0)}</span>
-              <span className="text-xs text-slate-500">/đêm</span>
+              <span className="text-xs text-slate-500">/{t("public.roomDetail.unitNight")}</span>
             </div>
             {checkin && checkout ? (
               <span className="text-[10px] font-bold text-emerald-600 mt-0.5">
-                Đã chọn {checkin.split('-').slice(1).reverse().join('/')} - {checkout.split('-').slice(1).reverse().join('/')}
+                {checkin.split('-').slice(1).reverse().join('/')} - {checkout.split('-').slice(1).reverse().join('/')}
               </span>
             ) : (
-              <span className="text-[10px] text-slate-400 mt-0.5">Chưa chọn ngày</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">{t("public.roomDetail.noDateSelected")}</span>
             )}
           </div>
 
@@ -1411,13 +1618,13 @@ const PublicRoomDetail = () => {
             ) : (
               <Button asChild variant="gradient" className="rounded-full px-6 text-xs font-bold h-10 shadow-md">
                 <Link to={`${ROUTERS.BOOKING}/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`}>
-                  Đặt ngay
+                  {t("public.roomDetail.bookNow")}
                 </Link>
               </Button>
             )
           ) : (
             <Button onClick={scrollToCalendar} className="rounded-full bg-primary hover:bg-primary/90 text-white text-xs font-bold px-6 h-10 shadow-md">
-              Chọn ngày
+              {t("public.home.search.checkIn")}
             </Button>
           )}
         </div>

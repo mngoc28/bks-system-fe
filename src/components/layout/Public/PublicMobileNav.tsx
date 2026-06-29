@@ -40,7 +40,7 @@ const PublicMobileNav = ({
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className="relative z-[90] ml-auto inline-flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 md:hidden"
-        aria-label={open ? t("common.close", "Đóng menu") : t("public.header.nav.menu", "Mở menu")}
+        aria-label={open ? t("common.close") : t("public.header.nav.menu")}
         aria-expanded={open}
       >
         {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -72,7 +72,7 @@ const PublicMobileNav = ({
                 type="button"
                 onClick={closeMenu}
                 className="inline-flex size-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
-                aria-label={t("common.close", "Đóng")}
+                aria-label={t("common.close")}
               >
                 <X className="size-5" />
               </button>

@@ -117,3 +117,18 @@ export const usePartnerRevenueAnalyticsQuery = () => {
     gcTime: 24 * 60 * 60_000 + 5 * 60_000,
   });
 };
+
+export const usePartnerDashboardConsolidatedQuery = (propertyId?: PartnerDashboardPropertyScope) => {
+  return useQuery({
+    queryKey: ["partner", "dashboard", "consolidated", scopeKey(propertyId)],
+    queryFn: async ({ signal }) => {
+      const response = await partnerDashboardApi.getConsolidated({
+        signal,
+        ...(propertyId != null ? { property_id: propertyId } : {}),
+      });
+      return response.data;
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+};

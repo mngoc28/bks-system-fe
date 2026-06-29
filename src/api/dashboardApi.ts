@@ -82,4 +82,12 @@ export const dashboardApi = {
   },
 
   getStats: async (): Promise<ApiResponse<AdminDashboardStats>> => axiosClient.get("/admin/dashboard/stats"),
+
+  getConsolidated: async (startDate?: string, endDate?: string): Promise<ApiResponse<any>> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+    const queryString = params.toString();
+    return axiosClient.get(`/admin/dashboard/consolidated${queryString ? `?${queryString}` : ""}`);
+  },
 };

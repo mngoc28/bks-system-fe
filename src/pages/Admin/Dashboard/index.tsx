@@ -1,17 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  useAdminDashboardStatsQuery,
-  useAdminOccupancyChartQuery,
-  useAdminRevenuePerformanceQuery,
-  useBookingStatusBreakdownQuery,
-  useBookingsByPropertyQuery,
-  useBookingsTrendQuery,
-  useSystemRoom,
-  useTotalPartner,
-  useTotalUser,
-} from "@/hooks/useDashboardQuery";
-import { useAdminSettlementDailyReportQuery } from "@/hooks/useSettlementQuery";
+import { useAdminDashboardConsolidatedQuery } from "@/hooks/useDashboardQuery";
 import { useCheckPermissionQuery } from "@/hooks/useAuthQuery";
 import { useBookingsQuery } from "@/hooks/useBookingQuery";
 import { PERMISSIONS, ROUTERS } from "@/constant";
@@ -64,40 +53,32 @@ const Dashboard: React.FC = () => {
   const permission = dataCheckPermission?.data?.role;
   const isAdmin = permission === PERMISSIONS.ADMIN;
 
-  const { data: usersData } = useTotalUser();
-  const { data: partnersData } = useTotalPartner();
-  const { data: roomsData } = useSystemRoom();
-  const { data: adminStatsData, isLoading: isAdminStatsLoading } = useAdminDashboardStatsQuery();
-  const analyticsEnabled = showAnalytics;
-  const { data: bookingsByPropertyData, isLoading: isBookingsByPropertyLoading } = useBookingsByPropertyQuery(
+  const { data: consolidatedData, isLoading: isConsolidatedLoading } = useAdminDashboardConsolidatedQuery(
     startDate,
-    endDate,
-    analyticsEnabled,
+    endDate
   );
-  const { data: bookingsTrendData, isLoading: isBookingsTrendLoading } = useBookingsTrendQuery(
-    startDate,
-    endDate,
-    analyticsEnabled,
-  );
-  const { data: settlementDailyReportData, isLoading: isSettlementDailyReportLoading } = useAdminSettlementDailyReportQuery(
-    startDate,
-    endDate,
-  );
-  const { data: bookingStatusData, isLoading: isBookingStatusLoading } = useBookingStatusBreakdownQuery(
-    startDate,
-    endDate,
-    analyticsEnabled,
-  );
-  const { data: occupancyChartData, isLoading: isOccupancyChartLoading } = useAdminOccupancyChartQuery(
-    startDate,
-    endDate,
-    analyticsEnabled,
-  );
-  const { data: revenuePerformanceData, isLoading: isRevenuePerformanceLoading } = useAdminRevenuePerformanceQuery(
-    startDate,
-    endDate,
-    analyticsEnabled,
-  );
+
+  const consolidated = consolidatedData?.data;
+
+  const usersData = consolidated?.totalUsers ? { data: consolidated.totalUsers } : undefined;
+  const partnersData = consolidated?.totalPartners ? { data: consolidated.totalPartners } : undefined;
+  const roomsData = consolidated?.systemRoom ? { data: consolidated.systemRoom } : undefined;
+  const adminStatsData = consolidated?.adminStats ? { data: consolidated.adminStats } : undefined;
+
+  const bookingsByPropertyData = consolidated?.bookingsByProperty ? { data: consolidated.bookingsByProperty } : undefined;
+  const bookingsTrendData = consolidated?.bookingsTrend ? { data: consolidated.bookingsTrend } : undefined;
+  const settlementDailyReportData = consolidated?.settlementDailyReport ? { data: consolidated.settlementDailyReport } : undefined;
+  const bookingStatusData = consolidated?.bookingStatus ? { data: consolidated.bookingStatus } : undefined;
+  const occupancyChartData = consolidated?.occupancyChart ? { data: consolidated.occupancyChart } : undefined;
+  const revenuePerformanceData = consolidated?.revenuePerformance ? { data: consolidated.revenuePerformance } : undefined;
+
+  const isBookingsByPropertyLoading = isConsolidatedLoading;
+  const isBookingsTrendLoading = isConsolidatedLoading;
+  const isSettlementDailyReportLoading = isConsolidatedLoading;
+  const isBookingStatusLoading = isConsolidatedLoading;
+  const isOccupancyChartLoading = isConsolidatedLoading;
+  const isRevenuePerformanceLoading = isConsolidatedLoading;
+  const isAdminStatsLoading = isConsolidatedLoading;
   const { data: pendingBookingsData, isLoading: isPendingQueueLoading } = useBookingsQuery(
     { page: 1, per_page: 5, status: 0 },
     { staleTime: 60_000, refetchOnWindowFocus: false },
@@ -132,7 +113,7 @@ const Dashboard: React.FC = () => {
 
   const bookingsTrend = React.useMemo(
     () =>
-      (bookingsTrendData?.data?.points ?? []).map((item) => ({
+      (bookingsTrendData?.data?.points ?? []).map((item: any) => ({
         date: new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
         rawDate: item.date,
         total: item.total ?? 0,
@@ -142,7 +123,7 @@ const Dashboard: React.FC = () => {
 
   const revenueTrend = React.useMemo(
     () =>
-      (settlementDailyReportData?.data ?? []).map((item) => ({
+      (settlementDailyReportData?.data ?? []).map((item: any) => ({
         date: item.date ? new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }) : "",
         total_gmv: item.total_gmv ?? 0,
         total_commission: item.total_commission ?? 0,
@@ -150,14 +131,14 @@ const Dashboard: React.FC = () => {
     [settlementDailyReportData],
   );
 
-  const totalGmv = React.useMemo(() => revenueTrend.reduce((sum, row) => sum + row.total_gmv, 0), [revenueTrend]);
-  const totalCommission = React.useMemo(() => revenueTrend.reduce((sum, row) => sum + row.total_commission, 0), [revenueTrend]);
+  const totalGmv = React.useMemo(() => revenueTrend.reduce((sum: number, row: any) => sum + row.total_gmv, 0), [revenueTrend]);
+  const totalCommission = React.useMemo(() => revenueTrend.reduce((sum: number, row: any) => sum + row.total_commission, 0), [revenueTrend]);
 
   const topProperties = React.useMemo(
     () =>
       (bookingsByPropertyData?.data ?? [])
         .slice()
-        .sort((a, b) => b.total - a.total)
+        .sort((a: any, b: any) => b.total - a.total)
         .slice(0, 8),
     [bookingsByPropertyData],
   );
@@ -170,7 +151,7 @@ const Dashboard: React.FC = () => {
 
   const occupancyTrend = React.useMemo(
     () =>
-      (occupancyChartData?.data?.points ?? []).map((item) => ({
+      (occupancyChartData?.data?.points ?? []).map((item: any) => ({
         date: new Date(item.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
         occupancyRate: item.occupancyRate,
         rawDate: item.date,
