@@ -240,6 +240,44 @@ export function formatProvinceName(name?: string | null): string {
   return stripped;
 }
 
+const PROVINCE_EN_LABELS: Record<string, string> = {
+  ho_chi_minh: "Ho Chi Minh City",
+  ha_noi: "Hanoi",
+  da_nang: "Da Nang",
+  hai_phong: "Hai Phong",
+  can_tho: "Can Tho",
+  hue: "Hue",
+  khanh_hoa: "Khanh Hoa",
+  quang_ninh: "Quang Ninh",
+  lam_dong: "Lam Dong",
+};
+
+export function formatProvinceSlugLabel(slug?: string | null): string {
+  if (!slug) return "";
+
+  const normalized = slug.trim().toLowerCase().replace(/-/g, "_");
+  if (PROVINCE_EN_LABELS[normalized]) {
+    return PROVINCE_EN_LABELS[normalized];
+  }
+
+  return normalized
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+export function getProvinceDisplayName(
+  province: { name: string; name_en?: string | null },
+  locale?: string,
+): string {
+  if (locale?.startsWith("en") && province.name_en) {
+    return formatProvinceSlugLabel(province.name_en);
+  }
+
+  return formatProvinceName(province.name);
+}
+
 /**
  * Simplify a detailed address to show only district/ward and province/city.
  * Example: "Số 11 Hoàng Quốc Việt, Phường Nghĩa Đô, Quận Cầu Giấy, Hà Nội" -> "Quận Cầu Giấy, Hà Nội"

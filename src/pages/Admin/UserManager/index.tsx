@@ -292,7 +292,7 @@ const UserManagement: React.FC = () => {
   return (
     <AdminPageShell>
       <PageBar
-        subtitle={t("user.user_list_subtitle") || "Qu?n l? danh s?ch th?nh vi?n v? quy?n h?n truy c?p."}
+        subtitle={t("user.user_list_subtitle") || "Quản lý danh sách thành viên và quyền hạn truy cập."}
         showLayoutToggle={true}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

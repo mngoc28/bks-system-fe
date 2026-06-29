@@ -10,7 +10,7 @@ import { resolveImageUrl } from "@/utils/imageUtils";
 import { formatCurrencyInput, formatProvinceName } from "@/utils/utils";
 import { ArrowRight, ChevronLeft, ChevronRight, Globe, Mail, MapPin, Phone, Users, Star, Heart, Share2, Building2, Home } from "lucide-react";
 import { usePartnerReviewsQuery } from "@/hooks/useReviewQuery";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import 'swiper/css';
@@ -18,64 +18,14 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import { Spinner } from "@/components/ui/spinner";
-import { toastSuccess, toastError } from "@/components/ui/toast";
 import { getRoomFallbackImage, getPartnerFallbackImage } from "@/utils/fallbackImages";
+import { usePublicRoomActions } from "@/hooks/usePublicRoomActions";
 
 // Partner Detail Page
 const PartnerDetail = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-
-    const [wishlist, setWishlist] = useState<number[]>(() => {
-        try {
-            const stored = localStorage.getItem("bks_wishlist");
-            return stored ? JSON.parse(stored) : [];
-        } catch {
-            return [];
-        }
-    });
-
-    useEffect(() => {
-        localStorage.setItem("bks_wishlist", JSON.stringify(wishlist));
-    }, [wishlist]);
-
-    const handleToggleWishlist = (e: React.MouseEvent, roomId: number) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setWishlist((prev) => {
-            const isAlreadyWishlisted = prev.includes(roomId);
-            if (isAlreadyWishlisted) {
-                toastSuccess("Đã xóa khỏi danh sách yêu thích");
-                return prev.filter((id) => id !== roomId);
-            } else {
-                toastSuccess("Đã thêm vào danh sách yêu thích");
-                return [...prev, roomId];
-            }
-        });
-    };
-
-    const handleShareRoom = (e: React.MouseEvent, roomId: number) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const url = window.location.origin + ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString());
-        navigator.clipboard.writeText(url)
-            .then(() => {
-                toastSuccess("Đã sao chép liên kết phòng!");
-            })
-            .catch(() => {
-                const textArea = document.createElement("textarea");
-                textArea.value = url;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand("copy");
-                    toastSuccess("Đã sao chép liên kết phòng!");
-                } catch {
-                    toastError("Không thể sao chép liên kết!");
-                }
-                document.body.removeChild(textArea);
-            });
-    };
+    const { wishlist, handleToggleWishlist, handleShareRoom } = usePublicRoomActions();
 
     const { partner_id } = useParams<{ partner_id: string }>();
     const partnerId = partner_id ? Number(partner_id) : -1;
@@ -156,157 +106,9 @@ const PartnerDetail = () => {
         <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40">
             <PublicHeader/>
 
-            {/* Partner Hero - 2-column premium layout */}
-            <div className="relative overflow-hidden bg-slate-950 pt-10 pb-10 text-white">
-                {/* Background scenic image */}
-                <div className="absolute inset-0 -z-10 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1600&q=75"
-                    alt="hero background"
-                    className="h-full w-full object-cover"
-                    style={{ opacity: 0.30 }}
-                  />
-                </div>
-                {/* Multi-layer overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-950/50" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
-                {/* Ambient glow effects */}
-                <div className="absolute -left-40 top-0 h-96 w-96 rounded-full bg-sky-600/10 blur-3xl" />
-                <div className="absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-                {/* Dot pattern */}
-                <div
-                    className="absolute inset-0 opacity-[0.07]"
-                    style={{
-                        backgroundImage: 'radial-gradient(circle, rgba(148,163,184,1) 1px, transparent 1px)',
-                        backgroundSize: '16px 16px',
-                    }}
-                />
-
-                <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-5">
-
-                        {/* LEFT — 3/5 */}
-                        <div className="lg:col-span-3">
-                            {/* Badge */}
-                            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-1.5 text-sm font-semibold text-sky-300">
-                                <Building2 className="size-4" />
-                                Đối tác BKS System
-                            </div>
-
-                            {/* Company Name */}
-                            <h1 className="mb-4 text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl leading-tight">
-                                {partnerData?.company_name ?? ""}
-                            </h1>
-
-                            {/* Location */}
-                            <div className="mb-5 flex items-center gap-2 text-slate-300">
-                                <MapPin className="size-5 shrink-0 text-sky-400" />
-                                <span className="text-base sm:text-lg">
-                                    {partnerData?.address && `${partnerData.address}, `}{formatProvinceName(partnerData?.province_name)}
-                                </span>
-                            </div>
-
-                            {/* Description */}
-                            {partnerData?.description && (
-                                <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                                    {partnerData.description.length > 180
-                                        ? `${partnerData.description.substring(0, 180)}...`
-                                        : partnerData.description}
-                                </p>
-                            )}
-
-                            {/* Stat cards */}
-                            <div className="flex flex-wrap gap-3">
-                                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                                    <Home className="size-5 text-sky-400" />
-                                    <div>
-                                        <div className="text-lg font-bold text-white">
-                                            {roomsData
-                                                ? roomsData.length >= 1000
-                                                    ? `${Math.floor(roomsData.length / 1000)}k+`
-                                                    : roomsData.length >= 100
-                                                        ? `${Math.floor(roomsData.length / 100) * 100}+`
-                                                        : roomsData.length > 0 ? `${roomsData.length}` : "0"
-                                                : "—"}
-                                        </div>
-                                        <div className="text-xs text-slate-400">Phòng cho thuê</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                                    <MapPin className="size-5 text-emerald-400" />
-                                    <div>
-                                        <div className="text-lg font-bold text-white">
-                                            {roomsArray.length > 0 ? `${roomsArray.length}` : "—"}
-                                        </div>
-                                        <div className="text-xs text-slate-400">Tỉnh/thành</div>
-                                    </div>
-                                </div>
-                                {reviewsData && reviewsData.total_count > 0 && (
-                                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                                        <Star className="size-5 fill-amber-400 text-amber-400" />
-                                        <div>
-                                            <div className="text-lg font-bold text-white">{reviewsData.average_rating}</div>
-                                            <div className="text-xs text-slate-400">{reviewsData.total_count} đánh giá</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* RIGHT — 2/5 — Contact card */}
-                        <div className="lg:col-span-2">
-                            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-                                <h2 className="mb-5 text-sm font-bold uppercase tracking-widest text-sky-300">Thông tin liên hệ</h2>
-                                <div className="space-y-4">
-                                    {partnerData?.address && (
-                                        <div className="flex items-start gap-3">
-                                            <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-500/15">
-                                                <MapPin className="size-4 text-sky-400" />
-                                            </div>
-                                            <span className="text-sm leading-relaxed text-slate-200">{partnerData.address}</span>
-                                        </div>
-                                    )}
-                                    {partnerData?.phone && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                                                <Phone className="size-4 text-emerald-400" />
-                                            </div>
-                                            <span className="text-sm text-slate-200">{partnerData.phone}</span>
-                                        </div>
-                                    )}
-                                    {partnerData?.user_email && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
-                                                <Mail className="size-4 text-violet-400" />
-                                            </div>
-                                            <span className="text-sm text-slate-200 break-all">{partnerData.user_email}</span>
-                                        </div>
-                                    )}
-                                    {partnerData?.website && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-500/15">
-                                                <Globe className="size-4 text-sky-400" />
-                                            </div>
-                                            <a
-                                                href={partnerData.website}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm text-sky-300 underline-offset-2 hover:underline break-all"
-                                            >
-                                                {partnerData.website}
-                                            </a>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* Breadcrumb */}
             <div className="border-b border-slate-200 bg-slate-50">
-                <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
                     <Breadcrumb
                         items={[
                             { label: t("breadcrumb.home"), href: "/" },
@@ -319,9 +121,159 @@ const PartnerDetail = () => {
                 </div>
             </div>
 
+            {/* Partner Info - Clean white premium layout */}
+            <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
+                <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/40 to-sky-50/20 p-6 md:p-8 shadow-sm">
+                    <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-5 relative z-10">
+
+                        {/* LEFT — 3/5 */}
+                        <div className="lg:col-span-3 space-y-5">
+                            {/* Badge */}
+                            <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700">
+                                <Building2 className="size-4 text-sky-600 animate-pulse" />
+                                {t("public.home.partners.trust")}
+                            </div>
+
+                            {/* Company Name */}
+                            <h1 className="text-3xl font-black tracking-tight sm:text-4xl text-slate-900 leading-tight">
+                                {partnerData?.company_name ?? ""}
+                            </h1>
+
+                            {/* Location */}
+                            <div className="flex items-center gap-2 text-slate-500 text-sm">
+                                <MapPin className="size-4 shrink-0 text-sky-500" />
+                                <span className="font-medium">
+                                    {formatProvinceName(partnerData?.province_name)}
+                                </span>
+                            </div>
+
+                            {/* Description */}
+                            {partnerData?.description && (
+                                <p className="text-sm sm:text-base leading-relaxed text-slate-600">
+                                    {partnerData.description}
+                                </p>
+                            )}
+
+                            {/* Stat cards */}
+                            <div className="flex flex-wrap gap-4 pt-2">
+                                <div className="flex items-center gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 shadow-sm hover:border-sky-300 hover:bg-sky-50 transition-all duration-300">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-sky-100 text-sky-700 shadow-inner">
+                                        <Home className="size-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-base font-extrabold text-slate-950 leading-tight">
+                                            {roomsData ? (
+                                                roomsData.length >= 1000
+                                                    ? `${Math.floor(roomsData.length / 1000)}k+`
+                                                    : roomsData.length
+                                            ) : "—"}
+                                        </div>
+                                        <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">Phòng cho thuê</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-3 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/70 transition-all duration-300">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shadow-inner">
+                                        <MapPin className="size-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-base font-extrabold text-slate-950 leading-tight">
+                                            {roomsArray.length > 0 ? `${roomsArray.length}` : "—"}
+                                        </div>
+                                        <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">Tỉnh/thành</div>
+                                    </div>
+                                </div>
+                                {reviewsData && reviewsData.total_count > 0 && (
+                                    <div className="flex items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50/40 px-4 py-3 shadow-sm hover:border-amber-300 hover:bg-amber-50/70 transition-all duration-300">
+                                        <div className="flex size-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 shadow-inner">
+                                            <Star className="size-5 fill-amber-500 text-amber-500" />
+                                        </div>
+                                        <div>
+                                            <div className="text-base font-extrabold text-slate-950 leading-tight">{reviewsData.average_rating}</div>
+                                            <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">{reviewsData.total_count} đánh giá</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* RIGHT — 2/5 — Contact details */}
+                        <div className="lg:col-span-2 w-full">
+                            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-5 shadow-sm backdrop-blur-sm space-y-4">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
+                                    <Phone className="size-3.5 text-sky-600" />
+                                    Thông tin liên hệ
+                                </h3>
+
+                                {partnerData?.address && (
+                                    <div className="flex items-start gap-3.5 group">
+                                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700 border border-sky-100 group-hover:bg-sky-600 group-hover:text-white transition-all duration-300">
+                                            <MapPin className="size-4" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Địa chỉ trụ sở</span>
+                                            <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-normal">{partnerData.address}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {partnerData?.phone && (
+                                    <div className="flex items-start gap-3.5 group">
+                                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                            <Phone className="size-4" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Số điện thoại</span>
+                                            <p className="text-xs sm:text-sm font-bold text-slate-800 leading-normal">
+                                                <a href={`tel:${partnerData.phone}`} className="hover:text-primary transition-colors">
+                                                    {partnerData.phone}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {partnerData?.user_email && (
+                                    <div className="flex items-start gap-3.5 group">
+                                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                            <Mail className="size-4" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Email liên hệ</span>
+                                            <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-normal break-all">
+                                                <a href={`mailto:${partnerData.user_email}`} className="hover:text-primary hover:underline transition-colors">
+                                                    {partnerData.user_email}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {partnerData?.website && (
+                                    <div className="flex items-start gap-3.5 group">
+                                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700 border border-sky-100 group-hover:bg-sky-600 group-hover:text-white transition-all duration-300">
+                                            <Globe className="size-4" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Website doanh nghiệp</span>
+                                            <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-normal break-all">
+                                                <a
+                                                    href={partnerData.website}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-sky-600 font-semibold hover:text-sky-700 underline underline-offset-2 transition-colors"
+                                                >
+                                                    {partnerData.website}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Partner Gallery Section */}
             {partnerImages.length > 0 && (
-                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
                     <h2 className="mb-6 text-2xl font-bold text-gray-900">{t("partnerDetail.partnerGallery")}</h2>
                     <div className={`grid gap-4 ${partnerImages.length === 1 ? 'grid-cols-1 justify-center' : partnerImages.length === 2 ? 'grid-cols-2 justify-center' : 'grid-cols-1 md:grid-cols-3'}`}>
                         {partnerImages.map((img, index) => (
@@ -344,7 +296,7 @@ const PartnerDetail = () => {
 
             {/* Rooms Section */}
             {roomsArray.length > 0 && (
-                <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
                     <h2 className="mb-8 text-3xl font-bold text-gray-900">{t("partnerDetail.availableRooms")}</h2>
 
                     {/* Provinces with Rooms */}
@@ -583,12 +535,12 @@ const PartnerDetail = () => {
             )}
 
             {/* Reviews Section */}
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
                 <Card className="rounded-3xl border-slate-200/80 shadow-sm bg-white">
                     <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
                         <div>
-                            <CardTitle className="text-2xl font-bold text-gray-900">Đánh giá về đối tác</CardTitle>
-                            <p className="text-xs text-slate-500 mt-1">Phản hồi thực tế của khách thuê về chủ nhà</p>
+                            <CardTitle className="text-2xl font-bold text-gray-900">{t("partnerDetail.reviewTitle")}</CardTitle>
+                            <p className="text-xs text-slate-500 mt-1">{t("partnerDetail.reviewSubtitle")}</p>
                         </div>
                         {reviewsData && reviewsData.total_count > 0 && (
                             <div className="text-right">
@@ -596,7 +548,7 @@ const PartnerDetail = () => {
                                     <Star className="size-5 text-amber-500 fill-amber-500 shrink-0" />
                                     {reviewsData.average_rating}
                                 </div>
-                                <span className="text-[11px] font-bold text-slate-400">/ {reviewsData.total_count} đánh giá</span>
+                                <span className="text-[11px] font-bold text-slate-400">/ {t("partnerDetail.reviewsCount", { count: reviewsData.total_count })}</span>
                             </div>
                         )}
                     </CardHeader>
@@ -607,7 +559,7 @@ const PartnerDetail = () => {
                             </div>
                         ) : !reviewsData || reviewsData.reviews.length === 0 ? (
                             <p className="py-4 text-center text-slate-400 text-sm">
-                                Chưa có đánh giá nào cho đối tác này.
+                                {t("partnerDetail.noReviewsForPartner")}
                             </p>
                         ) : (
                             <>
@@ -624,7 +576,7 @@ const PartnerDetail = () => {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-slate-800">{review.user?.name || "Khách hàng"}</h4>
+                                                        <h4 className="text-sm font-bold text-slate-800">{review.user?.name || t("partnerDetail.guestFallback")}</h4>
                                                         <span className="text-[10px] text-slate-400">{new Date(review.created_at).toLocaleDateString("vi-VN")}</span>
                                                     </div>
                                                 </div>
@@ -650,7 +602,7 @@ const PartnerDetail = () => {
                                 {reviewsData.reviews.length > 5 && (
                                     <div className="mt-6 flex justify-center border-t border-slate-100 pt-4">
                                         <ReviewsModal
-                                            title="Đánh giá về đối tác"
+                                            title={t("partnerDetail.reviewTitle")}
                                             reviews={reviewsData.reviews}
                                             averageRating={reviewsData.average_rating}
                                             totalCount={reviewsData.total_count}
@@ -659,7 +611,7 @@ const PartnerDetail = () => {
                                                     variant="outline"
                                                     className="rounded-full px-8 transition-all hover:bg-slate-50 font-semibold text-slate-700"
                                                 >
-                                                    Xem thêm {reviewsData.reviews.length - 5} đánh giá
+                                                    {t("partnerDetail.viewMoreReviews", { count: reviewsData.reviews.length - 5 })}
                                                 </Button>
                                             }
                                         />

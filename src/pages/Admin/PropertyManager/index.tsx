@@ -98,7 +98,7 @@ const Properties: React.FC = () => {
     clearSort();
   };
 
-  // Realtime search v?i debounce cho filters
+  // Realtime search với debounce cho filters
   useEffect(() => {
     const partnerId = Number(urlSearchParams.get("partner_id") || "") || undefined;
     setFilters((prev) => ({ ...prev, partner_id: partnerId }));

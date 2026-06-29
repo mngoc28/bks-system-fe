@@ -52,21 +52,21 @@ const PublicFooter = ({ className }: PublicFooterProps) => {
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-white">Đối tác liên kết</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-white">{t("public.footer.sections.partners.title")}</h4>
           <ul className="mt-4 space-y-3 text-sm text-slate-400">
             <li>
               <Link to={ROUTERS.BECOME_PARTNER} className="transition hover:text-blue-400 font-bold text-blue-500/90">
-                Đăng ký đối tác mới
+                {t("public.footer.sections.partners.becomePartner")}
               </Link>
             </li>
             <li>
               <Link to={ROUTERS.PARTNER_LOGIN} className="transition hover:text-primary">
-                Cổng thông tin đối tác
+                {t("public.footer.sections.partners.portal")}
               </Link>
             </li>
             <li>
               <Link to={ROUTERS.BECOME_PARTNER} className="transition hover:text-primary">
-                Chính sách đối tác
+                {t("public.footer.sections.partners.policy")}
               </Link>
             </li>
           </ul>

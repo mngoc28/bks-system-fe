@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Bot, Send, Sparkles, RefreshCcw, X, Loader2, LifeBuoy, Maximize2, Minimize2, MapPin, Star } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import aiChatbotApi, { AiChatTurn } from "@/api/aiChatbotApi";
@@ -34,6 +35,8 @@ interface GeminiChatbotProps {
 }
 
 const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: GeminiChatbotProps) => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language.startsWith("vi");
   const { userRole, userName } = useUserStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [apiHistory, setApiHistory] = useState<AiChatTurn[]>([]);
@@ -340,7 +343,7 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
     if (!roomCards?.length) return null;
 
     return (
-      <div className="mt-3 space-y-2">
+      <div className="space-y-2">
         {roomCards.map((room) => {
           const detailUrl = ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", String(room.id));
           const hasRating = room.rating !== null && room.rating !== undefined && Number(room.rating) > 0;
@@ -350,9 +353,9 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
             <Link
               key={room.id}
               to={detailUrl}
-              className="group flex gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-2 text-left transition hover:border-cyan-400/50 hover:bg-cyan-400/5"
+              className="group flex gap-2.5 rounded-xl border border-white/10 bg-slate-900/40 hover:border-cyan-400/50 hover:bg-slate-900/80 p-2 text-left transition-all duration-300 shadow-md backdrop-blur-sm"
             >
-              <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-800">
+              <div className="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg bg-slate-800">
                 <img
                   src={room.imageUrl}
                   alt={room.title}
@@ -364,30 +367,30 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
                 />
               </div>
               <div className="min-w-0 flex-1 py-0.5">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="line-clamp-2 text-[13px] font-bold leading-5 text-slate-100 group-hover:text-cyan-300">
+                <div className="flex items-start justify-between gap-1.5">
+                  <p className="line-clamp-2 text-[12.5px] font-bold leading-4.5 text-slate-100 group-hover:text-cyan-300">
                     {room.title}
                   </p>
                   {hasRating && (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
-                      <Star className="size-3 fill-amber-300" />
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-400/10 px-1 py-0.5 text-[9.5px] font-bold text-amber-300">
+                      <Star className="size-2.5 fill-amber-300" />
                       {room.rating}
                     </span>
                   )}
                 </div>
                 {(room.partnerName || room.propertyTypeName) && (
-                  <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-normal text-slate-500">
+                  <p className="mt-0.5 truncate text-[9.5px] font-semibold uppercase tracking-normal text-slate-500">
                     {room.partnerName || room.propertyTypeName}
                   </p>
                 )}
                 {room.address && (
-                  <p className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+                  <p className="mt-1 flex items-center gap-1 text-[10.5px] text-slate-400">
                     <MapPin className="size-3 shrink-0 text-cyan-400" />
                     <span className="line-clamp-1">{room.address}</span>
                   </p>
                 )}
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-[13px] font-extrabold text-cyan-300">
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-[12.5px] font-extrabold text-cyan-300">
                     {priceLabel && priceLabel !== "-" ? priceLabel : "Xem giá"}
                   </span>
                 </div>
@@ -571,9 +574,9 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
               </span>
             </div>
             <p className="text-[10px] text-slate-400 font-medium">
-              {normalizedRole === "admin" && "Hỗ trợ Quản trị viên"}
-              {normalizedRole === "partner" && "Hỗ trợ Đối tác liên kết"}
-              {normalizedRole === "user" && "Tìm phòng nghỉ & Du lịch"}
+              {normalizedRole === "admin" && (isVi ? "Hỗ trợ Quản trị viên" : "Admin support")}
+              {normalizedRole === "partner" && (isVi ? "Hỗ trợ Đối tác liên kết" : "Partner support")}
+              {normalizedRole === "user" && (isVi ? "Tìm phòng nghỉ & Du lịch" : "Room search & travel")}
             </p>
           </div>
         </div>
@@ -582,7 +585,7 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
             <button
               type="button"
               onClick={onToggleMaximize}
-              title={isMaximized ? "Thu nhỏ" : "Phóng to"}
+              title={isMaximized ? (isVi ? "Thu nhỏ" : "Minimize") : (isVi ? "Phóng to" : "Maximize")}
               className="rounded-lg bg-white/5 p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition active:scale-95"
             >
               {isMaximized ? (
@@ -595,7 +598,7 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
           <button
             type="button"
             onClick={handleReset}
-            title="Làm mới cuộc hội thoại"
+            title={t("publicChatbot.actions.reset")}
             className="rounded-lg bg-white/5 p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition active:scale-95"
           >
             <RefreshCcw className="size-4" />
@@ -604,7 +607,7 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
             <button
               type="button"
               onClick={onClose}
-              title="Đóng chatbot"
+              title={t("publicChatbot.actions.close")}
               className="rounded-lg bg-white/5 p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition active:scale-95"
             >
               <X className="size-4" />
@@ -626,9 +629,9 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
             }`}
           >
             <div
-              className={`flex max-w-[85%] items-start gap-2.5 ${
+              className={`flex items-start gap-2.5 ${
                 msg.sender === "user" ? "flex-row-reverse" : "flex-row"
-              }`}
+              } ${msg.sender === "bot" && msg.roomCards && msg.roomCards.length > 0 ? "max-w-[92%] w-full" : "max-w-[85%]"}`}
             >
               <div
                 className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold shadow-md ${
@@ -639,17 +642,21 @@ const GeminiChatbot = ({ onClose, isMaximized = false, onToggleMaximize }: Gemin
               >
                 {msg.sender === "user" ? "ME" : <Sparkles className="size-4 text-purple-300" />}
               </div>
-              <div className="flex flex-col gap-1">
+              <div className={`flex flex-col gap-1.5 ${msg.sender === "bot" && msg.roomCards && msg.roomCards.length > 0 ? "flex-1 min-w-0" : ""}`}>
                 <div
                   className={`whitespace-pre-wrap rounded-2xl p-3 text-sm shadow-md transition-all duration-200 ${
                     msg.sender === "user"
                       ? "rounded-tr-none bg-gradient-to-br from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-indigo-900/20"
                       : "rounded-tl-none bg-slate-900/80 text-slate-200 border border-white/5 shadow-black/20"
-                  }`}
+                  } ${msg.sender === "bot" && msg.roomCards && msg.roomCards.length > 0 ? "w-full" : ""}`}
                 >
                   {renderMessageText(msg.text)}
-                  {msg.sender === "bot" && renderRoomCards(msg.roomCards)}
                 </div>
+                {msg.sender === "bot" && msg.roomCards && msg.roomCards.length > 0 && (
+                  <div className="w-full mt-1.5 animate-in">
+                    {renderRoomCards(msg.roomCards)}
+                  </div>
+                )}
                 <span
                   className={`text-[9px] text-slate-500 px-1 ${
                     msg.sender === "user" ? "text-right" : "text-left"

@@ -37,6 +37,7 @@ import { PublicHeader, PublicFooter } from "@/components/layout/Public";
 import { useLatestNewsQuery } from "@/hooks/useNewsQuery";
 import { getRoomFallbackImage, getPartnerFallbackImage, getProvinceImage } from "@/utils/fallbackImages";
 import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
+import { resolveRoomRentDisplayFromCard } from "./utils/homeDisplayUtils";
 
 export const ReviewCardSkeleton = () => (
   <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-100/50 flex flex-col justify-between relative">
@@ -224,21 +225,13 @@ const PublicHome = () => {
   const featuredRooms: RoomCard[] = useMemo(() => {
     const rooms = (topRatedRoomsData as any)?.data ?? topRatedRoomsData ?? [];
       return (rooms as any[]).slice(0, 12).map((room: any) => {
-      const monthlyPrice = room.cheapest_monthly_price;
-      const dailyPrice = room.cheapest_nightly_price ?? room.cheapest_daily_price;
-      const hasMonthlyPrice = monthlyPrice !== null && monthlyPrice !== undefined && Number(monthlyPrice) > 0;
-      const hasDailyPrice = dailyPrice !== null && dailyPrice !== undefined && Number(dailyPrice) > 0;
-      const priceLabel = hasMonthlyPrice
-        ? `${Number(monthlyPrice).toLocaleString('vi-VN')}₫ / tháng`
-        : hasDailyPrice
-          ? `${Number(dailyPrice).toLocaleString('vi-VN')}₫ / đêm`
-          : "Liên hệ";
+      const rentDisplay = resolveRoomRentDisplayFromCard(t, room);
 
       return {
         id: room.id,
         name: room.title,
-        address: room.property_address || "Đang cập nhật",
-        price: priceLabel,
+        address: room.property_address || "",
+        price: rentDisplay.priceLabel,
         image: resolveCloudinaryUrl(room.room_image, CLOUDINARY_HEADER_IMAGE_URL) || getRoomFallbackImage(room.property_type_name, room.title),
         area: `${room.area} m²`,
         beds: room.people ?? 0,
@@ -250,12 +243,12 @@ const PublicHome = () => {
         room_type: room.room_type,
         property_type_name: room.property_type_name,
         partner_company_name: room.partner_company_name,
-        rent_type: hasMonthlyPrice ? "monthly" : (hasDailyPrice ? "daily" : undefined),
-        has_nightly_price: hasDailyPrice,
-        has_monthly_price: hasMonthlyPrice,
+        rent_type: rentDisplay.rent_type,
+        has_nightly_price: rentDisplay.has_nightly_price,
+        has_monthly_price: rentDisplay.has_monthly_price,
       };
     });
-  }, [topRatedRoomsData]);
+  }, [topRatedRoomsData, t]);
 
   const featuredProvinces = useMemo(() => {
     const provinces = provincesData?.data ?? [];
@@ -407,13 +400,13 @@ const PublicHome = () => {
     const partners = (randomPartnersData as any)?.data ?? randomPartnersData ?? [];
     return (partners as any[]).slice(0, 6).map((partner: any) => ({
       id: partner.id,
-      name: partner.company_name || [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || "Đối tác BKS",
-      address: [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || partner.address || "Đang cập nhật",
+      name: partner.company_name || [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || t("public.home.partners.trust"),
+      address: [partner.ward_name, partner.province_name].filter(Boolean).join(", ") || partner.address || "",
       image: resolveImageUrl(partner.image_1, { cloudinaryBaseUrl: CLOUDINARY_HEADER_IMAGE_URL }) || getPartnerFallbackImage(),
       reviews_count: partner.reviews_count ?? 0,
       reviews_avg_rating: partner.reviews_avg_rating ?? 0,
     }));
-  }, [randomPartnersData]);
+  }, [randomPartnersData, t]);
 
   const latestNews = useMemo(() => {
     const newsItems = latestNewsData?.data ?? [];
@@ -526,20 +519,17 @@ const PublicHome = () => {
 
         <ProvinceCarousel
           className={PUBLIC_PAGE_SECTION_CLASS}
-          heading="Khám phá thành phố đáng đi nhất"
-          description="Ưu tiên các thành phố lớn và điểm đến du lịch nổi bật để bạn chọn nhanh hơn ngay từ trang chủ."
           provinces={featuredProvinces}
-          ctaLabel="Xem tất cả điểm đến"
           ctaHref={ROUTERS.SEARCH_ROOMS}
           loading={isLoadingBootstrap}
         />
 
         <FeaturedRoomCarousel
           className={PUBLIC_PAGE_SECTION_CLASS}
-          heading="Phòng nổi bật dành cho chuyến đi tiếp theo"
-          description="Bộ sưu tập phòng được chọn lọc từ dữ liệu hiện có, ưu tiên trải nghiệm đặt phòng rõ ràng và dễ theo dõi."
+          heading={t("public.home.rooms.featuredHeading")}
+          description={t("public.home.rooms.featuredDescription")}
           rooms={featuredRooms}
-          ctaLabel="Xem thêm"
+          ctaLabel={t("public.home.rooms.cta")}
           ctaHref={ROUTERS.SEARCH_ROOMS}
           loading={isLoadingRooms}
         />
@@ -574,13 +564,13 @@ const PublicHome = () => {
           <section className={`${PUBLIC_PAGE_SECTION_CLASS} py-8`}>
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
-                Trải nghiệm khách hàng
+                {t("public.home.reviews.badge")}
               </span>
               <h2 className="text-2xl font-bold mt-2 text-slate-900 md:text-3xl">
-                Khách hàng nói gì về BKS Stay
+                {t("public.home.reviews.heading")}
               </h2>
               <p className="text-slate-500 text-sm mt-2">
-                Những chia sẻ, đóng góp ý kiến thực tế từ những vị khách đã và đang lưu trú cùng chúng tôi.
+                {t("public.home.reviews.description")}
               </p>
             </div>
 
@@ -615,25 +605,25 @@ const PublicHome = () => {
                         {review.room ? (
                           <span className="inline-flex items-center gap-1 bg-sky-50/70 text-[10px] font-bold text-sky-700 px-2 py-0.5 rounded-md border border-sky-100 max-w-full">
                             <Home className="size-3 text-sky-500 shrink-0" />
-                            <span className="truncate">Phòng: {review.room.title}</span>
+                            <span className="truncate">{t("public.home.reviews.roomLabel", { name: review.room.title })}</span>
                           </span>
                         ) : review.partner?.partner_info ? (
                           <span className="inline-flex items-center gap-1 bg-emerald-50/70 text-[10px] font-bold text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-100 max-w-full">
                             <Building2 className="size-3 text-emerald-500 shrink-0" />
-                            <span className="truncate">Đối tác: {review.partner.partner_info.company_name}</span>
+                            <span className="truncate">{t("public.home.reviews.partnerLabel", { name: review.partner.partner_info.company_name })}</span>
                           </span>
                         ) : null}
                       </div>
 
                       <p className="text-slate-600 text-sm leading-relaxed italic mb-6">
-                        "{review.comment || "Dịch vụ tuyệt vời, phòng ốc sạch sẽ và tiện nghi. Chủ nhà hỗ trợ rất nhiệt tình trong suốt kỳ nghỉ."}"
+                        "{review.comment || t("public.home.reviews.defaultComment")}"
                       </p>
                     </div>
 
                     <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
                       <div className={`size-8 rounded-full border overflow-hidden flex items-center justify-center shrink-0 ${review.user?.avatar
                         ? "bg-slate-100 border-slate-200"
-                        : getAvatarColors(review.user?.name || "Khách lưu trú")
+                        : getAvatarColors(review.user?.name || t("public.home.reviews.guestFallback"))
                         }`}>
                         {review.user?.avatar ? (
                           <img
@@ -649,7 +639,7 @@ const PublicHome = () => {
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-sm font-bold text-slate-800 truncate">
-                          {review.user?.name || "Khách lưu trú"}
+                          {review.user?.name || t("public.home.reviews.guestFallback")}
                         </h4>
                       </div>
                     </div>
@@ -668,7 +658,7 @@ const PublicHome = () => {
           description={t("public.home.news.description")}
           articles={latestNews}
           ctaHref={ROUTERS.PUBLIC_NEWS_LIST}
-          ctaLabel={t("public.home.news.ctaLabel", "Xem thêm")}
+          ctaLabel={t("public.home.news.ctaLabel")}
           footerLabel={t("public.home.news.footerCta")}
           loading={isLoadingNews}
           error={isErrorNews}

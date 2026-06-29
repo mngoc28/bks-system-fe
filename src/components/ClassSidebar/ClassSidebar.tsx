@@ -255,11 +255,11 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
     );
   };
 
-  const renderSidebarHeader = () => (
+  const renderSidebarHeader = (collapsedState = isCollapsed) => (
     <div
       className={cn(
         "flex shrink-0",
-        isCollapsed ? "flex-col items-center gap-4" : "min-h-10 items-center justify-between gap-2",
+        collapsedState ? "flex-col items-center gap-4" : "min-h-10 items-center justify-between gap-2",
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -270,37 +270,39 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
           className={cn(
             s.brandTitle,
             "leading-none",
-            isCollapsed ? "hidden" : "text-xl",
-            !isCollapsed && !showLabels ? "translate-x-2 opacity-0" : "translate-x-0 opacity-100",
+            collapsedState ? "hidden" : "text-xl",
+            !collapsedState && !showLabels ? "translate-x-2 opacity-0" : "translate-x-0 opacity-100",
           )}
         >
           {classInfo.name.toUpperCase()}
         </span>
       </div>
-      <button
-        type="button"
-        onClick={onToggleCollapse}
-        className={cn(s.toggleBtn, "shrink-0 self-center")}
-        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {isCollapsed ? <ChevronRight className="size-4 font-semibold" /> : <ChevronLeft className="size-4 font-semibold" />}
-      </button>
+      {!isMobile && (
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className={cn(s.toggleBtn, "shrink-0 self-center")}
+          aria-label={collapsedState ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsedState ? <ChevronRight className="size-4 font-semibold" /> : <ChevronLeft className="size-4 font-semibold" />}
+        </button>
+      )}
     </div>
   );
 
-  const renderFullSidebar = () => (
+  const renderFullSidebar = (collapsedState = isCollapsed) => (
     <div
       className={cn(
         s.root,
         "relative",
-        isCollapsed ? "w-[72px] px-3 py-6" : "w-[260px] p-6",
+        collapsedState ? "w-[72px] px-3 py-6" : "w-[260px] p-6",
         className,
       )}
     >
-      {renderSidebarHeader()}
+      {renderSidebarHeader(collapsedState)}
       <nav className="scrollbar-hide mt-4 flex-1 overflow-y-auto">
         <ul className="space-y-1">
-          {menuItems.map((item) => renderMenuItem(item, { collapsed: isCollapsed }))}
+          {menuItems.map((item) => renderMenuItem(item, { collapsed: collapsedState }))}
         </ul>
       </nav>
     </div>
@@ -325,7 +327,7 @@ const ClassSidebar: React.FC<ClassSidebarProps> = ({ className, classInfo, menuI
         {renderMobileSidebar()}
         <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <DialogContent className="h-full w-[260px] max-w-none border-none bg-transparent p-0 shadow-none">
-            {renderFullSidebar()}
+            {renderFullSidebar(false)}
           </DialogContent>
         </Dialog>
       </>

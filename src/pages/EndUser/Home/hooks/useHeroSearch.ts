@@ -34,8 +34,7 @@ export function useHeroSearch(options?: UseHeroSearchOptions) {
   const [searchTab, setSearchTab] = useState<HeroSearchTab>("daily");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [adults, setAdults] = useState<number>(1);
-  const [children, setChildren] = useState<number>(0);
+  const [guests, setGuests] = useState<number>(1);
 
   const shouldFetchProvinces = options?.provincesData === undefined;
   const { data: fetchedProvincesData, isLoading: isLoadingFetchedProvinces } = useGetAllProvincesTypes({
@@ -168,7 +167,7 @@ export function useHeroSearch(options?: UseHeroSearchOptions) {
       });
       if (startDate) params.set("startDate", startDate);
       if (endDate) params.set("endDate", endDate);
-      params.set("guests", (adults + children).toString());
+      params.set("guests", guests.toString());
       navigate(`${ROUTERS.SEARCH_ROOMS}?${params.toString()}`);
       onSearchSuccess?.();
     } else {
@@ -187,10 +186,8 @@ export function useHeroSearch(options?: UseHeroSearchOptions) {
     setStartDate,
     endDate,
     setEndDate,
-    adults,
-    setAdults,
-    children,
-    setChildren,
+    guests,
+    setGuests,
     provinceOptions,
     wardOptions,
     propertyTypeOptions,

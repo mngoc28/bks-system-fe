@@ -1,7 +1,7 @@
 import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow, Star, Heart, Share2, Sparkles, Home, ShieldCheck, Search, Minus, Plus } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Filter, MapPin, SearchX, Users, ArrowDownWideNarrow, Star, Heart, Share2, Sparkles, Search, Minus, Plus } from "lucide-react";
+import { useTranslation, Trans } from "react-i18next";
 import { format } from "date-fns";
 
 import axiosClient from "@/api/axiosClient";
@@ -26,9 +26,10 @@ import { usePropertyTypesQuery } from "@/hooks/usePropertyQuery";
 import { normalizeStayPropertyTypeLabel, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
 import { formatPrice, formatCurrencyInput, parseCurrencyValue, validateCurrencyInput, simplifyAddress, formatProvinceName } from "@/utils/utils";
 import { countBookingNights } from "@/utils/dateUtils";
-import { getRoomFallbackImage, getProvinceImage } from "@/utils/fallbackImages";
-import { toastSuccess, toastError } from "@/components/ui/toast";
-import { resolveImageUrl, resolveCloudinaryUrl } from "@/utils/imageUtils";
+import { getRoomFallbackImage } from "@/utils/fallbackImages";
+import { toastError } from "@/components/ui/toast";
+import { usePublicRoomActions } from "@/hooks/usePublicRoomActions";
+import { resolveImageUrl } from "@/utils/imageUtils";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ const parsePositiveInt = (value: string | null, fallback: number) => {
   return Math.floor(parsed);
 };
 const DiscountBanner = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [couponValue, setCouponValue] = useState<number | string>(10);
   const [couponType, setCouponType] = useState<string>("percent");
@@ -65,13 +67,13 @@ const DiscountBanner = () => {
     setMessageKind("validation");
 
     if (!email) {
-      setError("Vui lòng nhập email.");
+      setError(t("public.roomSearch.couponEmailRequired"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Email không hợp lệ.");
+      setError(t("public.roomSearch.couponEmailInvalid"));
       return;
     }
 
@@ -87,9 +89,9 @@ const DiscountBanner = () => {
       setIsSubmitted(true);
     } catch (err: any) {
       const backendMessage = err?.response?.data?.message;
-      const fallbackMessage = "Đã xảy ra lỗi khi đăng ký coupon. Vui lòng thử lại sau.";
+      const fallbackMessage = t("public.roomSearch.couponError");
       const message = backendMessage || fallbackMessage;
-      const isDuplicate = typeof backendMessage === "string" && backendMessage.includes("đã được sử dụng");
+      const isDuplicate = typeof backendMessage === "string" && backendMessage.includes(t("public.roomSearch.couponDuplicate"));
 
       setMessageKind(isDuplicate ? "duplicate" : "server");
       setError(message);
@@ -107,25 +109,35 @@ const DiscountBanner = () => {
       <div className="relative z-10 flex flex-col items-center justify-between gap-6 md:flex-row">
         <div className="text-center md:text-left flex-1">
           <Badge className="mb-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1 rounded-full uppercase tracking-wider text-[10px]">
-            Ưu đãi đặc biệt
+            {t("public.roomSearch.couponBadge")}
           </Badge>
           <h3 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-white">
-            Đăng ký nhận Coupon giảm giá <span className="text-amber-400">10%</span>
+            <Trans
+              i18nKey="public.roomSearch.couponHeading"
+              components={{ highlight: <span className="text-amber-400" /> }}
+            />
           </h3>
           <p className="mt-2 text-sm text-slate-300 max-w-xl leading-relaxed">
-            Đăng ký bản tin để nhận các ưu đãi phòng tốt nhất cùng mã giảm giá độc quyền dành riêng cho thành viên BKS Stay.
+            {t("public.roomSearch.couponDescription")}
           </p>
         </div>
 
         <div className="w-full max-w-md md:w-auto md:min-w-[320px] lg:min-w-[400px]">
           {isSubmitted ? (
             <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-6 text-center backdrop-blur-sm animate-fade-in shadow-inner">
-              <p className="text-sm font-bold text-emerald-400">🎉 Đăng ký thành công!</p>
+              <p className="text-sm font-bold text-emerald-400">🎉 {t("public.roomSearch.couponSuccessTitle")}</p>
               <p className="mt-2 text-xs text-slate-200 leading-relaxed">
-                Chúng tôi đã gửi mã giảm giá chào mừng <strong>giảm {couponValue}{couponType === "percent" ? "%" : "đ"}</strong> đến địa chỉ email của bạn.
+                <Trans
+                  i18nKey="public.roomSearch.couponSuccessSent"
+                  values={{
+                    value: couponValue,
+                    unit: couponType === "percent" ? "%" : "đ",
+                  }}
+                  components={{ strong: <strong /> }}
+                />
               </p>
               <p className="mt-2 text-[11px] text-slate-400 italic">
-                Vui lòng kiểm tra hộp thư (bao gồm cả mục Thư rác/Spam) để lấy mã và áp dụng khi tiến hành đặt phòng.
+                {t("public.roomSearch.couponSuccessCheckSpam")}
               </p>
             </div>
           ) : (
@@ -142,7 +154,7 @@ const DiscountBanner = () => {
                       setMessageKind("validation");
                     }
                   }}
-                  placeholder="Nhập email của bạn..."
+                  placeholder={t("public.roomSearch.couponEmailPlaceholder")}
                   className="h-11 flex-1 rounded-xl border border-slate-700 bg-slate-900/60 px-4 text-sm text-white placeholder-slate-400 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 backdrop-blur-sm"
                 />
                 <Button
@@ -151,7 +163,7 @@ const DiscountBanner = () => {
                   variant="gradient"
                   className="h-11 rounded-xl px-5 text-sm font-semibold"
                 >
-                  {isLoading ? "Đang gửi..." : "Nhận Coupon"}
+                  {isLoading ? t("public.roomSearch.couponSending") : t("public.roomSearch.couponSubmit")}
                 </Button>
               </div>
               {error && (
@@ -221,11 +233,10 @@ const RoomSearch = () => {
   const [localWardId, setLocalWardId] = useState<number | null>(() => parsePositiveInt(searchParams.get("wardId"), 0) || null);
   const [localStartDate, setLocalStartDate] = useState<string>(() => searchParams.get("startDate") || "");
   const [localEndDate, setLocalEndDate] = useState<string>(() => searchParams.get("endDate") || "");
-  const [localAdults, setLocalAdults] = useState<number>(() => {
+  const [localGuests, setLocalGuests] = useState<number>(() => {
     const guests = parsePositiveInt(searchParams.get("guests"), 1);
     return Math.max(1, guests);
   });
-  const [localChildren, setLocalChildren] = useState<number>(0);
   const [localPriceMinStr, setLocalPriceMinStr] = useState("");
   const [localPriceMaxStr, setLocalPriceMaxStr] = useState("");
   const [showAllAmenities, setShowAllAmenities] = useState(false);
@@ -233,56 +244,7 @@ const RoomSearch = () => {
   const [isAmenitiesServicesFilterOpen, setIsAmenitiesServicesFilterOpen] = useState(false);
   const roomResultsRef = useRef<HTMLDivElement>(null);
 
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem("bks_wishlist");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("bks_wishlist", JSON.stringify(wishlist));
-  }, [wishlist]);
-
-  const handleToggleWishlist = (e: React.MouseEvent, roomId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setWishlist((prev) => {
-      const isAlreadyWishlisted = prev.includes(roomId);
-      if (isAlreadyWishlisted) {
-        toastSuccess("Đã xóa khỏi danh sách yêu thích");
-        return prev.filter((id) => id !== roomId);
-      } else {
-        toastSuccess("Đã thêm vào danh sách yêu thích");
-        return [...prev, roomId];
-      }
-    });
-  };
-
-  const handleShareRoom = (e: React.MouseEvent, roomId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const url = window.location.origin + ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString());
-    navigator.clipboard.writeText(url)
-      .then(() => {
-        toastSuccess("Đã sao chép liên kết phòng!");
-      })
-      .catch(() => {
-        const textArea = document.createElement("textarea");
-        textArea.value = url;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand("copy");
-          toastSuccess("Đã sao chép liên kết phòng!");
-        } catch {
-          toastError("Không thể sao chép liên kết!");
-        }
-        document.body.removeChild(textArea);
-      });
-  };
+  const { wishlist, handleToggleWishlist, handleShareRoom } = usePublicRoomActions();
 
   const handleCardClick = (e: React.MouseEvent, roomId: number, cardRentType?: string) => {
     const target = e.target as HTMLElement;
@@ -355,8 +317,7 @@ const RoomSearch = () => {
     setLocalStartDate(searchParams.get("startDate") || "");
     setLocalEndDate(searchParams.get("endDate") || "");
     const guestsParam = parsePositiveInt(searchParams.get("guests"), 1);
-    setLocalAdults(Math.max(1, guestsParam));
-    setLocalChildren(0);
+    setLocalGuests(Math.max(1, guestsParam));
     setKeyword(searchParams.get("keyword") || "");
   }, [searchParams]);
 
@@ -750,8 +711,7 @@ const RoomSearch = () => {
     setLocalWardId(null);
     setLocalStartDate("");
     setLocalEndDate("");
-    setLocalAdults(1);
-    setLocalChildren(0);
+    setLocalGuests(1);
     updateSearchParams({
       page: String(DEFAULT_PAGE),
       keyword: null,
@@ -802,13 +762,13 @@ const RoomSearch = () => {
         wardId: localWardId ? String(localWardId) : null,
         startDate: localStartDate || null,
         endDate: localEndDate || null,
-        guests: (localAdults + localChildren) > 0 ? String(localAdults + localChildren) : null,
+        guests: localGuests > 0 ? String(localGuests) : null,
       }, { scroll: false });
       return;
     }
 
     if (!localProvinceId && !keyword.trim()) {
-      toastError("Vui lòng chọn điểm đến hoặc Tỉnh/Thành trước khi tìm kiếm");
+      toastError(t("public.home.search.provinceRequired"));
       return;
     }
 
@@ -818,7 +778,7 @@ const RoomSearch = () => {
       wardId: localWardId ? String(localWardId) : null,
       startDate: localStartDate || null,
       endDate: localEndDate || null,
-      guests: (localAdults + localChildren) > 0 ? String(localAdults + localChildren) : null,
+      guests: localGuests > 0 ? String(localGuests) : null,
       keyword: keyword.trim() || null,
       tourist_spot_slug: null,
     }, { scroll: false });
@@ -847,31 +807,31 @@ const RoomSearch = () => {
     if (isPrimaryMonthly) {
       if (hasMonthlyPrice) {
         displayPrice = Number(room.cheapest_monthly_price);
-        displayUnit = "/tháng";
-        badgeText = "Thuê dài hạn";
+        displayUnit = t("public.home.rooms.perMonth");
+        badgeText = t("public.home.search.tabMonthly");
         badgeColorClass = "bg-sky-500/95 text-white border-sky-400 hover:bg-sky-500";
         if (hasNightlyPrice) {
-          hintText = "Hỗ trợ thuê theo đêm";
+          hintText = t("public.home.rooms.nightlyRentHint");
         }
       } else {
         displayPrice = Number(room.cheapest_daily_price);
-        displayUnit = "/đêm";
-        badgeText = "Thuê theo đêm";
+        displayUnit = t("public.home.rooms.perNight");
+        badgeText = t("public.home.search.tabDaily");
         badgeColorClass = "bg-amber-500/95 text-white border-amber-400 hover:bg-amber-500";
       }
     } else {
       if (hasNightlyPrice) {
         displayPrice = Number(room.cheapest_nightly_price);
-        displayUnit = "/đêm";
-        badgeText = "Thuê theo đêm";
+        displayUnit = t("public.home.rooms.perNight");
+        badgeText = t("public.home.search.tabDaily");
         badgeColorClass = "bg-amber-500/95 text-white border-amber-400 hover:bg-amber-500";
         if (hasMonthlyPrice) {
-          hintText = "Hỗ trợ thuê dài hạn";
+          hintText = t("public.home.rooms.monthlyRentHint");
         }
       } else {
         displayPrice = Number(room.cheapest_monthly_price);
-        displayUnit = "/tháng";
-        badgeText = "Thuê dài hạn";
+        displayUnit = t("public.home.rooms.perMonth");
+        badgeText = t("public.home.search.tabMonthly");
         badgeColorClass = "bg-sky-500/95 text-white border-sky-400 hover:bg-sky-500";
       }
     }
@@ -922,7 +882,7 @@ const RoomSearch = () => {
               <button
                 onClick={(e) => handleToggleWishlist(e, room.id)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-rose-500 hover:scale-105 active:scale-95 shadow-lg"
-                title="Thêm vào yêu thích"
+                title={t("public.home.rooms.addToWishlist")}
               >
                 <Heart
                   className={`h-4.5 w-4.5 transition-all duration-300 ${wishlist.includes(room.id)
@@ -934,7 +894,7 @@ const RoomSearch = () => {
               <button
                 onClick={(e) => handleShareRoom(e, room.id)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-sky-500 hover:scale-105 active:scale-95 shadow-lg"
-                title="Chia sẻ phòng"
+                title={t("public.home.rooms.shareRoom")}
               >
                 <Share2 className="h-4.5 w-4.5 transition-all duration-300" />
               </button>
@@ -953,7 +913,7 @@ const RoomSearch = () => {
                   }}
                   className="interactive-click truncate transition-colors hover:text-sky-700 hover:underline cursor-pointer"
                 >
-                  {room.partner_company_name || "Đối tác BKS"}
+                  {room.partner_company_name || t("public.home.partners.trust")}
                 </span>
                 {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
                   <div className="flex items-center gap-1 text-[0.75rem] font-bold text-amber-500">
@@ -964,7 +924,7 @@ const RoomSearch = () => {
                 ) : (
                   <div className="flex items-center gap-1 text-[0.75rem] text-slate-400">
                     <Star className="size-3 text-slate-300" />
-                    <span className="font-normal text-slate-400">Chưa đánh giá</span>
+                    <span className="font-normal text-slate-400">{t("public.roomSearch.noReviews")}</span>
                   </div>
                 )}
               </div>
@@ -988,18 +948,16 @@ const RoomSearch = () => {
                     <span className="text-slate-300">•</span>
                   </>
                 )}
-                <span>{room.people} người</span>
+                <span>{t("public.roomByProvince.guests", { count: room.people })}</span>
                 <span className="text-slate-300">•</span>
-                <span>{room.bedrooms_count || 1} PN</span>
-                <span className="text-slate-300">•</span>
-                <span>{room.beds_count || 1} giường</span>
+                <span>{t("public.home.rooms.beds_with_bedrooms", { bedrooms: room.bedrooms_count || 1, beds: room.beds_count || 1 })}</span>
               </div>
             </div>
 
             <div className="mt-auto flex shrink-0 items-center justify-between border-t border-slate-100 pt-3">
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mr-0.5">Giá từ</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mr-0.5">{t("public.roomSearch.priceFrom")}</span>
                   <span className="text-lg font-extrabold text-sky-600 transition-colors group-hover:text-sky-700">
                     {formatPrice(displayPrice)}
                   </span>
@@ -1024,154 +982,73 @@ const RoomSearch = () => {
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 text-slate-900">
       <PublicHeader />
 
-      <div className="relative isolate overflow-hidden bg-slate-950 py-10 text-white sm:py-12 lg:py-16">
-        {/* Background Image with elegant overlay */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src={selectedProvince?.image ? resolveCloudinaryUrl(selectedProvince.image, CLOUDINARY_HEADER_IMAGE_URL) || getProvinceImage(selectedProvince?.name) : getProvinceImage(selectedProvince?.name)}
-            alt={selectedProvince?.name || "Background"}
-            className="absolute inset-0 size-full object-cover opacity-60 transition-all duration-700 scale-105"
-          />
-          {/* Lighter gradients for elite readability on the left and balanced visibility/tint on the right */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-slate-950/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
-        </div>
-
-        {/* Glow ambient background effects */}
-        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-sky-500/10 blur-[100px] pointer-events-none" />
-        <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-indigo-500/15 blur-[120px] pointer-events-none" />
-        <div className="absolute left-1/3 top-1/4 h-64 w-64 rounded-full bg-blue-600/5 blur-[90px] pointer-events-none" />
-
-        {/* Subtle geometric pattern/grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] [background-size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
-        
-        {/* Decorative elements: floating circles */}
-        <div className="absolute top-12 right-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
-        <div className="absolute bottom-16 left-1/4 h-3 w-3 rounded-full bg-indigo-400/30 animate-pulse pointer-events-none" />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left Column: Title and details */}
-            <div className="lg:col-span-7 flex flex-col items-start text-left">
-              <Badge className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300 border border-sky-500/20 backdrop-blur-md transition-all duration-300 hover:bg-sky-500/20">
-                <Sparkles className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
-                Kết quả tìm kiếm
-              </Badge>
-              
-              <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl leading-[1.15] text-white">
-                Tìm phòng lưu trú <br />
-                <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                  phù hợp nhất
-                </span>
-              </h1>
-              
-              <p className="mt-6 text-base text-slate-300 max-w-2xl leading-relaxed">
-                Khám phá hàng ngàn không gian sống tiện nghi, căn hộ hiện đại và homestay ấm cúng phù hợp cho cả mục đích công tác, du lịch hay cư trú dài hạn.
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 rounded-2xl bg-slate-900/60 border border-slate-800/80 px-4 py-2.5 text-sm backdrop-blur-md shadow-inner text-slate-200">
-                  <MapPin className="h-4.5 w-4.5 text-sky-400 shrink-0" />
-                  <span>
-                    {touristSpotLabel ? (
-                      <>
-                        Gần điểm du lịch: <span className="font-semibold text-white">{touristSpotLabel}</span>
-                      </>
-                    ) : selectedProvince?.name ? (
-                      <>
-                        Khu vực: <span className="font-semibold text-white">{formatProvinceName(selectedProvince.name)}</span>
-                        {selectedWard?.name && (
-                          <>
-                            <span className="mx-2 text-slate-600">•</span>
-                            <span className="text-sky-300">{selectedWard.name}</span>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <span className="font-semibold text-white">Tất cả tỉnh/thành</span>
-                    )}
-                  </span>
-                </div>
-
-                {deferredKeyword && (
-                  <div className="flex items-center gap-2 rounded-2xl bg-sky-950/40 border border-sky-800/40 px-4 py-2.5 text-sm backdrop-blur-md text-sky-200">
-                    <span className="text-slate-400">Từ khóa:</span>
-                    <span className="font-semibold text-sky-300">"{deferredKeyword}"</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column: Visual Dashboard / Metrics (Hidden on Mobile/Tablet to keep search flow compact) */}
-            <div className="lg:col-span-5 relative mt-6 lg:mt-0 hidden lg:block">
-              <div className="relative mx-auto max-w-md lg:max-w-none">
-                {/* Background glow behind cards */}
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-indigo-500/10 rounded-3xl blur-2xl pointer-events-none" />
-                
-                {/* Metrics Grid */}
-                <div className="relative grid grid-cols-2 gap-4">
-                  {/* Card 1: Total items found */}
-                  <div className="col-span-2 rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 border border-slate-800/80 p-6 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300">
-                          <Home className="h-5.5 w-5.5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Chỗ ở tại Việt Nam</p>
-                          <h3 className="text-2xl font-bold mt-0.5 text-white">
-                            1.000+
-                          </h3>
-                        </div>
-                      </div>
-                      <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold px-2 py-0.5">
-                        Tin cậy
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Support */}
-                  <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 border border-slate-800/80 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] group">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-slate-950 transition-all duration-300">
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                    <h4 className="mt-4 text-sm font-bold text-white">Xác thực 100%</h4>
-                    <p className="mt-1 text-xs text-slate-400 leading-normal">Mọi phòng đều được kiểm định chất lượng thực tế</p>
-                  </div>
-
-                  {/* Card 3: Free changes / Best Price */}
-                  <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 to-slate-950/80 border border-slate-800/80 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-slate-700/80 hover:translate-y-[-2px] group">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all duration-300">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                    <h4 className="mt-4 text-sm font-bold text-white">Giá tốt nhất</h4>
-                    <p className="mt-1 text-xs text-slate-400 leading-normal">BKS cam kết mức giá ưu đãi và minh bạch nhất</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
+            {/* Breadcrumb */}
       <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
+        <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
-              { label: "Tìm phòng" },
+              { label: t("public.roomByProvince.breadcrumb.search") },
             ]}
+            className="text-sm"
           />
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl p-4 sm:px-6 lg:max-w-[1360px] lg:px-8">
+      {/* Title & Description Section on clean white layout */}
+      <div className="mx-auto w-full max-w-[1440px] px-4 pt-8 sm:px-6 lg:px-8 space-y-2">
+        <Badge className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 border border-sky-200 transition-all duration-300">
+          <Sparkles className="h-3.5 w-3.5 text-sky-600 animate-pulse" />
+          Kết quả tìm kiếm
+        </Badge>
+        
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          {t("public.roomSearch.heroTitle")} <span className="text-sky-600">{t("public.roomSearch.heroHighlight")}</span>
+        </h1>
+        
+        <p className="text-sm text-slate-500 max-w-4xl leading-relaxed">
+          Khám phá hàng ngàn không gian sống tiện nghi, căn hộ hiện đại và homestay ấm cúng phù hợp cho cả mục đích công tác, du lịch hay cư trú dài hạn.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-4 text-xs pt-1 text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+            <span>
+              {touristSpotLabel ? (
+                <>
+                  Gần điểm du lịch: <span className="font-semibold text-slate-700">{touristSpotLabel}</span>
+                </>
+              ) : selectedProvince?.name ? (
+                <>
+                  Khu vực: <span className="font-semibold text-slate-700">{formatProvinceName(selectedProvince.name)}</span>
+                  {selectedWard?.name && (
+                    <>
+                      <span className="mx-2 text-slate-400">•</span>
+                      <span className="text-sky-600">{selectedWard.name}</span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <span className="font-semibold text-slate-700">{t("public.roomSearch.allProvinces")}</span>
+              )}
+            </span>
+          </div>
+
+          {deferredKeyword && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">{t("public.roomSearch.keywordLabel")}</span>
+              <span className="font-semibold text-sky-600">"{deferredKeyword}"</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-[1440px] p-4 sm:px-6 lg:px-8">
         <section className="mb-8">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800">
               <Filter className="h-5 w-5 text-sky-600" />
-              Lọc theo loại hình
+              {t("common.filter")}
             </h2>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -1183,7 +1060,7 @@ const RoomSearch = () => {
                 }`}
               onClick={() => handlePropertyTypeChange(null)}
             >
-              Tất cả
+              {t("common.all")}
             </Button>
             {propertyTypesData?.data?.map((type) => (
               <Button
@@ -1207,9 +1084,9 @@ const RoomSearch = () => {
               value={localProvinceId ? localProvinceId.toString() : ""}
               onValueChange={handleLocalProvinceChange}
               options={provinceOptions}
-              placeholder="Chọn Tỉnh/Thành"
-              searchPlaceholder="Tìm kiếm Tỉnh/Thành..."
-              emptyMessage="Không tìm thấy Tỉnh/Thành"
+              placeholder={t("public.home.search.provincePlaceholder")}
+              searchPlaceholder={t("public.home.search.provinceSearch")}
+              emptyMessage={t("public.home.search.provinceEmpty")}
               icon={<MapPin className="size-4 text-slate-400 shrink-0" />}
               showSearch
               triggerClassName="h-11 w-full rounded-xl border-slate-200 bg-white px-3 text-left text-sm font-semibold text-slate-700 hover:border-sky-400 focus-visible:ring-1 focus-visible:ring-sky-400"
@@ -1223,9 +1100,9 @@ const RoomSearch = () => {
               value={localWardId ? localWardId.toString() : ""}
               onValueChange={(val) => setLocalWardId(val ? Number(val) : null)}
               options={wardOptions}
-              placeholder="Chọn Phường/Xã"
-              searchPlaceholder="Tìm kiếm Phường/Xã..."
-              emptyMessage="Không tìm thấy Phường/Xã"
+              placeholder={t("public.home.search.districtPlaceholder")}
+              searchPlaceholder={t("public.home.search.districtSearch")}
+              emptyMessage={t("public.home.search.districtEmpty")}
               disabled={!localProvinceId || isLoadingWards}
               loading={isLoadingWards}
               icon={<MapPin className="size-4 text-slate-400 shrink-0" />}
@@ -1238,9 +1115,9 @@ const RoomSearch = () => {
           {/* Cột 3: Nhận phòng */}
           <div className="w-full">
             <DatePickerField
-              label="Nhận phòng"
+              label={t("public.home.search.checkIn")}
               labelClassName="hidden"
-              placeholder="Nhận phòng"
+              placeholder={t("public.home.search.checkIn")}
               value={localStartDate}
               onChange={(val) => {
                 setLocalStartDate(val);
@@ -1257,9 +1134,9 @@ const RoomSearch = () => {
           {/* Cột 4: Trả phòng */}
           <div className="w-full">
             <DatePickerField
-              label="Trả phòng"
+              label={t("public.home.search.checkOut")}
               labelClassName="hidden"
-              placeholder="Trả phòng"
+              placeholder={t("public.home.search.checkOut")}
               value={localEndDate}
               onChange={setLocalEndDate}
               minDate={(() => {
@@ -1287,68 +1164,33 @@ const RoomSearch = () => {
                 >
                   <Users className="mr-2 size-4 shrink-0 text-slate-400" />
                   <span className="truncate">
-                    {localChildren > 0
-                      ? `${localAdults} NL, ${localChildren} TE`
-                      : `${localAdults} Khách`}
+                    {`${localGuests} ${t("public.home.search.guests")}`}
                   </span>
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900 font-sans" align="start">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-sm">Người lớn</span>
-                      <span className="text-xs text-slate-400">Từ 13 tuổi trở lên</span>
-                    </div>
+                    <span className="font-semibold text-sm">{t("public.home.search.selectGuests")}</span>
                     <div className="flex items-center gap-3">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="size-8 rounded-full border-slate-300"
-                        disabled={localAdults <= 1}
-                        onClick={() => setLocalAdults(localAdults - 1)}
+                        disabled={localGuests <= 1}
+                        onClick={() => setLocalGuests(localGuests - 1)}
                       >
                         <Minus className="size-4" />
                       </Button>
-                      <span className="w-6 text-center font-bold">{localAdults}</span>
+                      <span className="w-6 text-center font-bold">{localGuests}</span>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="size-8 rounded-full border-slate-300"
-                        disabled={localAdults >= 10}
-                        onClick={() => setLocalAdults(localAdults + 1)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-sm">Trẻ em</span>
-                      <span className="text-xs text-slate-400">Độ tuổi 0 - 12</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="size-8 rounded-full border-slate-300"
-                        disabled={localChildren <= 0}
-                        onClick={() => setLocalChildren(localChildren - 1)}
-                      >
-                        <Minus className="size-4" />
-                      </Button>
-                      <span className="w-6 text-center font-bold">{localChildren}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="size-8 rounded-full border-slate-300"
-                        disabled={localChildren >= 10}
-                        onClick={() => setLocalChildren(localChildren + 1)}
+                        disabled={localGuests >= 10}
+                        onClick={() => setLocalGuests(localGuests + 1)}
                       >
                         <Plus className="size-4" />
                       </Button>
@@ -1380,7 +1222,7 @@ const RoomSearch = () => {
               className="h-11 w-full text-sm font-semibold flex items-center justify-center shadow-md hover:scale-[1.02] transition-all"
             >
               <Search className="mr-1.5 size-4" />
-              Tìm kiếm
+              {t("common.search")}
             </Button>
           </div>
         </form>
@@ -1402,14 +1244,14 @@ const RoomSearch = () => {
         ) : totalRooms === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300/70 bg-white/80 px-6 py-16 text-center">
             <SearchX className="mb-4 h-12 w-12 text-slate-300" />
-            <h3 className="text-lg font-medium text-slate-900">Không tìm thấy phòng nào</h3>
-            <p className="mt-1 text-slate-500">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn</p>
+            <h3 className="text-lg font-medium text-slate-900">{t("public.roomSearch.emptyTitle")}</h3>
+            <p className="mt-1 text-slate-500">{t("public.roomSearch.emptyDescription")}</p>
             <Button
               variant="outline"
               className="mt-6 rounded-full"
               onClick={handleResetFilters}
             >
-              Xóa bộ lọc
+              {t("common.reset")}
             </Button>
           </div>
         ) : (
@@ -1426,11 +1268,11 @@ const RoomSearch = () => {
                     </>
                   ) : selectedProvince?.name ? (
                     <>
-                       <span className="font-semibold text-slate-800">{totalRooms.toLocaleString("vi-VN")}</span> kết quả tại {formatProvinceName(selectedProvince.name)}
+                       {t("public.roomSearch.resultsAt", { count: totalRooms, province: formatProvinceName(selectedProvince.name) })}
                       {selectedWard?.name ? ` - ${selectedWard.name}` : ""}
                     </>
                   ) : (
-                    <>Danh sách phòng lưu trú trên toàn quốc</>
+                    <>{t("public.roomSearch.listNationwide")}</>
                   )}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
@@ -1440,7 +1282,7 @@ const RoomSearch = () => {
                       className="interactive-click w-fit rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800"
                       onClick={() => updateSearchParams({ tourist_spot_slug: null, page: String(DEFAULT_PAGE) }, { scroll: false })}
                     >
-                      Bỏ lọc {touristSpotLabel}
+                      {t("common.clear")} {touristSpotLabel}
                     </button>
                   )}
                   {ratingMin && (
@@ -1450,7 +1292,7 @@ const RoomSearch = () => {
                       onClick={() => handleRatingMinChange(null)}
                     >
                       <Star className="size-3 fill-amber-500 text-amber-500" />
-                      Bỏ lọc: từ {ratingMin}⭐
+                      {t("common.clear")}: {ratingMin}⭐
                     </button>
                   )}
                   {(priceMin || priceMax) && (
@@ -1498,13 +1340,13 @@ const RoomSearch = () => {
                       className="interactive-click text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline ml-2 py-1 px-3 rounded-full bg-rose-50 border border-rose-100 flex items-center gap-1 transition-all"
                       onClick={handleClearSecondaryFilters}
                     >
-                      Xóa tất cả bộ lọc
+                      {t("common.clear")}
                     </button>
                   )}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3 overflow-x-auto pb-1 scrollbar-hide md:overflow-visible">
-                {/* Bộ lọc Giá */}
+                {/* Price filter */}
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -1514,7 +1356,7 @@ const RoomSearch = () => {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        <span>Giá</span>
+                        <span>{t("common.price")}</span>
                         {priceMin || priceMax ? (
                           <span className="bg-sky-500 text-white size-5 flex items-center justify-center rounded-full text-[10px]">
                             !
@@ -1525,10 +1367,10 @@ const RoomSearch = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900 font-sans" align="end">
                     <div className="space-y-4">
-                      <h4 className="font-bold text-sm text-slate-800">Khoảng giá</h4>
+                      <h4 className="font-bold text-sm text-slate-800">{t("public.roomSearch.priceRange")}</h4>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label htmlFor="price-min-input" className="text-xs font-medium text-slate-400">Tối thiểu</label>
+                          <label htmlFor="price-min-input" className="text-xs font-medium text-slate-400">{t("public.roomSearch.minPrice")}</label>
                           <input
                             type="text"
                             placeholder="0đ"
@@ -1544,7 +1386,7 @@ const RoomSearch = () => {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label htmlFor="price-max-input" className="text-xs font-medium text-slate-400">Tối đa</label>
+                          <label htmlFor="price-max-input" className="text-xs font-medium text-slate-400">{t("public.roomSearch.maxPrice")}</label>
                           <input
                             type="text"
                             placeholder="Không giới hạn"
@@ -1571,7 +1413,7 @@ const RoomSearch = () => {
                             handlePriceRangeChange(null, null);
                           }}
                         >
-                          Xóa
+                          {t("common.clear")}
                         </Button>
                         <Button
                           variant="gradient"
@@ -1587,7 +1429,7 @@ const RoomSearch = () => {
                             handlePriceRangeChange(minVal, maxVal);
                           }}
                         >
-                          Áp dụng
+                          {t("common.apply")}
                         </Button>
                       </div>
                     </div>
@@ -1607,7 +1449,7 @@ const RoomSearch = () => {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        <span>Tiện ích</span>
+                        <span>{t("public.roomDetail.featuredAmenities")}</span>
                         {(amenityIds.length + serviceIds.length) > 0 ? (
                           <span className="bg-sky-500 text-white size-5 flex items-center justify-center rounded-full text-[10px]">
                             {amenityIds.length + serviceIds.length}
@@ -1619,7 +1461,7 @@ const RoomSearch = () => {
                   <PopoverContent className="w-[min(340px,calc(100vw-2rem))] max-h-[420px] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl text-slate-900 font-sans custom-scrollbar" align="end">
                     {isLoadingFilterMetadata ? (
                       <div className="flex min-h-[160px] items-center justify-center py-6">
-                        <Spinner size="md" showText text="Đang tải tiện ích..." className="text-slate-500" />
+                        <Spinner size="md" showText text={t("public.roomSearch.amenitiesLoading")} className="text-slate-500" />
                       </div>
                     ) : (
                     <div className="space-y-5">
@@ -1627,7 +1469,7 @@ const RoomSearch = () => {
                       <div>
                         <h4 className="font-bold text-sm text-slate-800 mb-2 flex items-center gap-1.5">
                           <span className="h-3 w-1 rounded-full bg-sky-500" />
-                          Tiện nghi phòng
+                          {t("public.roomDetail.featuredAmenities")}
                         </h4>
                         <div className="grid grid-cols-2 gap-2 pr-1">
                           {featuredAmenities.map((am: any) => (
@@ -1678,7 +1520,7 @@ const RoomSearch = () => {
                       <div>
                         <h4 className="font-bold text-sm text-slate-800 mb-2 flex items-center gap-1.5">
                           <span className="h-3 w-1 rounded-full bg-indigo-500" />
-                          Dịch vụ thêm
+                          {t("public.roomDetail.extraServices")}
                         </h4>
                         <div className="grid grid-cols-2 gap-2 pr-1">
                           {featuredServices.map((sv: any) => (
@@ -1737,7 +1579,7 @@ const RoomSearch = () => {
                             setShowAllServices(false);
                           }}
                         >
-                          Xóa tất cả
+                          {t("common.clear")}
                         </Button>
                       </div>
                     </div>
@@ -1753,14 +1595,14 @@ const RoomSearch = () => {
                     <SelectTrigger className="h-10 rounded-full border-slate-200 bg-white font-semibold text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10">
                       <div className="flex items-center gap-2">
                         <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                        <SelectValue placeholder="Đánh giá từ" />
+                        <SelectValue placeholder={t("public.roomSearch.ratingFrom")} />
                       </div>
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
-                      <SelectItem value="all" className="rounded-xl">Tất cả đánh giá</SelectItem>
-                      <SelectItem value="4.5" className="rounded-xl">Tuyệt vời (4.5⭐ trở lên)</SelectItem>
-                      <SelectItem value="4.0" className="rounded-xl">Rất tốt (4.0⭐ trở lên)</SelectItem>
-                      <SelectItem value="3.0" className="rounded-xl">Tốt (3.0⭐ trở lên)</SelectItem>
+                      <SelectItem value="all" className="rounded-xl">{t("public.roomSearch.allRatings")}</SelectItem>
+                      <SelectItem value="4.5" className="rounded-xl">{t("public.roomSearch.wonderfulRating")}</SelectItem>
+                      <SelectItem value="4.0" className="rounded-xl">{t("public.roomSearch.greatRating")}</SelectItem>
+                      <SelectItem value="3.0" className="rounded-xl">{t("public.roomSearch.goodRating")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1769,13 +1611,13 @@ const RoomSearch = () => {
                     <SelectTrigger className="h-10 rounded-full border-slate-200 bg-white font-semibold text-slate-700 shadow-sm transition-all hover:border-sky-400 focus:ring-sky-500/10">
                       <div className="flex items-center gap-2">
                         <ArrowDownWideNarrow className="h-4 w-4 text-sky-500" />
-                        <SelectValue placeholder="Sắp xếp theo" />
+                        <SelectValue placeholder={t("common.sort", "Sắp xếp theo")} />
                       </div>
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
-                      <SelectItem value="price_asc" className="rounded-xl">Giá thấp đến cao</SelectItem>
-                      <SelectItem value="price_desc" className="rounded-xl">Giá cao đến thấp</SelectItem>
-                      <SelectItem value="capacity_desc" className="rounded-xl">Sức chứa cao nhất</SelectItem>
+                      <SelectItem value="price_asc" className="rounded-xl">{t("public.roomSearch.sortPriceAsc")}</SelectItem>
+                      <SelectItem value="price_desc" className="rounded-xl">{t("public.roomSearch.sortPriceDesc")}</SelectItem>
+                      <SelectItem value="capacity_desc" className="rounded-xl">{t("public.roomSearch.sortCapacityDesc")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1792,10 +1634,10 @@ const RoomSearch = () => {
                   <div className="mb-4 flex items-center justify-between font-sans">
                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                       <span className="h-5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
-                      Khách sạn/Nhà nghỉ/Homestay
+                      {t("public.home.rooms.hotel")}/{t("public.home.rooms.guesthouse")}/{t("public.home.rooms.homestay")}
                     </h3>
                     <Badge variant="secondary" className="rounded-full bg-sky-50 text-sky-700 font-semibold px-3 py-1 shadow-sm border border-sky-100">
-                      {dailyRooms.length} phòng
+                      {dailyRooms.length} {t("public.roomByProvince.results")}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -1813,10 +1655,10 @@ const RoomSearch = () => {
                   <div className="mb-4 flex items-center justify-between font-sans">
                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                       <span className="h-5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                      Căn hộ dịch vụ
+                      {t("public.home.rooms.apartment")}
                     </h3>
                     <Badge variant="secondary" className="rounded-full bg-indigo-50 text-indigo-700 font-semibold px-3 py-1 shadow-sm border border-indigo-100">
-                      {monthlyRooms.length} phòng
+                      {monthlyRooms.length} {t("public.roomByProvince.results")}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -1835,7 +1677,7 @@ const RoomSearch = () => {
                 onPerPageChange={handlePerPageChange}
                 totalItems={totalRooms}
                 perPageOptions={LIMIT_OPTIONS}
-                resultsText="kết quả"
+                resultsText={t("public.roomByProvince.results")}
                 hideTotalItems={true}
               />
             </div>

@@ -105,111 +105,36 @@ const NewsList = () => {
     <div className="min-h-screen bg-slate-50/50">
       <PublicHeader />
 
-      {/* 1. Hero / Banner Section */}
-      <section className="relative overflow-hidden py-14 md:py-20">
-        {/* Background image */}
-        <img
-          src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?q=80&w=2070&auto=format&fit=crop"
-          alt="Hero"
-          className="absolute inset-0 size-full object-cover opacity-40"
-        />
-        {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-900/85 to-sky-950/80" />
-        {/* Ambient glows */}
-        <div className="absolute -left-40 top-0 h-96 w-96 rounded-full bg-sky-600/15 blur-3xl" />
-        <div className="absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
-        {/* Coordinate grid */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: "linear-gradient(rgba(148,163,184,1) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,1) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-
-        <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 sm:px-6 lg:grid-cols-5 lg:px-8">
-          {/* LEFT — 3/5 */}
-          <div className="lg:col-span-3">
-            {/* Badge */}
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-1.5 text-sm font-semibold text-sky-300">
-              <Sparkles className="size-4" />
-              {t("public.newsList.heroBadge", "Tạp chí phong cách sống")}
-            </div>
-
-            {/* Title */}
-            <h1 className="mb-4 text-3xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              {t("public.newsList.heroTitle", "Trong một căn phòng khác, Một cuộc sống mới")}
-            </h1>
-
-            {/* Subtitle */}
-            <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-              {t("public.newsList.heroSub", "Khám phá những câu chuyện cảm hứng về không gian sống và hành trình tìm kiếm tổ ấm lý tưởng của bạn.")}
-            </p>
-
-            {/* CTA */}
-            <Button asChild className="rounded-full bg-white px-8 py-5 text-base font-bold text-slate-900 shadow-xl hover:bg-slate-100">
-              <Link to="#popular-articles">{t("public.newsList.startReading", "Bắt đầu khám phá")}</Link>
-            </Button>
-          </div>
-
-          {/* RIGHT — 2/5 */}
-          <div className="hidden lg:col-span-2 lg:flex lg:flex-col lg:gap-4">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <p className="mb-4 text-sm font-bold uppercase tracking-widest text-sky-300">Nội dung nổi bật</p>
-              <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
-                  Kinh nghiệm thuê phòng dài hạn không bị hớ
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
-                  Review căn hộ dịch vụ tại TP.HCM &amp; Hà Nội
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
-                  Thị trường bất động sản cho thuê 2025
-                </li>
-              </ul>
-            </div>
-            {/* Stat cards */}
-            <div className="flex gap-3">
-              <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                <Sparkles className="size-5 text-amber-400" />
-                <div>
-                  <div className="text-lg font-bold text-white">
-                    {featuredItems.length > 0 ? `${featuredItems.length}` : "—"}
-                  </div>
-                  <div className="text-xs text-slate-400">Bài nổi bật</div>
-                </div>
-              </div>
-              <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                <TrendingUp className="size-5 text-emerald-400" />
-                <div>
-                  <div className="text-lg font-bold text-white">
-                    {totalItems >= 1000 ? `${Math.floor(totalItems / 1000)}k+` : totalItems > 0 ? `${totalItems}` : "—"}
-                  </div>
-                  <div className="text-xs text-slate-400">Bài viết</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* Breadcrumb section */}
-      <div className="sticky top-0 z-40 border-b border-slate-100 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      {/* Breadcrumb */}
+      <div className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-[1440px] py-2.5 px-4 sm:px-6 lg:px-8">
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
               { label: t("public.newsList.breadcrumb", "Tin tức") },
             ]}
+            className="text-sm"
           />
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl space-y-20 px-4 py-12 sm:px-6 lg:px-8">
+      {/* Title & Description Section on clean white layout */}
+      <div className="mx-auto w-full max-w-[1440px] px-4 pt-8 sm:px-6 lg:px-8 space-y-2">
+        <Badge className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 border border-sky-200 transition-all duration-300">
+          <Sparkles className="h-3.5 w-3.5 text-sky-600 animate-pulse" />
+          {t("public.newsList.heroBadge", "Tạp chí phong cách sống")}
+        </Badge>
+        
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          {t("public.newsList.heroTitle", "Trong một căn phòng khác, Một cuộc sống mới")}
+        </h1>
+        
+        <p className="text-sm text-slate-500 max-w-4xl leading-relaxed">
+          {t("public.newsList.heroSub", "Khám phá những câu chuyện cảm hứng về không gian sống và hành trình tìm kiếm tổ ấm lý tưởng của bạn.")}
+        </p>
+      </div>
+
+      <main className="mx-auto max-w-[1440px] space-y-20 px-4 py-12 sm:px-6 lg:px-8">
         
         {/* 2. Featured Articles Section (3-column) */}
         <section className="space-y-8">

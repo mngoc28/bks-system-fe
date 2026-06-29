@@ -34,7 +34,7 @@ const NewsDetail = () => {
   const handleNewsletterSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsletterEmail || !newsletterEmail.includes("@")) {
-      toastError(t("validation.newsletter.email_invalid", "Vui lòng nhập email hợp lệ."));
+      toastError(t("validation.newsletter.email_invalid"));
       return;
     }
 
@@ -44,16 +44,16 @@ const NewsDetail = () => {
         email: newsletterEmail,
       });
       if (response && response.success) {
-        toastSuccess(response.message || t("public.newsDetail.subscribeSuccess", "Đăng ký nhận tin thành công!"));
+        toastSuccess(response.message || t("public.newsDetail.subscribeSuccess"));
         if (response.data) {
           setNewsletterCoupon(response.data);
         }
         setNewsletterEmail("");
       } else {
-        toastError((response && response.message) || t("public.newsDetail.subscribeFailed", "Đăng ký thất bại. Vui lòng thử lại."));
+        toastError((response && response.message) || t("public.newsDetail.subscribeFailed"));
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || t("public.newsDetail.subscribeFailed", "Đăng ký thất bại. Vui lòng thử lại.");
+      const errorMsg = error?.response?.data?.message || t("public.newsDetail.subscribeFailed");
       toastError(errorMsg);
     } finally {
       setIsSubmittingNewsletter(false);
@@ -62,7 +62,7 @@ const NewsDetail = () => {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    toastSuccess(t("public.newsDetail.copySuccess", "Đã sao chép liên kết!"));
+    toastSuccess(t("public.newsDetail.copySuccess"));
   };
 
   const handleShareFacebook = () => {
@@ -82,10 +82,10 @@ const NewsDetail = () => {
         <PublicHeader />
         <main className="flex grow items-center justify-center p-4">
           <div className="space-y-4 text-center">
-            <h2 className="text-2xl font-bold text-slate-800">{t("public.newsDetail.errorTitle", "Không tìm thấy tin tức")}</h2>
-            <p className="text-slate-600">{t("public.newsDetail.errorDesc", "Bài viết bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ bỏ.")}</p>
+            <h2 className="text-2xl font-bold text-slate-800">{t("public.newsDetail.errorTitle")}</h2>
+            <p className="text-slate-600">{t("public.newsDetail.errorDesc")}</p>
             <Button asChild variant="outline" className="rounded-full">
-              <Link to={ROUTERS.HOME}>{t("public.newsDetail.backHome", "Quay lại trang chủ")}</Link>
+              <Link to={ROUTERS.HOME}>{t("public.newsDetail.backHome")}</Link>
             </Button>
           </div>
         </main>
@@ -104,8 +104,8 @@ const NewsDetail = () => {
           <Breadcrumb
             items={[
               { label: t("breadcrumb.home"), href: ROUTERS.HOME },
-              { label: t("public.newsDetail.breadcrumb.news", "Tin tức"), href: ROUTERS.PUBLIC_NEWS_LIST },
-              { label: news?.title || t("public.newsDetail.breadcrumb.loading", "Đang tải...") },
+              { label: t("public.newsDetail.breadcrumb.news"), href: ROUTERS.PUBLIC_NEWS_LIST },
+              { label: news?.title || t("public.newsDetail.breadcrumb.loading") },
             ]}
           />
         </div>
@@ -146,7 +146,7 @@ const NewsDetail = () => {
                   />
                   <div className="absolute left-4 top-4">
                     <Badge className="rounded-full border-none bg-sky-500 px-3 py-1 text-sm hover:bg-sky-600">
-                      {t("public.newsDetail.featured", "Nổi bật")}
+                      {t("public.newsDetail.featured")}
                     </Badge>
                   </div>
                 </div>
@@ -169,13 +169,13 @@ const NewsDetail = () => {
                         <div className="rounded-lg bg-emerald-50 p-2">
                           <User className="size-4 text-emerald-600" />
                         </div>
-                        <span>{news?.user_name || t("public.newsDetail.anonymous", "Tác giả")}</span>
+                        <span>{news?.user_name || t("public.newsDetail.anonymous")}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="rounded-lg bg-amber-50 p-2">
                           <Clock className="size-4 text-amber-600" />
                         </div>
-                        <span>5 {t("public.newsDetail.readTime", "phút đọc")}</span>
+                        <span>5 {t("public.newsDetail.readTime")}</span>
                       </div>
                     </div>
                   </div>
@@ -199,7 +199,7 @@ const NewsDetail = () => {
                   {/* Social Share */}
                   <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-100 pt-10 sm:flex-row">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold uppercase tracking-wider text-slate-500">{t("public.newsDetail.share", "Chia sẻ bài viết")}:</span>
+                      <span className="text-sm font-semibold uppercase tracking-wider text-slate-500">{t("public.newsDetail.share")}:</span>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="icon" className="rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-600 hover:text-white" onClick={handleShareFacebook}>
                           <Facebook className="size-5" />
@@ -216,7 +216,7 @@ const NewsDetail = () => {
                     <Button asChild variant="outline" className="gap-2 rounded-full border-slate-200 hover:bg-slate-50">
                       <Link to={ROUTERS.HOME}>
                         <ArrowLeft className="size-4" />
-                        {t("public.newsDetail.backToList", "Xem tin tức khác")}
+                        {t("public.newsDetail.backToList")}
                       </Link>
                     </Button>
                   </div>
@@ -233,7 +233,7 @@ const NewsDetail = () => {
             <div className="space-y-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <h3 className="inline-block border-b-2 border-sky-500 pb-2 text-xl font-bold text-slate-900">
-                  {t("public.newsDetail.latestHeading", "Tin mới nhất")}
+                  {t("public.newsDetail.latestHeading")}
                 </h3>
               </div>
 
@@ -283,7 +283,7 @@ const NewsDetail = () => {
 
               <Button asChild className="mt-4 w-full rounded-full bg-slate-900 text-white hover:bg-slate-800">
                 <Link to={ROUTERS.PUBLIC_NEWS_LIST}>
-                  {t("public.newsDetail.viewAllNews", "Xem tất cả tin tức")}
+                  {t("public.newsDetail.viewAllNews")}
                 </Link>
               </Button>
             </div>
@@ -295,10 +295,10 @@ const NewsDetail = () => {
               </div>
               <div className="relative z-10 space-y-4">
                 <h3 className="text-2xl font-bold leading-tight">
-                  {t("public.newsDetail.ctaTitle", "Đăng ký nhận tin tức")}
+                  {t("public.newsDetail.ctaTitle")}
                 </h3>
                 <p className="text-sm leading-relaxed text-sky-100">
-                  {t("public.newsDetail.ctaDesc", "Đừng bỏ lỡ các tin tức và cập nhật mới nhất từ chúng tôi.")}
+                  {t("public.newsDetail.ctaDesc")}
                 </p>
                 
                 {newsletterCoupon ? (
@@ -320,7 +320,7 @@ const NewsDetail = () => {
                         required
                         value={newsletterEmail}
                         onChange={(e) => setNewsletterEmail(e.target.value)}
-                        placeholder={t("public.footer.newsletter.placeholder", "Nhập email của bạn")}
+                        placeholder={t("public.footer.newsletter.placeholder")}
                         className="rounded-full bg-white/10 border-white/20 text-white placeholder:text-sky-200/60 focus:bg-white/95 focus:text-slate-900 focus:placeholder:text-slate-400 focus:outline-none"
                       />
                       <Button 
@@ -328,7 +328,7 @@ const NewsDetail = () => {
                         disabled={isSubmittingNewsletter}
                         className="w-full rounded-full bg-white text-sky-600 hover:bg-sky-50 font-bold"
                       >
-                        {isSubmittingNewsletter ? "Đang xử lý..." : t("public.newsDetail.ctaBtn", "Đăng ký ngay")}
+                        {isSubmittingNewsletter ? t("common.processing") : t("public.newsDetail.ctaBtn")}
                       </Button>
                     </div>
                     <p className="text-[10px] text-sky-200/70 italic text-center">

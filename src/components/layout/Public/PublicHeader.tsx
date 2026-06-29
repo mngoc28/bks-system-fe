@@ -40,12 +40,12 @@ const RewardsPopover = () => {
   const formatLevel = (lvl: string) => {
     const normalized = lvl.toUpperCase();
     if (normalized.includes("GOLD") || normalized.includes("VÀNG")) {
-      return "Hạng Vàng (Gold Member)";
+      return t("public.header.loyalty.levelGold");
     }
     if (normalized.includes("DIAMOND") || normalized.includes("KIM CƯƠNG")) {
-      return "Hạng Kim Cương (Diamond Member)";
+      return t("public.header.loyalty.levelDiamond");
     }
-    return "Hạng Đồng (Bronze Member)";
+    return t("public.header.loyalty.levelBronze");
   };
 
   return (
@@ -66,19 +66,19 @@ const RewardsPopover = () => {
               <Star className="size-5 fill-amber-500/30" />
             </div>
             <div className="text-left">
-              <h4 className="font-bold text-slate-900 text-sm">BKS Loyalty Club</h4>
-              <p className="text-[11px] text-slate-500">Tích lũy điểm thưởng, đổi ngàn ưu đãi</p>
+              <h4 className="font-bold text-slate-900 text-sm">{t("public.header.loyalty.title")}</h4>
+              <p className="text-[11px] text-slate-500">{t("public.header.loyalty.subtitle")}</p>
             </div>
           </div>
 
           {isAuthenticated ? (
             <div className="space-y-3 text-left">
               <div className="rounded-xl bg-slate-50 p-3 text-sm">
-                <p className="text-slate-600 text-xs">Xin chào,</p>
+                <p className="text-slate-600 text-xs">{t("public.header.loyalty.guestGreeting")}</p>
                 <p className="font-semibold text-slate-900">{userName || userEmail}</p>
                 <div className="mt-3 flex items-baseline gap-1 text-slate-900">
                   <span className="text-2xl font-black text-primary">{loading ? "..." : points}</span>
-                  <span className="text-xs font-medium text-slate-500">điểm tích lũy</span>
+                  <span className="text-xs font-medium text-slate-500">{t("public.header.loyalty.pointsLabel")}</span>
                 </div>
                 <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
                   {loading ? "..." : formatLevel(level)}
@@ -88,23 +88,23 @@ const RewardsPopover = () => {
                 to="/bks-stay/dashboard"
                 className="flex w-full items-center justify-center rounded-full bg-primary py-2.5 text-xs font-semibold text-white shadow-md shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/20 active:scale-95"
               >
-                Đến Trang Cá Nhân
+                {t("public.header.loyalty.ctaDashboard")}
               </Link>
             </div>
           ) : (
             <div className="space-y-3 text-left">
               <p className="text-xs text-slate-600 leading-relaxed">
-                Đăng nhập tài khoản BKS Stay để bắt đầu tích lũy 1 điểm thưởng cho mỗi 100,000₫ thanh toán đặt phòng!
+                {t("public.header.loyalty.loginDesc")}
               </p>
               <div className="rounded-xl bg-amber-50/50 p-3 text-[11px] text-amber-800 space-y-1.5 border border-amber-100/50">
-                <p className="font-bold">• Hạng Vàng (50+ điểm): Giảm ngay 10%</p>
-                <p className="font-bold">• Hạng Kim Cương (150+ điểm): Giảm ngay 15%</p>
+                <p className="font-bold">{t("public.header.loyalty.tierGold")}</p>
+                <p className="font-bold">{t("public.header.loyalty.tierDiamond")}</p>
               </div>
               <Link
                 to="/bks-stay/login"
                 className="flex w-full items-center justify-center rounded-full bg-primary py-2.5 text-xs font-semibold text-white shadow-md shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/20 active:scale-95"
               >
-                Đăng nhập BKS Stay
+                {t("public.header.loyalty.ctaLogin")}
               </Link>
             </div>
           )}

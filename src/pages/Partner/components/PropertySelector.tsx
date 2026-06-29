@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { Building2, ChevronDown, Check } from "lucide-react";
-import { partnerService } from "@/services/partnerService";
-import { parsePartnerPropertyNamesResponse } from "@/utils/partnerPropertyData";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-
-import { useMemo } from "react";
+import { usePartnerPropertyNamesQuery } from "@/hooks/Partner/usePartnerPropertyNamesQuery";
 
 interface PropertyOption {
   id: number | string;
@@ -23,7 +20,7 @@ interface PropertySelectorProps {
   className?: string;
   placeholder?: string;
   allowAll?: boolean;
-  properties?: any[];
+  properties?: Array<PropertyOption | { id: number | string; name?: string; title?: string }>;
 }
 
 const PropertySelector: React.FC<PropertySelectorProps> = ({
@@ -34,50 +31,28 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
   allowAll = true,
   properties: passedProperties,
 }) => {
-  const [internalProperties, setProperties] = useState<PropertyOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const shouldFetchProperties = !passedProperties && (isOpen || selectedId !== null);
 
-  useEffect(() => {
-    if (!passedProperties) {
-      const abortController = new AbortController();
-      void fetchProperties(abortController.signal);
-      return () => {
-        abortController.abort();
-      };
-    }
-  }, [passedProperties]);
-
-  const fetchProperties = async (signal?: AbortSignal) => {
-    try {
-      setLoading(true);
-      const res: any = await partnerService.getPropertyNames({ signal });
-      setProperties(parsePartnerPropertyNamesResponse(res));
-    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || signal?.aborted) {
-        return;
-      }
-      console.error("Error fetching properties for selector:", error);
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  };
+  const { data: fetchedProperties = [], isLoading: loading } = usePartnerPropertyNamesQuery(shouldFetchProperties);
 
   const properties = useMemo(() => {
     if (passedProperties) {
-      return passedProperties.map((p: any) => ({
-        id: p.id,
-        name: p.name || p.title || "",
-      }));
+      return passedProperties.map((p) => {
+        const item = p as { id: number | string; name?: string; title?: string };
+        return {
+          id: item.id,
+          name: item.name || item.title || "",
+        };
+      });
     }
-    return internalProperties;
-  }, [passedProperties, internalProperties]);
+    return fetchedProperties;
+  }, [passedProperties, fetchedProperties]);
 
   const selectedProperty = properties.find((p) => String(p.id) === String(selectedId));
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -101,7 +76,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="flex w-72 max-h-[min(20rem,70vh)] flex-col overflow-hidden rounded-xl border-gray-100 p-0 shadow-xl"
+        className="flex max-h-[min(20rem,70vh)] w-72 flex-col overflow-hidden rounded-xl border-gray-100 p-0 shadow-xl"
       >
         {allowAll && (
           <DropdownMenuItem

@@ -8,19 +8,19 @@ import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { toastSuccess, toastError } from "@/components/ui/toast";
 import { simplifyAddress } from "@/utils/utils";
 
-const shortenPropertyTypeName = (name: string): string => {
+const shortenPropertyTypeName = (name: string, t: ReturnType<typeof useTranslation>["t"]): string => {
   const lower = name.toLowerCase().trim();
   if (lower.includes("căn hộ") || lower.includes("apartment")) {
-    return "Căn hộ dịch vụ";
+    return t("public.home.rooms.apartment");
   }
   if (lower.includes("khách sạn") || lower.includes("hotel")) {
-    return "Khách sạn";
+    return t("public.home.rooms.hotel");
   }
   if (lower.includes("nhà nghỉ") || lower.includes("guesthouse")) {
-    return "Nhà nghỉ";
+    return t("public.home.rooms.guesthouse");
   }
   if (lower.includes("homestay")) {
-    return "Homestay";
+    return t("public.home.rooms.homestay");
   }
 
   const cleaned = name
@@ -55,10 +55,10 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
     setWishlist((prev) => {
       const isAlreadyWishlisted = prev.includes(roomId);
       if (isAlreadyWishlisted) {
-        toastSuccess("Đã xóa khỏi danh sách yêu thích");
+        toastSuccess(t("public.home.rooms.removedFromWishlist"));
         return prev.filter((id) => id !== roomId);
       } else {
-        toastSuccess("Đã thêm vào danh sách yêu thích");
+        toastSuccess(t("public.home.rooms.addedToWishlist"));
         return [...prev, roomId];
       }
     });
@@ -70,7 +70,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
     const url = window.location.origin + ROUTERS.PUBLIC_ROOM_DETAIL.replace(":roomId", roomId.toString());
     navigator.clipboard.writeText(url)
       .then(() => {
-        toastSuccess("Đã sao chép liên kết phòng!");
+        toastSuccess(t("public.home.rooms.copyLinkSuccess"));
       })
       .catch(() => {
         const textArea = document.createElement("textarea");
@@ -79,9 +79,9 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
         textArea.select();
         try {
           document.execCommand("copy");
-          toastSuccess("Đã sao chép liên kết phòng!");
+          toastSuccess(t("public.home.rooms.copyLinkSuccess"));
         } catch {
-          toastError("Không thể sao chép liên kết!");
+          toastError(t("public.home.rooms.copyLinkError"));
         }
         document.body.removeChild(textArea);
       });
@@ -89,7 +89,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
 
   const getBadgeText = () => {
     if (room.property_type_name) {
-      return shortenPropertyTypeName(room.property_type_name);
+      return shortenPropertyTypeName(room.property_type_name, t);
     }
     if (room.room_type) {
       const typeNum = Number(room.room_type);
@@ -105,9 +105,9 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
   const hasNightlyPrice = room.has_nightly_price === true;
   const secondaryRentHint =
     room.rent_type === "daily" && hasMonthlyPrice
-      ? "Hỗ trợ thuê dài hạn"
+      ? t("public.home.rooms.monthlyRentHint")
       : room.rent_type === "monthly" && hasNightlyPrice
-        ? "Hỗ trợ thuê theo đêm"
+        ? t("public.home.rooms.nightlyRentHint")
         : "";
 
   const detailUrl = room.rent_type
@@ -139,7 +139,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
           <button
             onClick={(e) => handleToggleWishlist(e, Number(room.id))}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-rose-500 hover:scale-105 active:scale-95 shadow-lg"
-            title="Thêm vào yêu thích"
+            title={t("public.home.rooms.addToWishlist")}
           >
             <Heart
               className={`h-4.5 w-4.5 transition-all duration-300 ${
@@ -152,7 +152,7 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
           <button
             onClick={(e) => handleShareRoom(e, Number(room.id))}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-sky-500 hover:scale-105 active:scale-95 shadow-lg"
-            title="Chia sẻ phòng"
+            title={t("public.home.rooms.shareRoom")}
           >
             <Share2 className="h-4.5 w-4.5 transition-all duration-300" />
           </button>
@@ -170,24 +170,24 @@ const RoomCarouselItem = ({ room }: RoomCarouselItemProps) => {
       <div className="flex flex-1 flex-col gap-2.5 p-5">
         <div>
           <span className="text-[10px] font-bold text-sky-600 uppercase tracking-widest truncate block mb-1">
-            {room.partner_company_name || "Đối tác BKS"}
+            {room.partner_company_name || t("public.home.partners.trust")}
           </span>
           <h3 className="text-[0.95rem] font-semibold text-slate-900 group-hover:text-primary line-clamp-2 h-10 leading-5">{room.name}</h3>
           {room.reviews_avg_rating && Number(room.reviews_avg_rating) > 0 ? (
             <div className="mt-1 flex items-center gap-1 text-[0.8rem] font-bold text-amber-500">
               <Star className="size-3.5 fill-amber-500 text-amber-500" />
               <span>{room.reviews_avg_rating}</span>
-              <span className="text-slate-400 font-normal">({room.reviews_count} đánh giá)</span>
+              <span className="text-slate-400 font-normal">{t("public.home.rooms.reviewsCount", { count: room.reviews_count })}</span>
             </div>
           ) : (
             <div className="mt-1 flex items-center gap-1 text-[0.8rem] text-slate-400">
               <Star className="size-3.5 text-slate-300" />
-              <span className="font-normal text-slate-400">Chưa có đánh giá</span>
+              <span className="font-normal text-slate-400">{t("public.home.rooms.noReviews")}</span>
             </div>
           )}
           <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600 overflow-hidden">
             <MapPinHouse className="size-4 text-primary shrink-0" />
-            <span className="truncate">{simplifyAddress(room.address)}</span>
+            <span className="truncate">{room.address ? simplifyAddress(room.address) : t("public.roomByProvince.fallbackAddress")}</span>
           </p>
 
         </div>

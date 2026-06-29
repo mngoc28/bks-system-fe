@@ -32,21 +32,24 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
     const service = portalType === 'stay' ? stayService : partnerService;
     const queryKey = useMemo(() => ["notifications", portalType], [portalType]);
     const [canLoadNotifications, setCanLoadNotifications] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [hasRealtimeAlert, setHasRealtimeAlert] = useState(false);
 
     useEffect(() => {
         const id = window.setTimeout(() => setCanLoadNotifications(true), portalType === 'partner' ? 1500 : 0);
         return () => window.clearTimeout(id);
     }, [portalType]);
+
+    const shouldFetchNotifications = canLoadNotifications && isOpen;
     
     const { data: notifications = [], isLoading } = useQuery<NotificationData[]>({
         queryKey: queryKey,
         queryFn: async ({ signal }) => {
             const res = await service.getNotifications(1, { signal });
-            // Laravel pagination returns { data: { data: [...] } } via our apiService
             return (res as any).data?.data || [];
         },
-        enabled: canLoadNotifications,
-        refetchInterval: 30000, // Poll every 30 seconds
+        enabled: shouldFetchNotifications,
+        refetchInterval: isOpen ? 30000 : false,
         staleTime: 20_000,
     });
 
@@ -57,18 +60,19 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
             const res = await partnerService.getCancellationRequests({ status: 'pending', per_page: 1 }, { signal });
             return (res as any)?.data?.meta?.total ?? 0;
         },
-        enabled: portalType === 'partner' && canLoadNotifications,
-        refetchInterval: 60000,
+        enabled: portalType === 'partner' && shouldFetchNotifications,
+        refetchInterval: isOpen ? 60000 : false,
     });
 
-    // Real-time listener for Partner portal
     useEffect(() => {
         if (portalType !== 'partner') return;
 
         const handleRealtime = () => {
-            // Refetch both notifications and cancellation count
-            queryClient.invalidateQueries({ queryKey: queryKey });
-            queryClient.invalidateQueries({ queryKey: ["notifications", portalType, "cancellation-pending"] });
+            setHasRealtimeAlert(true);
+            if (isOpen) {
+                queryClient.invalidateQueries({ queryKey: queryKey });
+                queryClient.invalidateQueries({ queryKey: ["notifications", portalType, "cancellation-pending"] });
+            }
         };
 
         window.addEventListener("partner:realtime-booking", handleRealtime);
@@ -78,9 +82,10 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
             window.removeEventListener("partner:realtime-booking", handleRealtime);
             window.removeEventListener("partner:realtime-cancellation-request", handleRealtime);
         };
-    }, [portalType, queryKey, queryClient]);
+    }, [portalType, isOpen, queryKey, queryClient]);
 
     const unreadCount = notifications.filter((n: NotificationData) => !n.is_read).length + (cancellationCount > 0 ? 1 : 0);
+    const showUnreadIndicator = unreadCount > 0 || hasRealtimeAlert;
 
     const markReadMutation = useMutation({
         mutationFn: (id: number) => service.markNotificationAsRead(id),
@@ -93,6 +98,7 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
         mutationFn: () => service.markAllAsRead(),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKey });
+            setHasRealtimeAlert(false);
             toastSuccess(t("notifications.mark_all_read_success"));
         }
     });
@@ -108,7 +114,15 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
     };
 
     return (
-        <DropdownMenu>
+        <DropdownMenu
+            open={isOpen}
+            onOpenChange={(open) => {
+                setIsOpen(open);
+                if (open) {
+                    setHasRealtimeAlert(false);
+                }
+            }}
+        >
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="ghost"
@@ -120,7 +134,7 @@ const NotificationBell = ({ portalType = 'stay', triggerSize = 'default' }: Noti
                     }
                 >
                     <Bell className={triggerSize === 'partner' ? 'size-6 stroke-[2px]' : 'size-5'} />
-                    {unreadCount > 0 && (
+                    {showUnreadIndicator && (
                         <span
                             className={`absolute animate-pulse rounded-full bg-rose-500 ring-2 ring-white ${
                                 triggerSize === 'partner' ? 'right-2.5 top-2 size-3' : 'right-2 top-2 size-2.5'

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ROUTERS, DEFAULT_ROOM_IMAGE } from "@/constant";
 import { ProvinceCarouselProps } from "@/dataHelper/province.dataHelper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatProvinceName } from "@/utils/utils";
+import { getProvinceDisplayName } from "@/utils/utils";
 
 const sliderOptions = {
   type: "slide",
@@ -29,13 +29,14 @@ const ProvinceCarousel = ({
   ctaHref,
   loading = false,
 }: ProvinceCarouselProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   if (!loading && !provinces?.length) return null;
 
   const headingText = heading ?? t("public.home.provinceCarousel.heading");
   const descriptionText =
     description ?? t("public.home.provinceCarousel.description");
+  const ctaText = ctaLabel ?? t("public.home.provinceCarousel.cta");
 
   return (
     <section className={className}>
@@ -44,7 +45,7 @@ const ProvinceCarousel = ({
         <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="mb-2 inline-flex rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
-              Điểm đến nổi bật
+              {t("public.home.provinceCarousel.badge")}
             </p>
             {headingText && (
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
@@ -57,12 +58,12 @@ const ProvinceCarousel = ({
               </p>
             )}
           </div>
-          {ctaLabel && ctaHref && (
+          {ctaText && ctaHref && (
             <Link
               to={ctaHref}
               className="hidden items-center justify-center rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 sm:inline-flex"
             >
-              {ctaLabel}
+              {ctaText}
             </Link>
           )}
         </div>
@@ -93,7 +94,7 @@ const ProvinceCarousel = ({
                   province.id.toString(),
                 )}
                 aria-label={t("public.home.provinceCarousel.cardLabel", {
-                  name: province.name,
+                  name: getProvinceDisplayName(province, i18n.language),
                 })}
                 className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 style={{ transform: "translateZ(0)" }}
@@ -102,7 +103,7 @@ const ProvinceCarousel = ({
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1">
                   <img
                     src={province.image || DEFAULT_ROOM_IMAGE}
-                    alt={province.name}
+                    alt={getProvinceDisplayName(province, i18n.language)}
                     className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
@@ -118,7 +119,7 @@ const ProvinceCarousel = ({
                 {/* Name below */}
                 <div className="mt-3 px-1">
                   <h3 className="truncate text-sm font-bold text-slate-800 transition-colors duration-200 group-hover:text-primary dark:text-slate-100">
-                    {formatProvinceName(province.name)}
+                    {getProvinceDisplayName(province, i18n.language)}
                   </h3>
                 </div>
               </Link>
@@ -129,13 +130,13 @@ const ProvinceCarousel = ({
       )}
 
       {/* ── Mobile CTA ── */}
-      {ctaLabel && ctaHref && !loading && (
+      {ctaText && ctaHref && !loading && (
         <div className="mt-6 flex justify-center sm:hidden">
           <Link
             to={ctaHref}
             className="inline-flex items-center justify-center rounded-full bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-95"
           >
-            {ctaLabel}
+            {ctaText}
           </Link>
         </div>
       )}

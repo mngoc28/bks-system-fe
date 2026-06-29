@@ -9,6 +9,7 @@ export const PARTNER_DASHBOARD_QUERY_KEYS = [
   ['partner-pending-bookings'],
   ['partner-urgent-maintenances'],
   ['partner', 'contracts', 'expiring-soon'],
+  ['partner', 'dashboard', 'consolidated'],
 ] as const;
 
 export const usePartnerDashboardRefresh = () => {
