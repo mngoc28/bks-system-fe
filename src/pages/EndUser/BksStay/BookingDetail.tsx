@@ -256,6 +256,10 @@ const BookingDetail = () => {
 
   const handleFileUpload = async (file: File) => {
     if (!booking) return;
+    if (!canPayDeposit) {
+      toastError("Vui lòng ký hợp đồng thuê trước khi thanh toán tiền đặt cọc.");
+      return;
+    }
     if (!file.type.startsWith("image/")) {
       toastError("Vui lòng tải lên một file ảnh hợp lệ (PNG/JPG/JPEG).");
       return;
@@ -347,6 +351,12 @@ const BookingDetail = () => {
       setLoading(false);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (searchParams.get("confirmed") === "true") {
+      void reloadBookingDetail();
+    }
+  }, [searchParams, reloadBookingDetail]);
 
   useEffect(() => {
     void reloadBookingDetail();
@@ -443,6 +453,33 @@ const BookingDetail = () => {
 
     return () => clearInterval(interval);
   }, [booking?.status, id, reloadBookingDetail]);
+
+  // Polling khi đang chờ thanh toán phần còn lại (QR trên trang chi tiết / webhook SePay)
+  useEffect(() => {
+    if (!id || !booking) return;
+    if (booking.status !== 1) return;
+    if (booking.payment_method !== "online") return;
+    if (booking.payment_status !== "partially_paid") return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res: any = await stayService.getBookingDetail(id);
+        if (res.status !== "success") return;
+
+        const resData = res.data as IBookingDetail;
+        const remaining = resData.amount_remaining ?? 0;
+        if (resData.payment_status === "paid" || remaining <= 0) {
+          clearInterval(interval);
+          setBooking(resData);
+          toastSuccess("Thanh toán thành công! Đơn phòng đã được thanh toán đủ.");
+        }
+      } catch (error) {
+        console.error("Failed to poll remainder payment status", error);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [id, booking?.status, booking?.payment_method, booking?.payment_status]);
 
   useEffect(() => {
     return () => {
@@ -690,6 +727,18 @@ Cam on quy khach da tin tuong va su dung dich vu!
     services: booking.services,
     total_amount: booking.total_amount,
   });
+  const amountPaid = booking.amount_paid ?? (
+    booking.payment_status === "paid"
+      ? totalAmount
+      : ["confirmed_by_partner", "held_in_escrow"].includes(booking.deposit_status ?? "") && booking.deposit_amount
+        ? Number(booking.deposit_amount)
+        : 0
+  );
+  const amountRemaining = booking.amount_remaining ?? Math.max(0, totalAmount - amountPaid);
+  const showRemainderPaymentCard =
+    booking.payment_method === "online" &&
+    booking.payment_status === "partially_paid" &&
+    amountRemaining > 0;
 
   const propertyTypeSlug = booking.room?.property?.property_type?.slug ?? "";
   const isLongTerm =
@@ -698,10 +747,35 @@ Cam on quy khach da tin tuong va su dung dich vu!
     booking.price?.unit === 'month';
 
   const isPartnerConfirmed = booking.status === 1;
+  const leaseContract = booking.contracts?.find(
+    (contract) => contract.contract_type === "LEASE_AGREEMENT",
+  ) ?? (isLongTerm ? booking.contracts?.[0] : undefined);
   const hasPendingContract = booking.contracts?.some((c) => c.status === 0) ?? false;
+  const isLeaseContractSigned = leaseContract != null && leaseContract.status !== 0;
+  const canPayDeposit = !isLongTerm || isLeaseContractSigned;
+  const showDepositPaymentCard =
+    Boolean(booking.deposit_amount && booking.deposit_amount > 0) &&
+    (booking.deposit_status === "pending" || booking.deposit_status === "payment_submitted");
+  const showDepositPaymentBlockedCard =
+    showDepositPaymentCard && booking.deposit_status === "pending" && !canPayDeposit;
+  const showDepositPaymentActiveCard =
+    showDepositPaymentCard && !showDepositPaymentBlockedCard;
   const showContractSignCard =
     booking.status === 0 ||
     (isPartnerConfirmed && (isLongTerm ? hasPendingContract : true));
+  const showContractReviewCard =
+    isLongTerm &&
+    isLeaseContractSigned &&
+    booking.status !== 2 &&
+    booking.status !== 4;
+
+  const handleViewLeaseContract = () => {
+    if (!leaseContract?.id) {
+      toastInfo("Hợp đồng đang được khởi tạo, vui lòng đợi trong giây lát...");
+      return;
+    }
+    navigate(`/bks-stay/contracts/${leaseContract.id}`);
+  };
 
   const steps = [
     { label: "Đã đặt", active: booking.status === 0, completed: booking.status >= 0 && booking.status !== 2 && booking.status !== 4 },
@@ -895,8 +969,39 @@ Cam on quy khach da tin tuong va su dung dich vu!
         {/* Left Column */}
         <div className="space-y-8 lg:col-span-2">
           
+          {/* Deposit blocked until lease signed (long-term) */}
+          {showDepositPaymentBlockedCard ? (
+            <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+              <CardContent className="p-8 space-y-4">
+                <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                  <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
+                  <div className="space-y-2">
+                    <h3 className="text-base font-bold text-amber-900">Chưa thể thanh toán tiền cọc</h3>
+                    <p className="text-sm leading-relaxed text-amber-800/90">
+                      Đơn thuê dài hạn yêu cầu ký hợp đồng thuê trước khi nộp tiền đặt cọc. Vui lòng hoàn tất ký hợp đồng bên dưới, sau đó quay lại mục thanh toán cọc.
+                    </p>
+                    {leaseContract?.id ? (
+                      <Button
+                        type="button"
+                        onClick={handleViewLeaseContract}
+                        className="mt-1 rounded-xl bg-amber-600 font-bold text-white hover:bg-amber-700"
+                      >
+                        <FileText className="mr-2 size-4" />
+                        Ký hợp đồng ngay
+                      </Button>
+                    ) : (
+                      <p className="text-xs font-medium text-amber-700">
+                        Hợp đồng đang được khởi tạo. Vui lòng chờ chủ nhà xác nhận đơn.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           {/* VietQR & Receipt Dropzone Card */}
-          {booking.deposit_amount && booking.deposit_amount > 0 && (booking.deposit_status === "pending" || booking.deposit_status === "payment_submitted") ? (
+          {showDepositPaymentActiveCard ? (
             <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
               <CardContent className="p-8 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -1133,6 +1238,68 @@ Cam on quy khach da tin tuong va su dung dich vu!
             </Card>
           ) : null}
 
+          {/* Remainder payment after deposit confirmed */}
+          {showRemainderPaymentCard ? (
+            <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
+              <CardContent className="p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <CreditCard className="size-5 text-amber-600" />
+                      Thanh toán phần còn lại
+                    </h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Đã đặt cọc {formatPrice(amountPaid)} — còn lại {formatPrice(amountRemaining)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="flex flex-col items-center justify-center border border-slate-100 bg-slate-50/50 rounded-2xl p-6 space-y-3">
+                    <div className="relative p-2 bg-white border border-slate-200 rounded-2xl shadow-inner">
+                      <img
+                        src={`https://img.vietqr.io/image/mb-0333494850-compact2.png?amount=${amountRemaining}&addInfo=BKS%20REMAIN%20${booking.id}&accountName=HO%20MINH%20NGOC`}
+                        alt="VietQR code"
+                        className="w-44 h-44 object-contain"
+                      />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <QrCode className="size-3.5" />
+                      Quét mã để thanh toán phần còn lại
+                    </span>
+                  </div>
+
+                  <div className="space-y-4 flex flex-col justify-center">
+                    <div className="space-y-2 text-xs font-semibold text-slate-500">
+                      <div className="flex justify-between border-b border-slate-100 pb-2">
+                        <span>Số tiền còn lại</span>
+                        <span className="text-amber-700 font-bold text-sm">{formatPrice(amountRemaining)} VNĐ</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2">
+                        <span>Nội dung chuyển khoản</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-900 font-bold">BKS REMAIN {booking.id}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(`BKS REMAIN ${booking.id}`, "Nội dung chuyển khoản")}
+                            className="text-sky-600 hover:text-sky-500"
+                          >
+                            <Copy className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <Button asChild className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 font-bold text-white shadow-md hover:from-amber-600 hover:to-orange-700 transition-all h-10">
+                      <a href={`${import.meta.env.VITE_URL}/payments/checkout?booking_id=${booking.id}&payment_phase=remainder&redirect_to=${encodeURIComponent(window.location.origin + "/bks-stay/bookings/" + booking.id)}`}>
+                        Thanh toán trực tuyến
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           {/* Main Details */}
           <Card className="overflow-hidden rounded-[32px] border-none bg-white shadow-xl shadow-slate-200/50">
             <CardContent className="p-8">
@@ -1157,10 +1324,10 @@ Cam on quy khach da tin tuong va su dung dich vu!
                   </Badge>
 
                   {(() => {
-                    const payStatus = booking.payment_status || (
-                      booking.status === 1 && booking.payment_method === "online" ? "paid" :
-                      booking.deposit_status === "confirmed_by_partner" ? "partially_paid" : "unpaid"
-                    );
+                    const payStatus =
+                      booking.payment_status === "paid" && amountRemaining > 0
+                        ? "partially_paid"
+                        : (booking.payment_status ?? "unpaid");
                     return (
                       <Badge className={`rounded-full border-none px-4 py-1.5 font-bold ${
                          payStatus === "paid" ? "bg-emerald-100 text-emerald-700" :
@@ -1259,12 +1426,7 @@ Cam on quy khach da tin tuong va su dung dich vu!
                         onClick={() => {
                           if (!isPartnerConfirmed) return;
                           if (isLongTerm) {
-                            const contractId = booking.contracts?.[0]?.id;
-                            if (contractId) {
-                              navigate(`/bks-stay/contracts/${contractId}`);
-                            } else {
-                              toastInfo("Hợp đồng đang được khởi tạo, vui lòng đợi trong giây lát...");
-                            }
+                            handleViewLeaseContract();
                           } else {
                             navigate(`/bks-stay/bookings/${booking.id}/voucher`);
                           }
@@ -1293,6 +1455,55 @@ Cam on quy khach da tin tuong va su dung dich vu!
                       {isLongTerm 
                         ? (isPartnerConfirmed ? "Bước 2/4: Ký hợp đồng" : "Bước 2/4: Xác nhận Partner")
                         : (isPartnerConfirmed ? "Bước 2/3: Nhận phiếu" : "Bước 2/3: Xác nhận Partner")}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showContractReviewCard && (
+                <div className="relative mb-8 overflow-hidden rounded-[32px] border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-sky-50/40 p-6 shadow-lg shadow-emerald-900/5 sm:p-8">
+                  <div className="pointer-events-none absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
+
+                  <div className="relative space-y-6">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                      <div className="flex size-16 shrink-0 items-center justify-center self-start rounded-[20px] bg-emerald-600 shadow-lg shadow-emerald-600/20 sm:size-20 sm:rounded-[24px]">
+                        <FileText className="size-7 text-white sm:size-8" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                          <h3 className="text-xl font-black text-slate-900 sm:text-2xl">
+                            Hợp đồng thuê của bạn
+                          </h3>
+                          <Badge className="border-none bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                            <CheckCircle2 className="mr-1 size-3.5" />
+                            Đã ký
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium leading-relaxed text-slate-600">
+                          Hợp đồng thuê căn hộ dịch vụ đã được ký thành công. Bạn có thể xem lại, in hoặc lưu bản sao
+                          để xuất trình khi nhận bàn giao phòng hoặc trong suốt thời gian lưu trú.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 border-t border-emerald-100/80 pt-5 sm:flex-row sm:justify-end">
+                      <Button
+                        type="button"
+                        onClick={handleViewLeaseContract}
+                        className="h-12 w-full gap-2 rounded-full bg-emerald-600 px-8 font-black text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 sm:w-auto"
+                      >
+                        <FileText className="size-4" />
+                        Xem lại hợp đồng
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => navigate(ROUTERS.BKS_STAY_CONTRACTS)}
+                        className="h-12 w-full rounded-full border-emerald-200 bg-white px-6 font-bold text-emerald-700 hover:bg-emerald-50 sm:w-auto"
+                      >
+                        Danh sách hợp đồng
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1691,6 +1902,18 @@ Cam on quy khach da tin tuong va su dung dich vu!
                     <span className="text-sm font-bold text-slate-900">Tổng cộng</span>
                     <span className="text-xl font-black text-sky-600">{formatPrice(totalAmount)}</span>
                  </div>
+                 {amountPaid > 0 && booking.payment_status !== "paid" && (
+                   <div className="flex justify-between text-sm">
+                     <span className="text-slate-500">Đã thanh toán (cọc)</span>
+                     <span className="font-bold text-emerald-600">{formatPrice(amountPaid)}</span>
+                   </div>
+                 )}
+                 {amountRemaining > 0 && booking.payment_status === "partially_paid" && (
+                   <div className="flex justify-between text-sm">
+                     <span className="text-slate-500">Còn lại</span>
+                     <span className="font-bold text-amber-700">{formatPrice(amountRemaining)}</span>
+                   </div>
+                 )}
                  {booking.payment_method && (
                    <div className="border-t border-slate-100 pt-3 flex justify-between items-center">
                      <span className="text-xs font-semibold text-slate-400">Phương thức thanh toán</span>
@@ -1707,7 +1930,7 @@ Cam on quy khach da tin tuong va su dung dich vu!
                          (booking.status === 0 || booking.status === 1) &&
                          (() => {
                            const hoursLeft = (new Date(booking.start_date).getTime() - Date.now()) / 3600000;
-                           const blocked = booking.payment_method === "online" && (booking.payment_status === "paid" || booking.status === 1);
+                           const blocked = booking.payment_method === "online" && booking.payment_status === "paid";
                            return hoursLeft > 12 && !blocked ? (
                              <Dialog open={isPaymentMethodDialogOpen} onOpenChange={setIsPaymentMethodDialogOpen}>
                                <DialogTrigger asChild>

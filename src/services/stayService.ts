@@ -139,6 +139,8 @@ export interface BookingDetail {
   payment_method?: string;
   payment_method_changed_at?: string | null;
   payment_status?: string;
+  amount_paid?: number;
+  amount_remaining?: number;
 }
 
 export interface NotificationData {

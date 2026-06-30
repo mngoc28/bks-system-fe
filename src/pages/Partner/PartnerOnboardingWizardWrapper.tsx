@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetUserProfileQuery } from "@/hooks/useUserQuery";
+import { useUserStore } from "@/store/useUserStore";
 import PartnerOnboardingWizard from "./components/PartnerOnboardingWizard";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -11,9 +12,16 @@ import { Spinner } from "@/components/ui/spinner";
  */
 const PartnerOnboardingWizardWrapper: React.FC = () => {
   const { data: profileRes, isLoading } = useGetUserProfileQuery();
+  const setPartnerStatus = useUserStore((state) => state.setPartnerStatus);
   const navigate = useNavigate();
   const user = profileRes?.data;
   const userStatus = user ? Number(user.status) : null;
+
+  useEffect(() => {
+    if (userStatus != null) {
+      setPartnerStatus(userStatus);
+    }
+  }, [userStatus, setPartnerStatus]);
 
   useEffect(() => {
     // Once partner is fully approved (status 1 = active), go to dashboard

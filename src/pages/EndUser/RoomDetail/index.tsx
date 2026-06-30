@@ -16,9 +16,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { toastError } from "@/components/ui/toast";
 import ImageLightbox from "@/components/ui/image-lightbox";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
 import type { Matcher } from "react-day-picker";
 import { ReviewsModal } from "@/components/rooms/ReviewsModal";
@@ -26,6 +27,8 @@ import { CLOUDINARY_HEADER_IMAGE_URL, ROUTERS } from "@/constant";
 import { normalizeStayPropertyTypeLabel, supportsElectronicContractByPropertyType, isApartmentSegmentPropertyType } from "@/utils/stayPropertyType";
 import { formatPrice, formatPhoneNumber } from "@/utils/utils";
 import { countBookingNights } from "@/utils/dateUtils";
+import { computeBookingRoomStayTotal } from "@/utils/bookingAmount";
+import { findNextAvailableStayRange, hasBookedDateOverlap } from "@/utils/bookingAvailability";
 import { RoomTouristSpotsSection } from "@/components/rooms/RoomTouristSpotsSection";
 import { BOOKED_DATES_QUERY_OPTIONS, PUBLIC_DETAIL_QUERY_OPTIONS } from "@/lib/queryCache";
 
@@ -74,14 +77,24 @@ const PublicRoomDetail = () => {
     ...PUBLIC_DETAIL_QUERY_OPTIONS,
   });
 
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const bookedDatesRangeEnd = useMemo(() => {
+    return format(addMonths(new Date(), 14), "yyyy-MM-dd");
+  }, []);
+
   // Fetch booked dates list
-  const { data: bookedDatesResponse } = useQuery({
-    queryKey: ["room-booked-dates", id],
+  const { data: bookedDatesResponse, isFetching: isBookedDatesLoading } = useQuery({
+    queryKey: ["room-booked-dates", id, todayStr, bookedDatesRangeEnd],
     queryFn: async () => {
-      const response = await roomApi.getBookedDates(id);
+      const response = await roomApi.getBookedDates(id, {
+        start_date: todayStr,
+        end_date: bookedDatesRangeEnd,
+      });
       return response.data;
     },
     enabled: !!id,
+    refetchOnMount: "always",
     ...BOOKED_DATES_QUERY_OPTIONS,
   });
   const bookedDates = bookedDatesResponse || [];
@@ -139,15 +152,8 @@ const PublicRoomDetail = () => {
     if (from && finalTo && bookedDates.length > 0) {
       const startStr = format(from, 'yyyy-MM-dd');
       const endStr = format(finalTo, 'yyyy-MM-dd');
-      const hasConflict = bookedDates.some(dateStr => {
-        return dateStr > startStr && dateStr < endStr;
-      });
-
-      if (hasConflict) {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.set("startDate", format(finalTo, 'yyyy-MM-dd'));
-        newParams.delete("endDate");
-        setSearchParams(newParams);
+      if (hasBookedDateOverlap(startStr, endStr, bookedDates)) {
+        toastError("Phòng đã được đặt trong khoảng thời gian này. Vui lòng chọn ngày khác.");
         return;
       }
     }
@@ -205,7 +211,16 @@ const PublicRoomDetail = () => {
     return matchers;
   }, [bookedDates]);
 
-  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  useEffect(() => {
+    if (!checkin || !checkout || bookedDates.length === 0) return;
+    if (!hasBookedDateOverlap(checkin, checkout, bookedDates)) return;
+
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("startDate");
+    newParams.delete("endDate");
+    setSearchParams(newParams, { replace: true });
+    toastError("Phòng đã được đặt trong khoảng thời gian này. Vui lòng chọn ngày khác.");
+  }, [checkin, checkout, bookedDates, searchParams, setSearchParams]);
 
   const DURATION_PRESETS = useMemo(
     () => [
@@ -216,18 +231,27 @@ const PublicRoomDetail = () => {
     [t],
   );
 
-  const handleDurationPreset = (days: number) => {
+  const handleDurationPreset = (days: number, months: number) => {
+    if (isBookedDatesLoading) {
+      toastError("Đang tải lịch trống, vui lòng thử lại sau giây lát.");
+      return;
+    }
+
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const start = format(tomorrow, "yyyy-MM-dd");
+    const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
 
-    const end = new Date(tomorrow);
-    end.setDate(end.getDate() + days);
-    const endStr = format(end, "yyyy-MM-dd");
+    const range = findNextAvailableStayRange(days, bookedDates, tomorrowStr);
+    if (!range) {
+      toastError(
+        `Không có khoảng trống ${months} tháng trong thời gian tìm kiếm. Vui lòng chọn ngày thủ công trên lịch.`,
+      );
+      return;
+    }
 
     const newParams = new URLSearchParams(searchParams);
-    newParams.set("startDate", start);
-    newParams.set("endDate", endStr);
+    newParams.set("startDate", range.checkIn);
+    newParams.set("endDate", range.checkOut);
     newParams.set("rent_type", "monthly");
     setSearchParams(newParams);
   };
@@ -423,28 +447,60 @@ const PublicRoomDetail = () => {
     return null;
   }, [checkin, checkout, allPrices, t]);
 
+  const availabilityError = useMemo(() => {
+    if (!checkin || !checkout || bookedDates.length === 0) return null;
+    if (!hasBookedDateOverlap(checkin, checkout, bookedDates)) return null;
+    return {
+      message: "Phòng đã được đặt trong khoảng thời gian này. Vui lòng chọn ngày khác.",
+    };
+  }, [checkin, checkout, bookedDates]);
+
   const initialPaymentBreakdown = useMemo(() => {
     if (!checkin || !checkout || !allPrices.length || validationError) return null;
 
     const nights = countBookingNights(checkin, checkout);
     const monthPrice = allPrices.find((p: any) => p.unit === "month");
     const nightPrice = allPrices.find((p: any) => p.unit === "night");
+    const isMonthly = nights >= 30 && Boolean(monthPrice);
 
-    if (!monthPrice && !nightPrice) return null;
+    if (isMonthly && monthPrice) {
+      const contractRentTotal = computeBookingRoomStayTotal({
+        start_date: checkin,
+        end_date: checkout,
+        price: { price: monthPrice.price, unit: "month" },
+      });
+      const firstMonthRent = Math.round(Number(monthPrice.price));
+      const depositAmount = Number(monthPrice.deposit_amount) || 0;
+      const installment1Total = firstMonthRent + depositAmount;
+      const remainingRent = Math.max(0, contractRentTotal - firstMonthRent);
 
-    let rentTotal = 0;
-    let depositAmount = 0;
-
-    if (nights >= 30 && monthPrice) {
-      const months = nights / 30;
-      rentTotal = Math.round(monthPrice.price * months);
-      depositAmount = monthPrice.deposit_amount || 0;
-    } else if (nightPrice) {
-      rentTotal = Math.round(nightPrice.price * nights);
-      depositAmount = nightPrice.deposit_amount || 0;
+      return {
+        nights,
+        isMonthly: true,
+        contractRentTotal,
+        firstMonthRent,
+        depositAmount,
+        installment1Total,
+        remainingRent,
+      };
     }
 
-    return { rentTotal, depositAmount, total: rentTotal + depositAmount, nights, isMonthly: nights >= 30 && allPrices.some((p: any) => p.unit === "month") };
+    if (nightPrice) {
+      const contractRentTotal = Math.round(Number(nightPrice.price) * nights);
+      // Ngắn hạn: không hiển thị deposit_amount gói giá (ký quỹ dài hạn) — cọc giữ chỗ tính ở bước đặt phòng.
+      const depositAmount = 0;
+
+      return {
+        nights,
+        isMonthly: false,
+        contractRentTotal,
+        depositAmount,
+        installment1Total: contractRentTotal,
+        remainingRent: 0,
+      };
+    }
+
+    return null;
   }, [checkin, checkout, allPrices, validationError]);
 
   const roomRules = useMemo(() => ({
@@ -585,8 +641,9 @@ const PublicRoomDetail = () => {
               <button
                 key={preset.label}
                 type="button"
-                onClick={() => handleDurationPreset(preset.days)}
-                className="px-3 py-1 rounded-full border border-sky-200 bg-sky-50 text-sky-700 text-xs font-bold hover:bg-sky-100 hover:border-sky-400 transition-all"
+                disabled={isBookedDatesLoading}
+                onClick={() => handleDurationPreset(preset.days, preset.months)}
+                className="px-3 py-1 rounded-full border border-sky-200 bg-sky-50 text-sky-700 text-xs font-bold hover:bg-sky-100 hover:border-sky-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-sky-50"
               >
                 {preset.label}
               </button>
@@ -631,29 +688,74 @@ const PublicRoomDetail = () => {
             <span>{validationError.message}</span>
           </p>
         )}
+        {availabilityError && (
+          <p className="text-[10.5px] text-rose-600 font-semibold flex items-start gap-1 bg-rose-50 p-2 rounded-lg border border-rose-100 mt-2">
+            <Info className="size-3.5 text-rose-500 shrink-0 mt-0.5" />
+            <span>{availabilityError.message}</span>
+          </p>
+        )}
         {initialPaymentBreakdown && (
           <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-2.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">
-              {initialPaymentBreakdown.isMonthly ? "Tạm tính thanh toán ban đầu" : "Tạm tính chi phí phòng"}
+              {initialPaymentBreakdown.isMonthly
+                ? t("public.roomDetail.initialPaymentEstimate")
+                : t("public.roomDetail.roomCostEstimate")}
             </p>
             <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between text-slate-700">
-                <span>Tiền phòng ({initialPaymentBreakdown.nights} đêm)</span>
-                <span className="font-semibold">{formatPrice(initialPaymentBreakdown.rentTotal)}</span>
-              </div>
-              {initialPaymentBreakdown.depositAmount > 0 && (
-                <div className="flex justify-between text-slate-700">
-                  <span>{t("public.roomDetail.depositSecurity")}</span>
-                  <span className="font-semibold text-amber-700">{formatPrice(initialPaymentBreakdown.depositAmount)}</span>
-                </div>
+              {initialPaymentBreakdown.isMonthly ? (
+                <>
+                  <div className="flex justify-between text-slate-500 text-xs">
+                    <span>
+                      {t("public.roomDetail.contractRentTotal", { nights: initialPaymentBreakdown.nights })}
+                    </span>
+                    <span>{formatPrice(initialPaymentBreakdown.contractRentTotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-700">
+                    <span>{t("public.roomDetail.firstMonthRent")}</span>
+                    <span className="font-semibold">{formatPrice(initialPaymentBreakdown.firstMonthRent)}</span>
+                  </div>
+                  {initialPaymentBreakdown.depositAmount > 0 && (
+                    <div className="flex justify-between text-slate-700">
+                      <span>{t("public.roomDetail.depositSecurity")}</span>
+                      <span className="font-semibold text-amber-700">{formatPrice(initialPaymentBreakdown.depositAmount)}</span>
+                    </div>
+                  )}
+                  {initialPaymentBreakdown.remainingRent > 0 && (
+                    <div className="flex justify-between text-slate-500 text-xs">
+                      <span>{t("public.roomDetail.remainingRentInstallments")}</span>
+                      <span>{formatPrice(initialPaymentBreakdown.remainingRent)}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between text-slate-700">
+                    <span>
+                      {t("public.roomDetail.roomRentNights", { nights: initialPaymentBreakdown.nights })}
+                    </span>
+                    <span className="font-semibold">{formatPrice(initialPaymentBreakdown.contractRentTotal)}</span>
+                  </div>
+                  {initialPaymentBreakdown.depositAmount > 0 && (
+                    <div className="flex justify-between text-slate-700">
+                      <span>{t("public.roomDetail.depositSecurity")}</span>
+                      <span className="font-semibold text-amber-700">{formatPrice(initialPaymentBreakdown.depositAmount)}</span>
+                    </div>
+                  )}
+                </>
               )}
               <div className="flex justify-between font-bold text-slate-900 border-t border-indigo-200 pt-2 mt-2">
-                <span>{initialPaymentBreakdown.isMonthly ? "Tổng thanh toán đợt 1" : "Tổng tiền thanh toán"}</span>
-                <span className="text-primary text-base">{formatPrice(initialPaymentBreakdown.total)}</span>
+                <span>
+                  {initialPaymentBreakdown.isMonthly
+                    ? t("public.roomDetail.installment1Total")
+                    : t("public.roomDetail.totalPayment")}
+                </span>
+                <span className="text-primary text-base">{formatPrice(initialPaymentBreakdown.installment1Total)}</span>
               </div>
             </div>
             <p className="text-[9px] text-indigo-600/80 italic">
-              * Chưa bao gồm phụ phí điện, nước phát sinh trong quá trình lưu trú.
+              {initialPaymentBreakdown.isMonthly && initialPaymentBreakdown.remainingRent > 0
+                ? t("public.roomDetail.installment1Note")
+                : t("public.roomDetail.utilitiesExcludedNote")}
             </p>
           </div>
         )}
@@ -672,6 +774,10 @@ const PublicRoomDetail = () => {
       validationError ? (
         <Button disabled className="w-full rounded-full bg-rose-100 text-rose-400 border border-rose-200 cursor-not-allowed hover:bg-rose-100">
           Chưa đạt ngày tối thiểu
+        </Button>
+      ) : availabilityError ? (
+        <Button disabled className="w-full rounded-full bg-rose-100 text-rose-400 border border-rose-200 cursor-not-allowed hover:bg-rose-100">
+          Phòng đã được đặt
         </Button>
       ) : (
         <Button asChild variant="gradient" className="w-full rounded-full">
@@ -778,7 +884,7 @@ const PublicRoomDetail = () => {
                     {room?.property_address || t("public.roomDetail.addressUpdating")}
                   </span>
 
-                  {room && (room.partner_company_name || room.partner_name) && (
+                  {room?.partner_company_name && (
                     <span className="flex items-center gap-1.5 text-slate-600">
                       <Building2 className="size-4 text-slate-400 shrink-0" />
                       <span>
@@ -788,10 +894,10 @@ const PublicRoomDetail = () => {
                             to={ROUTERS.PARTNER_DETAIL.replace(":partner_id", String(room.partner_id))}
                             className="font-bold text-sky-600 hover:text-sky-700 hover:underline transition-colors"
                           >
-                            {room.partner_company_name || room.partner_name}
+                            {room.partner_company_name}
                           </Link>
                         ) : (
-                          <span className="font-bold">{room.partner_company_name || room.partner_name}</span>
+                          <span className="font-bold">{room.partner_company_name}</span>
                         )}
                       </span>
                     </span>
@@ -1251,7 +1357,7 @@ const PublicRoomDetail = () => {
                     </div>
                   )}
 
-                  {allPrices.some((p: any) => p.deposit_amount > 0) && (
+                  {allPrices.some((p: any) => p.unit === "month" && p.deposit_amount > 0) && (
                     <div className="rounded-2xl bg-sky-50 border border-sky-100 p-4 flex items-start gap-4">
                       <div className="p-2 bg-white rounded-xl shadow-sm">
                         <CreditCard className="size-5 text-sky-600" />
@@ -1262,7 +1368,7 @@ const PublicRoomDetail = () => {
                           <p>{t("public.roomDetail.depositPolicyDesc")}</p>
                           <ul className="list-disc pl-4 space-y-1 mt-1 font-medium">
                             {allPrices
-                              .filter((p: any) => p.deposit_amount > 0)
+                              .filter((p: any) => p.unit === "month" && p.deposit_amount > 0)
                               .map((p: any, idx: number) => {
                                 let unitLabel = t("public.roomDetail.unitNight");
                                 if (p.unit === 'month') {
@@ -1361,6 +1467,7 @@ const PublicRoomDetail = () => {
                         row: "flex w-full mt-2",
                         cell: "relative h-10 w-full p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-slate-100 [&:has([aria-selected].day-outside)]:bg-slate-100/50 [&:has([disabled])]:bg-transparent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
                         day: "h-10 w-full p-0 font-normal text-slate-900 aria-selected:opacity-100 hover:bg-slate-100 rounded-lg",
+                        day_disabled: "text-slate-300 line-through opacity-40 cursor-not-allowed",
                       }}
                     />
                   </div>
@@ -1614,6 +1721,10 @@ const PublicRoomDetail = () => {
             validationError ? (
               <Button disabled className="rounded-full bg-rose-100 text-rose-400 border border-rose-200 cursor-not-allowed hover:bg-rose-100 text-xs font-bold h-10 px-6">
                 Chưa đủ tối thiểu
+              </Button>
+            ) : availabilityError ? (
+              <Button disabled className="rounded-full bg-rose-100 text-rose-400 border border-rose-200 cursor-not-allowed hover:bg-rose-100 text-xs font-bold h-10 px-6">
+                Phòng đã được đặt
               </Button>
             ) : (
               <Button asChild variant="gradient" className="rounded-full px-6 text-xs font-bold h-10 shadow-md">
