@@ -46,9 +46,8 @@ import {
 import Pagination from '@/components/Pagination';
 import CancelBookingDialog from './components/CancelBookingDialog';
 import { PartnerBookingDetailDialog } from './components/PartnerBookingDetailDialog';
-import { useQuickConfirm } from '@/hooks/Partner/useQuickConfirm';
 import { isPartner360Enabled } from '@/lib/featureFlags';
-import { Undo2, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import {
   countPartnerBookingNightsExclusive,
   formatPartnerBookingDateVi,
@@ -85,6 +84,7 @@ interface BookingRow extends Booking {
   cancelled_at?: string;
   no_show_at?: string;
   contract_id?: number | null;
+  amount_remaining?: number;
   bookingDeposit?: {
     id: number;
     amount: number;
@@ -323,25 +323,30 @@ const Bookings: React.FC = () => {
   };
 
   const [cancelTargetId, setCancelTargetId] = useState<number | string | null>(null);
-
-  const { confirm: quickConfirm, undo: undoConfirm, isPending: isPendingConfirm, remainingMs } = useQuickConfirm({
-    onOptimisticConfirm: () => {
-      // Optimistic UI handled via invalidate after confirm
-    },
-    onUndo: () => {
-      void invalidatePartnerBookings();
-    },
-    onConfirmed: () => {
-      void invalidatePartnerBookings();
-      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
-    },
-    onConflict: () => {
-      void invalidatePartnerBookings();
-    },
-  });
+  const [approveTargetId, setApproveTargetId] = useState<number | string | null>(null);
 
   const handleApprove = (id: string | number) => {
-    quickConfirm(id);
+    setApproveTargetId(id);
+  };
+
+  const executeApprove = async () => {
+    if (approveTargetId === null) return;
+    try {
+      setActionLoadingId(approveTargetId);
+      await partnerService.confirmBooking(approveTargetId);
+      toastSuccess(`Đã xác nhận booking #${approveTargetId}.`);
+      setApproveTargetId(null);
+      setSelectedBooking(null);
+      void invalidatePartnerBookings();
+      queryClient.invalidateQueries({ queryKey: ['partner-booking-summary'] });
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const msg = err?.response?.data?.message ?? 'Xác nhận booking thất bại';
+      toastError(`Booking #${approveTargetId}: ${msg}`);
+      void invalidatePartnerBookings();
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const handleReject = (id: string | number) => {
@@ -536,6 +541,14 @@ const Bookings: React.FC = () => {
 
   const displayBookings = filteredBookings;
 
+  const approveTargetBooking = useMemo(() => {
+    if (approveTargetId === null) return null;
+    const fromList = displayBookings.find((b) => b.id === approveTargetId);
+    if (fromList) return fromList;
+    if (selectedBooking?.id === approveTargetId) return selectedBooking;
+    return null;
+  }, [approveTargetId, displayBookings, selectedBooking]);
+
   const statusTabs: Array<{ key: BookingStatusFilter; label: string; count: number }> = [
     { key: 'all', label: 'Tất cả', count: bookingSummary?.totalBookingsCount ?? totalItems },
     { key: 0, label: 'Chờ duyệt', count: bookingSummary?.pendingBookingsCount ?? 0 },
@@ -586,7 +599,7 @@ const Bookings: React.FC = () => {
         b.cancellation_reason,
       )?.label ?? '',
       getPartnerDepositDisplay(b.deposit_status, b.deposit_amount)?.label ?? 'Không yêu cầu cọc',
-      getPartnerPaymentDisplay(b.payment_status, b.totalAmount).label,
+      getPartnerPaymentDisplay(b.payment_status, b.totalAmount, b.amount_remaining).label,
       b.totalAmount,
       (b.note ?? '').replace(/\r?\n/g, ' '),
     ]);
@@ -1014,7 +1027,13 @@ const Bookings: React.FC = () => {
                   <td className="px-6 py-4 align-top">
                     {(() => {
                       const deposit = getPartnerDepositDisplay(booking.deposit_status, booking.deposit_amount);
-                      const payment = getPartnerPaymentDisplay(booking.payment_status, booking.totalAmount);
+                      const payment = getPartnerPaymentDisplay(
+                        booking.payment_status === "paid" && (booking.amount_remaining ?? 0) > 0
+                          ? "partially_paid"
+                          : booking.payment_status,
+                        booking.totalAmount,
+                        booking.amount_remaining,
+                      );
                       return (
                         <div className="flex max-w-[220px] flex-col gap-1.5">
                           {deposit ? (
@@ -1100,11 +1119,6 @@ const Bookings: React.FC = () => {
                            </Button>
                            <Button onClick={() => handleReject(booking.id)} variant="outline" size="sm" className="h-8 border-red-200 px-3 text-red-600 hover:bg-red-50 hover:text-red-700">Từ chối</Button>
                          </>
-                       ) : isPendingConfirm(booking.id) ? (
-                         <Button onClick={() => undoConfirm(booking.id)} variant="outline" size="sm" className="h-8 border-amber-300 px-3 text-amber-700 hover:bg-amber-50">
-                           <Undo2 size={14} className="mr-1" />
-                           Hoàn tác ({Math.ceil(remainingMs(booking.id) / 1000)}s)
-                         </Button>
                        ) : canMarkPartnerBookingNoShow(booking.rawStatus, booking.stay_status, booking.checkIn) ? (
                           <>
                             {!isPartnerCheckInDepositLocked(booking.deposit_amount, booking.deposit_status) && (
@@ -1279,6 +1293,57 @@ const Bookings: React.FC = () => {
           }
         }}
       />
+
+      <Dialog open={approveTargetId !== null} onOpenChange={(open) => !open && setApproveTargetId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-600">
+              <UserCheck size={20} />
+              Xác nhận duyệt booking
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {approveTargetBooking ? (
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <div className="space-y-2 text-sm text-slate-700">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Mã booking:</span>
+                    <span className="font-bold">#{approveTargetBooking.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Khách hàng:</span>
+                    <span className="font-bold">{approveTargetBooking.guestName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Phòng:</span>
+                    <span className="font-semibold text-slate-900">{approveTargetBooking.roomName}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">
+                Bạn có chắc chắn muốn duyệt booking <strong>#{approveTargetId}</strong>?
+              </p>
+            )}
+            <p className="text-sm text-slate-600">
+              Sau khi duyệt, khách hàng sẽ nhận thông báo xác nhận đặt phòng. Hành động này không thể hoàn tác.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <Button variant="ghost" onClick={() => setApproveTargetId(null)} disabled={actionLoadingId !== null}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={actionLoadingId !== null}
+              onClick={() => void executeApprove()}
+            >
+              {actionLoadingId !== null ? <Loader2 className="mr-2 animate-spin" size={16} /> : null}
+              Xác nhận duyệt
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <CancelBookingDialog
         open={cancelTargetId !== null}

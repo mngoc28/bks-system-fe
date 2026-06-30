@@ -4,22 +4,37 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import RealtimeNotifyProvider from './components/RealtimeNotifyProvider';
 import { useGetUserProfileQuery } from '@/hooks/useUserQuery';
+import { useUserStore } from '@/store/useUserStore';
+import { Spinner } from '@/components/ui/spinner';
 
 const PartnerLayout: React.FC = () => {
-  const [canCheckProfile, setCanCheckProfile] = React.useState(false);
-  const { data: profileRes, isPending } = useGetUserProfileQuery({ enabled: canCheckProfile });
+  const setPartnerStatus = useUserStore((state) => state.setPartnerStatus);
+  const { data: profileRes, isPending, isError } = useGetUserProfileQuery();
   const user = profileRes?.data;
   const userStatus = user ? Number(user.status) : null;
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
-    const id = window.setTimeout(() => setCanCheckProfile(true), 2000);
-    return () => window.clearTimeout(id);
-  }, []);
+    if (userStatus != null) {
+      setPartnerStatus(userStatus);
+    }
+  }, [userStatus, setPartnerStatus]);
 
-  // Redirect only after profile is known — keep Outlet mounted so child pages can fetch in parallel.
-  // Status: 0 = email not verified, 2 = incomplete profile, 3 = pending approval, 4 = rejected
-  if (!isPending && user?.role === 'partner' && userStatus !== 1) {
+  if (isPending) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return <Navigate to="/partner/onboarding" replace />;
+  }
+
+  // Redirect only after profile is known — block child routes from firing dashboard APIs.
+  // Status: 0 = pending email/profile, 3 = pending approval, 4 = rejected
+  if (user?.role === 'partner' && userStatus !== 1) {
     return <Navigate to="/partner/onboarding" replace />;
   }
 

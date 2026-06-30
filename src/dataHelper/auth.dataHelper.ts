@@ -13,6 +13,7 @@ export interface LoginResponse {
   name: string;
   role: string;
   email: string;
+  status?: number;
 }
 
 export interface RefreshTokenResponse {

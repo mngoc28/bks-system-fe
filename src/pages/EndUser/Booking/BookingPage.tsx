@@ -24,8 +24,11 @@ import {
     formatDate,
 } from "@/utils/dateUtils";
 import { isLongTermLeaseBooking } from "@/utils/stayClassification";
+import { computeBookingHoldDeposit } from "@/utils/depositPolicy";
 import { formatCurrencyInput } from "@/utils/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { hasBookedDateOverlap } from "@/utils/bookingAvailability";
+import { BOOKED_DATES_QUERY_OPTIONS } from "@/lib/queryCache";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { resolveImageUrl } from "@/utils/imageUtils";
 import { getRoomFallbackImage } from "@/utils/fallbackImages";
 import { Controller, useForm } from "react-hook-form";
@@ -75,9 +78,12 @@ const getServiceIcon = (name: string): LucideIcon => {
     return CheckCircle2;
 };
 
+const ROOM_UNAVAILABLE_MESSAGE = "Phòng đã được đặt trong khoảng thời gian này!";
+
 const BookingPage = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { roomId } = useParams<{ roomId: string }>();
     const id = Number(roomId);
     const [searchParams] = useSearchParams();
@@ -141,12 +147,34 @@ const BookingPage = () => {
             images: Array.isArray(images) ? images : [],
         };
     }, [rawRoom]);
+
+    const { data: bookedDatesResponse, isFetching: isBookedDatesLoading } = useQuery({
+        queryKey: ["room-booked-dates", id],
+        queryFn: async () => {
+            const res = await roomApi.getBookedDates(id);
+            return res.data;
+        },
+        enabled: !!id,
+        refetchOnMount: "always",
+        ...BOOKED_DATES_QUERY_OPTIONS,
+    });
+    const bookedDates = bookedDatesResponse ?? [];
+
+    const isStayDatesUnavailable = (checkIn: string, checkOut: string): boolean => {
+        if (!checkIn || !checkOut || bookedDates.length === 0) {
+            return false;
+        }
+        return hasBookedDateOverlap(checkIn, checkOut, bookedDates);
+    };
+
     // create booking mutation
     const createBookingMutation = useMutation({
         mutationFn: async (data: CreateBookingUserRequest) => {
             return await bookingApi.createBookingUser(id, data);
         },
         onSuccess: (apiBody, variables) => {
+            void queryClient.invalidateQueries({ queryKey: ["room-booked-dates", id] });
+
             const payload = apiBody?.data as any;
             const quote = resolveStayPriceQuote(variables.start_date, variables.end_date, {
                 allPrices: room?.all_prices,
@@ -227,10 +255,27 @@ const BookingPage = () => {
 
     // handle form submit
     const onSubmit = (data: BookingFormData) => {
+        if (data.start_date && data.end_date && isBookedDatesLoading) {
+            toastError("Đang tải lịch trống, vui lòng thử lại sau giây lát.");
+            return;
+        }
+        if (isStayDatesUnavailable(data.start_date, data.end_date)) {
+            toastError(ROOM_UNAVAILABLE_MESSAGE);
+            return;
+        }
         createBookingMutation.mutate(data);
     };
 
     const handleContinueToConfirm = handleSubmit((data) => {
+        if (data.start_date && data.end_date && isBookedDatesLoading) {
+            toastError("Đang tải lịch trống, vui lòng thử lại sau giây lát.");
+            return;
+        }
+        if (isStayDatesUnavailable(data.start_date, data.end_date)) {
+            toastError(ROOM_UNAVAILABLE_MESSAGE);
+            return;
+        }
+
         // Validate minimum stay duration before continuing
         if (room && data.start_date && data.end_date) {
             const nights = countBookingNights(data.start_date, data.end_date);
@@ -385,40 +430,26 @@ const BookingPage = () => {
 
     const depositAmount = useMemo(() => {
         if (!startDate || !endDate || !room) return 0;
-        
+
         const rows = parseRoomPrices(room.all_prices);
         const isLongStay = stayNights >= 30;
-        
+
         const eligible = rows.filter((row) => {
             const unit = (row.unit ?? "").toLowerCase();
             return isLongStay ? unit === "month" : unit === "night";
         });
         const matchedRow = eligible.find((row) => Number(row.price ?? 0) > 0) ?? rows.find((row) => Number(row.price ?? 0) > 0) ?? null;
-
         const totalRoomPrice = priceQuote?.roomStayTotal ?? 0;
 
-        let baseDeposit = 0;
-        if (matchedRow && matchedRow.deposit_amount !== undefined && matchedRow.deposit_amount !== null && Number(matchedRow.deposit_amount) > 0) {
-            baseDeposit = Number(matchedRow.deposit_amount);
-        } else if (room.deposit !== undefined && room.deposit !== null && Number(room.deposit) > 0) {
-            baseDeposit = Number(room.deposit);
-        } else {
-            const checkInDate = new Date(startDate);
-            const todayDate = new Date();
-            const isLastMinute = (checkInDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60) <= 24;
-            baseDeposit = isLastMinute ? totalRoomPrice : Math.round(totalRoomPrice * 0.5);
-        }
-
-        // If deposit is required but baseDeposit is 0 or less, force the policy minimums
-        if (isDepositRequired && baseDeposit <= 0) {
-            const checkInDate = new Date(startDate);
-            const todayDate = new Date();
-            const isLastMinute = (checkInDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60) <= 24;
-            baseDeposit = isLastMinute ? totalRoomPrice : Math.round(totalRoomPrice * 0.5);
-        }
-
-        return baseDeposit;
-    }, [startDate, endDate, room, isDepositRequired, depositRequirements, priceQuote, stayNights]);
+        return computeBookingHoldDeposit({
+            isLongTerm: isLeaseBooking,
+            isDepositRequired,
+            roomStayTotal: totalRoomPrice,
+            startDate,
+            priceDepositAmount: matchedRow?.deposit_amount,
+            roomDeposit: room.deposit,
+        });
+    }, [startDate, endDate, room, isDepositRequired, isLeaseBooking, priceQuote, stayNights]);
 
     const depositPercent = useMemo(() => {
         const totalRoomPrice = priceQuote?.roomStayTotal ?? 0;

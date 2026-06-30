@@ -45,11 +45,11 @@ export default function PartnerLogin() {
       {
         onSuccess: (res: any) => {
           if (res.status === "success" && res.data) {
-            const userData = res.data.user;
-            const token = res.data.token || (typeof res.data === "string" ? res.data : "");
+            const loginData = res.data;
+            const token = loginData.token || (typeof loginData === "string" ? loginData : "");
             
             // Validate role
-            if (userData && userData.role !== 'partner' && userData.role !== 'admin') {
+            if (loginData.role && loginData.role !== 'partner' && loginData.role !== 'admin') {
               toastError(t("login.invalid_role_partner") || "Tài khoản không có quyền truy cập cổng Đối tác.");
               return;
             }
@@ -66,14 +66,14 @@ export default function PartnerLogin() {
             }
             
             // Normalize role to lowercase and save
-            const user_role = (userData?.role || 'partner').toLowerCase();
-            useUserStore.getState().login(token, values.email, user_role, userData?.name || "");
+            const user_role = (loginData?.role || 'partner').toLowerCase();
+            const partnerStatus = Number(loginData?.status ?? 0);
+            useUserStore.getState().login(token, values.email, user_role, loginData?.name || "", partnerStatus);
 
-            void promptBrowserSavePassword(values.email, values.password, userData?.name);
+            void promptBrowserSavePassword(values.email, values.password, loginData?.name);
             toastSuccess(t("login.success"));
             // Redirect based on partner activation status
             // status 1 = active partner, otherwise goes to onboarding/approval flow
-            const partnerStatus = Number(userData?.status ?? 0);
             navigate(partnerStatus === 1 ? "/partner/dashboard" : "/partner/onboarding");
           } else {
             toastError(t("login.failed"));

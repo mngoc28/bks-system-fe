@@ -218,6 +218,7 @@ const StayPrivateRoute = ({ children }: { children: React.ReactNode }) => {
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const userEmail = useUserStore((state) => state.userEmail);
   const userRole = useUserStore((state) => state.userRole);
+  const partnerStatus = useUserStore((state) => state.partnerStatus);
   const logout = useUserStore((state) => state.logout);
   const [token, setToken] = useState<string | null>(getAccessToken());
   const location = useLocation();
@@ -239,7 +240,8 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     const role = getEffectiveRole(userRole);
 
     if (role === PERMISSIONS.PARTNER && location.pathname === ROUTERS.PARTNER_LOGIN) {
-      return <Navigate to="/partner/dashboard" replace />;
+      const isActivePartner = partnerStatus === 1;
+      return <Navigate to={isActivePartner ? "/partner/dashboard" : "/partner/onboarding"} replace />;
     }
     if (
       role === PERMISSIONS.ADMIN &&

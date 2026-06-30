@@ -375,8 +375,12 @@ export function getPartnerStatusSubBadge(
 export function getPartnerPaymentDisplay(
   paymentStatus?: string | null,
   totalAmount?: number | null,
+  amountRemaining?: number | null,
 ): PartnerMoneyBadge {
   const amountText = totalAmount != null ? formatPartnerMoneyVi(totalAmount) : null;
+  const remainingText = amountRemaining != null && amountRemaining > 0
+    ? formatPartnerMoneyVi(amountRemaining)
+    : null;
 
   switch (paymentStatus) {
     case 'paid':
@@ -387,9 +391,9 @@ export function getPartnerPaymentDisplay(
       };
     case 'partially_paid':
       return {
-        label: amountText ? `Thanh toán một phần · ${amountText}` : 'Thanh toán một phần',
+        label: remainingText ? `Còn lại · ${remainingText}` : 'Thanh toán một phần',
         badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
-        hint: 'Thu thêm phần còn lại khi check-in/out',
+        hint: 'Khách đã cọc — thu phần còn lại khi check-in/out hoặc online',
       };
     case 'refunded':
       return {

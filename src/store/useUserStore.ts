@@ -11,23 +11,27 @@ export function readPersistedUserProfile(): {
   userEmail: string;
   userName: string;
   userRole: string;
+  partnerStatus: number | null;
 } {
   if (typeof window === "undefined") {
-    return { userEmail: "", userName: "", userRole: "" };
+    return { userEmail: "", userName: "", userRole: "", partnerStatus: null };
   }
   try {
     const raw = localStorage.getItem(USER_PERSIST_KEY);
     if (!raw) {
-      return { userEmail: "", userName: "", userRole: "" };
+      return { userEmail: "", userName: "", userRole: "", partnerStatus: null };
     }
-    const parsed = JSON.parse(raw) as { state?: { userEmail?: string; userName?: string; userRole?: string } };
+    const parsed = JSON.parse(raw) as {
+      state?: { userEmail?: string; userName?: string; userRole?: string; partnerStatus?: number | null };
+    };
     return {
       userEmail: parsed?.state?.userEmail ?? "",
       userName: parsed?.state?.userName ?? "",
       userRole: parsed?.state?.userRole ?? "",
+      partnerStatus: parsed?.state?.partnerStatus ?? null,
     };
   } catch {
-    return { userEmail: "", userName: "", userRole: "" };
+    return { userEmail: "", userName: "", userRole: "", partnerStatus: null };
   }
 }
 
@@ -35,8 +39,11 @@ interface UserStore {
   userEmail: string;
   userRole: string;
   userName: string;
+  /** Partner account status from login/profile; 1 = active. */
+  partnerStatus: number | null;
   get isAuthenticated(): boolean;
-  login: (token: string, email: string, role: string, name: string) => void;
+  login: (token: string, email: string, role: string, name: string, partnerStatus?: number | null) => void;
+  setPartnerStatus: (status: number | null) => void;
   logout: () => void;
 }
 
@@ -46,19 +53,24 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
       userEmail: "",
       userRole: "",
       userName: "",
+      partnerStatus: null,
       get isAuthenticated() {
         const token = getAccessToken();
         const state = get();
         const result = !!token && !!state.userEmail;
         return result;
       },
-      login(token: string, email: string, role: string, name: string) {
+      login(token: string, email: string, role: string, name: string, partnerStatus: number | null = null) {
         setAccessToken(token);
         set(() => ({
           userEmail: email,
           userRole: role ? role.toLowerCase() : "",
-          userName: name || ""
+          userName: name || "",
+          partnerStatus: role?.toLowerCase() === "partner" ? partnerStatus : null,
         }));
+      },
+      setPartnerStatus(status: number | null) {
+        set(() => ({ partnerStatus: status }));
       },
       logout() {
         removeAccessToken();
@@ -68,7 +80,8 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
         set(() => ({
           userEmail: "",
           userRole: "",
-          userName: ""
+          userName: "",
+          partnerStatus: null,
         }));
       },
     }),
@@ -78,7 +91,8 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
       partialize: (state) => ({
         userEmail: state.userEmail,
         userRole: state.userRole,
-        userName: state.userName
+        userName: state.userName,
+        partnerStatus: state.partnerStatus,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
@@ -86,6 +100,7 @@ export const useUserStore = create<UserStore, [["zustand/persist", unknown]]>(
           if (!token) {
             state.userEmail = "";
             state.userRole = "";
+            state.partnerStatus = null;
           }
         }
       },

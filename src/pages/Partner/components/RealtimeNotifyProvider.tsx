@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toastInfo, toastSuccess, toastWarning } from "@/components/ui/toast";
 import { useBookingsRealtime, type BookingEventName, type RealtimeBookingPayload, type RealtimeCancellationRequestPayload } from "@/hooks/Partner/useBookingsRealtime";
+import { getCurrentUserIdFromToken } from "@/lib/echoClient";
 import { ROUTERS } from "@/constant";
 
 /**
@@ -30,6 +31,9 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const detail = { event, payload };
     window.dispatchEvent(new CustomEvent("partner:realtime-booking", { detail }));
 
+    const currentUserId = getCurrentUserIdFromToken();
+    const isOwnAction = currentUserId !== null && payload.actor_id === currentUserId;
+
     if (event === "booking.created") {
       toastSuccess(`🆕 Có booking mới – Mã #${payload.id}`, {
         action: {
@@ -38,9 +42,9 @@ const RealtimeNotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         },
         duration: 8000,
       });
-    } else if (event === "booking.confirmed") {
+    } else if (event === "booking.confirmed" && !isOwnAction) {
       toastInfo(`✅ Booking #${payload.id} đã xác nhận`);
-    } else if (event === "booking.cancelled") {
+    } else if (event === "booking.cancelled" && !isOwnAction) {
       toastWarning(`⚠ Booking #${payload.id} bị huỷ`);
     }
   };

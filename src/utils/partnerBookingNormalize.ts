@@ -21,6 +21,8 @@ export interface PartnerBookingDetailData {
   deposit_amount?: number;
   deposit_status?: string;
   payment_status?: string;
+  amount_paid?: number;
+  amount_remaining?: number;
   cancellation_reason?: string;
   cancelled_at?: string;
   no_show_at?: string;
@@ -68,6 +70,8 @@ export const normalizePartnerBookings = (rows: any[]): PartnerBookingDetailData[
       deposit_amount: item.deposit_amount != null ? Number(item.deposit_amount) : undefined,
       deposit_status: item.deposit_status ?? undefined,
       payment_status: item.payment_status ?? 'unpaid',
+      amount_paid: item.amount_paid != null ? Number(item.amount_paid) : undefined,
+      amount_remaining: item.amount_remaining != null ? Number(item.amount_remaining) : undefined,
       cancellation_reason: item.cancellation_reason ?? undefined,
       cancelled_at: item.cancelled_at ?? undefined,
       no_show_at: item.no_show_at ?? undefined,

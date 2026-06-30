@@ -154,7 +154,11 @@ export const PartnerBookingDetailDialog: React.FC<PartnerBookingDetailDialogProp
               <div className="space-y-2 rounded-xl border border-slate-200 p-4">
                 <p className="text-xs font-bold uppercase text-slate-500">Thanh toán đơn</p>
                 {(() => {
-                  const payment = getPartnerPaymentDisplay(booking.payment_status, booking.totalAmount);
+                  const payment = getPartnerPaymentDisplay(
+                    booking.payment_status,
+                    booking.totalAmount,
+                    booking.amount_remaining,
+                  );
                   return (
                     <>
                       <Badge variant="none" className={`text-xs font-bold border px-2.5 py-0.5 ${payment.badgeClass}`}>
