@@ -1375,52 +1375,119 @@ Cam on quy khach da tin tuong va su dung dich vu!
 
               {/* Confirmation Action Card */}
               {showContractSignCard && (
-                <div className="relative overflow-hidden bg-gradient-to-br from-sky-600/10 via-white to-indigo-600/5 backdrop-blur-md border border-sky-100 rounded-[32px] p-8 shadow-xl shadow-sky-900/5 group mb-8">
-                  <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/20 transition-colors duration-500" />
-                  <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-500" />
-                  
-                  <div className="relative flex flex-col md:flex-row items-center gap-6">
-                    <div className={`flex-shrink-0 w-20 h-20 rounded-[24px] flex items-center justify-center shadow-lg ${isPartnerConfirmed ? "bg-sky-600 shadow-sky-600/20 animate-pulse" : "bg-amber-500 shadow-amber-500/20"}`}>
-                      <FileText className="text-white" size={32} />
-                    </div>
-                    
-                    <div className="flex-1 text-center md:text-left">
-                      <h3 className="text-2xl font-black text-slate-900 mb-2">
-                        {isPartnerConfirmed 
-                          ? (isLongTerm ? "Xác nhận hợp đồng thuê của bạn" : "Phiếu xác nhận lưu trú đã sẵn sàng") 
-                          : "Đang chờ Partner xác nhận"}
-                      </h3>
-                      <div className="text-slate-600 font-medium leading-relaxed max-w-lg">
-                        {isLongTerm ? (
-                          isPartnerConfirmed ? (
-                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
-                              <p>• Đơn đặt phòng dài hạn của bạn đã được đối tác xác nhận <span className="text-emerald-600 font-bold">thành công</span>.</p>
-                              <p>• <strong>Khuyến nghị:</strong> Hãy bấm <strong>"Ký hợp đồng & Xác nhận"</strong> để thực hiện ký tay hoặc tải chữ ký số hoàn tất thủ tục đặt phòng.</p>
-                              <p>• Sau khi ký, bạn hãy chọn <strong>"In hợp đồng / Xem trước"</strong> để lưu bản sao hợp đồng về máy nhằm xuất trình khi nhận bàn giao căn hộ lúc check-in.</p>
-                            </div>
+                <div className="relative mb-8 overflow-hidden rounded-[32px] border border-sky-100 bg-gradient-to-br from-sky-50/80 via-white to-indigo-50/40 p-6 shadow-lg shadow-sky-900/5 sm:p-8">
+                  <div className="pointer-events-none absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
+                  <div className="pointer-events-none absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                  <div className="relative space-y-6">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                      <div
+                        className={`flex size-16 shrink-0 items-center justify-center self-start rounded-[20px] shadow-lg sm:size-20 sm:rounded-[24px] ${
+                          isPartnerConfirmed
+                            ? "bg-sky-600 shadow-sky-600/20"
+                            : "bg-amber-500 shadow-amber-500/20"
+                        }`}
+                      >
+                        <FileText className="size-7 text-white sm:size-8" />
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-xl font-black text-slate-900 sm:text-2xl">
+                            {isPartnerConfirmed
+                              ? isLongTerm
+                                ? "Xác nhận hợp đồng thuê của bạn"
+                                : "Phiếu xác nhận lưu trú đã sẵn sàng"
+                              : "Đang chờ Partner xác nhận"}
+                          </h3>
+                          {isPartnerConfirmed && (
+                            <Badge className="border-none bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                              <CheckCircle2 className="mr-1 size-3.5" />
+                              {isLongTerm ? "Sẵn sàng ký" : "Đã phát hành"}
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="rounded-2xl border border-sky-100/80 bg-white/80 p-4 text-sm font-medium leading-relaxed text-slate-600">
+                          {isLongTerm ? (
+                            isPartnerConfirmed ? (
+                              <ul className="list-disc space-y-2 pl-4">
+                                <li>
+                                  Đơn đặt phòng dài hạn đã được đối tác xác nhận{" "}
+                                  <span className="font-bold text-emerald-600">thành công</span>.
+                                </li>
+                                <li>
+                                  Bấm <strong>&quot;Ký hợp đồng &amp; Xác nhận&quot;</strong> để ký tay hoặc tải chữ ký số hoàn tất thủ tục.
+                                </li>
+                                <li>
+                                  Sau khi ký, chọn <strong>&quot;In hợp đồng / Xem trước&quot;</strong> để lưu bản sao về máy.
+                                </li>
+                              </ul>
+                            ) : (
+                              <ul className="list-disc space-y-2 pl-4">
+                                <li>Đơn đặt phòng của bạn đang được Partner xem xét.</li>
+                                <li>
+                                  Sau khi được xác nhận, hợp đồng thuê sẽ được khởi tạo để bạn ký trực tuyến trước khi check-in.
+                                </li>
+                              </ul>
+                            )
+                          ) : isPartnerConfirmed ? (
+                            <ul className="list-disc space-y-2 pl-4">
+                              <li>
+                                Đơn ngắn hạn đã được xác nhận{" "}
+                                <span className="font-bold text-emerald-600">thành công</span> và phiếu lưu trú đã được cấp.
+                              </li>
+                              <li>
+                                <strong>Khuyến nghị:</strong> Bấm <strong>&quot;Nhận phiếu xác nhận&quot;</strong>, chọn{" "}
+                                <strong>&quot;Tải ảnh (PNG)&quot;</strong> để lưu phiếu về máy — tiện xuất trình khi check-in dù không có mạng.
+                              </li>
+                            </ul>
                           ) : (
-                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
-                              <p>• Đơn đặt phòng của bạn đang được Partner xem xét.</p>
-                              <p>• Sau khi được xác nhận, hợp đồng thuê nhà sẽ được tự động khởi tạo để bạn tiến hành ký trực tuyến trước khi check-in nhận phòng.</p>
-                            </div>
-                          )
-                        ) : (
-                          isPartnerConfirmed ? (
-                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
-                              <p>• Đơn đặt phòng ngắn hạn của bạn đã được xác nhận <span className="text-emerald-600 font-bold">thành công</span> và Phiếu xác nhận lưu trú đã được tự động cấp phát.</p>
-                              <p>• <strong>Khuyến nghị:</strong> Hãy bấm <strong>"Nhận phiếu xác nhận"</strong> và chọn <strong>"Tải ảnh (PNG)"</strong> để lưu phiếu về máy ngay khi có thể để dễ dàng xuất trình cho lễ tân khi check-in ngay cả khi thiết bị mất sóng hoặc không có mạng internet.</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-1.5 text-xs md:text-sm font-medium text-slate-600">
-                              <p>• Đơn đặt phòng của bạn đang được Partner xem xét. Sau khi được xác nhận, phiếu xác nhận lưu trú sẽ được tự động phát hành để bạn làm thủ tục nhận phòng lúc check-in.</p>
-                              <p>• <strong>Lưu ý:</strong> Hãy tải ảnh phiếu về máy ngay khi được cấp phát để phòng trường hợp thiết bị mất sóng.</p>
-                            </div>
-                          )
-                        )}
+                            <ul className="list-disc space-y-2 pl-4">
+                              <li>Đơn đặt phòng đang được Partner xem xét.</li>
+                              <li>
+                                Sau khi xác nhận, phiếu lưu trú sẽ được phát hành tự động. Hãy tải ảnh phiếu ngay khi nhận được.
+                              </li>
+                            </ul>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex-shrink-0 w-full md:w-auto">
+
+                    <div className="flex flex-col gap-4 border-t border-sky-100/80 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500 sm:text-sm">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="size-2 rounded-full bg-green-500" />
+                          Thông tin đã sẵn sàng
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className={`size-2 rounded-full ${
+                              isPartnerConfirmed ? "bg-amber-500" : "animate-pulse bg-amber-500"
+                            }`}
+                          />
+                          {isPartnerConfirmed
+                            ? isLongTerm
+                              ? "Chờ ký hợp đồng"
+                              : "Đã phát hành phiếu"
+                            : "Chờ Partner xác nhận"}
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className={`size-2 rounded-full ${
+                              isPartnerConfirmed ? "bg-sky-500" : "bg-slate-300"
+                            }`}
+                          />
+                          {isLongTerm
+                            ? isPartnerConfirmed
+                              ? "Bước 2/4: Ký hợp đồng"
+                              : "Bước 2/4: Xác nhận Partner"
+                            : isPartnerConfirmed
+                              ? "Bước 2/3: Nhận phiếu"
+                              : "Bước 2/3: Xác nhận Partner"}
+                        </span>
+                      </div>
+
                       <Button
                         disabled={!isPartnerConfirmed}
                         onClick={() => {
@@ -1431,30 +1498,11 @@ Cam on quy khach da tin tuong va su dung dich vu!
                             navigate(`/bks-stay/bookings/${booking.id}/voucher`);
                           }
                         }}
-                        className="relative z-20 flex h-14 w-full items-center justify-center gap-3 rounded-full bg-sky-600 px-8 font-black text-white shadow-xl shadow-sky-600/20 transition-all duration-300 hover:scale-[1.02] hover:bg-sky-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-sky-600 md:w-auto"
+                        className="h-12 w-full shrink-0 gap-2 rounded-full bg-sky-600 px-8 font-black text-white shadow-lg shadow-sky-600/20 transition-all hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[220px]"
                       >
                         {isLongTerm ? "Ký hợp đồng & Xác nhận" : "Nhận phiếu xác nhận"}
-                        <ArrowRight className="size-5" />
+                        <ArrowRight className="size-4" />
                       </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-slate-100 flex flex-wrap gap-6">
-                    <div className="flex items-center gap-2 text-slate-500 text-sm font-semibold">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      Thông tin đã sẵn sàng
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-500 text-sm font-semibold">
-                      <div className={`w-2 h-2 rounded-full ${isPartnerConfirmed ? "bg-amber-500" : "bg-amber-500 animate-pulse"}`} />
-                      {isPartnerConfirmed 
-                        ? (isLongTerm ? "Chờ ký hợp đồng" : "Đã phát hành phiếu") 
-                        : "Chờ Partner xác nhận"}
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-500 text-sm font-semibold">
-                      <div className={`w-2 h-2 rounded-full ${isPartnerConfirmed ? "bg-sky-500" : "bg-slate-300"}`} />
-                      {isLongTerm 
-                        ? (isPartnerConfirmed ? "Bước 2/4: Ký hợp đồng" : "Bước 2/4: Xác nhận Partner")
-                        : (isPartnerConfirmed ? "Bước 2/3: Nhận phiếu" : "Bước 2/3: Xác nhận Partner")}
                     </div>
                   </div>
                 </div>
