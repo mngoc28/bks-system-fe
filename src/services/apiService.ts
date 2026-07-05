@@ -5,7 +5,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { ROUTERS } from "@/constant";
 import { getLanguageStorage } from "@/store/useLanguage";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_URL || "http://localhost:8000";
 
 // Tạo instance Axios với các cấu hình mặc định
 const axiosInstance = axios.create({
