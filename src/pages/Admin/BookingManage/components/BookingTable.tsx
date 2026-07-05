@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BookingTableProps } from "@/dataHelper/booking.dataHelper";
@@ -65,24 +65,26 @@ const BookingTable: React.FC<BookingTableProps> = ({
                   )}
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">
-                  {onNavigateRoom ? (
-                    <button type="button" className="text-left text-primary hover:underline" onClick={() => onNavigateRoom(booking)}>
-                      {highlightText(booking.room.room_number, filters.room || "")}
-                    </button>
-                  ) : (
-                    <div>{highlightText(booking.room.room_number, filters.room || "")}</div>
-                  )}
-                  {onNavigateProperty ? (
-                    <button
-                      type="button"
-                      className="text-left text-xs text-slate-500 hover:text-primary hover:underline"
-                      onClick={() => onNavigateProperty(booking)}
-                    >
-                      {highlightText(booking.room.property.name, filters.room || "")}
-                    </button>
-                  ) : (
-                    <div className="text-xs text-slate-500">{highlightText(booking.room.property.name, filters.room || "")}</div>
-                  )}
+                  <div className="flex flex-col gap-0.5">
+                    {onNavigateRoom ? (
+                      <button type="button" className="text-left text-primary hover:underline font-medium" onClick={() => onNavigateRoom(booking)}>
+                        {highlightText(booking.room.room_number, filters.room || "")}
+                      </button>
+                    ) : (
+                      <div className="font-medium">{highlightText(booking.room.room_number, filters.room || "")}</div>
+                    )}
+                    {onNavigateProperty ? (
+                      <button
+                        type="button"
+                        className="text-left text-xs text-slate-500 hover:text-primary hover:underline"
+                        onClick={() => onNavigateProperty(booking)}
+                      >
+                        {highlightText(booking.room.property.name, filters.room || "")}
+                      </button>
+                    ) : (
+                      <div className="text-xs text-slate-500">{highlightText(booking.room.property.name, filters.room || "")}</div>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="px-4 py-3 align-middle text-slate-700">
                   {safeFormatDateTime(booking.start_date)} - {safeFormatDateTime(booking.end_date)}
