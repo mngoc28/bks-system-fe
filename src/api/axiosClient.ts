@@ -7,8 +7,16 @@ import axios, { AxiosError } from "axios";
 import { cancelAllRequests, getAbortSignal } from "./abortService";
 import { ErrorResponse } from "./types";
 
+const getBaseUrl = (): string => {
+  const rawUrl = import.meta.env.VITE_URL || "";
+  if (rawUrl.endsWith("/api/v1") || rawUrl.endsWith("/api/v1/")) {
+    return rawUrl;
+  }
+  return rawUrl ? `${rawUrl.replace(/\/+$/, "")}/api/v1` : "";
+};
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_URL,
+  baseURL: getBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },
